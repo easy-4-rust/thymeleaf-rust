@@ -163,6 +163,10 @@ cd thymeleaf-rust
 Then read:
 
 - [Feasibility and architecture proposal](docs/Thymeleaf-Rust-可行性与架构设计.md)
+- [Migration roadmap](docs/migration/迁移路线图.md)
+- [Object-level mapping](docs/migration/对象级对照表.md)
+- [Semantic migration matrix](docs/migration/语义迁移对照表.md)
+- [Object naming consistency check](docs/migration/对象名称一致性检查.md)
 - [Chinese README](README.zh-CN.md)
 
 ## Compatibility direction

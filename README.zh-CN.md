@@ -163,6 +163,10 @@ cd thymeleaf-rust
 然后阅读：
 
 - [可行性与架构提案](docs/Thymeleaf-Rust-可行性与架构设计.md)
+- [迁移路线图](docs/migration/迁移路线图.md)
+- [对象级对照表](docs/migration/对象级对照表.md)
+- [语义迁移对照表](docs/migration/语义迁移对照表.md)
+- [对象名称一致性检查](docs/migration/对象名称一致性检查.md)
 - [English README](README.md)
 
 ## 兼容方向
