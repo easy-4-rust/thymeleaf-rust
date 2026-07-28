@@ -1,0 +1,29 @@
+[workspace]
+members = ["."]
+resolver = "3"
+
+[package]
+name = "thymeleaf"
+version = "0.1.0-alpha.1"
+edition = "2024"
+rust-version = "1.85"
+description = "A framework-neutral Thymeleaf-compatible dynamic template engine for Rust"
+license = "MIT"
+repository = "https://github.com/easy-4-rust/thymeleaf-rust"
+readme = "README.md"
+keywords = ["template", "thymeleaf", "html", "ssr"]
+categories = ["template-engine", "web-programming"]
+
+[dependencies]
+thiserror = "2.0"
+tracing = "0.1"
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+wildcard_imports = "deny"

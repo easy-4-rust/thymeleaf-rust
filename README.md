@@ -6,7 +6,7 @@
 
 **A framework-neutral, Thymeleaf-inspired dynamic content rendering engine for Rust.**
 
-[![Project status: design stage](https://img.shields.io/badge/status-design%20stage-blue)](#project-status)
+[![Project status: migration in progress](https://img.shields.io/badge/status-migration%20in%20progress-blue)](#project-status)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
@@ -18,9 +18,9 @@
 
 ---
 
-> **Project status: design stage**
+> **Project status: migration in progress**
 >
-> This repository currently contains architecture and implementation planning only. It does not yet provide a Cargo workspace, an installable crate, stable public APIs, runnable examples, CI results, or compatibility claims.
+> The `thymeleaf` Cargo workspace and the first behavior-verified foundation slice now exist. The rendering engine, parsers, processors, integrations, stable public API, and crates.io release are still incomplete; no whole-engine compatibility claim is made.
 
 ## Overview
 
@@ -99,8 +99,8 @@ See the detailed [feasibility and architecture proposal](docs/Thymeleaf-Rust-可
 | Layer | Name | Status |
 |:---|:---|:---:|
 | Project and Git repository | `thymeleaf-rust` | Confirmed |
-| Future crates.io core | `thymeleaf` | Planned |
-| Public Rust path | `thymeleaf::...` | Planned |
+| Future crates.io core | `thymeleaf` | Workspace created; not published |
+| Public Rust path | `thymeleaf::...` | Foundation API implemented |
 | Integration crates | `thymeleaf-{framework}` | Planned |
 | Optional Vernal integration | `thymeleaf-vernal` | Planned |
 
@@ -144,20 +144,26 @@ Release order may be phased, but the architecture must not require independent u
 |:---|:---:|:---|
 | Feasibility and architecture proposal | Available | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
-| Cargo workspace | Not created | No `Cargo.toml` |
-| Public Rust API | Design only | No source implementation |
+| Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
+| Public Rust API | Foundation slice | `TemplateMode` and nine exception objects |
 | Framework adapters | Planned | No adapter manifests or code |
-| Upstream compatibility matrix | Planned | No parity harness |
-| Tests and CI | Not created | No test or workflow claims |
+| Upstream compatibility matrix | In progress | 491 objects, 4,291 methods, and 6,936 parameters inventoried |
+| Tests and CI | Foundation gate passing | 14 unit tests, one 84-record Java/Rust Golden test, 100% source coverage |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start
 
-There is no executable quick start yet. To review the current design:
+The rendering engine is not executable yet. To check the implemented foundation slice:
 
 ```bash
 git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
 cd thymeleaf-rust
+cargo test --workspace --all-features
+cargo llvm-cov --workspace --all-features \
+  --fail-under-lines 100 \
+  --fail-under-functions 100 \
+  --fail-under-regions 100 \
+  --summary-only
 ```
 
 Then read:
@@ -165,6 +171,7 @@ Then read:
 - [Feasibility and architecture proposal](docs/Thymeleaf-Rust-可行性与架构设计.md)
 - [Migration roadmap](docs/migration/迁移路线图.md)
 - [Object-level mapping](docs/migration/对象级对照表.md)
+- [Method-level mapping](docs/migration/方法级对照表.md)
 - [Semantic migration matrix](docs/migration/语义迁移对照表.md)
 - [Object naming consistency check](docs/migration/对象名称一致性检查.md)
 - [Chinese README](README.zh-CN.md)
@@ -173,7 +180,7 @@ Then read:
 
 The initial design targets the core semantics of the Thymeleaf 3.1 line. Exact upstream versions, supported processors, expression behavior, error parity, exclusions, and compatibility percentages will be published only after they are pinned and verified.
 
-Planned evidence includes:
+Evidence now includes a fixed Java API inventory and a Foundation Golden differential test. Remaining planned evidence includes:
 
 - public API and processor inventories;
 - Java/Rust golden-output comparisons;
@@ -228,7 +235,7 @@ When implementation begins, changes will be expected to include documentation, t
 
 ## Security
 
-There is no executable parser or runtime in the repository yet. Before implementation is accepted, the project plans to define limits for input size, recursion, expression evaluation, template resolution, output size, cancellation, and unescaped content.
+There is no executable parser or rendering runtime in the repository yet. Before those layers are accepted, the project will define limits for input size, recursion, expression evaluation, template resolution, output size, cancellation, and unescaped content.
 
 Do not publish suspected vulnerabilities or sensitive proof-of-concept data in a public issue. A private reporting channel will be finalized before executable releases.
 

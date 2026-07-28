@@ -1428,6 +1428,7 @@ thymeleaf_stream_cancellations_total
 
 - [迁移路线图](migration/迁移路线图.md)：定义上游基线、完成口径、阶段依赖和发布门禁；
 - [对象级对照表](migration/对象级对照表.md)：逐项登记 Java 主对象、内部对象及 Rust 落点；
+- [方法级对照表](migration/方法级对照表.md)：登记 Java 方法、构造器、重载、参数与 Rust API；
 - [语义迁移对照表](migration/语义迁移对照表.md)：固定处理链、模板模式、表达式、Processor、Web 与错误语义；
 - [对象名称一致性检查](migration/对象名称一致性检查.md)：约束类型名、文件名、目录布局和允许的 Rust 化例外。
 

@@ -6,7 +6,7 @@
 
 **面向 Rust 的框架中立、受 Thymeleaf 启发的动态内容渲染引擎。**
 
-[![项目状态：设计阶段](https://img.shields.io/badge/status-design%20stage-blue)](#项目状态)
+[![项目状态：迁移实施中](https://img.shields.io/badge/status-migration%20in%20progress-blue)](#项目状态)
 [![许可证：MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
@@ -18,9 +18,9 @@
 
 ---
 
-> **项目状态：设计阶段**
+> **项目状态：迁移实施中**
 >
-> 当前仓库只有架构与实施规划，尚未提供 Cargo Workspace、可安装 crate、稳定公共 API、可运行示例、CI 结果或兼容性结论。
+> `thymeleaf` Cargo Workspace 和首个行为验证 Foundation 切片已经存在。渲染引擎、Parser、Processor、整合层、稳定公共 API 与 crates.io 发布仍未完成；当前不声明整体兼容。
 
 ## 项目概览
 
@@ -99,8 +99,8 @@ thymeleaf crate → Vernal
 | 层级 | 名称 | 状态 |
 |:---|:---|:---:|
 | 项目与 Git 仓库 | `thymeleaf-rust` | 已确认 |
-| 未来 crates.io 核心 | `thymeleaf` | 规划中 |
-| Rust 公共路径 | `thymeleaf::...` | 规划中 |
+| 未来 crates.io 核心 | `thymeleaf` | Workspace 已创建，尚未发布 |
+| Rust 公共路径 | `thymeleaf::...` | Foundation API 已实现 |
 | 整合 crate | `thymeleaf-{framework}` | 规划中 |
 | 可选 Vernal 整合 | `thymeleaf-vernal` | 规划中 |
 
@@ -144,20 +144,26 @@ thymeleaf crate → Vernal
 |:---|:---:|:---|
 | 可行性与架构提案 | 已有 | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
-| Cargo Workspace | 未创建 | 不存在 `Cargo.toml` |
-| Rust 公共 API | 仅设计 | 不存在源码实现 |
+| Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
+| Rust 公共 API | Foundation 切片 | `TemplateMode` 与九个异常对象 |
 | 框架适配器 | 规划中 | 不存在适配器 Manifest 或代码 |
-| 上游兼容矩阵 | 规划中 | 不存在 Parity Harness |
-| 测试与 CI | 未创建 | 不声明任何测试或 Workflow 结果 |
+| 上游兼容矩阵 | 实施中 | 已登记 491 个对象、4,291 个方法和 6,936 个参数 |
+| 测试与 CI | Foundation 门禁通过 | 14 个单元测试、1 个 84 条记录的 Java/Rust Golden 测试、源码覆盖率 100% |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
 ## 文档快速开始
 
-当前还没有可执行的快速开始。查看现有设计：
+渲染引擎尚不可执行。验证当前 Foundation 切片：
 
 ```bash
 git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
 cd thymeleaf-rust
+cargo test --workspace --all-features
+cargo llvm-cov --workspace --all-features \
+  --fail-under-lines 100 \
+  --fail-under-functions 100 \
+  --fail-under-regions 100 \
+  --summary-only
 ```
 
 然后阅读：
@@ -165,6 +171,7 @@ cd thymeleaf-rust
 - [可行性与架构提案](docs/Thymeleaf-Rust-可行性与架构设计.md)
 - [迁移路线图](docs/migration/迁移路线图.md)
 - [对象级对照表](docs/migration/对象级对照表.md)
+- [方法级对照表](docs/migration/方法级对照表.md)
 - [语义迁移对照表](docs/migration/语义迁移对照表.md)
 - [对象名称一致性检查](docs/migration/对象名称一致性检查.md)
 - [English README](README.md)
@@ -173,7 +180,7 @@ cd thymeleaf-rust
 
 初始设计以 Thymeleaf 3.1 系列的核心语义为目标。只有在固定并验证具体上游版本、Processor、表达式行为、错误语义、排除项和统计口径后，才会发布兼容性结论和百分比。
 
-规划中的证据包括：
+当前已经具备固定 Java API 清单和 Foundation Golden 差分测试。后续规划证据包括：
 
 - 公共 API 与 Processor 清单；
 - Java/Rust Golden Output 对比；
@@ -228,7 +235,7 @@ fn render(engine: &TemplateEngine) -> Result<String, Box<dyn std::error::Error>>
 
 ## 安全
 
-当前仓库还没有可执行 Parser 或 Runtime。在接受实现前，项目计划明确输入大小、递归、表达式求值、模板解析、输出大小、取消和未转义内容等限制。
+当前仓库还没有可执行 Parser 或渲染 Runtime。在接受这些层之前，项目将明确输入大小、递归、表达式求值、模板解析、输出大小、取消和未转义内容等限制。
 
 请勿在公开 Issue 中披露疑似漏洞或敏感验证数据。项目会在发布可执行版本前确定私密报告渠道。
 
