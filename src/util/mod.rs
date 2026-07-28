@@ -2,6 +2,7 @@
 
 mod content_type_utils;
 mod identity_counter;
+mod list_utils;
 mod map_utils;
 mod number_point_type;
 mod object_utils;
@@ -13,6 +14,10 @@ mod version_utils;
 
 pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
 pub use identity_counter::{IdentityCounter, IdentityCounterError};
+pub use list_utils::{
+    JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,
+    ListView,
+};
 pub use map_utils::MapUtils;
 pub use number_point_type::NumberPointType;
 pub use object_utils::ObjectUtils;
