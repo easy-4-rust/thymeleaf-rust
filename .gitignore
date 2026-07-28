@@ -1,6 +1,7 @@
-/target/
+**/target/
 **/*.rs.bk
 Cargo.lock
+!xtask/Cargo.lock
 .DS_Store
 .idea/
 .vscode/
