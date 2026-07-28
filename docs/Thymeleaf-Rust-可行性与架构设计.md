@@ -7,7 +7,7 @@
 > 对外发布主 crate：`thymeleaf`
 > 核心定位：Web 框架中立、Vernal 中立
 > 独立集成：`thymeleaf-{framework}`
-> Vernal 集成：`vernal-thymeleaf`
+> Vernal 集成：`thymeleaf-vernal`
 
 ## 1. 文档目的
 
@@ -62,7 +62,7 @@
 2. 核心 crate `thymeleaf` 不依赖 Vernal；
 3. `thymeleaf::web` 内部模块只依赖 `http`、`http-body`、`bytes`、`mime` 等中立协议 crate；
 4. Topcoat、Actix Web、Axum、Gotham、Hyper、Ntex、Poem、Rocket、Salvo、Tide、Warp、Tower、Tonic 均通过独立可选适配器直接接入；
-5. `vernal-thymeleaf` 是消费者和桥接层，不是 Thymeleaf-Rust 核心的上游依赖；
+5. `thymeleaf-vernal` 是消费者和桥接层，不是 Thymeleaf-Rust 核心的上游依赖；
 6. 所有独立适配器和 Vernal 适配器必须复用同一个 TemplateEngine、TemplateModel、Processor 和渲染协议；
 7. 任何框架专属类型都不得进入 `thymeleaf` 的 Engine、Parser、Expression、Standard Dialect 等公共 API。
 
@@ -78,7 +78,7 @@ flowchart LR
     DIRECT --> AXUM["axum"]
     DIRECT --> OTHER["gotham / hyper / ntex / poem / rocket / salvo / tide / warp / tower / tonic"]
 
-    ENGINE --> VERNAL["vernal-thymeleaf"]
+    ENGINE --> VERNAL["thymeleaf-vernal"]
     VERNAL --> VTOP["vernal-topcoat"]
     VERNAL --> VACTIX["vernal-actix-web"]
     VERNAL --> VAXUM["vernal-axum"]
@@ -135,7 +135,7 @@ Vernal 已有的 `HttpBody` 支持：
 | 框架整合 crate | `thymeleaf-axum`、`thymeleaf-actix-web` 等 | 统一使用 `thymeleaf-{framework}` |
 | Rust 根路径 | `thymeleaf::...` | 业务代码面向的稳定 API |
 | Rust 内部模块 | `engine`、`context`、`parser`、`expression`、`standard`、`web` 等 | 不带项目名重复前缀 |
-| Vernal 集成 crate | `vernal-thymeleaf` | 由 Vernal 侧提供的可选 bridge |
+| Vernal 整合 crate | `thymeleaf-vernal` | 由 Thymeleaf 侧提供、面向 Vernal 的可选整合；命名与 `thymeleaf-spring` 一致 |
 
 禁止发布或创建：
 
@@ -254,7 +254,7 @@ flowchart TB
     end
 
     subgraph Vernal["可选 Vernal 集成层"]
-        BRIDGE["vernal-thymeleaf"]
+        BRIDGE["thymeleaf-vernal"]
         VE["vernal-expression / vernal-cache"]
         VH["vernal-http / vernal-web / vernal-tower"]
         VADAPTERS["vernal-topcoat / actix-web / axum / gotham / hyper / ntex / poem / rocket / salvo / tide / warp / tower / tonic"]
@@ -302,9 +302,9 @@ flowchart TB
 | 整合 | `thymeleaf-warp` | Warp 独立适配 |
 | 整合 | `thymeleaf-tower` | Tower Service/Layer 独立适配 |
 | 整合 | `thymeleaf-tonic` | Tonic 动态内容生成和服务集成 |
-| 整合 | `vernal-thymeleaf` | 可选 Vernal bridge、starter、自动配置和 ViewResolver 注册 |
+| 整合 | `thymeleaf-vernal` | 可选 Vernal bridge、starter、自动配置和 ViewResolver 注册 |
 
-除 `thymeleaf` 外，发布的 crate 都是整合层。框架整合是正式支持面，而不是 Vernal 的附属实现；它们应保持为薄层并独立发布、独立 feature gate、独立测试，不得复制模板解析、表达式求值、Processor 或渲染逻辑。`vernal-thymeleaf` 与上述框架整合并列存在，负责 Vernal 场景的自动装配。
+除 `thymeleaf` 外，发布的 crate 都是整合层。框架整合是正式支持面，而不是 Vernal 的附属实现；它们应保持为薄层并独立发布、独立 feature gate、独立测试，不得复制模板解析、表达式求值、Processor 或渲染逻辑。`thymeleaf-vernal` 与上述框架整合并列存在，负责 Vernal 场景的自动装配。
 
 ## 5. 核心领域模型
 
@@ -451,7 +451,7 @@ Thymeleaf 表达式包含不同语义：
 | `~{...}` | Fragment Expression | 委托 FragmentResolver |
 | `__${...}__` | Preprocessing | 首期谨慎支持或延后 |
 
-`thymeleaf::expression` 内部模块必须提供框架无关的 `ExpressionEvaluator`、Parser 和基础实现。`vernal-thymeleaf` 可以注册一个由 `vernal-expression` 驱动的实现，但核心不能反向依赖它。
+`thymeleaf::expression` 内部模块必须提供框架无关的 `ExpressionEvaluator`、Parser 和基础实现。`thymeleaf-vernal` 可以注册一个由 `vernal-expression` 驱动的实现，但核心不能反向依赖它。
 
 不能直接将整个属性内容交给某一个通用表达式引擎，因为 `#{...}` 在 Thymeleaf 中是消息表达式，而通用模板表达式 Parser 可能将其解释为另一种嵌入表达式。
 
@@ -508,7 +508,7 @@ SafeHtml
 
 ## 7. 可选 Vernal 集成建议
 
-Thymeleaf-Rust 不依赖 Vernal。根据 `Spring-组件替换约定.md`，Vernal Web 层采用全栈应用线与 API 后端线并存的双轨架构，因此可以通过 `vernal-thymeleaf` 将中立渲染引擎接入两条轨道。
+Thymeleaf-Rust 不依赖 Vernal。根据 `Spring-组件替换约定.md`，Vernal Web 层采用全栈应用线与 API 后端线并存的双轨架构，因此可以通过 `thymeleaf-vernal` 将中立渲染引擎接入两条轨道。
 
 ### 7.1 Vernal 场景建议接入的组件
 
@@ -534,12 +534,12 @@ Thymeleaf-Rust 不依赖 Vernal。根据 `Spring-组件替换约定.md`，Vernal
 
 同一个 Thymeleaf-Rust Engine 在 Vernal 中有两层使用方式：
 
-1. `vernal-thymeleaf` 提供统一的 `ThymeleafViewEngine`、配置、Bean、Context、Expression、Cache 和 HTTP bridge；
+1. `thymeleaf-vernal` 提供统一的 `ThymeleafViewEngine`、配置、Bean、Context、Expression、Cache 和 HTTP bridge；
 2. 每个 `vernal-{framework}` 场景将 `ThymeleafViewEngine` 的结果转换成对应框架响应。
 
 ```mermaid
 flowchart LR
-    CTRL["Controller / Handler"] --> VIEW["vernal-thymeleaf<br/>ThymeleafViewEngine"]
+    CTRL["Controller / Handler"] --> VIEW["thymeleaf-vernal<br/>ThymeleafViewEngine"]
     VIEW --> ENGINE["thymeleaf<br/>中立 TemplateEngine"]
     ENGINE --> RESULT["RenderedTemplate"]
     RESULT --> HTTP["vernal-http::HttpBody"]
@@ -660,7 +660,7 @@ RenderedView
 - 可选 CancellationToken；
 - 渲染诊断信息。
 
-`RenderedView` 可以被独立框架适配器直接转换，也可以由 `vernal-thymeleaf` 转换为 `vernal_http::HttpResponse`。
+`RenderedView` 可以被独立框架适配器直接转换，也可以由 `thymeleaf-vernal` 转换为 `vernal_http::HttpResponse`。
 
 ## 9. HTML Parser 技术选型
 
@@ -996,23 +996,23 @@ Arc<TemplateModel>
 每个宿主框架都必须允许两种接入方式：
 
 1. 不使用 Vernal：直接依赖 `thymeleaf-{framework}`；
-2. 使用 Vernal：通过 `vernal-thymeleaf` 与对应 `vernal-{framework}` 组合。
+2. 使用 Vernal：通过 `thymeleaf-vernal` 与对应 `vernal-{framework}` 组合。
 
 | 宿主框架 | 独立集成 | Vernal 场景 | 主要集成形态 |
 |---|---|---|---|
-| Topcoat | `thymeleaf-topcoat` | `vernal-thymeleaf` + `vernal-topcoat` | ViewEngine、Page、Fragment、动态 RawHtml |
-| Actix Web | `thymeleaf-actix-web` | `vernal-thymeleaf` + `vernal-actix-web` | Responder、MessageBody、Stream |
-| Axum | `thymeleaf-axum` | `vernal-thymeleaf` + `vernal-axum` | IntoResponse、Body、Extension |
-| Gotham | `thymeleaf-gotham` | `vernal-thymeleaf` + `vernal-gotham` | Handler、Response、Middleware |
-| Hyper | `thymeleaf-hyper` | `vernal-thymeleaf` + `vernal-hyper` | `Response<Body>`、Service |
-| Ntex | `thymeleaf-ntex` | `vernal-thymeleaf` + `vernal-ntex` | Responder、Service、Body |
-| Poem | `thymeleaf-poem` | `vernal-thymeleaf` + `vernal-poem` | IntoResponse、Endpoint、Stream |
-| Rocket | `thymeleaf-rocket` | `vernal-thymeleaf` + `vernal-rocket` | Responder、ByteStream、Fairing |
-| Salvo | `thymeleaf-salvo` | `vernal-thymeleaf` + `vernal-salvo` | Writer、Handler、ResBody |
-| Tide | `thymeleaf-tide` | `vernal-thymeleaf` + `vernal-tide` | Endpoint、Response、Body |
-| Warp | `thymeleaf-warp` | `vernal-thymeleaf` + `vernal-warp` | Reply、Filter、Rejection |
-| Tower | `thymeleaf-tower` | `vernal-thymeleaf` + `vernal-tower` | Service、Layer、Response Body |
-| Tonic | `thymeleaf-tonic` | `vernal-thymeleaf` + `vernal-tonic` | 动态 String/Bytes、状态详情、Gateway/Service 集成 |
+| Topcoat | `thymeleaf-topcoat` | `thymeleaf-vernal` + `vernal-topcoat` | ViewEngine、Page、Fragment、动态 RawHtml |
+| Actix Web | `thymeleaf-actix-web` | `thymeleaf-vernal` + `vernal-actix-web` | Responder、MessageBody、Stream |
+| Axum | `thymeleaf-axum` | `thymeleaf-vernal` + `vernal-axum` | IntoResponse、Body、Extension |
+| Gotham | `thymeleaf-gotham` | `thymeleaf-vernal` + `vernal-gotham` | Handler、Response、Middleware |
+| Hyper | `thymeleaf-hyper` | `thymeleaf-vernal` + `vernal-hyper` | `Response<Body>`、Service |
+| Ntex | `thymeleaf-ntex` | `thymeleaf-vernal` + `vernal-ntex` | Responder、Service、Body |
+| Poem | `thymeleaf-poem` | `thymeleaf-vernal` + `vernal-poem` | IntoResponse、Endpoint、Stream |
+| Rocket | `thymeleaf-rocket` | `thymeleaf-vernal` + `vernal-rocket` | Responder、ByteStream、Fairing |
+| Salvo | `thymeleaf-salvo` | `thymeleaf-vernal` + `vernal-salvo` | Writer、Handler、ResBody |
+| Tide | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint、Response、Body |
+| Warp | `thymeleaf-warp` | `thymeleaf-vernal` + `vernal-warp` | Reply、Filter、Rejection |
+| Tower | `thymeleaf-tower` | `thymeleaf-vernal` + `vernal-tower` | Service、Layer、Response Body |
+| Tonic | `thymeleaf-tonic` | `thymeleaf-vernal` + `vernal-tonic` | 动态 String/Bytes、状态详情、Gateway/Service 集成 |
 
 发布阶段可以按优先级逐步完成，但架构和公共 API 不得把任何一个框架定义成二等集成，也不得要求独立用户引入 Vernal。
 
@@ -1111,7 +1111,7 @@ Thymeleaf-Rust 的定位与它并不相同：
 | 支持客户端响应式转换 | 主要是服务端 SSR |
 | Rust 开发者友好 | Java/Spring/设计师迁移友好 |
 
-独立 Topcoat 应用可以注册 Thymeleaf-Rust View/Page adapter；Vernal Topcoat 应用则通过 `vernal-thymeleaf` 注册不同 `ViewEngine`：
+独立 Topcoat 应用可以注册 Thymeleaf-Rust View/Page adapter；Vernal Topcoat 应用则通过 `thymeleaf-vernal` 注册不同 `ViewEngine`：
 
 ```text
 TopcoatViewEngine
@@ -1145,7 +1145,7 @@ Tonic 是正式支持的独立集成目标，但集成语义是“动态内容�
 - gRPC Gateway 将数据交给 Web 层后渲染；
 - 后台管理服务内部生成静态 HTML。
 
-`vernal-tonic` 场景通过 `vernal-thymeleaf` 获取同一个 `ThymeleafViewEngine`、Context、Expression、Cache 和观测能力。Tonic adapter 不应把普通 HTML 冒充为 gRPC 协议响应，而应明确地把渲染结果映射到消息字段、Gateway HTTP Response 或内部业务输出。
+`vernal-tonic` 场景通过 `thymeleaf-vernal` 获取同一个 `ThymeleafViewEngine`、Context、Expression、Cache 和观测能力。Tonic adapter 不应把普通 HTML 冒充为 gRPC 协议响应，而应明确地把渲染结果映射到消息字段、Gateway HTTP Response 或内部业务输出。
 
 ## 15. 主要技术困难
 
@@ -1318,7 +1318,7 @@ Fragment 是模板引擎从“变量替换”走向“页面组件系统”的�
 
 ### 16.6 可选 Vernal 生态复用
 
-在使用 Vernal 的部署场景中，`vernal-thymeleaf` 可以选择性桥接和复用：
+在使用 Vernal 的部署场景中，`thymeleaf-vernal` 可以选择性桥接和复用：
 
 - SpEL 风格表达式；
 - Bean Container；
@@ -1548,7 +1548,7 @@ expected-error.json
 - Template/Expression Cache；
 - 完整 Bytes 响应；
 - Axum、Actix Web、Hyper、Tower 和 Topcoat 独立原型适配；
-- `vernal-thymeleaf` bridge 原型，但不成为 MVP Engine 的依赖。
+- `thymeleaf-vernal` bridge 原型，但不成为 MVP Engine 的依赖。
 
 ### 19.3 Phase 2：独立框架适配套件
 
@@ -1574,7 +1574,7 @@ expected-error.json
 
 支持：
 
-- `vernal-thymeleaf`；
+- `thymeleaf-vernal`；
 - `vernal-web::ViewEngine`；
 - `ViewResolver`；
 - `ModelAndView`；
@@ -1718,7 +1718,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 - Core 不依赖 Axum、Actix Web、Topcoat、Vernal 或其他宿主框架；
 - Web 层依赖 `http`、`bytes`、`http-body`；
 - 每个宿主框架提供独立、可选、薄适配器；
-- Vernal 集成放入独立的 `vernal-thymeleaf`；
+- Vernal 集成放入独立的 `thymeleaf-vernal`；
 - 独立适配和 Vernal 适配是并列通道，不是上下级关系。
 
 ### ADR-002：采用不可变、可重放的 TemplateModel
@@ -1740,7 +1740,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 - `${}`、`*{}`、`#{}`、`@{}`、`~{}` 由 Thymeleaf-Rust Parser 识别；
 - `${}`、`*{}` 的内部 AST 委托中立 `ExpressionEvaluator`；
-- `vernal-expression` 只是 `vernal-thymeleaf` 可注册的一个实现；
+- `vernal-expression` 只是 `thymeleaf-vernal` 可注册的一个实现；
 - Message、URL、Fragment 使用专属 Resolver；
 - 避免 `#{}` 语义冲突。
 
@@ -1754,7 +1754,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 - Stream Render 输出 `Stream<Frame<Bytes>>`；
 - `thymeleaf::web` 模块提供中立 `ThymeleafBody`；
 - 独立适配器将其转换为各框架 Response；
-- `vernal-thymeleaf` 将其转换为 `vernal_http::HttpBody`；
+- `thymeleaf-vernal` 将其转换为 `vernal_http::HttpBody`；
 - Core 不暴露任何框架或 Vernal 类型。
 
 ### ADR-005：Topcoat 与 Thymeleaf-Rust 作为并列 ViewEngine
@@ -1776,7 +1776,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 决策：
 
 - 提供独立的 `thymeleaf-tonic`；
-- 提供 `vernal-thymeleaf` + `vernal-tonic` 组合；
+- 提供 `thymeleaf-vernal` + `vernal-tonic` 组合；
 - 支持将渲染结果映射到 Protobuf String/Bytes、Gateway Response 和内部动态内容；
 - 支持在 Tonic Service/Interceptor 中注入共享 TemplateEngine；
 - 不把普通 HTML Body 冒充为 gRPC 协议响应。
@@ -1793,7 +1793,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 - 框架整合 crate 统一命名为 `thymeleaf-{framework}`；
 - 禁止创建或发布 `thymeleaf-rust-*` crate；
 - 禁止使用 `thymeleaf_rust` 作为 Rust 根模块；
-- `vernal-thymeleaf` 仅表示 Vernal 侧的可选集成 crate。
+- `thymeleaf-vernal` 表示 Thymeleaf 面向 Vernal 的可选整合 crate，命名遵循与 `thymeleaf-spring` 相同的“核心在前、宿主在后”约定。
 
 ## 24. 最终建议
 
@@ -1805,7 +1805,7 @@ flowchart LR
     B --> C["实现 Standard Dialect MVP"]
     C --> D["固定中立 RenderedTemplate / Body"]
     D --> E["独立集成所有目标 Web 框架"]
-    D --> F["通过 vernal-thymeleaf 接入所有 vernal-* 场景"]
+    D --> F["通过 thymeleaf-vernal 接入所有 vernal-* 场景"]
     E --> G["扩展流式、方言和高级能力"]
     F --> G
     G --> H["建立 Thymeleaf 兼容矩阵"]
@@ -1818,7 +1818,7 @@ flowchart LR
 3. 使用 Rust 原生的不可变模型、显式值访问、`Arc`、`Bytes` 和 `http_body::Body`；
 4. Core 不依赖任何 Web 框架，也不依赖 Vernal；
 5. 为 Topcoat、Actix Web、Axum、Gotham、Hyper、Ntex、Poem、Rocket、Salvo、Tide、Warp、Tower、Tonic 提供独立适配；
-6. 通过 `vernal-thymeleaf` 将同一 Engine 接入所有对应 `vernal-*` 场景；
+6. 通过 `thymeleaf-vernal` 将同一 Engine 接入所有对应 `vernal-*` 场景；
 7. 将 Topcoat 视为可以独立组合、也可以在 Vernal 中并列注册的编译期响应式 ViewEngine；
 8. 将 Tonic 视为正式的动态 String/Bytes、Gateway 和服务内容渲染目标；
 9. 用 Java/Rust 双运行 Golden Test 驱动兼容性；
@@ -1830,6 +1830,6 @@ flowchart LR
 - 引擎项目：`thymeleaf-rust`
 - 对外主 crate：`thymeleaf`
 - 独立适配器：`thymeleaf-{framework}`
-- Vernal 集成：`vernal-thymeleaf`
-- Vernal 宿主组合：`vernal-thymeleaf` + `vernal-{framework}`
+- Vernal 集成：`thymeleaf-vernal`
+- Vernal 宿主组合：`thymeleaf-vernal` + `vernal-{framework}`
 - 对外定位：独立、中立、面向 Thymeleaf 核心模板语义兼容的 Rust 动态内容渲染引擎

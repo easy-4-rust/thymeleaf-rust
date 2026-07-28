@@ -47,7 +47,7 @@
 - 支持完整渲染和具有背压能力的流式渲染。
 - 暴露中立的 `RenderedTemplate`/HTTP Body 合同。
 - 为目标 Rust Web 框架提供独立版本的适配器。
-- 提供可选的 `vernal-thymeleaf` bridge，同时避免 Vernal 成为 Core 依赖。
+- 提供可选的 `thymeleaf-vernal` bridge，同时避免 Vernal 成为 Core 依赖。
 - 通过可追溯的 Parity Test 和 Golden Test 推进上游兼容。
 
 ### 非目标
@@ -75,7 +75,7 @@
                                │
               ┌────────────────┴────────────────┐
               ▼                                 ▼
-       独立框架适配器                   可选 vernal-thymeleaf
+       独立框架适配器                   可选 thymeleaf-vernal
        thymeleaf-{framework}            bridge
               │                                 │
               ▼                                 ▼
@@ -102,7 +102,7 @@ thymeleaf crate → Vernal
 | 未来 crates.io 核心 | `thymeleaf` | 规划中 |
 | Rust 公共路径 | `thymeleaf::...` | 规划中 |
 | 整合 crate | `thymeleaf-{framework}` | 规划中 |
-| 可选 Vernal bridge | `vernal-thymeleaf` | 规划中 |
+| 可选 Vernal 整合 | `thymeleaf-vernal` | 规划中 |
 
 明确排除 `thymeleaf-rust-core`、`thymeleaf-rust-axum` 和 Rust 根模块 `thymeleaf_rust` 等名称。
 
@@ -114,7 +114,7 @@ thymeleaf crate → Vernal
 |:---|:---|
 | `thymeleaf` | Engine、Context、TemplateModel、各 Parser 模式、表达式求值、Standard Dialect 与 `th:*` Processor、中立渲染输出、稳定公共 API 和核心测试基础设施 |
 
-其余 crate 均为整合 crate：`thymeleaf-{framework}` 将 `thymeleaf` 的中立输出适配到单个宿主框架，`vernal-thymeleaf` 提供可选 Vernal bridge。整合 crate 必须保持薄层，禁止复制解析或渲染逻辑。
+其余 crate 均为整合 crate：`thymeleaf-{framework}` 将 `thymeleaf` 的中立输出适配到单个宿主框架，`thymeleaf-vernal` 提供可选 Vernal 整合，其名称与 `thymeleaf-spring` 一样遵循“核心在前”的命名约定。整合 crate 必须保持薄层，禁止复制解析或渲染逻辑。
 
 ## 集成模型
 
@@ -122,19 +122,19 @@ thymeleaf crate → Vernal
 
 | 宿主 | 独立适配器 | Vernal 组合 | 预期输出 |
 |:---|:---|:---|:---|
-| Topcoat | `thymeleaf-topcoat` | `vernal-thymeleaf` + `vernal-topcoat` | View、Page、Fragment、受控 RawHtml |
-| Actix Web | `thymeleaf-actix-web` | `vernal-thymeleaf` + `vernal-actix-web` | Responder、MessageBody、Stream |
-| Axum | `thymeleaf-axum` | `vernal-thymeleaf` + `vernal-axum` | IntoResponse 与 Body |
-| Gotham | `thymeleaf-gotham` | `vernal-thymeleaf` + `vernal-gotham` | Handler 与 Response |
-| Hyper | `thymeleaf-hyper` | `vernal-thymeleaf` + `vernal-hyper` | 标准 HTTP Response/Body |
-| Ntex | `thymeleaf-ntex` | `vernal-thymeleaf` + `vernal-ntex` | Responder、Service、Body |
-| Poem | `thymeleaf-poem` | `vernal-thymeleaf` + `vernal-poem` | IntoResponse、Endpoint、Stream |
-| Rocket | `thymeleaf-rocket` | `vernal-thymeleaf` + `vernal-rocket` | Responder 与 ByteStream |
-| Salvo | `thymeleaf-salvo` | `vernal-thymeleaf` + `vernal-salvo` | Handler 与 Response Body |
-| Tide | `thymeleaf-tide` | `vernal-thymeleaf` + `vernal-tide` | Endpoint 与 Response |
-| Warp | `thymeleaf-warp` | `vernal-thymeleaf` + `vernal-warp` | Reply 与 Rejection 映射 |
-| Tower | `thymeleaf-tower` | `vernal-thymeleaf` + `vernal-tower` | Service、Layer、Response Body |
-| Tonic | `thymeleaf-tonic` | `vernal-thymeleaf` + `vernal-tonic` | 动态 String/Bytes、Gateway、服务内容 |
+| Topcoat | `thymeleaf-topcoat` | `thymeleaf-vernal` + `vernal-topcoat` | View、Page、Fragment、受控 RawHtml |
+| Actix Web | `thymeleaf-actix-web` | `thymeleaf-vernal` + `vernal-actix-web` | Responder、MessageBody、Stream |
+| Axum | `thymeleaf-axum` | `thymeleaf-vernal` + `vernal-axum` | IntoResponse 与 Body |
+| Gotham | `thymeleaf-gotham` | `thymeleaf-vernal` + `vernal-gotham` | Handler 与 Response |
+| Hyper | `thymeleaf-hyper` | `thymeleaf-vernal` + `vernal-hyper` | 标准 HTTP Response/Body |
+| Ntex | `thymeleaf-ntex` | `thymeleaf-vernal` + `vernal-ntex` | Responder、Service、Body |
+| Poem | `thymeleaf-poem` | `thymeleaf-vernal` + `vernal-poem` | IntoResponse、Endpoint、Stream |
+| Rocket | `thymeleaf-rocket` | `thymeleaf-vernal` + `vernal-rocket` | Responder 与 ByteStream |
+| Salvo | `thymeleaf-salvo` | `thymeleaf-vernal` + `vernal-salvo` | Handler 与 Response Body |
+| Tide | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint 与 Response |
+| Warp | `thymeleaf-warp` | `thymeleaf-vernal` + `vernal-warp` | Reply 与 Rejection 映射 |
+| Tower | `thymeleaf-tower` | `thymeleaf-vernal` + `vernal-tower` | Service、Layer、Response Body |
+| Tonic | `thymeleaf-tonic` | `thymeleaf-vernal` + `vernal-tonic` | 动态 String/Bytes、Gateway、服务内容 |
 
 发布顺序可以分阶段推进，但架构不得要求独立用户依赖 Vernal。
 
@@ -186,7 +186,7 @@ Thymeleaf 上游采用 Apache License 2.0。任何从上游调整而来的源码
 | Phase 0 | 中立合同与 Parser/Body 原型 | Model 重放以及 Full/Stream 输出得到验证 |
 | Phase 1 | HTML 与 Standard Dialect MVP | 一个真实模板路径端到端运行 |
 | Phase 2 | 独立框架适配器 | 每个适配器具备 Full/Stream/Error/Cancellation 测试 |
-| Phase 3 | `vernal-thymeleaf` bridge | 所有相关 `vernal-*` 宿主消费同一个 Engine |
+| Phase 3 | `thymeleaf-vernal` bridge | 所有相关 `vernal-*` 宿主消费同一个 Engine |
 | Phase 4 | 更多模式与 Dialect SPI | 发布版本化能力矩阵 |
 | Phase 5 | 兼容与发布准备 | Package、文档、安全和 Parity 门禁通过 |
 

@@ -47,7 +47,7 @@ This is an independent project. It is not an official Thymeleaf project.
 - Support complete and backpressure-aware streaming rendering.
 - Expose a neutral `RenderedTemplate`/HTTP body contract.
 - Offer independently versioned adapters for supported Rust web frameworks.
-- Offer an optional `vernal-thymeleaf` bridge without making Vernal a core dependency.
+- Offer an optional `thymeleaf-vernal` bridge without making Vernal a core dependency.
 - Develop upstream compatibility through traceable parity and golden tests.
 
 ### Non-goals
@@ -75,7 +75,7 @@ Templates + model + locale + render options
                                │
               ┌────────────────┴────────────────┐
               ▼                                 ▼
-  Independent framework adapters       Optional vernal-thymeleaf
+  Independent framework adapters       Optional thymeleaf-vernal
   thymeleaf-{framework}                 bridge
               │                                 │
               ▼                                 ▼
@@ -102,7 +102,7 @@ See the detailed [feasibility and architecture proposal](docs/Thymeleaf-Rust-可
 | Future crates.io core | `thymeleaf` | Planned |
 | Public Rust path | `thymeleaf::...` | Planned |
 | Integration crates | `thymeleaf-{framework}` | Planned |
-| Optional Vernal bridge | `vernal-thymeleaf` | Planned |
+| Optional Vernal integration | `thymeleaf-vernal` | Planned |
 
 Names such as `thymeleaf-rust-core`, `thymeleaf-rust-axum`, and the Rust root module `thymeleaf_rust` are explicitly excluded.
 
@@ -114,7 +114,7 @@ The engine is planned as one cohesive core crate. Parser modes, expression handl
 |:---|:---|
 | `thymeleaf` | Engine, context, template model, parser modes, expression evaluation, standard dialect and `th:*` processors, neutral rendered output, stable public API, and core test infrastructure |
 
-Everything else is an integration crate: `thymeleaf-{framework}` adapts the neutral `thymeleaf` output to one host framework, while `vernal-thymeleaf` provides the optional Vernal bridge. Integration crates must remain thin and must not duplicate parsing or rendering logic.
+Everything else is an integration crate: `thymeleaf-{framework}` adapts the neutral `thymeleaf` output to one host framework, while `thymeleaf-vernal` provides the optional Vernal integration. Its name follows the same core-first convention as `thymeleaf-spring`. Integration crates must remain thin and must not duplicate parsing or rendering logic.
 
 ## Integration model
 
@@ -122,19 +122,19 @@ Every target framework is planned to support both direct use and optional Vernal
 
 | Host | Independent adapter | Vernal composition | Intended output |
 |:---|:---|:---|:---|
-| Topcoat | `thymeleaf-topcoat` | `vernal-thymeleaf` + `vernal-topcoat` | View, page, fragment, controlled raw HTML |
-| Actix Web | `thymeleaf-actix-web` | `vernal-thymeleaf` + `vernal-actix-web` | Responder, message body, stream |
-| Axum | `thymeleaf-axum` | `vernal-thymeleaf` + `vernal-axum` | IntoResponse and body |
-| Gotham | `thymeleaf-gotham` | `vernal-thymeleaf` + `vernal-gotham` | Handler and response |
-| Hyper | `thymeleaf-hyper` | `vernal-thymeleaf` + `vernal-hyper` | Standard HTTP response/body |
-| Ntex | `thymeleaf-ntex` | `vernal-thymeleaf` + `vernal-ntex` | Responder, service, body |
-| Poem | `thymeleaf-poem` | `vernal-thymeleaf` + `vernal-poem` | IntoResponse, endpoint, stream |
-| Rocket | `thymeleaf-rocket` | `vernal-thymeleaf` + `vernal-rocket` | Responder and byte stream |
-| Salvo | `thymeleaf-salvo` | `vernal-thymeleaf` + `vernal-salvo` | Handler and response body |
-| Tide | `thymeleaf-tide` | `vernal-thymeleaf` + `vernal-tide` | Endpoint and response |
-| Warp | `thymeleaf-warp` | `vernal-thymeleaf` + `vernal-warp` | Reply and rejection mapping |
-| Tower | `thymeleaf-tower` | `vernal-thymeleaf` + `vernal-tower` | Service, layer, response body |
-| Tonic | `thymeleaf-tonic` | `vernal-thymeleaf` + `vernal-tonic` | Dynamic string/bytes, gateway, service content |
+| Topcoat | `thymeleaf-topcoat` | `thymeleaf-vernal` + `vernal-topcoat` | View, page, fragment, controlled raw HTML |
+| Actix Web | `thymeleaf-actix-web` | `thymeleaf-vernal` + `vernal-actix-web` | Responder, message body, stream |
+| Axum | `thymeleaf-axum` | `thymeleaf-vernal` + `vernal-axum` | IntoResponse and body |
+| Gotham | `thymeleaf-gotham` | `thymeleaf-vernal` + `vernal-gotham` | Handler and response |
+| Hyper | `thymeleaf-hyper` | `thymeleaf-vernal` + `vernal-hyper` | Standard HTTP response/body |
+| Ntex | `thymeleaf-ntex` | `thymeleaf-vernal` + `vernal-ntex` | Responder, service, body |
+| Poem | `thymeleaf-poem` | `thymeleaf-vernal` + `vernal-poem` | IntoResponse, endpoint, stream |
+| Rocket | `thymeleaf-rocket` | `thymeleaf-vernal` + `vernal-rocket` | Responder and byte stream |
+| Salvo | `thymeleaf-salvo` | `thymeleaf-vernal` + `vernal-salvo` | Handler and response body |
+| Tide | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint and response |
+| Warp | `thymeleaf-warp` | `thymeleaf-vernal` + `vernal-warp` | Reply and rejection mapping |
+| Tower | `thymeleaf-tower` | `thymeleaf-vernal` + `vernal-tower` | Service, layer, response body |
+| Tonic | `thymeleaf-tonic` | `thymeleaf-vernal` + `vernal-tonic` | Dynamic string/bytes, gateway, service content |
 
 Release order may be phased, but the architecture must not require independent users to depend on Vernal.
 
@@ -186,7 +186,7 @@ The upstream Thymeleaf project is licensed under Apache License 2.0. Any source,
 | Phase 0 | Neutral contracts and parser/body prototypes | Model replay and full/stream output validated |
 | Phase 1 | HTML and standard-dialect MVP | One real template path works end to end |
 | Phase 2 | Independent framework adapters | Each adapter has full/stream/error/cancellation tests |
-| Phase 3 | `vernal-thymeleaf` bridge | All relevant `vernal-*` hosts consume the same engine |
+| Phase 3 | `thymeleaf-vernal` bridge | All relevant `vernal-*` hosts consume the same engine |
 | Phase 4 | Additional modes and dialect SPI | Versioned capability matrix is published |
 | Phase 5 | Compatibility and release readiness | Packaging, documentation, security, and parity gates pass |
 
