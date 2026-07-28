@@ -145,16 +145,16 @@ Release order may be phased, but the architecture must not require independent u
 | Feasibility and architecture proposal | Available | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
-| Public Rust API | S1 slices | `Thymeleaf`, `TemplateMode`, `TemplateSpec`, and nine exception objects |
+| Public Rust API | Verified slices | `Thymeleaf`, `TemplateMode`, `TemplateSpec`, nine exceptions, `IDialect`, `AbstractDialect`, and `DialectConfiguration` |
 | Framework adapters | Planned | No adapter manifests or code |
 | Upstream compatibility matrix | In progress | 491 objects, 4,291 methods, and 6,936 parameters inventoried |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
-| Tests and CI | S1 gate passing | 24 unit tests, three Java/Rust Golden tests with 383 records, 100% line/function/region coverage |
+| Tests and CI | Slice gates passing | 30 unit tests, four Java/Rust Golden tests with 406 records, 100% line/function/region coverage |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start
 
-The rendering engine is not executable yet. To check the implemented S1 slices:
+The rendering engine is not executable yet. To check the implemented S1/S5 slices:
 
 ```bash
 git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
