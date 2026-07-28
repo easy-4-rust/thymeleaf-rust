@@ -5,6 +5,7 @@
 pub mod exceptions;
 mod template_spec;
 pub mod templatemode;
+mod thymeleaf;
 
 pub use exceptions::{
     AlreadyInitializedException, CacheConfigurationException, ConfigurationException,
@@ -16,3 +17,4 @@ pub use template_spec::{
     TemplateSpec, TemplateSpecError,
 };
 pub use templatemode::{TemplateMode, TemplateModeParseError};
+pub use thymeleaf::Thymeleaf;

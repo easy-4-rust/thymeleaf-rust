@@ -145,10 +145,10 @@ Release order may be phased, but the architecture must not require independent u
 | Feasibility and architecture proposal | Available | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
-| Public Rust API | S1 slices | `TemplateMode`, `TemplateSpec`, and nine exception objects |
+| Public Rust API | S1 slices | `Thymeleaf`, `TemplateMode`, `TemplateSpec`, and nine exception objects |
 | Framework adapters | Planned | No adapter manifests or code |
 | Upstream compatibility matrix | In progress | 491 objects, 4,291 methods, and 6,936 parameters inventoried |
-| Tests and CI | S1 gate passing | 23 unit tests, two Java/Rust Golden tests with 375 records, 100% line/function/region coverage |
+| Tests and CI | S1 gate passing | 24 unit tests, three Java/Rust Golden tests with 383 records, 100% line/function/region coverage |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start
