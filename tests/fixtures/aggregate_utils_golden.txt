@@ -1,0 +1,68 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+util.sum.iterable.null=ERR:java.lang.IllegalArgumentException:Cannot aggregate on null
+util.sum.iterable.empty=OK:null
+util.sum.iterable.null_element=ERR:java.lang.IllegalArgumentException:Cannot aggregate on iterable containing nulls
+util.avg.iterable.null_element=ERR:java.lang.IllegalArgumentException:Cannot aggregate on array containing nulls
+util.sum.iterable.counting=OK:6|scale=0|unscaled=6|plain=6
+util.sum.iterable.iterator_calls=2
+util.sum.objects.null=ERR:java.lang.IllegalArgumentException:Cannot aggregate on null
+util.sum.objects.empty=OK:null
+util.sum.objects.null_element=ERR:java.lang.IllegalArgumentException:Cannot aggregate on array containing nulls
+util.sum.objects.null_priority=ERR:java.lang.IllegalArgumentException:Cannot aggregate on array containing nulls
+util.sum.objects.class_cast=ERR:java.lang.ClassCastException
+util.sum.objects.mixed=OK:22.00|scale=2|unscaled=2200|plain=22.00
+util.avg.objects.mixed=OK:2.4444444444|scale=10|unscaled=24444444444|plain=2.4444444444
+util.sum.bytes=OK:0|scale=0|unscaled=0|plain=0
+util.avg.bytes=OK:0|scale=0|unscaled=0|plain=0
+util.sum.bytes.empty=OK:null
+util.sum.shorts=OK:0|scale=0|unscaled=0|plain=0
+util.avg.shorts=OK:0|scale=0|unscaled=0|plain=0
+util.sum.shorts.empty=OK:null
+util.sum.ints=OK:0|scale=0|unscaled=0|plain=0
+util.avg.ints=OK:0|scale=0|unscaled=0|plain=0
+util.sum.ints.empty=OK:null
+util.sum.longs=OK:0|scale=0|unscaled=0|plain=0
+util.avg.longs=OK:0|scale=0|unscaled=0|plain=0
+util.sum.longs.empty=OK:null
+util.sum.floats=OK:1.35000000149011612|scale=17|unscaled=135000000149011612|plain=1.35000000149011612
+util.avg.floats=OK:0.45000000049670537|scale=17|unscaled=45000000049670537|plain=0.45000000049670537
+util.sum.floats.empty=OK:null
+util.sum.doubles=OK:1.35|scale=2|unscaled=135|plain=1.35
+util.avg.doubles=OK:0.45|scale=2|unscaled=45|plain=0.45
+util.sum.doubles.empty=OK:null
+util.sum.floats.min=OK:1.401298464324817E-45|scale=60|unscaled=1401298464324817|plain=0.000000000000000000000000000000000000000000001401298464324817
+util.sum.floats.max=OK:340282346638528860000000000000000000000|scale=0|unscaled=340282346638528860000000000000000000000|plain=340282346638528860000000000000000000000
+util.sum.floats.nan=ERR:java.lang.NumberFormatException
+util.sum.floats.infinity=ERR:java.lang.NumberFormatException
+util.sum.doubles.min=OK:4.9E-324|scale=325|unscaled=49|plain=0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000049
+util.sum.doubles.max=OK:179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000|scale=0|unscaled=179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000|plain=179769313486231570000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+util.sum.doubles.threshold_plain=OK:9999999.0|scale=1|unscaled=99999990|plain=9999999.0
+util.sum.doubles.threshold_scientific=OK:10000000|scale=0|unscaled=10000000|plain=10000000
+util.sum.doubles.small_plain=OK:0.001|scale=3|unscaled=1|plain=0.001
+util.sum.doubles.small_scientific=OK:0.00010|scale=5|unscaled=10|plain=0.00010
+util.sum.doubles.negative_zero=OK:0.0|scale=1|unscaled=0|plain=0.0
+util.sum.doubles.nan=ERR:java.lang.NumberFormatException
+util.sum.doubles.infinity=ERR:java.lang.NumberFormatException
+util.avg.exact=OK:1.5|scale=1|unscaled=15|plain=1.5
+util.avg.repeating=OK:1.3333333333|scale=10|unscaled=13333333333|plain=1.3333333333
+util.avg.repeating_negative=OK:-1.3333333333|scale=10|unscaled=-13333333333|plain=-1.3333333333
+util.avg.scale_12=OK:1.666666666667|scale=12|unscaled=1666666666667|plain=1.666666666667
+util.sum.long_no_overflow=OK:18446744073709551614|scale=0|unscaled=18446744073709551614|plain=18446744073709551614
+util.double_matrix.count=20010
+util.double_matrix.fnv64=11010a963b544d86
+facade.sum.iterable=OK:3|scale=0|unscaled=3|plain=3
+facade.sum.numbers=OK:3|scale=0|unscaled=3|plain=3
+facade.sum.bytes=OK:3|scale=0|unscaled=3|plain=3
+facade.sum.shorts=OK:3|scale=0|unscaled=3|plain=3
+facade.sum.ints=OK:3|scale=0|unscaled=3|plain=3
+facade.sum.longs=OK:3|scale=0|unscaled=3|plain=3
+facade.sum.floats=OK:0.75|scale=2|unscaled=75|plain=0.75
+facade.sum.doubles=OK:0.75|scale=2|unscaled=75|plain=0.75
+facade.avg.iterable=OK:1.5|scale=1|unscaled=15|plain=1.5
+facade.avg.numbers=OK:1.5|scale=1|unscaled=15|plain=1.5
+facade.avg.bytes=OK:1.5|scale=1|unscaled=15|plain=1.5
+facade.avg.shorts=OK:1.5|scale=1|unscaled=15|plain=1.5
+facade.avg.ints=OK:1.5|scale=1|unscaled=15|plain=1.5
+facade.avg.longs=OK:1.5|scale=1|unscaled=15|plain=1.5
+facade.avg.floats=OK:0.375|scale=3|unscaled=375|plain=0.375
+facade.avg.doubles=OK:0.375|scale=3|unscaled=375|plain=0.375
