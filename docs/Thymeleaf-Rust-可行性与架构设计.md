@@ -58,13 +58,13 @@
 
 以下原则属于项目架构红线：
 
-1. `thymeleaf-core` 不依赖任何 Web 框架；
-2. `thymeleaf-core` 不依赖 Vernal；
-3. `thymeleaf-web` 只依赖 `http`、`http-body`、`bytes`、`mime` 等中立协议 crate；
+1. 核心 crate `thymeleaf` 不依赖任何 Web 框架；
+2. 核心 crate `thymeleaf` 不依赖 Vernal；
+3. `thymeleaf::web` 内部模块只依赖 `http`、`http-body`、`bytes`、`mime` 等中立协议 crate；
 4. Topcoat、Actix Web、Axum、Gotham、Hyper、Ntex、Poem、Rocket、Salvo、Tide、Warp、Tower、Tonic 均通过独立可选适配器直接接入；
 5. `vernal-thymeleaf` 是消费者和桥接层，不是 Thymeleaf-Rust 核心的上游依赖；
 6. 所有独立适配器和 Vernal 适配器必须复用同一个 TemplateEngine、TemplateModel、Processor 和渲染协议；
-7. 任何框架专属类型都不得进入 Core、Parser、Expression、Standard Dialect 的公共 API。
+7. 任何框架专属类型都不得进入 `thymeleaf` 的 Engine、Parser、Expression、Standard Dialect 等公共 API。
 
 两种集成模式必须同时成立：
 
@@ -101,7 +101,7 @@ RenderedTemplate
 └── Stream(Stream<Frame<Bytes>>)
 ```
 
-`thymeleaf-web` 可以进一步提供中立的：
+核心 crate 的 `thymeleaf::web` 模块可以进一步提供中立的：
 
 ```rust
 http::Response<ThymeleafBody>
@@ -131,10 +131,10 @@ Vernal 已有的 `HttpBody` 支持：
 | 层级 | 名称 | 说明 |
 |---|---|---|
 | Git 仓库/项目目录 | `thymeleaf-rust` | 仅用于代码仓库和项目识别 |
-| crates.io 主 crate | `thymeleaf` | 用户默认依赖和统一 facade |
-| 子 crate | `thymeleaf-core`、`thymeleaf-web`、`thymeleaf-axum` 等 | 统一使用 `thymeleaf-*` |
+| crates.io 核心 crate | `thymeleaf` | 用户默认依赖；包含 Engine、Parser、Expression、Standard Dialect 与中立 Web 输出 |
+| 框架整合 crate | `thymeleaf-axum`、`thymeleaf-actix-web` 等 | 统一使用 `thymeleaf-{framework}` |
 | Rust 根路径 | `thymeleaf::...` | 业务代码面向的稳定 API |
-| Rust 内部模块 | `engine`、`context`、`parser`、`web`、`integrations` 等 | 不带项目名重复前缀 |
+| Rust 内部模块 | `engine`、`context`、`parser`、`expression`、`standard`、`web` 等 | 不带项目名重复前缀 |
 | Vernal 集成 crate | `vernal-thymeleaf` | 由 Vernal 侧提供的可选 bridge |
 
 禁止发布或创建：
@@ -152,7 +152,7 @@ use thymeleaf::{Context, TemplateEngine};
 use thymeleaf::web::{RenderedTemplate, ThymeleafBody};
 ```
 
-使用 Axum 等独立适配器时，依赖名称为 `thymeleaf-axum`。该适配器可以通过扩展 trait 或 facade feature 暴露能力，但面向业务的核心类型仍来自 `thymeleaf::...`。
+使用 Axum 等独立适配器时，依赖名称为 `thymeleaf-axum`。该整合 crate 通过扩展 trait 暴露能力，但面向业务的核心类型仍来自 `thymeleaf::...`。
 
 ## 3. Thymeleaf 核心架构分析
 
@@ -282,36 +282,29 @@ flowchart TB
     VH --> VADAPTERS
 ```
 
-### 4.2 推荐 crate 拆分
+### 4.2 推荐 crate 模型
 
-| Crate | 职责 |
-|---|---|
-| `thymeleaf` | 对外发布的统一 facade，重导出稳定公共 API |
-| `thymeleaf-core` | Engine、Context、TemplateModel、事件、错误、Processor/Dialect SPI |
-| `thymeleaf-parser` | Parser 抽象和公共解析设施 |
-| `thymeleaf-parser-html` | HTML 模式解析 |
-| `thymeleaf-parser-xml` | XML 模式解析 |
-| `thymeleaf-parser-text` | TEXT、JS、CSS、RAW 模式 |
-| `thymeleaf-expression` | Thymeleaf 外层表达式语法和求值适配 |
-| `thymeleaf-standard` | Standard Dialect 和标准 `th:*` Processor |
-| `thymeleaf-web` | View、ModelAndView、RenderedView、HTTP Header 与 MIME |
-| `thymeleaf-topcoat` | Topcoat 独立适配 |
-| `thymeleaf-actix-web` | Actix Web 独立适配 |
-| `thymeleaf-axum` | Axum 独立适配 |
-| `thymeleaf-gotham` | Gotham 独立适配 |
-| `thymeleaf-hyper` | Hyper 独立适配 |
-| `thymeleaf-ntex` | Ntex 独立适配 |
-| `thymeleaf-poem` | Poem 独立适配 |
-| `thymeleaf-rocket` | Rocket 独立适配 |
-| `thymeleaf-salvo` | Salvo 独立适配 |
-| `thymeleaf-tide` | Tide 独立适配 |
-| `thymeleaf-warp` | Warp 独立适配 |
-| `thymeleaf-tower` | Tower Service/Layer 独立适配 |
-| `thymeleaf-tonic` | Tonic 动态内容生成和服务集成 |
-| `vernal-thymeleaf` | 可选 Vernal bridge、starter、自动配置和 ViewResolver 注册 |
-| `thymeleaf-testkit` | Golden Test、兼容性测试、框架适配测试 |
+引擎只发布一个核心 crate。Engine、Context、TemplateModel、事件、错误、Processor/Dialect SPI、各模板 Parser、表达式系统、Standard Dialect、中立 Web 输出和核心测试设施均属于 `thymeleaf` 的内部模块，不再拆分成独立 crate。
 
-这些框架适配器是正式支持面，而不是 Vernal 的附属实现。它们应保持为薄层并独立发布、独立 feature gate、独立测试；适配器之间不得复制模板引擎逻辑。`vernal-thymeleaf` 与上述适配器并列存在，负责 Vernal 场景的自动装配。
+| 类型 | Crate | 职责 |
+|---|---|---|
+| 核心 | `thymeleaf` | 完整模板引擎、稳定公共 API 与中立渲染协议 |
+| 整合 | `thymeleaf-topcoat` | Topcoat 独立适配 |
+| 整合 | `thymeleaf-actix-web` | Actix Web 独立适配 |
+| 整合 | `thymeleaf-axum` | Axum 独立适配 |
+| 整合 | `thymeleaf-gotham` | Gotham 独立适配 |
+| 整合 | `thymeleaf-hyper` | Hyper 独立适配 |
+| 整合 | `thymeleaf-ntex` | Ntex 独立适配 |
+| 整合 | `thymeleaf-poem` | Poem 独立适配 |
+| 整合 | `thymeleaf-rocket` | Rocket 独立适配 |
+| 整合 | `thymeleaf-salvo` | Salvo 独立适配 |
+| 整合 | `thymeleaf-tide` | Tide 独立适配 |
+| 整合 | `thymeleaf-warp` | Warp 独立适配 |
+| 整合 | `thymeleaf-tower` | Tower Service/Layer 独立适配 |
+| 整合 | `thymeleaf-tonic` | Tonic 动态内容生成和服务集成 |
+| 整合 | `vernal-thymeleaf` | 可选 Vernal bridge、starter、自动配置和 ViewResolver 注册 |
+
+除 `thymeleaf` 外，发布的 crate 都是整合层。框架整合是正式支持面，而不是 Vernal 的附属实现；它们应保持为薄层并独立发布、独立 feature gate、独立测试，不得复制模板解析、表达式求值、Processor 或渲染逻辑。`vernal-thymeleaf` 与上述框架整合并列存在，负责 Vernal 场景的自动装配。
 
 ## 5. 核心领域模型
 
@@ -458,7 +451,7 @@ Thymeleaf 表达式包含不同语义：
 | `~{...}` | Fragment Expression | 委托 FragmentResolver |
 | `__${...}__` | Preprocessing | 首期谨慎支持或延后 |
 
-`thymeleaf-expression` 必须提供框架无关的 `ExpressionEvaluator`、Parser 和基础实现。`vernal-thymeleaf` 可以注册一个由 `vernal-expression` 驱动的实现，但核心不能反向依赖它。
+`thymeleaf::expression` 内部模块必须提供框架无关的 `ExpressionEvaluator`、Parser 和基础实现。`vernal-thymeleaf` 可以注册一个由 `vernal-expression` 驱动的实现，但核心不能反向依赖它。
 
 不能直接将整个属性内容交给某一个通用表达式引擎，因为 `#{...}` 在 Thymeleaf 中是消息表达式，而通用模板表达式 Parser 可能将其解释为另一种嵌入表达式。
 
@@ -1759,7 +1752,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 - Full Render 输出 `Bytes`；
 - Stream Render 输出 `Stream<Frame<Bytes>>`；
-- `thymeleaf-web` 提供中立 `ThymeleafBody`；
+- `thymeleaf::web` 模块提供中立 `ThymeleafBody`；
 - 独立适配器将其转换为各框架 Response；
 - `vernal-thymeleaf` 将其转换为 `vernal_http::HttpBody`；
 - Core 不暴露任何框架或 Vernal 类型。
@@ -1797,7 +1790,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 - 项目和 Git 仓库名称固定为 `thymeleaf-rust`；
 - crates.io 主 crate 固定为 `thymeleaf`；
 - 对外 Rust API 根路径固定为 `thymeleaf::...`；
-- 子 crate 和框架适配器统一命名为 `thymeleaf-*`；
+- 框架整合 crate 统一命名为 `thymeleaf-{framework}`；
 - 禁止创建或发布 `thymeleaf-rust-*` crate；
 - 禁止使用 `thymeleaf_rust` 作为 Rust 根模块；
 - `vernal-thymeleaf` 仅表示 Vernal 侧的可选集成 crate。

@@ -11,7 +11,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-[项目概览](#项目概览) · [架构](#架构) · [规划中的-crate](#规划中的-crate) ·
+[项目概览](#项目概览) · [架构](#架构) · [Crate 模型](#crate-模型) ·
 [集成模型](#集成模型) · [路线图](#路线图) · [参与贡献](#参与贡献)
 
 </div>
@@ -26,7 +26,7 @@
 
 `thymeleaf-rust` 是项目和 Git 仓库名称，目标是使用 Rust 实现一个受 [Thymeleaf](https://www.thymeleaf.org/) 模板语义启发的动态内容渲染引擎。
 
-未来对外发布的 facade crate 名称是 **`thymeleaf`**。规划中的子 crate 和适配器统一使用 `thymeleaf-*` 前缀；不会发布或创建任何 `thymeleaf-rust-*` crate 或 Rust 模块。
+未来对外发布的核心 crate 名称是 **`thymeleaf`**。框架整合 crate 使用 `thymeleaf-{framework}` 模式；不会发布或创建任何 `thymeleaf-rust-*` crate 或 Rust 模块。
 
 项目计划同时支持两条地位相同的集成路径：
 
@@ -85,11 +85,11 @@
 Core 依赖规则：
 
 ```text
-thymeleaf core ← 中立合同 ← 适配器
+thymeleaf crate ← 中立合同 ← 整合 crate
 
 禁止：
-thymeleaf core → 框架适配器
-thymeleaf core → Vernal
+thymeleaf crate → 框架整合
+thymeleaf crate → Vernal
 ```
 
 详细设计见[可行性与架构提案](docs/Thymeleaf-Rust-可行性与架构设计.md)。
@@ -99,30 +99,22 @@ thymeleaf core → Vernal
 | 层级 | 名称 | 状态 |
 |:---|:---|:---:|
 | 项目与 Git 仓库 | `thymeleaf-rust` | 已确认 |
-| 未来 crates.io facade | `thymeleaf` | 规划中 |
+| 未来 crates.io 核心 | `thymeleaf` | 规划中 |
 | Rust 公共路径 | `thymeleaf::...` | 规划中 |
-| 子 crate | `thymeleaf-*` | 规划中 |
-| 独立框架适配器 | `thymeleaf-{framework}` | 规划中 |
+| 整合 crate | `thymeleaf-{framework}` | 规划中 |
 | 可选 Vernal bridge | `vernal-thymeleaf` | 规划中 |
 
 明确排除 `thymeleaf-rust-core`、`thymeleaf-rust-axum` 和 Rust 根模块 `thymeleaf_rust` 等名称。
 
-## 规划中的 crate
+## Crate 模型
 
-本表所有条目均为规划，当前还不存在 Cargo Manifest 或已发布产物。
+引擎规划为一个内聚的核心 crate。Parser 模式、表达式处理、Standard Dialect、中立 Web 输出和测试支持均作为 `thymeleaf` 的内部模块或测试基础设施存在，不拆分为独立发布的 crate。
 
-| 规划 crate | 职责 |
+| 规划核心 crate | 职责 |
 |:---|:---|
-| `thymeleaf` | 稳定 facade 和公共 API 重导出 |
-| `thymeleaf-core` | Engine、Context、Model、Event、Error、Processor 与 Dialect 合同 |
-| `thymeleaf-parser` | Parser 抽象与公共解析设施 |
-| `thymeleaf-parser-html` | HTML 模板模式 |
-| `thymeleaf-parser-xml` | XML 模板模式 |
-| `thymeleaf-parser-text` | Text、JavaScript、CSS 与 Raw 模式 |
-| `thymeleaf-expression` | Thymeleaf 表达式语法与中立求值合同 |
-| `thymeleaf-standard` | Standard Dialect 和 `th:*` Processor |
-| `thymeleaf-web` | 中立 View Model、渲染输出、HTTP Header 与 MIME |
-| `thymeleaf-testkit` | Parity、Golden、集成和适配器测试支持 |
+| `thymeleaf` | Engine、Context、TemplateModel、各 Parser 模式、表达式求值、Standard Dialect 与 `th:*` Processor、中立渲染输出、稳定公共 API 和核心测试基础设施 |
+
+其余 crate 均为整合 crate：`thymeleaf-{framework}` 将 `thymeleaf` 的中立输出适配到单个宿主框架，`vernal-thymeleaf` 提供可选 Vernal bridge。整合 crate 必须保持薄层，禁止复制解析或渲染逻辑。
 
 ## 集成模型
 

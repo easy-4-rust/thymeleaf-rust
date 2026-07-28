@@ -11,7 +11,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-[Overview](#overview) · [Architecture](#architecture) · [Planned crates](#planned-crates) ·
+[Overview](#overview) · [Architecture](#architecture) · [Crate model](#crate-model) ·
 [Integrations](#integration-model) · [Roadmap](#roadmap) · [Contributing](#contributing)
 
 </div>
@@ -26,7 +26,7 @@
 
 `thymeleaf-rust` is the project and repository name for a planned Rust implementation of a dynamic content rendering engine inspired by [Thymeleaf](https://www.thymeleaf.org/) template semantics.
 
-The future public facade crate will be published as **`thymeleaf`**. Planned subcrates and adapters use the `thymeleaf-*` prefix; no published crate or Rust module will use a `thymeleaf-rust-*` prefix.
+The future public core crate will be published as **`thymeleaf`**. Framework integration crates use the `thymeleaf-{framework}` pattern; no published crate or Rust module will use a `thymeleaf-rust-*` prefix.
 
 The project is intended to support two equal integration paths:
 
@@ -85,11 +85,11 @@ Templates + model + locale + render options
 Core dependency rule:
 
 ```text
-thymeleaf core ← neutral contracts ← adapters
+thymeleaf crate ← neutral contracts ← integration crates
 
 Never:
-thymeleaf core → framework adapter
-thymeleaf core → Vernal
+thymeleaf crate → framework integration
+thymeleaf crate → Vernal
 ```
 
 See the detailed [feasibility and architecture proposal](docs/Thymeleaf-Rust-可行性与架构设计.md).
@@ -99,30 +99,22 @@ See the detailed [feasibility and architecture proposal](docs/Thymeleaf-Rust-可
 | Layer | Name | Status |
 |:---|:---|:---:|
 | Project and Git repository | `thymeleaf-rust` | Confirmed |
-| Future crates.io facade | `thymeleaf` | Planned |
+| Future crates.io core | `thymeleaf` | Planned |
 | Public Rust path | `thymeleaf::...` | Planned |
-| Subcrates | `thymeleaf-*` | Planned |
-| Independent framework adapters | `thymeleaf-{framework}` | Planned |
+| Integration crates | `thymeleaf-{framework}` | Planned |
 | Optional Vernal bridge | `vernal-thymeleaf` | Planned |
 
 Names such as `thymeleaf-rust-core`, `thymeleaf-rust-axum`, and the Rust root module `thymeleaf_rust` are explicitly excluded.
 
-## Planned crates
+## Crate model
 
-All entries in this table are plans; no Cargo manifests or published artifacts exist yet.
+The engine is planned as one cohesive core crate. Parser modes, expression handling, the standard dialect, neutral web output, and test support are internal modules or test infrastructure of `thymeleaf`; they are not separate published crates.
 
-| Planned crate | Responsibility |
+| Planned core crate | Responsibility |
 |:---|:---|
-| `thymeleaf` | Stable facade and public re-exports |
-| `thymeleaf-core` | Engine, context, model, events, errors, processor and dialect contracts |
-| `thymeleaf-parser` | Parser abstractions and shared parsing facilities |
-| `thymeleaf-parser-html` | HTML template mode |
-| `thymeleaf-parser-xml` | XML template mode |
-| `thymeleaf-parser-text` | Text, JavaScript, CSS, and raw modes |
-| `thymeleaf-expression` | Thymeleaf expression grammar and neutral evaluator contract |
-| `thymeleaf-standard` | Standard dialect and `th:*` processors |
-| `thymeleaf-web` | Neutral view model, rendered output, HTTP headers, and MIME handling |
-| `thymeleaf-testkit` | Parity, golden, integration, and adapter test support |
+| `thymeleaf` | Engine, context, template model, parser modes, expression evaluation, standard dialect and `th:*` processors, neutral rendered output, stable public API, and core test infrastructure |
+
+Everything else is an integration crate: `thymeleaf-{framework}` adapts the neutral `thymeleaf` output to one host framework, while `vernal-thymeleaf` provides the optional Vernal bridge. Integration crates must remain thin and must not duplicate parsing or rendering logic.
 
 ## Integration model
 
