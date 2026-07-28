@@ -8,6 +8,7 @@ mod dialect_configuration;
 pub mod exceptions;
 mod template_spec;
 pub mod templatemode;
+pub mod templateresolver;
 pub mod templateresource;
 mod thymeleaf;
 
@@ -23,6 +24,7 @@ pub use template_spec::{
     TemplateSpec, TemplateSpecError,
 };
 pub use templatemode::{TemplateMode, TemplateModeParseError};
+pub use templateresolver::{TemplateResolution, TemplateResolutionError};
 pub use templateresource::{
     FileTemplateResource, ITemplateResource, StringTemplateResource, TemplateResourceError,
     UrlTemplateResource,
