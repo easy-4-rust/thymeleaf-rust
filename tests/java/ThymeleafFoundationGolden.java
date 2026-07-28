@@ -37,6 +37,8 @@ public final class ThymeleafFoundationGolden {
         emitParsedMode("null", null);
         emitParsedMode("empty", "");
         emitParsedMode("blank", " \n\t");
+        emitParsedMode("nul_control", "\u0000");
+        emitParsedMode("nbsp", "\u00A0");
         emitParsedMode("html", "html");
         emitParsedMode("XML", "XML");
         emitParsedMode("Text", "Text");

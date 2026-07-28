@@ -145,15 +145,15 @@ thymeleaf crate → Vernal
 | 可行性与架构提案 | 已有 | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
-| Rust 公共 API | Foundation 切片 | `TemplateMode` 与九个异常对象 |
+| Rust 公共 API | S1 垂直切片 | `TemplateMode`、`TemplateSpec` 与九个异常对象 |
 | 框架适配器 | 规划中 | 不存在适配器 Manifest 或代码 |
 | 上游兼容矩阵 | 实施中 | 已登记 491 个对象、4,291 个方法和 6,936 个参数 |
-| 测试与 CI | Foundation 门禁通过 | 14 个单元测试、1 个 84 条记录的 Java/Rust Golden 测试、源码覆盖率 100% |
+| 测试与 CI | S1 门禁通过 | 23 个单元测试、2 个共 375 条记录的 Java/Rust Golden 测试、行/函数/区域覆盖率均为 100% |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
 ## 文档快速开始
 
-渲染引擎尚不可执行。验证当前 Foundation 切片：
+渲染引擎尚不可执行。验证当前已实现的 S1 垂直切片：
 
 ```bash
 git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git

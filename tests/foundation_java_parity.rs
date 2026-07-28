@@ -55,6 +55,8 @@ fn emit_template_modes(output: &mut String) {
         ("null", None),
         ("empty", Some("")),
         ("blank", Some(" \n\t")),
+        ("nul_control", Some("\0")),
+        ("nbsp", Some("\u{00A0}")),
         ("html", Some("html")),
         ("XML", Some("XML")),
         ("Text", Some("Text")),

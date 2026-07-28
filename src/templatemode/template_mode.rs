@@ -68,7 +68,7 @@ impl TemplateMode {
         let Some(mode) = mode else {
             return Err(TemplateModeParseError);
         };
-        if mode.trim().is_empty() {
+        if java_trim(mode).is_empty() {
             return Err(TemplateModeParseError);
         }
 
@@ -133,6 +133,10 @@ fn current_thread_index() -> String {
         .to_owned()
 }
 
+fn java_trim(value: &str) -> &str {
+    value.trim_matches(|character| character <= '\u{0020}')
+}
+
 /// 模板模式为 `null`、空字符串或纯空白时产生的解析错误。
 ///
 /// 对应 Java: `TemplateMode#parse(String)` 抛出的 `IllegalArgumentException`。
@@ -188,7 +192,7 @@ mod tests {
 
     #[test]
     fn rejects_null_empty_and_whitespace() {
-        for input in [None, Some(""), Some(" "), Some("\n\t")] {
+        for input in [None, Some(""), Some(" "), Some("\n\t"), Some("\0")] {
             assert_eq!(
                 TemplateMode::parse(input),
                 Err(TemplateModeParseError),
@@ -208,6 +212,10 @@ mod tests {
             Ok(TemplateMode::HTML)
         );
         assert_eq!(TemplateMode::parse(Some(" XML ")), Ok(TemplateMode::HTML));
+        assert_eq!(
+            TemplateMode::parse(Some("\u{00A0}")),
+            Ok(TemplateMode::HTML)
+        );
         assert_eq!(
             current_thread_index(),
             "templatemode::template_mode::tests::unknown_and_untrimmed_modes_fall_back_to_html"
