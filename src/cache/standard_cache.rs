@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::{ICache, ICacheEntryValidityChecker};
+use crate::util::Validate;
 
 const REPORT_INTERVAL_MILLIS: i64 = 300_000;
 
@@ -172,9 +173,10 @@ where
         enable_counters: bool,
         trace_execution: bool,
     ) -> Result<Self, StandardCacheError> {
-        let name = name
-            .filter(|value| !is_java_empty_or_whitespace(value))
-            .ok_or_else(|| StandardCacheError::new("Name cannot be null or empty"))?;
+        let name = name.ok_or_else(|| StandardCacheError::new("Name cannot be null or empty"))?;
+        if Validate::not_empty_str(Some(name), Some("Name cannot be null or empty")).is_err() {
+            return Err(StandardCacheError::new("Name cannot be null or empty"));
+        }
         if initial_capacity <= 0 {
             return Err(StandardCacheError::new("Initial capacity must be > 0"));
         }
@@ -564,24 +566,6 @@ fn current_time_millis() -> i64 {
         .unwrap_or_default()
         .as_millis();
     i64::try_from(millis).unwrap_or(i64::MAX)
-}
-
-fn is_java_empty_or_whitespace(value: &str) -> bool {
-    value.is_empty()
-        || value.chars().all(|character| {
-            matches!(
-                character,
-                '\u{0009}'..='\u{000D}'
-                    | '\u{001C}'..='\u{0020}'
-                    | '\u{1680}'
-                    | '\u{2000}'..='\u{2006}'
-                    | '\u{2008}'..='\u{200A}'
-                    | '\u{2028}'
-                    | '\u{2029}'
-                    | '\u{205F}'
-                    | '\u{3000}'
-            )
-        })
 }
 
 #[cfg(test)]
