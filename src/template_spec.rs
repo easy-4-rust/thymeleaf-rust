@@ -7,7 +7,7 @@ use std::sync::Arc;
 use thiserror::Error;
 
 use crate::TemplateMode;
-use crate::util::ContentTypeUtils;
+use crate::util::{ContentTypeUtils, LoggingUtils};
 
 /// Java `Set<String>` 形式的模板选择器输入。
 ///
@@ -478,7 +478,8 @@ impl Hash for TemplateSpec {
 
 impl Display for TemplateSpec {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut rendered = loggify_template_name(&self.template);
+        let mut rendered =
+            LoggingUtils::loggify_str(Some(&self.template)).expect("non-null template");
         if let Some(selectors) = &self.template_selectors {
             rendered.push_str("::");
             rendered.push_str(&format_selectors(selectors));
@@ -571,18 +572,6 @@ fn is_java_whitespace(character: char) -> bool {
     )
 }
 
-pub(crate) fn loggify_template_name(template: &str) -> String {
-    let utf16 = template.encode_utf16().collect::<Vec<_>>();
-    if utf16.len() <= 120 {
-        return template.replace('\n', " ");
-    }
-
-    // Java String.length/substring 以 UTF-16 代码单元计数；有效 Unicode 边界处可精确对应。
-    let prefix = String::from_utf16_lossy(&utf16[..35]).replace('\n', " ");
-    let suffix = String::from_utf16_lossy(&utf16[utf16.len() - 80..]).replace('\n', " ");
-    format!("{prefix}[...]{suffix}")
-}
-
 fn format_selectors(selectors: &[String]) -> String {
     format!("[{}]", selectors.join(", "))
 }
@@ -622,9 +611,10 @@ mod tests {
 
     use super::{
         TemplateResolutionAttributeValue, TemplateResolutionAttributes, TemplateSelectorSet,
-        TemplateSpec, TemplateSpecError, loggify_template_name,
+        TemplateSpec, TemplateSpecError,
     };
     use crate::TemplateMode;
+    use crate::util::LoggingUtils;
 
     fn hash_of<T: Hash>(value: &T) -> u64 {
         let mut hasher = DefaultHasher::new();
@@ -964,10 +954,10 @@ mod tests {
         assert!(format!("{spec:?}").contains("template: \"home\\npage\""));
 
         let short = "x".repeat(120);
-        assert_eq!(loggify_template_name(&short), short);
+        assert_eq!(LoggingUtils::loggify_str(Some(&short)), Some(short.clone()));
 
         let long = format!("{}\n{}尾", "a".repeat(34), "b".repeat(90));
-        let rendered = loggify_template_name(&long);
+        let rendered = LoggingUtils::loggify_str(Some(&long)).expect("rendered");
         assert!(rendered.starts_with(&format!("{} ", "a".repeat(34))));
         assert!(rendered.contains("[...]"));
         assert!(rendered.ends_with('尾'));

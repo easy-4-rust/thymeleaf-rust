@@ -5,7 +5,8 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
-use crate::template_spec::{format_attributes, loggify_template_name};
+use crate::template_spec::format_attributes;
+use crate::util::LoggingUtils;
 use crate::{TemplateMode, TemplateResolutionAttributes, TemplateSelectorSet};
 
 /// 模板缓存使用的不可变复合键。
@@ -199,12 +200,14 @@ impl Hash for TemplateCacheKey {
 
 impl Display for TemplateCacheKey {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&loggify_template_name(&self.template))?;
+        formatter.write_str(
+            &LoggingUtils::loggify_str(Some(&self.template)).expect("non-null template"),
+        )?;
         if let Some(owner_template) = &self.owner_template {
             write!(
                 formatter,
                 "@({};{},{})",
-                loggify_template_name(owner_template),
+                LoggingUtils::loggify_str(Some(owner_template)).expect("non-null owner template"),
                 self.line_offset,
                 self.col_offset
             )?;

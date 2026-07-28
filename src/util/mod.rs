@@ -3,6 +3,7 @@
 mod content_type_utils;
 mod identity_counter;
 mod list_utils;
+mod logging_utils;
 mod map_utils;
 mod number_point_type;
 mod object_utils;
@@ -18,6 +19,7 @@ pub use list_utils::{
     JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,
     ListView,
 };
+pub use logging_utils::{JavaString, JavaStringResult, LoggingUtils};
 pub use map_utils::MapUtils;
 pub use number_point_type::NumberPointType;
 pub use object_utils::ObjectUtils;
