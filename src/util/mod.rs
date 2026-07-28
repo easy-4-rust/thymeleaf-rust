@@ -1,5 +1,6 @@
 //! Thymeleaf 公共工具对象。
 
+mod content_type_utils;
 mod identity_counter;
 mod map_utils;
 mod number_point_type;
@@ -9,6 +10,7 @@ mod pattern_utils;
 mod validate;
 mod version_utils;
 
+pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
 pub use identity_counter::{IdentityCounter, IdentityCounterError};
 pub use map_utils::MapUtils;
 pub use number_point_type::NumberPointType;

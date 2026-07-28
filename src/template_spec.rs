@@ -7,6 +7,7 @@ use std::sync::Arc;
 use thiserror::Error;
 
 use crate::TemplateMode;
+use crate::util::ContentTypeUtils;
 
 /// Java `Set<String>` 形式的模板选择器输入。
 ///
@@ -287,10 +288,13 @@ impl TemplateSpec {
         let template_resolution_attributes =
             template_resolution_attributes.filter(|attributes| !attributes.is_empty());
         let output_content_type = output_content_type.map(str::to_owned);
-        let normalized_mime_type = parse_mime_type(output_content_type.as_deref())?;
-        let computed_template_mode =
-            compute_template_mode_for_mime_type(normalized_mime_type.as_deref());
-        let output_sse = normalized_mime_type.as_deref() == Some("text/event-stream");
+        let computed_template_mode = ContentTypeUtils::compute_template_mode_for_content_type(
+            output_content_type.as_deref(),
+        )
+        .map_err(TemplateSpecError::from)?;
+        // 上一步已经用同一个 ContentType 解析器完成校验，因此此处不会再出现解析错误。
+        let output_sse =
+            ContentTypeUtils::is_content_type_sse(output_content_type.as_deref()) == Ok(true);
 
         Ok(Self {
             template: template.to_owned(),
@@ -521,6 +525,12 @@ pub enum TemplateSpecError {
     JavaEqualsNullOutputContentType,
 }
 
+impl From<crate::util::ContentTypeError> for TemplateSpecError {
+    fn from(_: crate::util::ContentTypeError) -> Self {
+        Self::MalformedOutputContentType
+    }
+}
+
 fn normalize_selectors(
     template_selectors: Option<&TemplateSelectorSet>,
 ) -> Result<Option<Vec<String>>, TemplateSpecError> {
@@ -540,48 +550,6 @@ fn normalize_selectors(
     }
     normalized.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     Ok(Some(normalized))
-}
-
-fn compute_template_mode_for_mime_type(mime_type: Option<&str>) -> Option<TemplateMode> {
-    let mime_type = mime_type?;
-    match mime_type {
-        "text/html" | "application/xhtml+xml" => Some(TemplateMode::HTML),
-        "application/xml" | "text/xml" | "application/rss+xml" | "application/atom+xml" => {
-            Some(TemplateMode::XML)
-        }
-        "application/javascript"
-        | "application/x-javascript"
-        | "application/ecmascript"
-        | "text/javascript"
-        | "text/ecmascript"
-        | "application/json" => Some(TemplateMode::JAVASCRIPT),
-        "text/css" => Some(TemplateMode::CSS),
-        "text/plain" => Some(TemplateMode::TEXT),
-        _ => None,
-    }
-}
-
-fn parse_mime_type(output_content_type: Option<&str>) -> Result<Option<String>, TemplateSpecError> {
-    let Some(output_content_type) = output_content_type else {
-        return Ok(None);
-    };
-    if java_trim(output_content_type).is_empty() {
-        return Ok(None);
-    }
-
-    // Java StringTokenizer 会忽略连续、前导及尾部分隔符。
-    let Some(mime_type) = output_content_type
-        .split(';')
-        .find(|token| !token.is_empty())
-    else {
-        return Err(TemplateSpecError::MalformedOutputContentType);
-    };
-    let lowercase_mime_type = mime_type.to_lowercase();
-    Ok(Some(java_trim(&lowercase_mime_type).to_owned()))
-}
-
-fn java_trim(value: &str) -> &str {
-    value.trim_matches(|character| character <= '\u{0020}')
 }
 
 fn is_java_empty_or_whitespace(value: &str) -> bool {
