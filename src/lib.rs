@@ -6,6 +6,7 @@ pub mod cache;
 pub mod dialect;
 mod dialect_configuration;
 pub mod exceptions;
+pub mod expression;
 mod template_spec;
 pub mod templatemode;
 pub mod templateresolver;

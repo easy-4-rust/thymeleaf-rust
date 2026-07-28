@@ -7,6 +7,7 @@ mod number_point_type;
 mod object_utils;
 mod pattern_spec;
 mod pattern_utils;
+mod set_utils;
 mod validate;
 mod version_utils;
 
@@ -17,5 +18,6 @@ pub use number_point_type::NumberPointType;
 pub use object_utils::ObjectUtils;
 pub use pattern_spec::{PatternSpec, PatternSpecError};
 pub use pattern_utils::{PatternUtils, PatternUtilsError, StringPattern};
+pub use set_utils::{JavaSet, SetTarget, SetUtils, SetUtilsError, SetView};
 pub use validate::{Validate, ValidateError};
 pub use version_utils::{VersionQualifier, VersionSpec, VersionUtils};
