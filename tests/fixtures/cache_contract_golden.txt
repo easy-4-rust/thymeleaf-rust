@@ -1,0 +1,14 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+cache.miss=true
+cache.hit.identity=true
+cache.keys=[key]
+cache.checked.identity=true
+checker.key=key
+checker.value=value
+checker.timestamp=7
+cache.invalid.miss=true
+cache.invalid.removed=true
+cache.invalid.keys=[]
+cache.missing.checked=true
+cache.clear_key.remaining=[second]
+cache.clear.empty=true
