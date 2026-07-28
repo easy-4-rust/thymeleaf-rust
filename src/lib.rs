@@ -11,6 +11,7 @@ pub mod templatemode;
 pub mod templateresolver;
 pub mod templateresource;
 mod thymeleaf;
+pub mod util;
 
 pub use dialect::{AbstractDialect, AbstractDialectError, IDialect};
 pub use dialect_configuration::{DialectConfiguration, DialectConfigurationError};
