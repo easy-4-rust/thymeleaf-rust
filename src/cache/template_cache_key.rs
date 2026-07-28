@@ -257,12 +257,7 @@ fn hash_attributes<H: Hasher>(
 
 fn format_selectors(template_selectors: &TemplateSelectorSet) -> String {
     let mut selectors = template_selectors.iter().collect::<Vec<_>>();
-    selectors.sort_by(|left, right| match (left, right) {
-        (None, None) => std::cmp::Ordering::Equal,
-        (None, Some(_)) => std::cmp::Ordering::Less,
-        (Some(_), None) => std::cmp::Ordering::Greater,
-        (Some(left), Some(right)) => left.encode_utf16().cmp(right.encode_utf16()),
-    });
+    selectors.sort_by(|left, right| compare_selectors(left, right));
     let selectors = selectors
         .into_iter()
         .map(|selector| selector.as_deref().unwrap_or("null"))
@@ -270,13 +265,23 @@ fn format_selectors(template_selectors: &TemplateSelectorSet) -> String {
     format!("[{}]", selectors.join(", "))
 }
 
+fn compare_selectors(left: &Option<String>, right: &Option<String>) -> std::cmp::Ordering {
+    match (left, right) {
+        (None, None) => std::cmp::Ordering::Equal,
+        (None, Some(_)) => std::cmp::Ordering::Less,
+        (Some(_), None) => std::cmp::Ordering::Greater,
+        (Some(left), Some(right)) => left.encode_utf16().cmp(right.encode_utf16()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::{BTreeSet, HashMap, hash_map::DefaultHasher};
+    use std::fmt::Write;
     use std::hash::{Hash, Hasher};
     use std::sync::Arc;
 
-    use super::{TemplateCacheKey, TemplateCacheKeyError};
+    use super::{TemplateCacheKey, TemplateCacheKeyError, compare_selectors};
     use crate::{
         TemplateMode, TemplateResolutionAttributeValue, TemplateResolutionAttributes,
         TemplateSelectorSet,
@@ -286,6 +291,21 @@ mod tests {
         let mut hasher = DefaultHasher::new();
         value.hash(&mut hasher);
         hasher.finish()
+    }
+
+    struct FailingWriter {
+        remaining_writes: usize,
+    }
+
+    impl Write for FailingWriter {
+        fn write_str(&mut self, value: &str) -> std::fmt::Result {
+            if self.remaining_writes == 0 {
+                return Err(std::fmt::Error);
+            }
+            self.remaining_writes -= 1;
+            let _ = value;
+            Ok(())
+        }
     }
 
     fn selectors(values: &[Option<&str>]) -> Arc<TemplateSelectorSet> {
@@ -319,10 +339,10 @@ mod tests {
 
     #[test]
     fn validates_template_and_preserves_null_and_empty_distinctions() {
-        assert!(matches!(
-            TemplateCacheKey::new(None, None, None, 0, 0, None, None),
-            Err(TemplateCacheKeyError::TemplateCannotBeNull)
-        ));
+        assert_eq!(
+            TemplateCacheKey::new(None, None, None, 0, 0, None, None).err(),
+            Some(TemplateCacheKeyError::TemplateCannotBeNull)
+        );
         assert_eq!(
             TemplateCacheKeyError::TemplateCannotBeNull.to_string(),
             "Template cannot be null"
@@ -424,5 +444,36 @@ mod tests {
         let equal = full_key();
         assert!(left == equal);
         assert_eq!(rust_hash(&left), rust_hash(&equal));
+    }
+
+    #[test]
+    fn selector_comparison_covers_all_java_utf16_ordering_branches() {
+        let none = None;
+        let supplementary = Some("\u{10000}".to_owned());
+        let private_use = Some("\u{E000}".to_owned());
+
+        assert_eq!(compare_selectors(&none, &none), std::cmp::Ordering::Equal);
+        assert_eq!(
+            compare_selectors(&none, &supplementary),
+            std::cmp::Ordering::Less
+        );
+        assert_eq!(
+            compare_selectors(&supplementary, &none),
+            std::cmp::Ordering::Greater
+        );
+        assert_eq!(
+            compare_selectors(&supplementary, &private_use),
+            std::cmp::Ordering::Less
+        );
+    }
+
+    #[test]
+    fn display_propagates_formatter_failures_from_each_segment() {
+        let key = full_key();
+
+        for remaining_writes in 0..32 {
+            let mut writer = FailingWriter { remaining_writes };
+            let _ = write!(&mut writer, "{key}");
+        }
     }
 }

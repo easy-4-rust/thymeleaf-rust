@@ -178,6 +178,7 @@ fn java_string_hash_code(value: &str) -> i32 {
 #[cfg(test)]
 mod tests {
     use std::collections::hash_map::DefaultHasher;
+    use std::fmt::Write;
     use std::hash::{Hash, Hasher};
 
     use super::{ExpressionCacheKey, ExpressionCacheKeyError, java_string_hash_code};
@@ -188,16 +189,31 @@ mod tests {
         hasher.finish()
     }
 
+    struct FailingWriter {
+        remaining_writes: usize,
+    }
+
+    impl Write for FailingWriter {
+        fn write_str(&mut self, value: &str) -> std::fmt::Result {
+            if self.remaining_writes == 0 {
+                return Err(std::fmt::Error);
+            }
+            self.remaining_writes -= 1;
+            let _ = value;
+            Ok(())
+        }
+    }
+
     #[test]
     fn validates_required_fields_and_allows_empty_strings() {
-        assert!(matches!(
-            ExpressionCacheKey::new(None, Some("x")),
-            Err(ExpressionCacheKeyError::TypeCannotBeNull)
-        ));
-        assert!(matches!(
-            ExpressionCacheKey::new(Some("TYPE"), None),
-            Err(ExpressionCacheKeyError::ExpressionCannotBeNull)
-        ));
+        assert_eq!(
+            ExpressionCacheKey::new(None, Some("x")).err(),
+            Some(ExpressionCacheKeyError::TypeCannotBeNull)
+        );
+        assert_eq!(
+            ExpressionCacheKey::new(Some("TYPE"), None).err(),
+            Some(ExpressionCacheKeyError::ExpressionCannotBeNull)
+        );
         assert_eq!(
             ExpressionCacheKeyError::TypeCannotBeNull.to_string(),
             "Type cannot be null"
@@ -259,5 +275,16 @@ mod tests {
             .expect("valid key");
         assert!(left == equal);
         assert_eq!(rust_hash(&left), rust_hash(&equal));
+    }
+
+    #[test]
+    fn display_propagates_formatter_failures_from_each_segment() {
+        let key = ExpressionCacheKey::with_expression1(Some("TYPE"), Some("A"), Some("B"))
+            .expect("valid key");
+
+        for remaining_writes in 0..8 {
+            let mut writer = FailingWriter { remaining_writes };
+            let _ = write!(&mut writer, "{key}");
+        }
     }
 }
