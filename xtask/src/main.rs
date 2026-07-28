@@ -12,6 +12,7 @@ const INVENTORY_PATH: &str = "docs/migration/baseline/java_api_inventory.json";
 const OBJECT_TABLE_PATH: &str = "docs/migration/对象级对照表.md";
 const TODO_MACRO: &str = concat!("todo", "!(");
 const UNIMPLEMENTED_MACRO: &str = concat!("unimplemented", "!(");
+const INTERNAL_HELPER_FILES: [&str; 1] = ["src/templateresource/template_resource_reader.rs"];
 
 #[derive(Debug, Deserialize)]
 struct Inventory {
@@ -74,6 +75,7 @@ struct ResultReport {
     exact: usize,
     equivalent: usize,
     behavior_verified: usize,
+    implemented_unverified: usize,
     missing: usize,
     extra: usize,
     path_collisions: usize,
@@ -182,17 +184,22 @@ fn migration_check(
         .iter()
         .filter(|row| row.status == "BEHAVIOR_VERIFIED")
         .count();
-    validate_verified_objects(project_root, &inventory, &rows, &mut violations)?;
+    let implemented_unverified = rows
+        .iter()
+        .filter(|row| row.status == "IMPLEMENTED_UNVERIFIED")
+        .count();
+    validate_implemented_objects(project_root, &inventory, &rows, &mut violations)?;
 
     let exact = rows
         .iter()
-        .filter(|row| row.status == "BEHAVIOR_VERIFIED" && row.target_file.starts_with("src/"))
+        .filter(|row| is_implemented(row) && row.target_file.starts_with("src/"))
         .count();
     let equivalent = rows
         .iter()
         .filter(|row| row.status == "JAVA_ONLY_EXEMPT")
         .count();
-    let missing = inventory.summary.primary_objects - verified - equivalent;
+    let missing =
+        inventory.summary.primary_objects - verified - implemented_unverified - equivalent;
     let expected_files = rows
         .iter()
         .filter(|row| row.target_file.starts_with("src/"))
@@ -205,6 +212,7 @@ fn migration_check(
             relative != "src/lib.rs"
                 && !relative.ends_with("/mod.rs")
                 && !expected_files.contains(relative.as_str())
+                && !INTERNAL_HELPER_FILES.contains(&relative.as_str())
         })
         .count();
     let path_collisions = path_collision_count(&rows);
@@ -224,6 +232,7 @@ fn migration_check(
             exact,
             equivalent,
             behavior_verified: verified,
+            implemented_unverified,
             missing,
             extra,
             path_collisions,
@@ -304,7 +313,7 @@ fn validate_manifest(inventory: &Inventory, rows: &[ObjectRow], violations: &mut
     }
 }
 
-fn validate_verified_objects(
+fn validate_implemented_objects(
     project_root: &Path,
     inventory: &Inventory,
     rows: &[ObjectRow],
@@ -324,10 +333,10 @@ fn validate_verified_objects(
         })
         .collect::<BTreeMap<_, _>>();
 
-    for row in rows.iter().filter(|row| row.status == "BEHAVIOR_VERIFIED") {
+    for row in rows.iter().filter(|row| is_implemented(row)) {
         if !row.target_file.starts_with("src/") {
             violations.push(format!(
-                "verified object {} has non-core target {}",
+                "implemented object {} has non-core target {}",
                 row.java_name, row.target_file
             ));
             continue;
@@ -335,7 +344,7 @@ fn validate_verified_objects(
         let path = project_root.join(&row.target_file);
         if !path.is_file() {
             violations.push(format!(
-                "verified object {} is missing {}",
+                "implemented object {} is missing {}",
                 row.java_name, row.target_file
             ));
             continue;
@@ -365,6 +374,13 @@ fn validate_verified_objects(
         }
     }
     Ok(())
+}
+
+fn is_implemented(row: &ObjectRow) -> bool {
+    matches!(
+        row.status.as_str(),
+        "BEHAVIOR_VERIFIED" | "IMPLEMENTED_UNVERIFIED"
+    )
 }
 
 fn scan_red_lines(
@@ -489,10 +505,11 @@ fn print_human_report(report: &MigrationReport) {
         report.baseline.version, report.baseline.commit
     );
     println!(
-        "objects: primary={}, nested={}, verified={}, missing={}",
+        "objects: primary={}, nested={}, verified={}, implemented_unverified={}, missing={}",
         report.objects.java_primary,
         report.objects.java_nested,
         report.result.behavior_verified,
+        report.result.implemented_unverified,
         report.result.missing
     );
     println!(
@@ -515,7 +532,10 @@ fn print_human_report(report: &MigrationReport) {
 
 #[cfg(test)]
 mod tests {
-    use super::{contains_type_declaration, parse_cli, parse_object_rows, path_collision_count};
+    use super::{
+        contains_type_declaration, is_implemented, parse_cli, parse_object_rows,
+        path_collision_count,
+    };
 
     #[test]
     fn parses_cli_and_rejects_invalid_shapes() {
@@ -568,12 +588,16 @@ mod tests {
     fn parses_object_table_and_counts_collisions() {
         let markdown = concat!(
             "| 1 | `Alpha` | class | `A.java` | `src/alpha.rs` | `Alpha` | — | 1:1 | BEHAVIOR_VERIFIED |\n",
-            "| 2 | `Beta` | class | `B.java` | `src/alpha.rs` | `Beta` | — | 1:1 | NOT_STARTED |\n"
+            "| 2 | `Beta` | class | `B.java` | `src/alpha.rs` | `Beta` | — | 1:1 | IMPLEMENTED_UNVERIFIED |\n",
+            "| 3 | `Gamma` | class | `C.java` | `src/gamma.rs` | `Gamma` | — | 1:1 | NOT_STARTED |\n"
         );
         let rows = parse_object_rows(markdown).unwrap();
-        assert_eq!(rows.len(), 2);
+        assert_eq!(rows.len(), 3);
         assert_eq!(rows[0].java_name, "Alpha");
         assert_eq!(path_collision_count(&rows), 1);
+        assert!(is_implemented(&rows[0]));
+        assert!(is_implemented(&rows[1]));
+        assert!(!is_implemented(&rows[2]));
         assert!(parse_object_rows("not a table").is_err());
     }
 

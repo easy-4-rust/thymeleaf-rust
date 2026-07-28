@@ -30,6 +30,7 @@ javac -encoding UTF-8 -d "${temporary_dir}" \
     "${thymeleaf_sources}/templateresource/TemplateResourceUtils.java" \
     "${thymeleaf_sources}/templateresource/FileTemplateResource.java" \
     "${thymeleaf_sources}/templateresource/StringTemplateResource.java" \
+    "${thymeleaf_sources}/templateresource/UrlTemplateResource.java" \
     "${project_root}/tests/java/TemplateResourceGolden.java"
 
 mkdir -p "$(dirname "${output}")"

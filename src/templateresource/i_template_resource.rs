@@ -85,6 +85,13 @@ pub trait ITemplateResource {
 pub enum TemplateResourceError {
     /// 参数违反具体资源实现的前置条件。
     InvalidArgument(String),
+    /// URL 文本无法构造成资源地址。
+    MalformedUrl {
+        /// 无法解析的原始 URL 位置。
+        location: String,
+        /// Rust URL 解析器报告的底层原因。
+        source: url::ParseError,
+    },
     /// 模板输入资源无法创建或定位。
     Input(TemplateInputException),
 }
@@ -93,6 +100,9 @@ impl Display for TemplateResourceError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InvalidArgument(message) => formatter.write_str(message),
+            Self::MalformedUrl { location, source } => {
+                write!(formatter, "Malformed URL \"{location}\": {source}")
+            }
             Self::Input(error) => Display::fmt(error, formatter),
         }
     }
@@ -102,6 +112,7 @@ impl std::error::Error for TemplateResourceError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::InvalidArgument(_) => None,
+            Self::MalformedUrl { source, .. } => Some(source),
             Self::Input(error) => error.source(),
         }
     }
@@ -177,5 +188,14 @@ mod tests {
         )));
         assert_eq!(input.to_string(), "input failure");
         assert!(input.source().is_none());
+
+        let malformed_source =
+            url::Url::parse("relative").expect_err("relative URL without a base must fail");
+        let malformed = TemplateResourceError::MalformedUrl {
+            location: "relative".to_owned(),
+            source: malformed_source,
+        };
+        assert!(malformed.to_string().contains("relative"));
+        assert!(malformed.source().is_some());
     }
 }

@@ -1,14 +1,26 @@
 import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.net.URL;
 
 import org.thymeleaf.templateresource.FileTemplateResource;
 import org.thymeleaf.templateresource.ITemplateResource;
 import org.thymeleaf.templateresource.StringTemplateResource;
+import org.thymeleaf.templateresource.UrlTemplateResource;
 
 public final class TemplateResourceGolden {
 
@@ -25,6 +37,10 @@ public final class TemplateResourceGolden {
         exportFileValidation();
         exportFilePaths();
         exportFileReaders();
+        exportUrlValidation();
+        exportUrlPaths();
+        exportUrlFiles();
+        exportUrlHttp();
     }
 
     private static void exportNullConstructor() {
@@ -237,6 +253,351 @@ public final class TemplateResourceGolden {
                     throwable.getMessage() != null
                             && slash(throwable.getMessage()).contains(
                                     slash(directory.resolve("missing.txt").toString())));
+        }
+    }
+
+    private static void exportUrlValidation() {
+        for (final Object[] value : new Object[][] {
+                {"null", null},
+                {"empty", ""},
+                {"whitespace", "\t \u3000"}}) {
+            try {
+                new UrlTemplateResource((String) value[1], null);
+                emit("url.path." + value[0], "<no-error>");
+            } catch (final Throwable throwable) {
+                emit("url.path." + value[0] + ".type", throwable.getClass().getName());
+                emit("url.path." + value[0] + ".message", throwable.getMessage());
+            }
+        }
+
+        try {
+            new UrlTemplateResource((URL) null, null);
+            emit("url.null_url", "<no-error>");
+        } catch (final Throwable throwable) {
+            emit("url.null_url.type", throwable.getClass().getName());
+            emit("url.null_url.message", throwable.getMessage());
+        }
+
+        try {
+            new UrlTemplateResource("not-a-url", null);
+            emit("url.malformed", "<no-error>");
+        } catch (final Throwable throwable) {
+            emit("url.malformed.type", throwable.getClass().getName());
+            emit("url.malformed.message_nonempty",
+                    throwable.getMessage() != null && !throwable.getMessage().isEmpty());
+        }
+    }
+
+    private static void exportUrlPaths() throws Exception {
+        final String[] descriptions = {
+                "http://www.thymeleaf.org/",
+                "http://www.thymeleaf.org",
+                "http://www.thymeleaf.org/something",
+                "http://www.thymeleaf.org/something/",
+                "http://www.thymeleaf.org/something/else",
+                "http://www.thymeleaf.org/something/else.html",
+                "http://www.thymeleaf.org/something/./else.html",
+                "http://www.thymeleaf.org/something/more/../else.html",
+                "http://www.thymeleaf.org/something/./more/../else.html"
+        };
+        for (int index = 0; index < descriptions.length; index++) {
+            emit("url.description." + index,
+                    new UrlTemplateResource(descriptions[index], null).getDescription());
+        }
+
+        final String[][] relatives = {
+                {"http://www.thymeleaf.org/", "/"},
+                {"http://www.thymeleaf.org", "/"},
+                {"http://www.thymeleaf.org", "/something"},
+                {"http://www.thymeleaf.org", "something"},
+                {"http://www.thymeleaf.org/more", "something"},
+                {"http://www.thymeleaf.org/more/", "something"},
+                {"http://www.thymeleaf.org/something/else", "more"},
+                {"http://www.thymeleaf.org/something/else.html", "more.html"},
+                {"http://www.thymeleaf.org/something/else.html", "../more.html"},
+                {"http://www.thymeleaf.org/something/more/../else.html", "../less.html"},
+                {"http://www.thymeleaf.org/something/more/../else.html", "../even/less.html"},
+                {"http://www.thymeleaf.org/something/./more/../else.html", "../even/./less.html"}
+        };
+        for (int index = 0; index < relatives.length; index++) {
+            final ITemplateResource resource =
+                    new UrlTemplateResource(relatives[index][0], "ISO-8859-1");
+            emit("url.relative." + index, resource.relative(relatives[index][1]).getDescription());
+        }
+
+        final String[] baseNames = {
+                "http://www.thymeleaf.org/",
+                "http://www.thymeleaf.org",
+                "http://www.thymeleaf.org/more",
+                "http://www.thymeleaf.org/more/",
+                "http://www.thymeleaf.org/something/else",
+                "http://www.thymeleaf.org/something/else.html",
+                "http://www.thymeleaf.org/something/more/../else.html",
+                "http://www.thymeleaf.org/something/more/../else.html/",
+                "http://www.thymeleaf.org/something/more/../else.html/a/..",
+                "http://www.thymeleaf.org/something/./more/../else.html",
+                "http://www.thymeleaf.org/something/./more/../else.html?param=a"
+        };
+        for (int index = 0; index < baseNames.length; index++) {
+            emit("url.base_name." + index,
+                    new UrlTemplateResource(baseNames[index], null).getBaseName());
+        }
+
+        final ITemplateResource failure =
+                new UrlTemplateResource("http://www.thymeleaf.org/base.html", null);
+        for (final Object[] value : new Object[][] {
+                {"null", null},
+                {"empty", ""},
+                {"whitespace", "\t \u3000"}}) {
+            try {
+                failure.relative((String) value[1]);
+                emit("url.relative_failure." + value[0], "<no-error>");
+            } catch (final Throwable throwable) {
+                emit("url.relative_failure." + value[0] + ".type",
+                        throwable.getClass().getName());
+                emit("url.relative_failure." + value[0] + ".message",
+                        throwable.getMessage());
+            }
+        }
+
+        try {
+            failure.relative("http://[");
+            emit("url.relative_failure.malformed", "<no-error>");
+        } catch (final Throwable throwable) {
+            emit("url.relative_failure.malformed.type", throwable.getClass().getName());
+            emit("url.relative_failure.malformed.message",
+                    throwable.getMessage());
+            emit("url.relative_failure.malformed.cause_type",
+                    throwable.getCause() == null ? null : throwable.getCause().getClass().getName());
+        }
+    }
+
+    private static void exportUrlFiles() throws Exception {
+        final Path directory = Files.createTempDirectory("thymeleaf-url-golden-");
+        try {
+            final Path parent = Files.createDirectory(directory.resolve("space dir"));
+            final Path primary = parent.resolve("main.html");
+            final Path sibling = parent.resolve("child.html");
+            Files.write(primary, new byte[] {0x61, (byte) 0xE9});
+            Files.write(sibling, new byte[] {0x62, (byte) 0xE9});
+
+            final ITemplateResource resource =
+                    new UrlTemplateResource(primary.toUri().toURL(), "ISO-8859-1");
+            emit("url.file.description_scheme", resource.getDescription().startsWith("file:"));
+            emit("url.file.description_has_escaped_space",
+                    resource.getDescription().contains("space%20dir"));
+            emit("url.file.base_name", resource.getBaseName());
+            emit("url.file.exists", resource.exists());
+            emit("url.file.reader", codePoints(readAll(resource.reader())));
+            emit("url.file.reader_fresh", resource.reader() != resource.reader());
+
+            final ITemplateResource relative = resource.relative("child.html");
+            emit("url.file.relative.base_name", relative.getBaseName());
+            emit("url.file.relative.exists", relative.exists());
+            emit("url.file.relative.reader", codePoints(readAll(relative.reader())));
+
+            final ITemplateResource missing = resource.relative("missing.html");
+            emit("url.file.missing.exists", missing.exists());
+            try {
+                missing.reader();
+                emit("url.file.missing.reader", "<no-error>");
+            } catch (final Throwable throwable) {
+                emit("url.file.missing.reader.type", throwable.getClass().getName());
+            }
+        } finally {
+            try (java.util.stream.Stream<Path> paths = Files.walk(directory)) {
+                paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                    try {
+                        Files.delete(path);
+                    } catch (final IOException exception) {
+                        throw new RuntimeException(exception);
+                    }
+                });
+            }
+        }
+    }
+
+    private static void exportUrlHttp() throws Exception {
+        final LocalHttpServer server = new LocalHttpServer(10);
+        try {
+            emit("url.http.exists.ok",
+                    new UrlTemplateResource(server.url("/ok"), null).exists());
+            emit("url.http.exists.not_found",
+                    new UrlTemplateResource(server.url("/not-found"), null).exists());
+            emit("url.http.exists.other_with_length",
+                    new UrlTemplateResource(server.url("/other-with-length"), null).exists());
+            emit("url.http.exists.other_without_length",
+                    new UrlTemplateResource(server.url("/other-without-length"), null).exists());
+
+            emit("url.http.reader.ok",
+                    readAll(new UrlTemplateResource(server.url("/ok"), "UTF-8").reader()));
+            emit("url.http.reader.latin1",
+                    codePoints(readAll(
+                            new UrlTemplateResource(server.url("/latin1"), "ISO-8859-1").reader())));
+
+            try {
+                new UrlTemplateResource(server.url("/ok"), "not-a-charset").reader();
+                emit("url.http.reader.unsupported", "<no-error>");
+            } catch (final Throwable throwable) {
+                emit("url.http.reader.unsupported.type", throwable.getClass().getName());
+            }
+
+            try {
+                new UrlTemplateResource(server.url("/not-found"), "UTF-8").reader();
+                emit("url.http.reader.not_found", "<no-error>");
+            } catch (final Throwable throwable) {
+                emit("url.http.reader.not_found.type", throwable.getClass().getName());
+            }
+
+            final ITemplateResource fresh =
+                    new UrlTemplateResource(server.url("/ok"), "UTF-8");
+            emit("url.http.reader.fresh", fresh.reader() != fresh.reader());
+
+            server.await();
+            emit("url.http.server.head_count", server.count("HEAD"));
+            emit("url.http.server.get_count", server.count("GET"));
+        } finally {
+            server.close();
+        }
+
+        final int unavailablePort;
+        try (ServerSocket unavailable = new ServerSocket(0)) {
+            unavailablePort = unavailable.getLocalPort();
+        }
+        emit("url.http.exists.connection_refused",
+                new UrlTemplateResource(
+                        "http://127.0.0.1:" + unavailablePort + "/unavailable", null).exists());
+    }
+
+    private static final class LocalHttpServer implements AutoCloseable {
+
+        private final ServerSocket serverSocket;
+        private final Thread thread;
+        private final int expectedRequests;
+        private final List<String> methods =
+                Collections.synchronizedList(new ArrayList<String>());
+        private volatile Throwable failure;
+
+        private LocalHttpServer(final int expectedRequests) throws IOException {
+            this.serverSocket = new ServerSocket(0);
+            this.expectedRequests = expectedRequests;
+            this.thread = new Thread(this::serve, "thymeleaf-url-golden-http");
+            this.thread.setDaemon(true);
+            this.thread.start();
+        }
+
+        private String url(final String path) {
+            return "http://127.0.0.1:" + this.serverSocket.getLocalPort() + path;
+        }
+
+        private int count(final String method) {
+            synchronized (this.methods) {
+                int count = 0;
+                for (final String observed : this.methods) {
+                    if (method.equals(observed)) {
+                        count++;
+                    }
+                }
+                return count;
+            }
+        }
+
+        private void serve() {
+            try {
+                for (int index = 0; index < this.expectedRequests; index++) {
+                    try (Socket socket = this.serverSocket.accept()) {
+                        handle(socket);
+                    }
+                }
+            } catch (final SocketException exception) {
+                if (!this.serverSocket.isClosed()) {
+                    this.failure = exception;
+                }
+            } catch (final Throwable throwable) {
+                this.failure = throwable;
+            }
+        }
+
+        private void handle(final Socket socket) throws IOException {
+            final BufferedReader input = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream(), StandardCharsets.ISO_8859_1));
+            final String requestLine = input.readLine();
+            if (requestLine == null) {
+                throw new IOException("Missing HTTP request line");
+            }
+            String line;
+            while ((line = input.readLine()) != null && !line.isEmpty()) {
+                // Consume all request headers before writing the response.
+            }
+
+            final String[] request = requestLine.split(" ");
+            final String method = request[0];
+            final String path = request[1];
+            this.methods.add(method);
+
+            final int status;
+            final String reason;
+            final byte[] body;
+            final boolean includeLength;
+            if ("/ok".equals(path)) {
+                status = 200;
+                reason = "OK";
+                body = new byte[] {0x6F, 0x6B};
+                includeLength = true;
+            } else if ("/latin1".equals(path)) {
+                status = 200;
+                reason = "OK";
+                body = new byte[] {0x61, (byte) 0xE9};
+                includeLength = true;
+            } else if ("/not-found".equals(path)) {
+                status = 404;
+                reason = "Not Found";
+                body = new byte[0];
+                includeLength = true;
+            } else if ("/other-with-length".equals(path)) {
+                status = 500;
+                reason = "Server Error";
+                body = new byte[] {0x65, 0x72};
+                includeLength = true;
+            } else {
+                status = 204;
+                reason = "No Content";
+                body = new byte[0];
+                includeLength = false;
+            }
+
+            final OutputStream output = socket.getOutputStream();
+            output.write(("HTTP/1.1 " + status + " " + reason + "\r\n")
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            if (includeLength) {
+                output.write(("Content-Length: " + body.length + "\r\n")
+                        .getBytes(StandardCharsets.ISO_8859_1));
+            }
+            output.write("Connection: close\r\n\r\n"
+                    .getBytes(StandardCharsets.ISO_8859_1));
+            if (!"HEAD".equals(method)) {
+                output.write(body);
+            }
+            output.flush();
+        }
+
+        private void await() throws Exception {
+            this.thread.join(10_000L);
+            if (this.thread.isAlive()) {
+                throw new IllegalStateException("HTTP server did not receive all requests");
+            }
+            if (this.failure != null) {
+                throw new Exception(this.failure);
+            }
+        }
+
+        @Override
+        public void close() throws Exception {
+            this.serverSocket.close();
+            this.thread.join(10_000L);
+            if (this.failure != null) {
+                throw new Exception(this.failure);
+            }
         }
     }
 

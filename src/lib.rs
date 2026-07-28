@@ -25,5 +25,6 @@ pub use template_spec::{
 pub use templatemode::{TemplateMode, TemplateModeParseError};
 pub use templateresource::{
     FileTemplateResource, ITemplateResource, StringTemplateResource, TemplateResourceError,
+    UrlTemplateResource,
 };
 pub use thymeleaf::Thymeleaf;
