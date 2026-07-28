@@ -39,4 +39,13 @@ public final class StringUtils {
         }
         return true;
     }
+
+    public static String replace(final Object target, final String before, final String after) {
+        Validate.notNull(before, "Parameter before cannot be null");
+        Validate.notNull(after, "Parameter after cannot be null");
+        if (target == null) {
+            return null;
+        }
+        return target.toString().replace(before, after);
+    }
 }

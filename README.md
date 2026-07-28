@@ -145,11 +145,11 @@ Release order may be phased, but the architecture must not require independent u
 | Feasibility and architecture proposal | Available | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
-| Public Rust API | Verified slices | Foundation/configuration APIs, cache families, and the template-resource SPI/string resource |
+| Public Rust API | Verified slices | Foundation/configuration APIs, cache families, and the template-resource SPI/string/file resources |
 | Framework adapters | Planned | No adapter manifests or code |
 | Upstream compatibility matrix | In progress | 491 objects, 4,291 methods, and 6,936 parameters inventoried |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
-| Tests and CI | Slice gates passing | 56 unit tests, eight Java/Rust Golden tests with 531 records, 100% line/function/region coverage |
+| Tests and CI | Slice gates passing | 72 unit tests, eight Java/Rust Golden tests with 579 records, 100% line/function/region coverage |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start

@@ -23,5 +23,7 @@ pub use template_spec::{
     TemplateSpec, TemplateSpecError,
 };
 pub use templatemode::{TemplateMode, TemplateModeParseError};
-pub use templateresource::{ITemplateResource, StringTemplateResource, TemplateResourceError};
+pub use templateresource::{
+    FileTemplateResource, ITemplateResource, StringTemplateResource, TemplateResourceError,
+};
 pub use thymeleaf::Thymeleaf;

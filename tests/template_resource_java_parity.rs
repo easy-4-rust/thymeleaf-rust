@@ -1,11 +1,16 @@
-//! 模板资源接口与字符串资源的 Thymeleaf 3.1.5 Java/Rust Golden 差分测试。
+//! 模板资源接口、字符串资源和文件资源的 Thymeleaf 3.1.5 Java/Rust Golden 差分测试。
 
+use std::fs;
 use std::io::Read;
+use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use thymeleaf::{ITemplateResource, StringTemplateResource, TemplateResourceError};
+use thymeleaf::{
+    FileTemplateResource, ITemplateResource, StringTemplateResource, TemplateResourceError,
+};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
-const RUST_BASELINE: &str = "b6c97b2df175370c8b6a94feaed0955af67712f9";
+const RUST_BASELINE: &str = "eca81ffdc14b721e60cbfc812cb701ffb8fae7ba";
 const JAVA_GOLDEN: &str = include_str!("fixtures/template_resource_golden.txt");
 
 #[test]
@@ -17,6 +22,9 @@ fn template_resource_objects_match_java_golden() {
     export_empty_resource(&mut output);
     export_unicode_resource(&mut output);
     export_relative_failures(&mut output);
+    export_file_validation(&mut output);
+    export_file_paths(&mut output);
+    export_file_readers(&mut output);
     assert_eq!(output, JAVA_GOLDEN);
 }
 
@@ -128,6 +136,342 @@ fn export_relative_failures(output: &mut String) {
             Some(&error.to_string()),
         );
     }
+}
+
+fn export_file_validation(output: &mut String) {
+    for (name, path) in [
+        ("null", None),
+        ("empty", Some("")),
+        ("whitespace", Some("\t \u{3000}")),
+    ] {
+        let error = FileTemplateResource::new(path, None)
+            .err()
+            .expect("invalid string path");
+        emit(
+            output,
+            &format!("file.path.{name}.type"),
+            Some("java.lang.IllegalArgumentException"),
+        );
+        emit(
+            output,
+            &format!("file.path.{name}.message"),
+            Some(&error.to_string()),
+        );
+    }
+
+    let error = FileTemplateResource::from_file(None, None)
+        .err()
+        .expect("null file must fail");
+    emit(
+        output,
+        "file.null_file.type",
+        Some("java.lang.IllegalArgumentException"),
+    );
+    emit(output, "file.null_file.message", Some(&error.to_string()));
+
+    #[cfg(unix)]
+    {
+        use std::ffi::OsStr;
+        use std::os::unix::ffi::OsStrExt;
+
+        let non_utf8 = Path::new(OsStr::from_bytes(&[0xFF]));
+        assert!(
+            FileTemplateResource::from_file(Some(non_utf8), None).is_err(),
+            "a Java File cannot represent a non-UTF-8 Rust path"
+        );
+    }
+
+    let empty_file =
+        FileTemplateResource::from_file(Some(Path::new("")), None).expect("empty File is valid");
+    emit_bool(
+        output,
+        "file.empty_file.description_is_user_dir",
+        empty_file.get_description()
+            == std::env::current_dir()
+                .expect("current directory")
+                .to_string_lossy(),
+    );
+    emit(
+        output,
+        "file.empty_file.base_name",
+        empty_file.get_base_name().as_deref(),
+    );
+    emit_bool(output, "file.empty_file.exists", empty_file.exists());
+}
+
+fn export_file_paths(output: &mut String) {
+    let resource =
+        FileTemplateResource::new(Some("something/else/../more.html"), Some("ISO-8859-1"))
+            .expect("valid file resource");
+    emit_bool(
+        output,
+        "file.path.description_suffix",
+        slash(&resource.get_description()).ends_with("/something/else/../more.html"),
+    );
+    emit(
+        output,
+        "file.path.base_name",
+        resource.get_base_name().as_deref(),
+    );
+    emit_bool(output, "file.path.exists", resource.exists());
+
+    let duplicate =
+        FileTemplateResource::new(Some("//something//else"), None).expect("valid file resource");
+    emit(
+        output,
+        "file.path.duplicate.description",
+        Some(&slash(&duplicate.get_description())),
+    );
+    emit(
+        output,
+        "file.path.duplicate.base_name",
+        duplicate.get_base_name().as_deref(),
+    );
+
+    for (name, relative_location) in [
+        ("null", None),
+        ("empty", Some("")),
+        ("whitespace", Some("\t \u{3000}")),
+    ] {
+        let error = resource
+            .relative(relative_location)
+            .err()
+            .expect("invalid relative path");
+        emit(
+            output,
+            &format!("file.relative.{name}.type"),
+            Some("java.lang.IllegalArgumentException"),
+        );
+        emit(
+            output,
+            &format!("file.relative.{name}.message"),
+            Some(&error.to_string()),
+        );
+    }
+
+    let relative = resource
+        .relative(Some("../more_es.properties"))
+        .expect("valid relative resource");
+    emit_bool(
+        output,
+        "file.relative.valid.description_suffix",
+        slash(&relative.get_description()).ends_with("/something/../more_es.properties"),
+    );
+    emit(
+        output,
+        "file.relative.valid.base_name",
+        relative.get_base_name().as_deref(),
+    );
+    emit_bool(output, "file.relative.valid.exists", relative.exists());
+}
+
+fn export_file_readers(output: &mut String) {
+    let directory = temporary_directory();
+    fs::create_dir(&directory).expect("create temporary directory");
+
+    export_decode(output, &directory, "default", None, "默认😀".as_bytes());
+    export_decode(
+        output,
+        &directory,
+        "blank",
+        Some("\t \u{3000}"),
+        "默认😀".as_bytes(),
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf8_bom",
+        Some("UTF8"),
+        &[0xEF, 0xBB, 0xBF, b'a'],
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf8_malformed",
+        Some("UTF-8"),
+        &[b'a', 0xC0, 0xAF, 0xE2, 0x82, b'b'],
+    );
+    export_decode(
+        output,
+        &directory,
+        "ascii",
+        Some("ASCII"),
+        &[b'a', 0x80, 0x81, b'b'],
+    );
+    export_decode(
+        output,
+        &directory,
+        "latin1",
+        Some("ISO8859_1"),
+        &[b'a', 0x80, 0xFF],
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf16_bom_be",
+        Some("UTF-16"),
+        &[0xFE, 0xFF, 0x00, b'a'],
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf16_bom_le",
+        Some("Unicode"),
+        &[0xFF, 0xFE, b'a', 0x00],
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf16_no_bom",
+        Some("UTF-16"),
+        &[0x00, b'a'],
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf16be_explicit_bom",
+        Some("UnicodeBigUnmarked"),
+        &[0xFE, 0xFF, 0x00, b'a'],
+    );
+    export_decode(
+        output,
+        &directory,
+        "utf16le_explicit_bom",
+        Some("UnicodeLittleUnmarked"),
+        &[0xFF, 0xFE, b'a', 0x00],
+    );
+    export_decode(
+        output,
+        &directory,
+        "windows1252",
+        Some("windows-1252"),
+        &[b'a', 0x80, 0x81],
+    );
+    export_decode(
+        output,
+        &directory,
+        "gbk",
+        Some("GBK"),
+        &[0xC4, 0xE3, 0xBA, 0xC3],
+    );
+
+    let fresh_path = directory.join("fresh.txt");
+    fs::write(&fresh_path, b"fresh-reader").expect("write fresh reader fixture");
+    let fresh = FileTemplateResource::from_file(Some(&fresh_path), Some("UTF-8"))
+        .expect("valid file resource");
+    emit_bool(output, "file.reader.exists", fresh.exists());
+    let first_identity = fresh.reader().expect("first identity reader");
+    let second_identity = fresh.reader().expect("second identity reader");
+    emit_bool(
+        output,
+        "file.reader.fresh",
+        !std::ptr::eq::<dyn Read>(&*first_identity, &*second_identity),
+    );
+    emit(
+        output,
+        "file.reader.first",
+        Some(&read_all(fresh.reader().expect("first reader"))),
+    );
+    emit(
+        output,
+        "file.reader.second",
+        Some(&read_all(fresh.reader().expect("second reader"))),
+    );
+
+    let unsupported_path = directory.join("unsupported.txt");
+    fs::write(&unsupported_path, b"a").expect("write unsupported charset fixture");
+    let unsupported = FileTemplateResource::from_file(Some(&unsupported_path), Some(" UTF-8 "))
+        .expect("resource construction is lazy");
+    let unsupported_error = unsupported
+        .reader()
+        .err()
+        .expect("unsupported charset must fail");
+    emit(
+        output,
+        "file.reader.unsupported.type",
+        Some("java.io.UnsupportedEncodingException"),
+    );
+    emit(
+        output,
+        "file.reader.unsupported.message",
+        Some(&code_points(&unsupported_error.to_string())),
+    );
+
+    let unknown = FileTemplateResource::from_file(Some(&unsupported_path), Some("not-a-charset"))
+        .expect("resource construction is lazy");
+    let unknown_error = unknown.reader().err().expect("unknown charset must fail");
+    emit(
+        output,
+        "file.reader.unknown.type",
+        Some("java.io.UnsupportedEncodingException"),
+    );
+    emit(
+        output,
+        "file.reader.unknown.message",
+        Some(&code_points(&unknown_error.to_string())),
+    );
+
+    let missing_path = directory.join("missing.txt");
+    let missing = FileTemplateResource::from_file(Some(&missing_path), Some("not-a-charset"))
+        .expect("resource construction is lazy");
+    let missing_error = missing
+        .reader()
+        .err()
+        .expect("missing file must fail before charset");
+    emit(
+        output,
+        "file.reader.missing_precedes_charset.type",
+        Some("java.io.FileNotFoundException"),
+    );
+    emit_bool(
+        output,
+        "file.reader.missing_precedes_charset.message_mentions_file",
+        slash(&missing_error.to_string()).contains(&slash(&missing_path.to_string_lossy())),
+    );
+
+    fs::remove_dir_all(directory).expect("remove temporary directory");
+}
+
+fn export_decode(
+    output: &mut String,
+    directory: &Path,
+    name: &str,
+    character_encoding: Option<&str>,
+    bytes: &[u8],
+) {
+    let file = directory.join(format!("{name}.txt"));
+    fs::write(&file, bytes).expect("write decoding fixture");
+    let resource = FileTemplateResource::from_file(Some(&file), character_encoding)
+        .expect("valid decoding resource");
+    let decoded = read_all(resource.reader().expect("decoded reader"));
+    emit(
+        output,
+        &format!("file.decode.{name}"),
+        Some(&code_points(&decoded)),
+    );
+}
+
+fn code_points(value: &str) -> String {
+    value
+        .chars()
+        .map(|character| format!("{:04X}", character as u32))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn slash(value: &str) -> String {
+    value.replace('\\', "/")
+}
+
+fn temporary_directory() -> PathBuf {
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time")
+        .as_nanos();
+    std::env::temp_dir().join(format!(
+        "thymeleaf-file-golden-{}-{nonce}",
+        std::process::id()
+    ))
 }
 
 fn read_all(mut reader: Box<dyn Read>) -> String {
