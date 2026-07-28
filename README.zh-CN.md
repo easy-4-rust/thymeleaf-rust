@@ -148,6 +148,7 @@ thymeleaf crate → Vernal
 | Rust 公共 API | S1 垂直切片 | `Thymeleaf`、`TemplateMode`、`TemplateSpec` 与九个异常对象 |
 | 框架适配器 | 规划中 | 不存在适配器 Manifest 或代码 |
 | 上游兼容矩阵 | 实施中 | 已登记 491 个对象、4,291 个方法和 6,936 个参数 |
+| 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
 | 测试与 CI | S1 门禁通过 | 24 个单元测试、3 个共 383 条记录的 Java/Rust Golden 测试、行/函数/区域覆盖率均为 100% |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
