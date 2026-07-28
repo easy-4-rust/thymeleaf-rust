@@ -6,4 +6,12 @@ package org.slf4j;
 public interface Logger {
 
     void warn(String format, Object... arguments);
+
+    default boolean isTraceEnabled() {
+        return false;
+    }
+
+    default void trace(String format, Object... arguments) {
+        // Golden 中默认关闭 trace；该方法只满足上游编译边界。
+    }
 }

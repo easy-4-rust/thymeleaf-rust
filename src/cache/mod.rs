@@ -6,6 +6,7 @@ mod i_cache;
 mod i_cache_entry_validity;
 mod i_cache_entry_validity_checker;
 mod non_cacheable_cache_entry_validity;
+mod standard_cache;
 mod template_cache_key;
 mod ttl_cache_entry_validity;
 
@@ -15,5 +16,6 @@ pub use i_cache::ICache;
 pub use i_cache_entry_validity::ICacheEntryValidity;
 pub use i_cache_entry_validity_checker::ICacheEntryValidityChecker;
 pub use non_cacheable_cache_entry_validity::NonCacheableCacheEntryValidity;
+pub use standard_cache::{StandardCache, StandardCacheError};
 pub use template_cache_key::{TemplateCacheKey, TemplateCacheKeyError};
 pub use ttl_cache_entry_validity::TTLCacheEntryValidity;
