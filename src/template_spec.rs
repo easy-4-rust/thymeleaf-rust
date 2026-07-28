@@ -603,7 +603,7 @@ fn is_java_whitespace(character: char) -> bool {
     )
 }
 
-fn loggify_template_name(template: &str) -> String {
+pub(crate) fn loggify_template_name(template: &str) -> String {
     let utf16 = template.encode_utf16().collect::<Vec<_>>();
     if utf16.len() <= 120 {
         return template.replace('\n', " ");
@@ -619,7 +619,7 @@ fn format_selectors(selectors: &[String]) -> String {
     format!("[{}]", selectors.join(", "))
 }
 
-fn format_attributes(attributes: &TemplateResolutionAttributes) -> String {
+pub(crate) fn format_attributes(attributes: &TemplateResolutionAttributes) -> String {
     let mut entries = attributes
         .iter()
         .map(|(key, value)| format!("{}={value}", key.as_deref().unwrap_or("null")))
