@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 
 const INVENTORY_PATH: &str = "docs/migration/baseline/java_api_inventory.json";
 const OBJECT_TABLE_PATH: &str = "docs/migration/对象级对照表.md";
+const TODO_MACRO: &str = concat!("todo", "!(");
+const UNIMPLEMENTED_MACRO: &str = concat!("unimplemented", "!(");
 
 #[derive(Debug, Deserialize)]
 struct Inventory {
@@ -380,8 +382,8 @@ fn scan_red_lines(
         }
         for (index, line) in source.lines().enumerate() {
             let trimmed = line.trim();
-            let forbidden = trimmed.contains("todo!(")
-                || trimmed.contains("unimplemented!(")
+            let forbidden = trimmed.contains(TODO_MACRO)
+                || trimmed.contains(UNIMPLEMENTED_MACRO)
                 || (trimmed.starts_with("use ") && trimmed.contains("::*"));
             if forbidden {
                 violations.push(format!("forbidden source at {relative}:{}", index + 1));
