@@ -8,6 +8,7 @@ mod dialect_configuration;
 pub mod exceptions;
 mod template_spec;
 pub mod templatemode;
+pub mod templateresource;
 mod thymeleaf;
 
 pub use dialect::{AbstractDialect, AbstractDialectError, IDialect};
@@ -22,4 +23,5 @@ pub use template_spec::{
     TemplateSpec, TemplateSpecError,
 };
 pub use templatemode::{TemplateMode, TemplateModeParseError};
+pub use templateresource::{ITemplateResource, StringTemplateResource, TemplateResourceError};
 pub use thymeleaf::Thymeleaf;
