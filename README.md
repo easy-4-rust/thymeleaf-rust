@@ -145,11 +145,11 @@ Release order may be phased, but the architecture must not require independent u
 | Feasibility and architecture proposal | Available | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
-| Public Rust API | Verified slices | Foundation/configuration APIs, cache families, `StandardCache`, `TemplateResolution`, template-resource SPI/string/file resources, all five upstream enums, internal incremental processing and flow-control contracts, text-parser locator/state/error/handler/default-handler/chained-handler/comment/literal/general scanning/attribute-sequence/element contracts, `FastStringWriter`, `CharArrayWrapperSequence`, standard expression literal/execution-context/conversion-service/NO-OP/token character semantics, `EvaluationUtils`/`Bools`, aggregate/array/list/set/map/object facades, pattern, version, logging, and content-type utilities; URL and JVM soft-reference runtime edges remain pending |
+| Public Rust API | Verified slices | Foundation/configuration APIs, cache families, `StandardCache`, `TemplateResolution`, template-resource SPI/string/file resources, all five upstream enums, internal incremental processing and flow-control contracts, the UTF-16 streaming `TextParser`/`BufferPool` chain and its supporting text-parser contracts, `FastStringWriter`, `CharArrayWrapperSequence`, standard expression literal/execution-context/conversion-service/NO-OP/token character semantics, `EvaluationUtils`/`Bools`, aggregate/array/list/set/map/object facades, pattern, version, logging, and content-type utilities; URL and JVM soft-reference runtime edges remain pending |
 | Framework adapters | Planned | No adapter manifests or code |
 | Upstream compatibility matrix | In progress | 491 objects, 4,291 methods, and 6,936 parameters inventoried |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
-| Tests and CI | Slice gates passing | 212 unit tests, 38 fixed Java Oracles with 3,042 registered records, 100% line/function/region coverage |
+| Tests and CI | Slice gates passing | 226 unit tests, 41 fixed Java Oracles with 3,444 registered records, 100% line/function/region coverage |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start
@@ -175,6 +175,8 @@ Then read:
 - [Method-level mapping](docs/migration/方法级对照表.md)
 - [Semantic migration matrix](docs/migration/语义迁移对照表.md)
 - [Object naming consistency check](docs/migration/对象名称一致性检查.md)
+- [Migration technical requirements](docs/migration/Thymeleaf-Rust-迁移技术要求.md)
+- [Migration test ledger](docs/migration/迁移测试对照表.md)
 - [Chinese README](README.zh-CN.md)
 
 ## Compatibility direction

@@ -145,11 +145,11 @@ thymeleaf crate → Vernal
 | 可行性与架构提案 | 已有 | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
-| Rust 公共 API | 已验证切片 | Foundation/配置 API、缓存对象族、`StandardCache`、`TemplateResolution`、模板资源 SPI/字符串资源/文件资源、上游全部五个枚举、引擎内部增量处理/流控合同与文本解析器定位/状态/异常合同、`FastStringWriter`、`CharArrayWrapperSequence`、标准表达式字面量/执行上下文/转换服务/NO-OP/Token 字符语义、`EvaluationUtils`/`Bools`、聚合/数组/List/Set/Map/Object facade、模式、版本、日志与内容类型工具；URL 与 JVM 软引用运行时边界仍待补齐 |
+| Rust 公共 API | 已验证切片 | Foundation/配置 API、缓存对象族、`StandardCache`、`TemplateResolution`、模板资源 SPI/字符串资源/文件资源、上游全部五个枚举、引擎内部增量处理/流控合同、UTF-16 流式 `TextParser`/`BufferPool` 调用链及其文本解析支撑合同、`FastStringWriter`、`CharArrayWrapperSequence`、标准表达式字面量/执行上下文/转换服务/NO-OP/Token 字符语义、`EvaluationUtils`/`Bools`、聚合/数组/List/Set/Map/Object facade、模式、版本、日志与内容类型工具；URL 与 JVM 软引用运行时边界仍待补齐 |
 | 框架适配器 | 规划中 | 不存在适配器 Manifest 或代码 |
 | 上游兼容矩阵 | 实施中 | 已登记 491 个对象、4,291 个方法和 6,936 个参数 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
-| 测试与 CI | 切片门禁通过 | 197 个单元测试、33 个共 2,721 条记录的 Java/Rust Golden 测试、行/函数/区域覆盖率均为 100% |
+| 测试与 CI | 切片门禁通过 | 226 个单元测试、41 组共 3,444 条记录的固定 Java Oracle、行/函数/区域覆盖率均为 100% |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
 ## 文档快速开始
@@ -175,6 +175,8 @@ cargo llvm-cov --workspace --all-features \
 - [方法级对照表](docs/migration/方法级对照表.md)
 - [语义迁移对照表](docs/migration/语义迁移对照表.md)
 - [对象名称一致性检查](docs/migration/对象名称一致性检查.md)
+- [迁移技术要求](docs/migration/Thymeleaf-Rust-迁移技术要求.md)
+- [迁移测试对照表](docs/migration/迁移测试对照表.md)
 - [English README](README.md)
 
 ## 兼容方向
