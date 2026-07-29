@@ -4,6 +4,11 @@ mod abstract_chained_text_handler;
 mod abstract_text_handler;
 #[allow(
     dead_code,
+    reason = "TextParser 消费者将在后续切片迁移；当前先验证注释预处理器"
+)]
+mod comment_processor_text_handler;
+#[allow(
+    dead_code,
     reason = "TextParser 消费者将在后续切片迁移；当前先验证事件预处理器"
 )]
 mod event_processor_text_handler;
@@ -38,6 +43,9 @@ pub use {
 };
 #[expect(unused_imports, reason = "text parser 消费者对象将在后续切片中迁移")]
 pub(crate) use {
+    comment_processor_text_handler::{
+        CommentProcessorTextHandler, CommentProcessorTextHandlerRuntimeError,
+    },
     event_processor_text_handler::{
         EventProcessorTextHandler, EventProcessorTextHandlerRuntimeError, StructureNamesRepository,
     },
