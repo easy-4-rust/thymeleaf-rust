@@ -3,6 +3,7 @@
 mod aggregate_utils;
 mod array_utils;
 mod content_type_utils;
+mod evaluation_utils;
 mod identity_counter;
 mod list_utils;
 mod logging_utils;
@@ -23,6 +24,11 @@ pub use array_utils::{
     ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArray, JavaArrayElement, JavaArrayType,
 };
 pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
+pub use evaluation_utils::{
+    EvaluationError, EvaluationUtils, JavaBigDecimalResult, JavaEvaluationArray,
+    JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
+    JavaEvaluationValue, JavaHashCode, JavaMapEntry,
+};
 pub use identity_counter::{IdentityCounter, IdentityCounterError};
 pub use list_utils::{
     JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,

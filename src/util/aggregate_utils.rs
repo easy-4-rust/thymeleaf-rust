@@ -134,6 +134,49 @@ impl JavaBigDecimal {
         parse_decimal(&java_double_string(value))
     }
 
+    pub(crate) fn from_f64_exact(value: f64) -> Option<Self> {
+        if !value.is_finite() {
+            return None;
+        }
+        if value == 0.0 {
+            return Some(Self::zero());
+        }
+
+        // BigDecimal(double) 使用 IEEE-754 的精确二进制值，而不是 valueOf(double)
+        // 的最短十进制文本。先还原 significand × 2^exponent，再把负二进制指数
+        // 转换成最小的十进制 scale。
+        let bits = value.to_bits();
+        let negative = bits >> 63 != 0;
+        let exponent_bits = ((bits >> 52) & 0x7ff) as i32;
+        let fraction = bits & ((1_u64 << 52) - 1);
+        let (mut significand, binary_exponent) = if exponent_bits == 0 {
+            (fraction, -1074)
+        } else {
+            ((1_u64 << 52) | fraction, exponent_bits - 1023 - 52)
+        };
+
+        let mut unscaled = if binary_exponent >= 0 {
+            BigInt::from(significand)
+                << usize::try_from(binary_exponent).expect("non-negative binary exponent")
+        } else {
+            let mut scale = -binary_exponent;
+            while scale > 0 && significand & 1 == 0 {
+                significand >>= 1;
+                scale -= 1;
+            }
+            let scale_u32 = u32::try_from(scale).expect("IEEE-754 scale fits u32");
+            let mut value = BigInt::from(significand) * BigInt::from(5_u8).pow(scale_u32);
+            if negative {
+                value = -value;
+            }
+            return Some(Self::from_unscaled(value, scale));
+        };
+        if negative {
+            unscaled = -unscaled;
+        }
+        Some(Self::from_unscaled(unscaled, 0))
+    }
+
     fn add(&self, other: &Self) -> Self {
         let result_scale = self.scale.max(other.scale);
         let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
