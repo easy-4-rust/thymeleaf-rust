@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 269,
+    "rust_tests": 270,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -7884,6 +7884,14 @@
       "file": "src/expression/token.rs",
       "line": 395,
       "name": "preserves_null_index_and_trace_boundaries",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/inline/i_inline_pre_processor_handler.rs",
+      "line": 501,
+      "name": "java_golden_covers_all_callbacks_and_nullable_mutable_buffers",
       "kind": "test",
       "signals": []
     },
