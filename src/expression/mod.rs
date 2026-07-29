@@ -13,6 +13,7 @@ mod objects;
 mod sets;
 mod standard_conversion_service;
 mod standard_expression_execution_context;
+mod token;
 
 pub use abstract_standard_conversion_service::AbstractStandardConversionService;
 pub use aggregates::Aggregates;
@@ -30,3 +31,4 @@ pub use objects::{JavaObjectArray, Objects, ObjectsError};
 pub use sets::Sets;
 pub use standard_conversion_service::StandardConversionService;
 pub use standard_expression_execution_context::StandardExpressionExecutionContext;
+pub use token::{JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer};
