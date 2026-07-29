@@ -95,7 +95,7 @@ pub trait IEngineConfiguration: Send + Sync {
     fn get_execution_attributes(&self)
     -> &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
     /// 返回聚合表达式对象工厂。
-    fn get_expression_object_factory(&self) -> &dyn IExpressionObjectFactory;
+    fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory>;
     /// 返回模板管理器。
     fn get_template_manager(&self) -> &dyn ITemplateManager;
     /// 返回指定模式的稳定模型工厂。

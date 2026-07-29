@@ -35,6 +35,7 @@ pub mod templateresource;
 pub mod text;
 mod thymeleaf;
 pub mod util;
+pub mod web;
 pub mod xmldeclaration;
 
 pub use context::{

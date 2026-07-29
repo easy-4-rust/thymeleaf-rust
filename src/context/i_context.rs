@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::expression::TemplateValue;
 use crate::util::{JavaLocale, JavaString};
+use crate::web::IWebExchange;
 
 /// `IContext#getVariableNames()` 返回的可变 Set 视图合同。
 ///
@@ -55,4 +56,12 @@ pub trait IContext: Any {
     /// `None` 表示变量不存在；显式 Java null 返回
     /// `Some(TemplateValue::Null)`，最终 Java API 边界可重新折叠两者。
     fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
+
+    /// 返回可选 Web exchange capability。
+    ///
+    /// Java 通过 `context instanceof IWebContext` 发现该能力；Rust 用显式 capability
+    /// 避免丢失 trait object 的动态接口信息。普通上下文默认不具备 Web 能力。
+    fn get_web_exchange(&self) -> Option<&dyn IWebExchange> {
+        None
+    }
 }

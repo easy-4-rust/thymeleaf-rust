@@ -15,8 +15,8 @@ pub trait IExpressionObjects {
     fn contains_object(&self, name: Option<&JavaString>) -> bool;
 
     /// 返回对象名称集合的只读快照。
-    fn get_object_names(&self) -> Vec<JavaString>;
+    fn get_object_names(&self) -> Vec<Option<JavaString>>;
 
     /// 返回指定名称对应的对象；未声明或工厂返回 null 时为 `None`。
-    fn get_object(&mut self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
+    fn get_object(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
 }
