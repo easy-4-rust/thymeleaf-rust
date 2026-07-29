@@ -10,6 +10,7 @@ pub mod exceptions;
 pub mod expression;
 pub mod inline;
 pub mod model;
+pub mod reader;
 mod template_spec;
 pub mod templatemode;
 pub mod templateresolver;

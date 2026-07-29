@@ -181,7 +181,7 @@ impl Error for TextParserRuntimeError {}
 /// 对应 Java: `java.io.Reader` 的实现可抛出的任意 `Exception`。解析器会把该异常
 /// 包装为 `TextParseException`，同时保留类名、可空消息与 Rust source 身份。
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct TextParserReaderError {
+pub struct TextParserReaderError {
     java_class_name: String,
     java_message: Option<JavaString>,
 }
@@ -189,7 +189,7 @@ pub(crate) struct TextParserReaderError {
 impl TextParserReaderError {
     /// 创建带 Java 元数据的 Reader 失败。
     #[must_use]
-    pub(crate) fn new(java_class_name: &str, java_message: Option<JavaString>) -> Self {
+    pub fn new(java_class_name: &str, java_message: Option<JavaString>) -> Self {
         Self {
             java_class_name: java_class_name.to_owned(),
             java_message,
@@ -198,7 +198,7 @@ impl TextParserReaderError {
 
     /// 创建 `java.io.IOException`。
     #[must_use]
-    pub(crate) fn io(message: &str) -> Self {
+    pub fn io(message: &str) -> Self {
         Self::new(
             "java.io.IOException",
             Some(JavaString::from_rust_str(message)),
@@ -207,13 +207,13 @@ impl TextParserReaderError {
 
     /// 返回 Java 异常全限定名。
     #[must_use]
-    pub(crate) fn java_class_name(&self) -> &str {
+    pub fn java_class_name(&self) -> &str {
         &self.java_class_name
     }
 
     /// 返回可空 Java 消息。
     #[must_use]
-    pub(crate) fn java_message(&self) -> Option<JavaString> {
+    pub fn java_message(&self) -> Option<JavaString> {
         self.java_message.clone()
     }
 }
@@ -234,9 +234,9 @@ impl Error for TextParserReaderError {}
 /// `java.io.Reader` 的 UTF-16 读取合同。
 ///
 /// 对应 Java: `java.io.Reader`。`TextParser` 按 Java `char[]` 而非 UTF-8 字节
-/// 消费输入，因此该内部 trait 直接读取 UTF-16 code unit，并分别保留
+/// 消费输入，因此该 Reader 适配合同直接读取 UTF-16 code unit，并分别保留
 /// `read(char[])`、`read(char[],off,len)` 与 `close()` 三个动态调用点。
-pub(crate) trait TextParserReader {
+pub trait TextParserReader {
     /// 对应 `Reader#read(char[])`。
     fn read_buffer(&mut self, buffer: &mut [u16]) -> Result<i32, TextParserReaderError> {
         self.read_range(buffer, 0, buffer.len() as i32)

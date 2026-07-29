@@ -45,6 +45,7 @@ pub use {
     abstract_chained_text_handler::{AbstractChainedTextHandler, ChainedTextHandlerRuntimeError},
     abstract_text_handler::AbstractTextHandler,
     i_text_handler::ITextHandler,
+    text_parser::{TextParserReader, TextParserReaderError},
 };
 #[expect(unused_imports, reason = "text parser 消费者对象将在后续切片中迁移")]
 pub(crate) use {
@@ -56,7 +57,7 @@ pub(crate) use {
     },
     parsing_locator_util::ParsingLocatorUtil,
     text_parse_status::TextParseStatus,
-    text_parser::{TextParser, TextParserReader, TextParserReaderError, TextParserRuntimeError},
+    text_parser::{TextParser, TextParserRuntimeError},
     text_parsing_attribute_sequence_util::{
         TextParsingAttributeSequenceError, TextParsingAttributeSequenceUtil,
     },

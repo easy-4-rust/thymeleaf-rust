@@ -1,9 +1,9 @@
 {
-  "java_root": "thymeleaf@10f9dd2eb8cbd98515ce14b149d115e0287d0add",
+  "java_root": "/Users/wandl/workspaces/workspace-github/thymeleaf",
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 260,
+    "rust_tests": 264,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -7908,6 +7908,38 @@
       "file": "src/model/attribute_value_quotes.rs",
       "line": 51,
       "name": "preserves_java_declaration_order_ordinals_and_names",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/block_aware_reader.rs",
+      "line": 728,
+      "name": "java_golden_matches_text_comment_reader_streaming_contract",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/block_aware_reader.rs",
+      "line": 735,
+      "name": "generated_structure_positions_match_upstream_equivalence_algorithms",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/block_aware_reader.rs",
+      "line": 773,
+      "name": "upstream_handwritten_examples_match_for_every_original_buffer_shape",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/block_aware_reader.rs",
+      "line": 909,
+      "name": "direct_block_actions_and_utf16_reader_default_method_are_preserved",
       "kind": "test",
       "signals": []
     },
