@@ -14,7 +14,7 @@ mod template_spec;
 pub mod templatemode;
 pub mod templateresolver;
 pub mod templateresource;
-pub(crate) mod text;
+pub mod text;
 mod thymeleaf;
 pub mod util;
 
