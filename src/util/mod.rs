@@ -4,6 +4,7 @@ mod aggregate_utils;
 mod array_utils;
 mod content_type_utils;
 mod evaluation_utils;
+mod fast_string_writer;
 mod identity_counter;
 mod list_utils;
 mod logging_utils;
@@ -29,6 +30,7 @@ pub use evaluation_utils::{
     JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
     JavaEvaluationValue, JavaHashCode, JavaMapEntry,
 };
+pub use fast_string_writer::{FastStringWriter, FastStringWriterError};
 pub use identity_counter::{IdentityCounter, IdentityCounterError};
 pub use list_utils::{
     JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,
