@@ -4,7 +4,7 @@ use std::fmt::Write;
 use std::sync::Arc;
 
 use num_bigint::BigInt;
-use thymeleaf::expression::{Bools, JavaObjectArray};
+use thymeleaf::expression::{Bools, JavaObjectArray, LiteralValue};
 use thymeleaf::util::{
     EvaluationError, EvaluationUtils, JavaBigDecimal, JavaBigDecimalResult, JavaEvaluationArray,
     JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
@@ -147,11 +147,7 @@ fn cover_public_adapter_contracts() {
     assert!(bools.array_is_true(None).is_err());
     assert!(bools.list_is_true(None).is_err());
     assert!(bools.set_is_true(None).is_err());
-    assert!(
-        bools
-            .is_false(&JavaEvaluationValue::LiteralValue(None))
-            .is_err()
-    );
+    assert!(bools.is_false(&literal(None)).is_err());
     assert!(bools.array_is_false(None).is_err());
     assert!(bools.list_is_false(None).is_err());
     assert!(bools.set_is_false(None).is_err());
@@ -160,7 +156,7 @@ fn cover_public_adapter_contracts() {
     assert!(bools.array_or(None).is_err());
     assert!(bools.list_or(None).is_err());
     assert!(bools.set_or(None).is_err());
-    let invalid = [JavaEvaluationValue::LiteralValue(None)];
+    let invalid = [literal(None)];
     assert!(bools.array_and(Some(&invalid)).is_err());
     assert!(bools.array_or(Some(&invalid)).is_err());
 }
@@ -231,16 +227,8 @@ fn emit_boolean_cases(output: &mut String) {
     emit_boolean(output, "bool.string.no", string("NO"));
     emit_boolean(output, "bool.string.empty", string(""));
     emit_boolean(output, "bool.string.nbsp", string("\u{a0}false\u{a0}"));
-    emit_boolean(
-        output,
-        "bool.literal.false",
-        JavaEvaluationValue::LiteralValue(Some(JavaString::from_rust_str(" false "))),
-    );
-    emit_boolean(
-        output,
-        "bool.literal.null",
-        JavaEvaluationValue::LiteralValue(None),
-    );
+    emit_boolean(output, "bool.literal.false", literal(Some(" false ")));
+    emit_boolean(output, "bool.literal.null", literal(None));
     emit_boolean(
         output,
         "bool.empty_list",
@@ -306,11 +294,7 @@ fn emit_number_cases(output: &mut String) {
     emit_number(output, "number.string.trailing_space", string("123 "));
     emit_number(output, "number.string.dot_prefix", string(".5"));
     emit_number(output, "number.string.invalid", string("+ 1"));
-    emit_number(
-        output,
-        "number.literal",
-        JavaEvaluationValue::LiteralValue(Some(JavaString::from_rust_str("12"))),
-    );
+    emit_number(output, "number.literal", literal(Some("12")));
     emit_number(
         output,
         "number.other",
@@ -551,19 +535,13 @@ fn emit_bools_cases(output: &mut String) {
     emit_result(output, "bools.empty_and", bools.array_and(Some(&[])));
     emit_result(output, "bools.empty_or", bools.array_or(Some(&[])));
     emit_result(output, "bools.null_array", bools.array_and(None));
-    let short_and = [
-        JavaEvaluationValue::Boolean(false),
-        JavaEvaluationValue::LiteralValue(None),
-    ];
+    let short_and = [JavaEvaluationValue::Boolean(false), literal(None)];
     emit_result(
         output,
         "bools.short_circuit_and",
         bools.array_and(Some(&short_and)),
     );
-    let short_or = [
-        JavaEvaluationValue::Boolean(true),
-        JavaEvaluationValue::LiteralValue(None),
-    ];
+    let short_or = [JavaEvaluationValue::Boolean(true), literal(None)];
     emit_result(
         output,
         "bools.short_circuit_or",
@@ -785,6 +763,12 @@ fn number(value: JavaNumber) -> JavaEvaluationValue {
 
 fn string(value: &str) -> JavaEvaluationValue {
     JavaEvaluationValue::String(JavaString::from_rust_str(value))
+}
+
+fn literal(value: Option<&str>) -> JavaEvaluationValue {
+    JavaEvaluationValue::LiteralValue(Arc::new(LiteralValue::new(
+        value.map(JavaString::from_rust_str),
+    )))
 }
 
 fn emit(output: &mut String, key: &str, value: impl std::fmt::Display) {

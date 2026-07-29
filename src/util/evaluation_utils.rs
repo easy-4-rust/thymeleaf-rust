@@ -6,7 +6,7 @@ use num_bigint::BigInt;
 use num_traits::Zero;
 use thiserror::Error;
 
-use crate::expression::JavaObjectArray;
+use crate::expression::{JavaObjectArray, LiteralValue};
 
 use super::{JavaBigDecimal, JavaNumber, JavaString, ValidateError};
 
@@ -34,8 +34,8 @@ pub enum JavaEvaluationValue {
     Character(u16),
     /// `java.lang.String`。
     String(JavaString),
-    /// `LiteralValue`；内部 `None` 保留其构造器允许 null 的事实。
-    LiteralValue(Option<JavaString>),
+    /// `LiteralValue` 对象；`Arc` 保留 Java 引用身份及共享语义。
+    LiteralValue(Arc<LiteralValue>),
     /// 其他 Java 对象及其运行时类名。
     Other(String),
 }
@@ -463,8 +463,10 @@ impl EvaluationUtils {
             JavaEvaluationValue::Number(number) => Ok(number_is_non_zero(number)),
             JavaEvaluationValue::Character(value) => Ok(*value != 0),
             JavaEvaluationValue::String(value) => Ok(string_is_true(value)),
-            JavaEvaluationValue::LiteralValue(Some(value)) => Ok(string_is_true(value)),
-            JavaEvaluationValue::LiteralValue(None) => Err(EvaluationError::NullPointer),
+            JavaEvaluationValue::LiteralValue(value) => value
+                .get_value()
+                .map(string_is_true)
+                .ok_or(EvaluationError::NullPointer),
             JavaEvaluationValue::Other(_) => Ok(true),
         }
     }
