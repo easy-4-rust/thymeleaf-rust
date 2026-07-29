@@ -1,6 +1,7 @@
 //! Thymeleaf 公共工具对象。
 
 mod aggregate_utils;
+mod array_utils;
 mod content_type_utils;
 mod identity_counter;
 mod list_utils;
@@ -17,6 +18,9 @@ mod version_utils;
 pub use aggregate_utils::{
     AggregateError, AggregateUtils, JavaAggregateObject, JavaBigDecimal, JavaNumber,
     JavaNumberIterable, JavaNumberList,
+};
+pub use array_utils::{
+    ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArray, JavaArrayElement, JavaArrayType,
 };
 pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
 pub use identity_counter::{IdentityCounter, IdentityCounterError};

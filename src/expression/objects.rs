@@ -24,6 +24,22 @@ pub struct JavaObjectArray<T> {
 }
 
 impl<T> JavaObjectArray<T> {
+    pub(crate) fn from_parts(
+        component_class_name: String,
+        elements: Vec<Option<T>>,
+        component_predicate: Arc<ComponentPredicate<T>>,
+    ) -> Self {
+        Self {
+            elements,
+            component_class_name,
+            component_predicate,
+        }
+    }
+
+    pub(crate) fn component_predicate(&self) -> Arc<ComponentPredicate<T>> {
+        Arc::clone(&self.component_predicate)
+    }
+
     /// 创建具有 JVM 运行时组件类型约束的引用数组。
     ///
     /// # 参数
