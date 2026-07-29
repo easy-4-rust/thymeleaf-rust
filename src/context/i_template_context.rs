@@ -1,0 +1,55 @@
+use std::any::TypeId;
+use std::sync::Arc;
+
+use indexmap::IndexMap;
+
+use crate::TemplateMode;
+use crate::engine::TemplateData;
+use crate::expression::TemplateValue;
+use crate::inline::IInliner;
+use crate::model::{IModelFactory, IProcessableElementTag};
+use crate::util::JavaString;
+
+use super::{IExpressionContext, IdentifierSequences};
+
+/// 模板 Processor 执行期间可读取的完整上下文合同。
+///
+/// 对应 Java: `org.thymeleaf.context.ITemplateContext`。
+pub trait ITemplateContext: IExpressionContext {
+    /// 返回当前事件来源模板的数据。
+    fn get_template_data(&self) -> &TemplateData;
+    /// 返回当前事件来源模板模式。
+    fn get_template_mode(&self) -> TemplateMode;
+    /// 返回从顶层模板到当前模板的调用栈。
+    fn get_template_stack(&self) -> Vec<&TemplateData>;
+    /// 返回处理时元素栈。
+    fn get_element_stack(&self) -> Vec<&dyn IProcessableElementTag>;
+    /// 返回模板解析属性。
+    fn get_template_resolution_attributes(
+        &self,
+    ) -> Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>;
+    /// 返回当前模式的模型工厂。
+    fn get_model_factory(&self) -> &dyn IModelFactory;
+    /// 判断是否存在 selection target。
+    fn has_selection_target(&self) -> bool;
+    /// 返回 selection target。
+    fn get_selection_target(&self) -> Option<Arc<TemplateValue>>;
+    /// 返回当前内联器。
+    fn get_inliner(&self) -> Option<&dyn IInliner>;
+    /// 解析外部化消息。
+    fn get_message(
+        &self,
+        origin: TypeId,
+        key: &JavaString,
+        message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
+        use_absent_message_representation: bool,
+    ) -> Option<JavaString>;
+    /// 构建模板链接。
+    fn build_link(
+        &self,
+        base: Option<&JavaString>,
+        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    ) -> JavaString;
+    /// 返回上下文级唯一标识序列。
+    fn get_identifier_sequences(&self) -> &IdentifierSequences;
+}

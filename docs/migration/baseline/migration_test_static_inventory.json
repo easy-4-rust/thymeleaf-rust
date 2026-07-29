@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 287,
+    "rust_tests": 290,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -7607,6 +7607,22 @@
     },
     {
       "language": "rust",
+      "file": "src/dialect/abstract_processor_dialect.rs",
+      "line": 144,
+      "name": "rejects_null_name_through_parent_constructor_with_exact_error",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/dialect/abstract_processor_dialect.rs",
+      "line": 154,
+      "name": "preserves_composed_final_state_and_concrete_processor_extension_dispatch",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "src/dialect/i_dialect.rs",
       "line": 33,
       "name": "custom_dialect_can_preserve_a_java_null_name",
@@ -9314,6 +9330,14 @@
       "file": "src/util/version_utils.rs",
       "line": 634,
       "name": "internal_helpers_preserve_java_overflow_trim_and_composition_rules",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/abstract_processor_dialect_java_parity.rs",
+      "line": 57,
+      "name": "abstract_processor_dialect_matches_java_golden",
       "kind": "test",
       "signals": []
     },

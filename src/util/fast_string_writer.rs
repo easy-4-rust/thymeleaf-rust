@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use super::JavaString;
+use super::{JavaString, JavaWriter};
 
 const NULL_TEXT: &str = "null";
 const NULL_CHAR_ARRAY_MESSAGE: &str =
@@ -331,6 +331,14 @@ impl FastStringWriter {
 impl Default for FastStringWriter {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl JavaWriter for FastStringWriter {
+    fn write_utf16(&mut self, characters: &[u16]) -> std::io::Result<()> {
+        // 非 null 的完整切片不可能触发 Java 数组范围异常。
+        self.write_chars(Some(characters))
+            .map_err(std::io::Error::other)
     }
 }
 

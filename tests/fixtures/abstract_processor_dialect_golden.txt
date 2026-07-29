@@ -1,0 +1,5 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+nullName=ERR:java.lang.IllegalArgumentException:Dialect name cannot be null
+case.nullPrefix=name=,prefix=null,precedence=-2147483648,dialectName=,interfacePrefix=null,interfacePrecedence=-2147483648,processorsSize=0,lastPrefix=null,calls=1,stable=true
+case.emptyPrefix=name=empty-prefix,prefix=,precedence=0,dialectName=empty-prefix,interfacePrefix=,interfacePrecedence=0,processorsSize=0,lastPrefix=,calls=1,stable=true
+case.unicode=name=方言,prefix=前缀,precedence=2147483647,dialectName=方言,interfacePrefix=前缀,interfacePrecedence=2147483647,processorsSize=0,lastPrefix=用户覆盖,calls=1,stable=true

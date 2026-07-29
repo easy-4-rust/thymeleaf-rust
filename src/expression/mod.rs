@@ -4,6 +4,8 @@ mod abstract_standard_conversion_service;
 mod aggregates;
 mod arrays;
 mod bools;
+mod i_expression_object_factory;
+mod i_expression_objects;
 mod i_standard_conversion_service;
 mod lists;
 mod literal_value;
@@ -13,12 +15,15 @@ mod objects;
 mod sets;
 mod standard_conversion_service;
 mod standard_expression_execution_context;
+mod template_value;
 mod token;
 
 pub use abstract_standard_conversion_service::AbstractStandardConversionService;
 pub use aggregates::Aggregates;
 pub use arrays::Arrays;
 pub use bools::Bools;
+pub use i_expression_object_factory::IExpressionObjectFactory;
+pub use i_expression_objects::IExpressionObjects;
 pub use i_standard_conversion_service::{
     IStandardConversionService, JavaConversionObject, JavaConversionResult, JavaConversionValue,
     JavaStringConversionResult, JavaTargetClass, StandardConversionError,
@@ -31,4 +36,5 @@ pub use objects::{JavaObjectArray, Objects, ObjectsError};
 pub use sets::Sets;
 pub use standard_conversion_service::StandardConversionService;
 pub use standard_expression_execution_context::StandardExpressionExecutionContext;
+pub use template_value::{TemplateObject, TemplateValue};
 pub use token::{JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer};

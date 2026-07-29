@@ -13,6 +13,8 @@ mod comment_processor_text_handler;
 )]
 mod event_processor_text_handler;
 mod i_text_handler;
+mod i_text_processor;
+mod i_text_structure_handler;
 mod parsing_locator_util;
 mod text_parse_exception;
 mod text_parse_status;
@@ -45,6 +47,8 @@ pub use {
     abstract_chained_text_handler::{AbstractChainedTextHandler, ChainedTextHandlerRuntimeError},
     abstract_text_handler::AbstractTextHandler,
     i_text_handler::ITextHandler,
+    i_text_processor::ITextProcessor,
+    i_text_structure_handler::ITextStructureHandler,
     text_parser::{TextParserReader, TextParserReaderError},
 };
 #[expect(unused_imports, reason = "text parser 消费者对象将在后续切片中迁移")]

@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use super::{CharArrayWrapperSequence, JavaString};
+use super::{CharArrayWrapperSequence, JavaHashCode, JavaString, JavaWriter};
 
 const CASE_MAP: &[u8] = include_bytes!("text_utils_case_map.bin");
 
@@ -102,6 +102,11 @@ impl Error for TextUtilsError {}
 /// `charAt(int)` 的调用次数、顺序、可变底层数据和运行时异常，避免将所有实现
 /// 提前复制成不可变字符串。
 pub trait JavaCharSequence {
+    /// 返回 Java 运行时类名；自定义适配器应覆盖为原对象的全限定类名。
+    fn java_sequence_class_name(&self) -> &str {
+        std::any::type_name::<Self>()
+    }
+
     /// 调用 Java `CharSequence#length()`。
     ///
     /// # 返回
@@ -122,9 +127,65 @@ pub trait JavaCharSequence {
     /// # 返回
     /// 仅当实现语义就是 `java.lang.String` 时返回该字符串。
     fn as_java_string(&self) -> Option<&JavaString>;
+
+    /// 调用 Java `Object#toString()` 得到序列的字符串表示。
+    ///
+    /// 默认实现按当前 `length/charAt` 复制；自定义 Java `CharSequence` 若覆盖
+    /// `toString()`，对应 Rust 适配器也必须覆盖此方法。
+    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+        let length = self.java_length()?;
+        self.java_sub_sequence(0, length)
+    }
+
+    /// 在对象同时对应 Java `IWritableCharSequence` 时直接写出。
+    ///
+    /// `None` 表示不具备该接口；`Some` 中的结果对应其 `write(Writer)` 调用。
+    fn write_direct(&self, _writer: &mut dyn JavaWriter) -> Option<std::io::Result<()>> {
+        None
+    }
+
+    /// 返回 Java `Object#hashCode()`；覆盖过 hashCode 的适配器必须同步覆盖。
+    fn java_sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
+        let address = self as *const Self as *const () as usize;
+        Ok((address as u64 ^ ((address as u64) >> 32)) as i32)
+    }
+
+    /// 执行 Java `equals(Object)`；默认保留引用身份语义。
+    fn java_sequence_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+        Ok(std::ptr::eq(
+            self as *const Self as *const (),
+            other as *const dyn JavaCharSequence as *const (),
+        ))
+    }
+
+    /// 调用 Java `CharSequence#subSequence(int, int)`。
+    ///
+    /// 默认实现逐 UTF-16 代码单元复制；具有不同异常或视图语义的自定义序列可以覆盖。
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+        let length = self.java_length()?;
+        if start < 0 || end < start || end > length {
+            return Err(TextUtilsError::StringIndexOutOfBounds {
+                index: if start < 0 || start > length {
+                    start
+                } else {
+                    end
+                },
+                length: usize::try_from(length).unwrap_or_default(),
+            });
+        }
+        let mut value = Vec::with_capacity((end - start) as usize);
+        for index in start..end {
+            value.push(self.java_char_at(index)?);
+        }
+        Ok(JavaString::from_utf16(value))
+    }
 }
 
 impl JavaCharSequence for JavaString {
+    fn java_sequence_class_name(&self) -> &str {
+        "java.lang.String"
+    }
+
     fn java_length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.len() as i32)
     }
@@ -146,6 +207,40 @@ impl JavaCharSequence for JavaString {
 
     fn as_java_string(&self) -> Option<&JavaString> {
         Some(self)
+    }
+
+    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+        Ok(self.clone())
+    }
+
+    fn java_sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
+        Ok(self.java_hash_code())
+    }
+
+    fn java_sequence_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+        Ok(other.as_java_string().is_some_and(|value| value == self))
+    }
+
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+        let start = usize::try_from(start).map_err(|_| TextUtilsError::StringIndexOutOfBounds {
+            index: start,
+            length: self.len(),
+        })?;
+        let end = usize::try_from(end).map_err(|_| TextUtilsError::StringIndexOutOfBounds {
+            index: end,
+            length: self.len(),
+        })?;
+        if start > end || end > self.len() {
+            return Err(TextUtilsError::StringIndexOutOfBounds {
+                index: if start > self.len() {
+                    start as i32
+                } else {
+                    end as i32
+                },
+                length: self.len(),
+            });
+        }
+        Ok(JavaString::from_utf16(self.as_utf16()[start..end].to_vec()))
     }
 }
 
@@ -1807,6 +1902,10 @@ fn case_map(value: u16, upper: bool) -> u16 {
     } else {
         value
     }
+}
+
+pub(crate) fn java_case_fold_unit(value: u16) -> u16 {
+    java_lower(java_upper(value))
 }
 
 fn read_u16(bytes: &[u8], offset: usize) -> u16 {

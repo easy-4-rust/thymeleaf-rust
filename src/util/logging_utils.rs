@@ -9,7 +9,7 @@ use std::ptr;
 /// Java `String#substring` 可以在代理对中间切分，产生 Rust `String` 无法表示的孤立
 /// 代理项。本类型保存原始 UTF-16 代码单元，确保模板名日志截断不会用替换字符改变
 /// 上游结果。
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, Hash, PartialEq)]
 pub struct JavaString {
     utf16: Vec<u16>,
 }

@@ -1,5 +1,43 @@
 //! Thymeleaf 模板模型公共对象。
 
+mod abstract_model_visitor;
 mod attribute_value_quotes;
+mod i_attribute;
+mod i_cdata_section;
+mod i_close_element_tag;
+mod i_comment;
+mod i_doc_type;
+mod i_element_tag;
+mod i_model;
+mod i_model_factory;
+mod i_model_visitor;
+mod i_open_element_tag;
+mod i_processable_element_tag;
+mod i_processing_instruction;
+mod i_standalone_element_tag;
+mod i_template_end;
+mod i_template_event;
+mod i_template_start;
+mod i_text;
+mod i_xml_declaration;
 
+pub use abstract_model_visitor::AbstractModelVisitor;
 pub use attribute_value_quotes::AttributeValueQuotes;
+pub use i_attribute::IAttribute;
+pub use i_cdata_section::ICDATASection;
+pub use i_close_element_tag::ICloseElementTag;
+pub use i_comment::IComment;
+pub use i_doc_type::IDocType;
+pub use i_element_tag::IElementTag;
+pub use i_model::{IModel, IModelError};
+pub use i_model_factory::IModelFactory;
+pub use i_model_visitor::IModelVisitor;
+pub use i_open_element_tag::IOpenElementTag;
+pub use i_processable_element_tag::IProcessableElementTag;
+pub use i_processing_instruction::IProcessingInstruction;
+pub use i_standalone_element_tag::IStandaloneElementTag;
+pub use i_template_end::ITemplateEnd;
+pub use i_template_event::ITemplateEvent;
+pub use i_template_start::ITemplateStart;
+pub use i_text::IText;
+pub use i_xml_declaration::IXMLDeclaration;

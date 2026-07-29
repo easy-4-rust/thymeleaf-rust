@@ -11,6 +11,13 @@ use crate::templatemode::TemplateMode;
 /// `AbstractProcessor` 构造时才执行。因此这里使用 `Option<TemplateMode>` 精确保留
 /// 接口层的可观察取值范围。
 pub trait IProcessor {
+    /// 返回 Java 风格的具体处理器类名，供稳定 precedence 排序打破平局。
+    ///
+    /// 具体迁移对象应覆盖为上游全限定类名；第三方实现默认使用 Rust 类型全名。
+    fn java_class_name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
+
     /// 返回当前处理器适用的模板模式。
     ///
     /// 对应 Java: `IProcessor#getTemplateMode()`。

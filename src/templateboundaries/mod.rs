@@ -1,0 +1,7 @@
+//! 模板开始与结束边界 Processor 合同。
+
+mod i_template_boundaries_processor;
+mod i_template_boundaries_structure_handler;
+
+pub use i_template_boundaries_processor::ITemplateBoundariesProcessor;
+pub use i_template_boundaries_structure_handler::ITemplateBoundariesStructureHandler;

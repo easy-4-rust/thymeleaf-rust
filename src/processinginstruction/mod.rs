@@ -1,0 +1,7 @@
+//! ProcessingInstruction 事件 Processor 与结构处理合同。
+
+mod i_processing_instruction_processor;
+mod i_processing_instruction_structure_handler;
+
+pub use i_processing_instruction_processor::IProcessingInstructionProcessor;
+pub use i_processing_instruction_structure_handler::IProcessingInstructionStructureHandler;
