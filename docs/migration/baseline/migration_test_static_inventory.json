@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 278,
+    "rust_tests": 280,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -83,7 +83,7 @@
     {
       "language": "java",
       "file": "tests/thymeleaf-tests-core/src/test/java/org/thymeleaf/TemplateEngineTest.java",
-      "line": 55,
+      "line": 56,
       "name": "testTemplateResolverConfiguration03",
       "kind": "Test",
       "signals": []
@@ -7921,6 +7921,14 @@
     },
     {
       "language": "rust",
+      "file": "src/processor/i_processor.rs",
+      "line": 55,
+      "name": "preserves_nullable_values_boundaries_and_dynamic_dispatch",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "src/reader/block_aware_reader.rs",
       "line": 728,
       "name": "java_golden_matches_text_comment_reader_streaming_contract",
@@ -9432,6 +9440,14 @@
       "file": "tests/pattern_java_parity.rs",
       "line": 11,
       "name": "pattern_utils_and_spec_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_contract_java_parity.rs",
+      "line": 27,
+      "name": "processor_contract_matches_java_golden",
       "kind": "test",
       "signals": []
     },

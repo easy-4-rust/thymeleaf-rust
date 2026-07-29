@@ -1,0 +1,11 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+initial.mode=null
+initial.precedence=-2147483648
+mode.HTML=HTML
+mode.XML=XML
+mode.TEXT=TEXT
+mode.JAVASCRIPT=JAVASCRIPT
+mode.CSS=CSS
+mode.RAW=RAW
+precedence.zero=0
+precedence.max=2147483647

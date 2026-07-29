@@ -10,6 +10,7 @@ pub mod exceptions;
 pub mod expression;
 pub mod inline;
 pub mod model;
+pub mod processor;
 pub mod reader;
 mod template_spec;
 pub mod templatemode;
@@ -26,6 +27,7 @@ pub use exceptions::{
     ParserInitializationException, TemplateAssertionException, TemplateEngineException,
     TemplateInputException, TemplateOutputException, TemplateProcessingException,
 };
+pub use processor::IProcessor;
 pub use template_spec::{
     TemplateResolutionAttributeValue, TemplateResolutionAttributes, TemplateSelectorSet,
     TemplateSpec, TemplateSpecError,
