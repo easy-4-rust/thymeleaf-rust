@@ -404,7 +404,7 @@ fn dispatch_attribute(
     let buffer = buffer.expect("successful attribute scans require a non-null buffer");
     handler
         .handle_attribute(
-            buffer,
+            Some(buffer),
             event.name_offset,
             event.name_len,
             event.name_line,
@@ -530,7 +530,7 @@ mod tests {
 
         fn handle_text(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -541,7 +541,7 @@ mod tests {
 
         fn handle_comment(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -554,7 +554,7 @@ mod tests {
 
         fn handle_standalone_element_start(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: bool,
@@ -566,7 +566,7 @@ mod tests {
 
         fn handle_standalone_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: bool,
@@ -578,7 +578,7 @@ mod tests {
 
         fn handle_open_element_start(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -589,7 +589,7 @@ mod tests {
 
         fn handle_open_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -600,7 +600,7 @@ mod tests {
 
         fn handle_close_element_start(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -611,7 +611,7 @@ mod tests {
 
         fn handle_close_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -622,7 +622,7 @@ mod tests {
 
         fn handle_attribute(
             &mut self,
-            buffer: &mut [u16],
+            buffer: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             name_line: i32,
@@ -638,6 +638,7 @@ mod tests {
             value_line: i32,
             value_col: i32,
         ) -> Result<(), Box<TextParseException>> {
+            let buffer = buffer.expect("attribute callback receives the parser buffer");
             self.call_count += 1;
             if !self.calls.is_empty() {
                 self.calls.push('|');
@@ -728,27 +729,27 @@ mod tests {
         let mut buffer = [u16::from(b'x')];
         handler.handle_document_start(0, 0, 0).unwrap();
         handler.handle_document_end(0, 0, 0, 0).unwrap();
-        handler.handle_text(&mut buffer, 0, 0, 0, 0).unwrap();
+        handler.handle_text(Some(&mut buffer), 0, 0, 0, 0).unwrap();
         handler
-            .handle_comment(&mut buffer, 0, 0, 0, 0, 0, 0)
+            .handle_comment(Some(&mut buffer), 0, 0, 0, 0, 0, 0)
             .unwrap();
         handler
-            .handle_standalone_element_start(&mut buffer, 0, 0, false, 0, 0)
+            .handle_standalone_element_start(Some(&mut buffer), 0, 0, false, 0, 0)
             .unwrap();
         handler
-            .handle_standalone_element_end(&mut buffer, 0, 0, false, 0, 0)
+            .handle_standalone_element_end(Some(&mut buffer), 0, 0, false, 0, 0)
             .unwrap();
         handler
-            .handle_open_element_start(&mut buffer, 0, 0, 0, 0)
+            .handle_open_element_start(Some(&mut buffer), 0, 0, 0, 0)
             .unwrap();
         handler
-            .handle_open_element_end(&mut buffer, 0, 0, 0, 0)
+            .handle_open_element_end(Some(&mut buffer), 0, 0, 0, 0)
             .unwrap();
         handler
-            .handle_close_element_start(&mut buffer, 0, 0, 0, 0)
+            .handle_close_element_start(Some(&mut buffer), 0, 0, 0, 0)
             .unwrap();
         handler
-            .handle_close_element_end(&mut buffer, 0, 0, 0, 0)
+            .handle_close_element_end(Some(&mut buffer), 0, 0, 0, 0)
             .unwrap();
     }
 

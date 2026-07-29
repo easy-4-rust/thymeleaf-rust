@@ -735,7 +735,7 @@ fn dispatch_standalone_start(
         .ok_or(TextParsingElementError::NullStandaloneStartHandler)?;
     handler
         .handle_standalone_element_start(
-            buffer.expect("validated element has non-null buffer"),
+            Some(buffer.expect("validated element has non-null buffer")),
             name_offset,
             name_len,
             true,
@@ -758,7 +758,7 @@ fn dispatch_standalone_end(
         .ok_or(TextParsingElementError::NullStandaloneEndHandler)?;
     handler
         .handle_standalone_element_end(
-            buffer.expect("validated element has non-null buffer"),
+            Some(buffer.expect("validated element has non-null buffer")),
             name_offset,
             name_len,
             true,
@@ -781,7 +781,7 @@ fn dispatch_open_start(
         .ok_or(TextParsingElementError::NullOpenStartHandler)?;
     handler
         .handle_open_element_start(
-            buffer.expect("validated element has non-null buffer"),
+            Some(buffer.expect("validated element has non-null buffer")),
             name_offset,
             name_len,
             line,
@@ -803,7 +803,7 @@ fn dispatch_open_end(
         .ok_or(TextParsingElementError::NullOpenEndHandler)?;
     handler
         .handle_open_element_end(
-            buffer.expect("validated element has non-null buffer"),
+            Some(buffer.expect("validated element has non-null buffer")),
             name_offset,
             name_len,
             line,
@@ -825,7 +825,7 @@ fn dispatch_close_start(
         .ok_or(TextParsingElementError::NullCloseStartHandler)?;
     handler
         .handle_close_element_start(
-            buffer.expect("validated element has non-null buffer"),
+            Some(buffer.expect("validated element has non-null buffer")),
             name_offset,
             name_len,
             line,
@@ -847,7 +847,7 @@ fn dispatch_close_end(
         .ok_or(TextParsingElementError::NullCloseEndHandler)?;
     handler
         .handle_close_element_end(
-            buffer.expect("validated element has non-null buffer"),
+            Some(buffer.expect("validated element has non-null buffer")),
             name_offset,
             name_len,
             line,
@@ -1011,7 +1011,7 @@ mod tests {
 
         fn handle_text(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -1022,7 +1022,7 @@ mod tests {
 
         fn handle_comment(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -1035,7 +1035,7 @@ mod tests {
 
         fn handle_standalone_element_start(
             &mut self,
-            buffer: &mut [u16],
+            buffer: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             minimized: bool,
@@ -1045,12 +1045,12 @@ mod tests {
             self.record(&format!(
                 "SS:{name_offset}:{name_len}:{minimized}:{line}:{col}"
             ));
-            self.after_start(buffer)
+            self.after_start(buffer.expect("element callback receives the parser buffer"))
         }
 
         fn handle_standalone_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             minimized: bool,
@@ -1065,19 +1065,19 @@ mod tests {
 
         fn handle_open_element_start(
             &mut self,
-            buffer: &mut [u16],
+            buffer: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             line: i32,
             col: i32,
         ) -> Result<(), Box<TextParseException>> {
             self.record(&format!("OS:{name_offset}:{name_len}:{line}:{col}"));
-            self.after_start(buffer)
+            self.after_start(buffer.expect("element callback receives the parser buffer"))
         }
 
         fn handle_open_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             line: i32,
@@ -1089,19 +1089,19 @@ mod tests {
 
         fn handle_close_element_start(
             &mut self,
-            buffer: &mut [u16],
+            buffer: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             line: i32,
             col: i32,
         ) -> Result<(), Box<TextParseException>> {
             self.record(&format!("CS:{name_offset}:{name_len}:{line}:{col}"));
-            self.after_start(buffer)
+            self.after_start(buffer.expect("element callback receives the parser buffer"))
         }
 
         fn handle_close_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             line: i32,
@@ -1113,7 +1113,7 @@ mod tests {
 
         fn handle_attribute(
             &mut self,
-            buffer: &mut [u16],
+            buffer: Option<&mut [u16]>,
             name_offset: i32,
             name_len: i32,
             name_line: i32,
@@ -1138,7 +1138,10 @@ mod tests {
             ));
             self.fail(Mode::CheckedAttribute, Mode::RuntimeAttribute)?;
             if self.mode == Mode::MutateAttribute && self.attribute_count == 1 {
-                mutate_next(buffer, u16::from(b'c'));
+                mutate_next(
+                    buffer.expect("attribute callback receives the parser buffer"),
+                    u16::from(b'c'),
+                );
             }
             Ok(())
         }
@@ -1215,9 +1218,9 @@ mod tests {
         let mut buffer = [u16::from(b'x')];
         handler.handle_document_start(0, 0, 0).unwrap();
         handler.handle_document_end(0, 0, 0, 0).unwrap();
-        handler.handle_text(&mut buffer, 0, 0, 0, 0).unwrap();
+        handler.handle_text(Some(&mut buffer), 0, 0, 0, 0).unwrap();
         handler
-            .handle_comment(&mut buffer, 0, 0, 0, 0, 0, 0)
+            .handle_comment(Some(&mut buffer), 0, 0, 0, 0, 0, 0)
             .unwrap();
 
         let standalone_end_error =

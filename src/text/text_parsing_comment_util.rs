@@ -120,7 +120,7 @@ impl TextParsingCommentUtil {
         let buffer = buffer.expect("validated comment dereferenced the buffer");
         handler
             .handle_comment(
-                buffer,
+                Some(buffer),
                 offset.wrapping_add(2),
                 len.wrapping_sub(4),
                 offset,
@@ -240,7 +240,7 @@ mod tests {
         }
         fn handle_text(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -250,7 +250,7 @@ mod tests {
         }
         fn handle_comment(
             &mut self,
-            buffer: &mut [u16],
+            buffer: Option<&mut [u16]>,
             content_offset: i32,
             content_len: i32,
             outer_offset: i32,
@@ -267,6 +267,7 @@ mod tests {
                 col,
             ));
             if self.mutate {
+                let buffer = buffer.expect("comment callback receives the parser buffer");
                 buffer[content_offset as usize] = u16::from(b'Z');
             }
             if self.fail {
@@ -280,7 +281,7 @@ mod tests {
         }
         fn handle_standalone_element_start(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: bool,
@@ -291,7 +292,7 @@ mod tests {
         }
         fn handle_standalone_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: bool,
@@ -302,7 +303,7 @@ mod tests {
         }
         fn handle_open_element_start(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -312,7 +313,7 @@ mod tests {
         }
         fn handle_open_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -322,7 +323,7 @@ mod tests {
         }
         fn handle_close_element_start(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -332,7 +333,7 @@ mod tests {
         }
         fn handle_close_element_end(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -342,7 +343,7 @@ mod tests {
         }
         fn handle_attribute(
             &mut self,
-            _: &mut [u16],
+            _: Option<&mut [u16]>,
             _: i32,
             _: i32,
             _: i32,
@@ -480,27 +481,43 @@ mod tests {
         let mut buffer: Vec<u16> = "n=o".encode_utf16().collect();
         receiver.handle_document_start(11, 1, 2).unwrap();
         receiver.handle_document_end(13, 2, 3, 4).unwrap();
-        receiver.handle_text(&mut buffer, 0, 3, 5, 6).unwrap();
+        receiver.handle_text(Some(&mut buffer), 0, 3, 5, 6).unwrap();
         receiver
-            .handle_standalone_element_start(&mut buffer, 0, 1, true, 9, 10)
+            .handle_standalone_element_start(Some(&mut buffer), 0, 1, true, 9, 10)
             .unwrap();
         receiver
-            .handle_standalone_element_end(&mut buffer, 0, 1, false, 11, 12)
+            .handle_standalone_element_end(Some(&mut buffer), 0, 1, false, 11, 12)
             .unwrap();
         receiver
-            .handle_open_element_start(&mut buffer, 0, 1, 13, 14)
+            .handle_open_element_start(Some(&mut buffer), 0, 1, 13, 14)
             .unwrap();
         receiver
-            .handle_open_element_end(&mut buffer, 0, 1, 15, 16)
+            .handle_open_element_end(Some(&mut buffer), 0, 1, 15, 16)
             .unwrap();
         receiver
-            .handle_close_element_start(&mut buffer, 0, 1, 17, 18)
+            .handle_close_element_start(Some(&mut buffer), 0, 1, 17, 18)
             .unwrap();
         receiver
-            .handle_close_element_end(&mut buffer, 0, 1, 19, 20)
+            .handle_close_element_end(Some(&mut buffer), 0, 1, 19, 20)
             .unwrap();
         receiver
-            .handle_attribute(&mut buffer, 0, 1, 21, 22, 1, 1, 23, 24, 2, 1, 1, 2, 25, 26)
+            .handle_attribute(
+                Some(&mut buffer),
+                0,
+                1,
+                21,
+                22,
+                1,
+                1,
+                23,
+                24,
+                2,
+                1,
+                1,
+                2,
+                25,
+                26,
+            )
             .unwrap();
 
         let runtime_errors = [

@@ -5,8 +5,9 @@ use super::TextParseException;
 /// 对应 Java: `org.thymeleaf.templateparser.text.ITextHandler`。
 ///
 /// 解析器按文档、文本、注释、元素边界和属性的出现顺序同步回调本接口。所有
-/// `buffer` 都是同一 Java `char[]` 的 UTF-16 代码单元视图；实现可以修改数组，
-/// 该修改会被调用方继续观察。实现返回的 [`TextParseException`] 原样向上传播。
+/// `buffer` 都是同一 Java `char[]` 的 UTF-16 代码单元视图；`None` 精确表示
+/// Java `null`。实现可以修改数组，该修改会被调用方继续观察。实现返回的
+/// [`TextParseException`] 原样向上传播。
 pub trait ITextHandler {
     /// 处理文档开始事件。对应 Java: `ITextHandler#handleDocumentStart`。
     ///
@@ -34,7 +35,7 @@ pub trait ITextHandler {
     /// `offset` 和 `len` 指定 `buffer` 中的原始片段，`line`、`col` 为片段位置。
     fn handle_text(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         offset: i32,
         len: i32,
         line: i32,
@@ -47,7 +48,7 @@ pub trait ITextHandler {
     #[allow(clippy::too_many_arguments)]
     fn handle_comment(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         content_offset: i32,
         content_len: i32,
         outer_offset: i32,
@@ -60,7 +61,7 @@ pub trait ITextHandler {
     #[allow(clippy::too_many_arguments)]
     fn handle_standalone_element_start(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         minimized: bool,
@@ -72,7 +73,7 @@ pub trait ITextHandler {
     #[allow(clippy::too_many_arguments)]
     fn handle_standalone_element_end(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         minimized: bool,
@@ -83,7 +84,7 @@ pub trait ITextHandler {
     /// 处理开放元素开始边界。对应 Java: `ITextHandler#handleOpenElementStart`。
     fn handle_open_element_start(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         line: i32,
@@ -93,7 +94,7 @@ pub trait ITextHandler {
     /// 处理开放元素结束边界。对应 Java: `ITextHandler#handleOpenElementEnd`。
     fn handle_open_element_end(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         line: i32,
@@ -103,7 +104,7 @@ pub trait ITextHandler {
     /// 处理关闭元素开始边界。对应 Java: `ITextHandler#handleCloseElementStart`。
     fn handle_close_element_start(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         line: i32,
@@ -113,7 +114,7 @@ pub trait ITextHandler {
     /// 处理关闭元素结束边界。对应 Java: `ITextHandler#handleCloseElementEnd`。
     fn handle_close_element_end(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         line: i32,
@@ -127,7 +128,7 @@ pub trait ITextHandler {
     #[allow(clippy::too_many_arguments)]
     fn handle_attribute(
         &mut self,
-        buffer: &mut [u16],
+        buffer: Option<&mut [u16]>,
         name_offset: i32,
         name_len: i32,
         name_line: i32,

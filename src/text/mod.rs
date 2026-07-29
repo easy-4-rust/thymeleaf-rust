@@ -1,5 +1,7 @@
 //! Thymeleaf 文本模板解析器内部对象。
 
+mod abstract_chained_text_handler;
+mod abstract_text_handler;
 mod i_text_handler;
 mod parsing_locator_util;
 mod text_parse_exception;
@@ -23,8 +25,12 @@ mod text_parsing_literal_util;
 )]
 mod text_parsing_util;
 
-pub use i_text_handler::ITextHandler;
 pub use text_parse_exception::{TextParseCause, TextParseException};
+pub use {
+    abstract_chained_text_handler::{AbstractChainedTextHandler, ChainedTextHandlerRuntimeError},
+    abstract_text_handler::AbstractTextHandler,
+    i_text_handler::ITextHandler,
+};
 #[expect(unused_imports, reason = "text parser 消费者对象将在后续切片中迁移")]
 pub(crate) use {
     parsing_locator_util::ParsingLocatorUtil,
