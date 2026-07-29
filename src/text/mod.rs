@@ -16,6 +16,11 @@ mod i_text_handler;
 mod parsing_locator_util;
 mod text_parse_exception;
 mod text_parse_status;
+#[allow(
+    dead_code,
+    reason = "AbstractTextTemplateParser 消费者将在后续切片迁移"
+)]
+mod text_parser;
 mod text_parsing_attribute_sequence_util;
 #[allow(
     dead_code,
@@ -51,6 +56,7 @@ pub(crate) use {
     },
     parsing_locator_util::ParsingLocatorUtil,
     text_parse_status::TextParseStatus,
+    text_parser::{TextParser, TextParserReader, TextParserReaderError, TextParserRuntimeError},
     text_parsing_attribute_sequence_util::{
         TextParsingAttributeSequenceError, TextParsingAttributeSequenceUtil,
     },
