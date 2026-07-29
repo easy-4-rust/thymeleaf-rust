@@ -2,6 +2,7 @@
 
 mod aggregate_utils;
 mod array_utils;
+mod char_array_wrapper_sequence;
 mod content_type_utils;
 mod evaluation_utils;
 mod fast_string_writer;
@@ -23,6 +24,9 @@ pub use aggregate_utils::{
 };
 pub use array_utils::{
     ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArray, JavaArrayElement, JavaArrayType,
+};
+pub use char_array_wrapper_sequence::{
+    CharArrayWrapperSequence, CharArrayWrapperSequenceError, SharedCharArray,
 };
 pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
 pub use evaluation_utils::{
