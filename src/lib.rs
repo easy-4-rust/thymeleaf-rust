@@ -27,7 +27,7 @@ pub use exceptions::{
     ParserInitializationException, TemplateAssertionException, TemplateEngineException,
     TemplateInputException, TemplateOutputException, TemplateProcessingException,
 };
-pub use processor::IProcessor;
+pub use processor::{AbstractProcessor, IProcessor};
 pub use template_spec::{
     TemplateResolutionAttributeValue, TemplateResolutionAttributes, TemplateSelectorSet,
     TemplateSpec, TemplateSpecError,

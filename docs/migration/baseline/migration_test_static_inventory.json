@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 280,
+    "rust_tests": 283,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -83,7 +83,7 @@
     {
       "language": "java",
       "file": "tests/thymeleaf-tests-core/src/test/java/org/thymeleaf/TemplateEngineTest.java",
-      "line": 56,
+      "line": 55,
       "name": "testTemplateResolverConfiguration03",
       "kind": "Test",
       "signals": []
@@ -7921,6 +7921,22 @@
     },
     {
       "language": "rust",
+      "file": "src/processor/abstract_processor.rs",
+      "line": 93,
+      "name": "rejects_null_template_mode_with_exact_validate_error",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/processor/abstract_processor.rs",
+      "line": 112,
+      "name": "preserves_all_modes_precedence_boundaries_and_dynamic_contract",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "src/processor/i_processor.rs",
       "line": 55,
       "name": "preserves_nullable_values_boundaries_and_dynamic_dispatch",
@@ -9287,6 +9303,14 @@
     },
     {
       "language": "rust",
+      "file": "tests/abstract_processor_java_parity.rs",
+      "line": 11,
+      "name": "abstract_processor_matches_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "tests/aggregate_utils_java_parity.rs",
       "line": 16,
       "name": "aggregate_utils_and_facade_match_java_golden",
@@ -9446,7 +9470,7 @@
     {
       "language": "rust",
       "file": "tests/processor_contract_java_parity.rs",
-      "line": 27,
+      "line": 26,
       "name": "processor_contract_matches_java_golden",
       "kind": "test",
       "signals": []

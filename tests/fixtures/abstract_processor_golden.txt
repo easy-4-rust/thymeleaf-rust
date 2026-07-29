@@ -1,0 +1,8 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+null=ERR:java.lang.IllegalArgumentException:Template mode cannot be null
+case.html=mode=HTML,precedence=-2147483648,interfaceMode=HTML,interfacePrecedence=-2147483648,modeIdentity=true,stable=true
+case.xml=mode=XML,precedence=-1,interfaceMode=XML,interfacePrecedence=-1,modeIdentity=true,stable=true
+case.text=mode=TEXT,precedence=0,interfaceMode=TEXT,interfacePrecedence=0,modeIdentity=true,stable=true
+case.javascript=mode=JAVASCRIPT,precedence=1,interfaceMode=JAVASCRIPT,interfacePrecedence=1,modeIdentity=true,stable=true
+case.css=mode=CSS,precedence=1000,interfaceMode=CSS,interfacePrecedence=1000,modeIdentity=true,stable=true
+case.raw=mode=RAW,precedence=2147483647,interfaceMode=RAW,interfacePrecedence=2147483647,modeIdentity=true,stable=true
