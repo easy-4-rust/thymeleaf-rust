@@ -247,7 +247,6 @@ fn rust_golden() -> String {
 fn markup_comment_readers_match_java_golden() {
     assert_eq!(rust_golden(), JAVA_GOLDEN);
 
-    let mut prototype =
-        PrototypeOnlyCommentMarkupReader::new(Box::new(StringReader::new("")));
+    let mut prototype = PrototypeOnlyCommentMarkupReader::new(Box::new(StringReader::new("")));
     assert_eq!(prototype.close(), Ok(()));
 }
