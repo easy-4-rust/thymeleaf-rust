@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use crate::util::{JavaString, ValidateError};
 
-use super::IStandardExpression;
+use super::{IStandardExpression, StandardExpressionResult};
 
 /// 由原始列表支撑的不可修改 Standard Expression 序列视图。
 ///
@@ -43,7 +43,7 @@ impl ExpressionSequence {
     }
 
     /// 返回逗号连接且不插入空格的当前字符串表示。
-    pub fn get_string_representation(&self) -> JavaString {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
         let expressions = read_recovering_poison(&self.expressions);
         let mut units = Vec::new();
         for (index, expression) in expressions.iter().enumerate() {
@@ -52,12 +52,12 @@ impl ExpressionSequence {
             }
             match expression {
                 Some(expression) => {
-                    units.extend_from_slice(expression.get_string_representation().as_utf16());
+                    units.extend_from_slice(expression.get_string_representation()?.as_utf16());
                 }
                 None => units.extend("null".encode_utf16()),
             }
         }
-        JavaString::from_utf16(units)
+        Ok(JavaString::from_utf16(units))
     }
 }
 

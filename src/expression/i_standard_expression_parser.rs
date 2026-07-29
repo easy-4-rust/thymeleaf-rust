@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::exceptions::TemplateProcessingException;
 use crate::util::JavaString;
 
-use super::IStandardExpression;
+use super::{IStandardExpression, StandardExpressionResult};
 
 /// Standard Expression 解析器合同。
 ///
@@ -17,5 +16,5 @@ pub trait IStandardExpressionParser: Send + Sync {
         &self,
         context: &dyn IExpressionContext,
         input: Option<&JavaString>,
-    ) -> Result<Arc<dyn IStandardExpression>, TemplateProcessingException>;
+    ) -> StandardExpressionResult<Arc<dyn IStandardExpression>>;
 }

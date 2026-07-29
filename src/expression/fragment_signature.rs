@@ -40,9 +40,7 @@ impl FragmentSignature {
     }
 
     /// 返回原共享参数列表的实时只读视图。
-    pub fn get_parameter_names(
-        &self,
-    ) -> Option<RwLockReadGuard<'_, Vec<Option<JavaString>>>> {
+    pub fn get_parameter_names(&self) -> Option<RwLockReadGuard<'_, Vec<Option<JavaString>>>> {
         self.parameter_names
             .as_ref()
             .map(|parameters| read_recovering_poison(parameters))

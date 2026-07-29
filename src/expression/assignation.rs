@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::util::{JavaString, ValidateError};
 
-use super::IStandardExpression;
+use super::{IStandardExpression, StandardExpressionResult};
 
 /// Standard Expression 中的单个赋值对。
 ///
@@ -14,6 +14,7 @@ pub struct Assignation {
 
 impl Assignation {
     /// 创建赋值；左侧为 null 时复现 Java 参数校验错误，右侧允许缺失。
+    #[expect(dead_code, reason = "仅由后续批量迁移的 AssignationUtils 解析链创建")]
     pub(crate) fn new(
         left: Option<Arc<dyn IStandardExpression>>,
         right: Option<Arc<dyn IStandardExpression>>,
@@ -32,18 +33,18 @@ impl Assignation {
         self.right.as_deref()
     }
     /// 返回规范字符串表示。
-    pub fn get_string_representation(&self) -> JavaString {
-        let mut units = self.left.get_string_representation().as_utf16().to_vec();
+    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+        let mut units = self.left.get_string_representation()?.as_utf16().to_vec();
         if let Some(right) = &self.right {
             units.push(b'=' as u16);
             if right.is_complex() {
                 units.push(b'(' as u16);
             }
-            units.extend_from_slice(right.get_string_representation().as_utf16());
+            units.extend_from_slice(right.get_string_representation()?.as_utf16());
             if right.is_complex() {
                 units.push(b')' as u16);
             }
         }
-        JavaString::from_utf16(units)
+        Ok(JavaString::from_utf16(units))
     }
 }

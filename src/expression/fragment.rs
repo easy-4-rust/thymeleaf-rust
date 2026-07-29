@@ -8,8 +8,7 @@ use crate::expression::TemplateValue;
 use crate::model::IModel;
 use crate::util::{FastStringWriter, JavaString, ValidateError};
 
-type FragmentParameterMap =
-    IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+type FragmentParameterMap = IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
 
 /// Fragment Expression 的执行结果。
 ///

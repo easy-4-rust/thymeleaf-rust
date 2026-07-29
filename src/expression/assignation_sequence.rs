@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use crate::util::{JavaString, ValidateError};
 
-use super::Assignation;
+use super::{Assignation, StandardExpressionResult};
 
 /// 由原始列表支撑的不可修改赋值序列视图。
 ///
@@ -13,6 +13,7 @@ pub struct AssignationSequence {
 
 impl AssignationSequence {
     /// 保存原列表身份，并在构造瞬间拒绝 null 列表或 null 元素。
+    #[expect(dead_code, reason = "仅由后续批量迁移的 AssignationUtils 解析链创建")]
     pub(crate) fn new(
         assignations: Option<Arc<RwLock<Vec<Option<Arc<Assignation>>>>>>,
     ) -> Result<Self, ValidateError> {
@@ -41,7 +42,7 @@ impl AssignationSequence {
     }
 
     /// 返回逗号连接且不插入空格的当前字符串表示。
-    pub fn get_string_representation(&self) -> JavaString {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
         let assignations = read_recovering_poison(&self.assignations);
         let mut units = Vec::new();
         for (index, assignation) in assignations.iter().enumerate() {
@@ -50,12 +51,12 @@ impl AssignationSequence {
             }
             match assignation {
                 Some(assignation) => {
-                    units.extend_from_slice(assignation.get_string_representation().as_utf16());
+                    units.extend_from_slice(assignation.get_string_representation()?.as_utf16());
                 }
                 None => units.extend("null".encode_utf16()),
             }
         }
-        JavaString::from_utf16(units)
+        Ok(JavaString::from_utf16(units))
     }
 }
 

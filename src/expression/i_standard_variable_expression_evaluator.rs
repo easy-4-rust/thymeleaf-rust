@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
+use super::{
+    IStandardVariableExpression, StandardExpressionExecutionContext, StandardExpressionResult,
+    TemplateValue,
+};
 use crate::context::IExpressionContext;
-use crate::exceptions::TemplateProcessingException;
-
-use super::{IStandardVariableExpression, StandardExpressionExecutionContext, TemplateValue};
 
 /// Standard Variable Expression 求值器合同。
 ///
@@ -16,5 +17,5 @@ pub trait IStandardVariableExpressionEvaluator: Send + Sync {
         context: &dyn IExpressionContext,
         expression: &dyn IStandardVariableExpression,
         expression_context: &'static StandardExpressionExecutionContext,
-    ) -> Result<Option<Arc<TemplateValue>>, TemplateProcessingException>;
+    ) -> StandardExpressionResult<Option<Arc<TemplateValue>>>;
 }

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::util::{JavaString, ValidateError};
 
-use super::IStandardExpression;
+use super::{IStandardExpression, StandardExpressionResult};
 
 /// `th:each` 解析后的迭代声明。
 ///
@@ -49,18 +49,18 @@ impl Each {
         self.iterable.as_ref()
     }
     /// 返回 `iter[,status] : iterable` 规范文本。
-    pub fn get_string_representation(&self) -> JavaString {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
         let mut units = self
             .iter_var
-            .get_string_representation()
+            .get_string_representation()?
             .as_utf16()
             .to_vec();
         if let Some(status_var) = &self.status_var {
             units.push(b',' as u16);
-            units.extend_from_slice(status_var.get_string_representation().as_utf16());
+            units.extend_from_slice(status_var.get_string_representation()?.as_utf16());
         }
         units.extend_from_slice(&[b' ' as u16, b':' as u16, b' ' as u16]);
-        units.extend_from_slice(self.iterable.get_string_representation().as_utf16());
-        JavaString::from_utf16(units)
+        units.extend_from_slice(self.iterable.get_string_representation()?.as_utf16());
+        Ok(JavaString::from_utf16(units))
     }
 }

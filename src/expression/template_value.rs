@@ -4,6 +4,8 @@ use std::sync::Arc;
 
 use crate::util::{JavaNumber, JavaString};
 
+use super::LiteralValue;
+
 /// Rust 用户对象接入 Thymeleaf 动态值模型的合同。
 ///
 /// Java `Object` 同时具有运行时类、引用身份和 `toString()`。实现此 trait 可在不
@@ -43,6 +45,10 @@ pub enum TemplateValue {
     List(Arc<Vec<Arc<TemplateValue>>>),
     /// Java Map 的有序 key/value 条目；null 使用 `TemplateValue::Null`。
     Map(Arc<Vec<(Arc<TemplateValue>, Arc<TemplateValue>)>>),
+    /// 文本字面量包装，阻止后续算术阶段重新解释其内容。
+    Literal(Arc<LiteralValue>),
+    /// `NoOpToken.VALUE` 的 Rust 等价单例值。
+    NoOp,
     /// 宿主注册的任意 Java 对象等价物。
     Object(Arc<dyn TemplateObject>),
     /// 已由应用确认无需 HTML 转义的文本。
@@ -74,6 +80,8 @@ impl TemplateValue {
             Self::Bytes(_) => "[B",
             Self::List(_) => "java.util.List",
             Self::Map(_) => "java.util.Map",
+            Self::Literal(_) => "org.thymeleaf.standard.expression.LiteralValue",
+            Self::NoOp => "org.thymeleaf.standard.expression.NoOpToken",
             Self::Object(object) => object.java_class_name(),
         }
     }
@@ -90,6 +98,8 @@ impl Debug for TemplateValue {
             Self::Bytes(value) => formatter.debug_tuple("Bytes").field(value).finish(),
             Self::List(value) => formatter.debug_tuple("List").field(value).finish(),
             Self::Map(value) => formatter.debug_tuple("Map").field(value).finish(),
+            Self::Literal(value) => formatter.debug_tuple("Literal").field(value).finish(),
+            Self::NoOp => formatter.write_str("NoOp"),
             Self::Object(value) => formatter
                 .debug_struct("Object")
                 .field("java_class_name", &value.java_class_name())
