@@ -14,6 +14,11 @@ mod text_parsing_comment_util;
     reason = "TextParser 消费者将在后续切片中迁移；当前先验证依赖对象"
 )]
 mod text_parsing_literal_util;
+#[allow(
+    dead_code,
+    reason = "TextParser/element/attribute 消费者将在后续切片中迁移"
+)]
+mod text_parsing_util;
 
 pub use i_text_handler::ITextHandler;
 pub use text_parse_exception::{TextParseCause, TextParseException};
@@ -23,4 +28,5 @@ pub(crate) use {
     text_parse_status::TextParseStatus,
     text_parsing_comment_util::{TextParsingCommentError, TextParsingCommentUtil},
     text_parsing_literal_util::TextParsingLiteralUtil,
+    text_parsing_util::{TextParsingUtil, TextParsingUtilError},
 };
