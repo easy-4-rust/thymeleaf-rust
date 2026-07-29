@@ -83,6 +83,117 @@ impl IProcessor for AbstractProcessor {
     }
 }
 
+/// Rust 组合式抽象 Processor 共用的基础状态与异常装饰器。
+pub(crate) struct AbstractProcessorAdapter<F> {
+    processor: AbstractProcessor,
+    processor_class_name: &'static str,
+    callback: F,
+}
+
+impl<F> AbstractProcessorAdapter<F> {
+    /// 创建带 Java 具体类名和 `doProcess` 回调的适配器。
+    pub(crate) fn new(
+        template_mode: Option<TemplateMode>,
+        precedence: i32,
+        processor_class_name: &'static str,
+        callback: F,
+    ) -> Result<Self, ValidateError> {
+        Ok(Self {
+            processor: AbstractProcessor::new(template_mode, precedence)?,
+            processor_class_name,
+            callback,
+        })
+    }
+
+    /// 执行具体 Processor 回调，并按 Java 抽象基类规则补充或包装异常位置。
+    pub(crate) fn execute(
+        &self,
+        event: &dyn ITemplateEvent,
+        operation: impl FnOnce(&F) -> Result<(), Box<dyn TemplateEngineException>>,
+    ) -> Result<(), Box<dyn TemplateEngineException>> {
+        self.execute_optional(Some(event), operation)
+    }
+
+    /// 执行可能没有首事件可用于异常定位的模型 Processor。
+    pub(crate) fn execute_optional(
+        &self,
+        event: Option<&dyn ITemplateEvent>,
+        operation: impl FnOnce(&F) -> Result<(), Box<dyn TemplateEngineException>>,
+    ) -> Result<(), Box<dyn TemplateEngineException>> {
+        match operation(&self.callback) {
+            Ok(()) => Ok(()),
+            Err(mut error) => {
+                if let Some(processing) = error.as_processing_exception_mut() {
+                    if let Some(event) = event {
+                        enrich_location(processing, event);
+                    }
+                    return Err(error);
+                }
+                let wrapped = TemplateProcessingException::with_location_and_cause(
+                    Some(format!(
+                        "Error during execution of processor '{}'",
+                        self.processor_class_name
+                    )),
+                    event
+                        .and_then(ITemplateEvent::get_template_name)
+                        .map(|name| name.to_string_lossy()),
+                    event.map_or(-1, ITemplateEvent::get_line),
+                    event.map_or(-1, ITemplateEvent::get_col),
+                    ProcessorExecutionCause(error),
+                );
+                Err(Box::new(wrapped))
+            }
+        }
+    }
+
+    pub(crate) fn template_mode(&self) -> Option<TemplateMode> {
+        IProcessor::get_template_mode(&self.processor)
+    }
+
+    pub(crate) fn precedence(&self) -> i32 {
+        IProcessor::get_precedence(&self.processor)
+    }
+
+    pub(crate) const fn processor_class_name(&self) -> &'static str {
+        self.processor_class_name
+    }
+}
+
+fn enrich_location(processing: &mut TemplateProcessingException, event: &dyn ITemplateEvent) {
+    if !event.has_location() {
+        return;
+    }
+    if !processing.has_template_name() {
+        processing.set_template_name(event.get_template_name().map(|name| name.to_string_lossy()));
+    }
+    if !processing.has_line_and_col() {
+        processing.set_line_and_col(event.get_line(), event.get_col());
+    }
+}
+
+struct ProcessorExecutionCause(Box<dyn TemplateEngineException>);
+
+impl Display for ProcessorExecutionCause {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, formatter)
+    }
+}
+
+impl std::fmt::Debug for ProcessorExecutionCause {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_tuple("ProcessorExecutionCause")
+            .field(&self.0.to_string())
+            .finish()
+    }
+}
+
+impl Error for ProcessorExecutionCause {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::AbstractProcessor;
@@ -136,3 +247,8 @@ mod tests {
         }
     }
 }
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
+use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
+use crate::model::ITemplateEvent;

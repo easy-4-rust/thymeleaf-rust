@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::IXMLDeclaration;
 use crate::processor::IProcessor;
 
@@ -14,5 +15,5 @@ pub trait IXMLDeclarationProcessor: IProcessor {
         context: &dyn ITemplateContext,
         xml_declaration: &dyn IXMLDeclaration,
         structure_handler: &mut dyn IXMLDeclarationStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

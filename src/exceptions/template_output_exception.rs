@@ -105,7 +105,11 @@ impl Error for TemplateOutputException {
     }
 }
 
-impl TemplateEngineException for TemplateOutputException {}
+impl TemplateEngineException for TemplateOutputException {
+    fn as_processing_exception_mut(&mut self) -> Option<&mut TemplateProcessingException> {
+        Some(&mut self.processing)
+    }
+}
 
 impl AsRef<TemplateProcessingException> for TemplateOutputException {
     fn as_ref(&self) -> &TemplateProcessingException {

@@ -350,6 +350,70 @@ impl IProcessableElementTag for StandaloneElementTag {
             .get_attribute_name(attribute_name)
             .and_then(IAttribute::get_value)
     }
+
+    fn with_attribute(
+        self: Arc<Self>,
+        attribute_definitions: &AttributeDefinitions,
+        attribute_definition: Option<&AttributeDefinitionValue>,
+        attribute_name: JavaString,
+        attribute_value: Option<JavaString>,
+        attribute_value_quotes: Option<AttributeValueQuotes>,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
+        StandaloneElementTag::set_attribute(
+            &self,
+            attribute_definitions,
+            attribute_definition,
+            attribute_name,
+            attribute_value,
+            attribute_value_quotes,
+        )
+        .map(|tag| tag as Arc<dyn IProcessableElementTag>)
+    }
+
+    fn with_replaced_attribute(
+        self: Arc<Self>,
+        attribute_definitions: &AttributeDefinitions,
+        old_attribute_name: &AttributeName,
+        attribute_definition: Option<&AttributeDefinitionValue>,
+        attribute_name: JavaString,
+        attribute_value: Option<JavaString>,
+        attribute_value_quotes: Option<AttributeValueQuotes>,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
+        StandaloneElementTag::replace_attribute(
+            &self,
+            attribute_definitions,
+            old_attribute_name,
+            attribute_definition,
+            attribute_name,
+            attribute_value,
+            attribute_value_quotes,
+        )
+        .map(|tag| tag as Arc<dyn IProcessableElementTag>)
+    }
+
+    fn without_attribute(
+        self: Arc<Self>,
+        attribute_name: &AttributeName,
+    ) -> Arc<dyn IProcessableElementTag> {
+        StandaloneElementTag::remove_attribute_name(&self, attribute_name)
+    }
+
+    fn without_attribute_complete(
+        self: Arc<Self>,
+        attribute_name: &JavaString,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
+        StandaloneElementTag::remove_attribute(&self, attribute_name)
+            .map(|tag| tag as Arc<dyn IProcessableElementTag>)
+    }
+
+    fn without_attribute_with_prefix(
+        self: Arc<Self>,
+        prefix: Option<&JavaString>,
+        name: &JavaString,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
+        StandaloneElementTag::remove_attribute_with_prefix(&self, prefix, name)
+            .map(|tag| tag as Arc<dyn IProcessableElementTag>)
+    }
 }
 
 impl IElementTag for StandaloneElementTag {
@@ -407,6 +471,17 @@ impl ITemplateEvent for StandaloneElementTag {
         visitor.visit_standalone_element_tag(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_standalone_element(self)
+    }
+
+    fn into_processable_element_tag(self: Arc<Self>) -> Option<Arc<dyn IProcessableElementTag>> {
+        Some(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         if self.is_synthetic() {
             return Ok(());
@@ -436,11 +511,7 @@ impl ITemplateEvent for StandaloneElementTag {
     }
 }
 
-impl IEngineTemplateEvent for StandaloneElementTag {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_standalone_element(self);
-    }
-}
+impl IEngineTemplateEvent for StandaloneElementTag {}
 
 impl Display for StandaloneElementTag {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

@@ -18,7 +18,7 @@ pub trait IModel {
     /// 返回事件数量。
     fn size(&self) -> usize;
     /// 返回指定位置的事件。
-    fn get(&self, pos: usize) -> &dyn ITemplateEvent;
+    fn get(&self, pos: usize) -> Arc<dyn ITemplateEvent>;
     /// 在末尾添加事件；`None` 对应 Java null 并保持不变。
     fn add(&mut self, event: Option<Arc<dyn ITemplateEvent>>) -> Result<(), IModelError>;
     /// 在指定位置插入事件。

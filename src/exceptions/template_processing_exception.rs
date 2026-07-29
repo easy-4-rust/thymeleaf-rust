@@ -210,7 +210,11 @@ impl Error for TemplateProcessingException {
     }
 }
 
-impl TemplateEngineException for TemplateProcessingException {}
+impl TemplateEngineException for TemplateProcessingException {
+    fn as_processing_exception_mut(&mut self) -> Option<&mut Self> {
+        Some(self)
+    }
+}
 
 #[cfg(test)]
 mod tests {

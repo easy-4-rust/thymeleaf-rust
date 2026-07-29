@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io;
+use std::sync::Arc;
 
 use crate::model::{IModelVisitor, ITemplateEvent, IXMLDeclaration};
 use crate::util::{JavaString, JavaWriter};
@@ -143,16 +144,19 @@ impl ITemplateEvent for XMLDeclaration {
         visitor.visit_xml_declaration(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_xml_declaration(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         writer.write_utf16(self.xml_declaration.as_utf16())
     }
 }
 
-impl IEngineTemplateEvent for XMLDeclaration {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_xml_declaration(self);
-    }
-}
+impl IEngineTemplateEvent for XMLDeclaration {}
 
 impl Display for XMLDeclaration {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

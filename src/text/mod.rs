@@ -70,3 +70,5 @@ pub(crate) use {
     text_parsing_literal_util::TextParsingLiteralUtil,
     text_parsing_util::{TextParsingUtil, TextParsingUtilError},
 };
+mod abstract_text_processor;
+pub use abstract_text_processor::AbstractTextProcessor;

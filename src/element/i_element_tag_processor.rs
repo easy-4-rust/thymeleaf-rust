@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::IProcessableElementTag;
 
 use super::{IElementProcessor, IElementTagStructureHandler};
@@ -13,5 +14,5 @@ pub trait IElementTagProcessor: IElementProcessor {
         context: &dyn ITemplateContext,
         tag: &dyn IProcessableElementTag,
         structure_handler: &mut dyn IElementTagStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

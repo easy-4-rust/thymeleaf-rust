@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io;
+use std::sync::Arc;
 
 use crate::model::{IModelVisitor, IProcessingInstruction, ITemplateEvent};
 use crate::util::{JavaString, JavaWriter};
@@ -92,16 +93,19 @@ impl ITemplateEvent for ProcessingInstruction {
         visitor.visit_processing_instruction(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_processing_instruction(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         writer.write_utf16(self.processing_instruction.as_utf16())
     }
 }
 
-impl IEngineTemplateEvent for ProcessingInstruction {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_processing_instruction(self);
-    }
-}
+impl IEngineTemplateEvent for ProcessingInstruction {}
 
 impl Display for ProcessingInstruction {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::IComment;
 use crate::processor::IProcessor;
 
@@ -14,5 +15,5 @@ pub trait ICommentProcessor: IProcessor {
         context: &dyn ITemplateContext,
         comment: &dyn IComment,
         structure_handler: &mut dyn ICommentStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

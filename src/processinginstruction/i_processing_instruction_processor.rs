@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::IProcessingInstruction;
 use crate::processor::IProcessor;
 
@@ -15,5 +16,5 @@ pub trait IProcessingInstructionProcessor: IProcessor {
         context: &dyn ITemplateContext,
         processing_instruction: &dyn IProcessingInstruction,
         structure_handler: &mut dyn IProcessingInstructionStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

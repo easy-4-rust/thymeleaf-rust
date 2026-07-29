@@ -1,13 +1,13 @@
 use std::fmt::{Display, Formatter};
 use std::io;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use crate::model::{IModelVisitor, ITemplateEvent, ITemplateStart};
 use crate::util::{JavaString, JavaWriter};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
-static TEMPLATE_START_INSTANCE: OnceLock<TemplateStart> = OnceLock::new();
+static TEMPLATE_START_INSTANCE: OnceLock<Arc<TemplateStart>> = OnceLock::new();
 
 /// 模板处理开始的无内容单例事件。
 ///
@@ -21,10 +21,12 @@ impl TemplateStart {
     ///
     /// 对应 Java: `TemplateStart.TEMPLATE_START_INSTANCE`。
     #[must_use]
-    pub fn instance() -> &'static Self {
-        TEMPLATE_START_INSTANCE.get_or_init(|| Self {
-            template_event: AbstractTemplateEvent::new(),
-        })
+    pub fn instance() -> Arc<Self> {
+        Arc::clone(TEMPLATE_START_INSTANCE.get_or_init(|| {
+            Arc::new(Self {
+                template_event: AbstractTemplateEvent::new(),
+            })
+        }))
     }
 }
 
@@ -51,16 +53,23 @@ impl ITemplateEvent for TemplateStart {
         visitor.visit_template_start(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_template_start(self)
+    }
+
+    fn is_template_start(&self) -> bool {
+        true
+    }
+
     fn write(&self, _writer: &mut dyn JavaWriter) -> io::Result<()> {
         Ok(())
     }
 }
 
-impl IEngineTemplateEvent for TemplateStart {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_template_start(self);
-    }
-}
+impl IEngineTemplateEvent for TemplateStart {}
 
 impl Display for TemplateStart {
     fn fmt(&self, _formatter: &mut Formatter<'_>) -> std::fmt::Result {

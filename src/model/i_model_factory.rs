@@ -18,7 +18,10 @@ pub trait IModelFactory {
     /// 创建空的可变模型。
     fn create_model(&self) -> Box<dyn IModel>;
     /// 创建包含一个事件的可变模型。
-    fn create_model_with_event(&self, event: Arc<dyn ITemplateEvent>) -> Box<dyn IModel>;
+    fn create_model_with_event(
+        &self,
+        event: Arc<dyn ITemplateEvent>,
+    ) -> Result<Box<dyn IModel>, crate::model::IModelError>;
     /// 按指定 owner 模板解析模型片段。
     fn parse(
         &self,
@@ -26,11 +29,19 @@ pub trait IModelFactory {
         template: &JavaString,
     ) -> Result<Box<dyn IModel>, crate::exceptions::TemplateProcessingException>;
     /// 创建 CDATA 事件。
-    fn create_cdata_section(&self, content: JavaString) -> Arc<dyn ICDATASection>;
+    fn create_cdata_section(
+        &self,
+        content: JavaString,
+    ) -> Result<Arc<dyn ICDATASection>, crate::exceptions::TemplateProcessingException>;
     /// 创建注释事件。
-    fn create_comment(&self, content: JavaString) -> Arc<dyn IComment>;
+    fn create_comment(
+        &self,
+        content: JavaString,
+    ) -> Result<Arc<dyn IComment>, crate::exceptions::TemplateProcessingException>;
     /// 创建 HTML5 DOCTYPE。
-    fn create_html5_doc_type(&self) -> Arc<dyn IDocType>;
+    fn create_html5_doc_type(
+        &self,
+    ) -> Result<Arc<dyn IDocType>, crate::exceptions::TemplateProcessingException>;
     /// 创建带 public/system ID 的 DOCTYPE。
     fn create_doc_type(
         &self,
@@ -51,7 +62,7 @@ pub trait IModelFactory {
         &self,
         target: JavaString,
         content: JavaString,
-    ) -> Arc<dyn IProcessingInstruction>;
+    ) -> Result<Arc<dyn IProcessingInstruction>, crate::exceptions::TemplateProcessingException>;
     /// 创建文本事件。
     fn create_text(&self, text: JavaString) -> Arc<dyn IText>;
     /// 创建 XML declaration。
@@ -60,7 +71,7 @@ pub trait IModelFactory {
         version: Option<JavaString>,
         encoding: Option<JavaString>,
         standalone: Option<JavaString>,
-    ) -> Arc<dyn IXMLDeclaration>;
+    ) -> Result<Arc<dyn IXMLDeclaration>, crate::exceptions::TemplateProcessingException>;
     /// 创建独立标签。
     fn create_standalone_element_tag(
         &self,
@@ -88,7 +99,7 @@ pub trait IModelFactory {
     /// 返回设置属性后的同类型新标签。
     fn set_attribute(
         &self,
-        tag: &dyn IProcessableElementTag,
+        tag: Arc<dyn IProcessableElementTag>,
         attribute_name: JavaString,
         attribute_value: Option<JavaString>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
@@ -96,7 +107,7 @@ pub trait IModelFactory {
     /// 返回替换属性后的同类型新标签。
     fn replace_attribute(
         &self,
-        tag: &dyn IProcessableElementTag,
+        tag: Arc<dyn IProcessableElementTag>,
         old_attribute_name: &AttributeName,
         attribute_name: JavaString,
         attribute_value: Option<JavaString>,
@@ -105,7 +116,7 @@ pub trait IModelFactory {
     /// 返回删除属性后的同类型标签；属性不存在时允许返回原对象身份。
     fn remove_attribute(
         &self,
-        tag: &dyn IProcessableElementTag,
+        tag: Arc<dyn IProcessableElementTag>,
         attribute_name: &AttributeName,
     ) -> Result<Arc<dyn IProcessableElementTag>, crate::exceptions::TemplateProcessingException>;
 }

@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::IText;
 use crate::processor::IProcessor;
 
@@ -14,5 +15,5 @@ pub trait ITextProcessor: IProcessor {
         context: &dyn ITemplateContext,
         text: &dyn IText,
         structure_handler: &mut dyn ITextStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

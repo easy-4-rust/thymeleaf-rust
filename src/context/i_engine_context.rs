@@ -28,7 +28,7 @@ pub trait IEngineContext: ITemplateContext {
     /// 设置当前内联器。
     fn set_inliner(&mut self, inliner: Option<Arc<dyn IInliner>>);
     /// 切换当前模板数据。
-    fn set_template_data(&mut self, template_data: TemplateData);
+    fn set_template_data(&mut self, template_data: Arc<TemplateData>);
     /// 设置当前处理元素。
     fn set_element_tag(&mut self, element_tag: Option<Arc<dyn IProcessableElementTag>>);
     /// 返回指定层级之上的元素栈。

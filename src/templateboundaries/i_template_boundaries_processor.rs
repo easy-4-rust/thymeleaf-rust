@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::{ITemplateEnd, ITemplateStart};
 use crate::processor::IProcessor;
 
@@ -15,12 +16,12 @@ pub trait ITemplateBoundariesProcessor: IProcessor {
         context: &dyn ITemplateContext,
         template_start: &dyn ITemplateStart,
         structure_handler: &mut dyn ITemplateBoundariesStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
     /// 处理 TemplateEnd。
     fn process_template_end(
         &self,
         context: &dyn ITemplateContext,
         template_end: &dyn ITemplateEnd,
         structure_handler: &mut dyn ITemplateBoundariesStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

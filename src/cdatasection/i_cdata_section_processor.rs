@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::ICDATASection;
 use crate::processor::IProcessor;
 
@@ -14,5 +15,5 @@ pub trait ICDATASectionProcessor: IProcessor {
         context: &dyn ITemplateContext,
         cdata_section: &dyn ICDATASection,
         structure_handler: &mut dyn ICDATASectionStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

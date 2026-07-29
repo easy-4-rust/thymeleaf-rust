@@ -111,16 +111,19 @@ impl ITemplateEvent for Text {
         visitor.visit_text(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_text(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         self.textual_event.write_content(writer)
     }
 }
 
-impl IEngineTemplateEvent for Text {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_text(self);
-    }
-}
+impl IEngineTemplateEvent for Text {}
 
 impl Display for Text {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

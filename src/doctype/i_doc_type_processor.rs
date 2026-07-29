@@ -1,4 +1,5 @@
 use crate::context::ITemplateContext;
+use crate::exceptions::TemplateEngineException;
 use crate::model::IDocType;
 use crate::processor::IProcessor;
 
@@ -14,5 +15,5 @@ pub trait IDocTypeProcessor: IProcessor {
         context: &dyn ITemplateContext,
         doc_type: &dyn IDocType,
         structure_handler: &mut dyn IDocTypeStructureHandler,
-    );
+    ) -> Result<(), Box<dyn TemplateEngineException>>;
 }

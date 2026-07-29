@@ -5,3 +5,5 @@ mod i_processing_instruction_structure_handler;
 
 pub use i_processing_instruction_processor::IProcessingInstructionProcessor;
 pub use i_processing_instruction_structure_handler::IProcessingInstructionStructureHandler;
+mod abstract_processing_instruction_processor;
+pub use abstract_processing_instruction_processor::AbstractProcessingInstructionProcessor;

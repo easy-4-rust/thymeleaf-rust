@@ -5,3 +5,5 @@ mod i_comment_structure_handler;
 
 pub use i_comment_processor::ICommentProcessor;
 pub use i_comment_structure_handler::ICommentStructureHandler;
+mod abstract_comment_processor;
+pub use abstract_comment_processor::AbstractCommentProcessor;

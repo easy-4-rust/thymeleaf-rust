@@ -1,9 +1,13 @@
+use std::sync::Arc;
+
 use indexmap::IndexMap;
 
-use crate::engine::{AttributeName, AttributesError};
+use crate::engine::{
+    AttributeDefinitionValue, AttributeDefinitions, AttributeName, AttributesError,
+};
 use crate::util::JavaString;
 
-use super::{IAttribute, IElementTag};
+use super::{AttributeValueQuotes, IAttribute, IElementTag};
 
 /// 可应用 Processor 的打开或独立元素标签合同。
 ///
@@ -59,4 +63,44 @@ pub trait IProcessableElementTag: IElementTag {
 
     /// 按规范化属性名返回可空属性值。
     fn get_attribute_value_by_name(&self, attribute_name: &AttributeName) -> Option<&JavaString>;
+
+    /// 在当前不可变标签上设置属性并返回派生标签。
+    fn with_attribute(
+        self: Arc<Self>,
+        attribute_definitions: &AttributeDefinitions,
+        attribute_definition: Option<&AttributeDefinitionValue>,
+        attribute_name: JavaString,
+        attribute_value: Option<JavaString>,
+        attribute_value_quotes: Option<AttributeValueQuotes>,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError>;
+
+    /// 替换指定规范化属性并返回派生标签。
+    fn with_replaced_attribute(
+        self: Arc<Self>,
+        attribute_definitions: &AttributeDefinitions,
+        old_attribute_name: &AttributeName,
+        attribute_definition: Option<&AttributeDefinitionValue>,
+        attribute_name: JavaString,
+        attribute_value: Option<JavaString>,
+        attribute_value_quotes: Option<AttributeValueQuotes>,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError>;
+
+    /// 删除指定规范化属性；不存在时保留当前 `Arc` 对象身份。
+    fn without_attribute(
+        self: Arc<Self>,
+        attribute_name: &AttributeName,
+    ) -> Arc<dyn IProcessableElementTag>;
+
+    /// 按完整名称删除属性。
+    fn without_attribute_complete(
+        self: Arc<Self>,
+        attribute_name: &JavaString,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError>;
+
+    /// 按 prefix 与本地名称删除属性。
+    fn without_attribute_with_prefix(
+        self: Arc<Self>,
+        prefix: Option<&JavaString>,
+        name: &JavaString,
+    ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError>;
 }

@@ -189,6 +189,13 @@ impl ITemplateEvent for Comment {
         visitor.visit_comment(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_comment(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         writer.write_utf16(self.prefix.as_utf16())?;
         self.textual_event.write_content(writer)?;
@@ -196,11 +203,7 @@ impl ITemplateEvent for Comment {
     }
 }
 
-impl IEngineTemplateEvent for Comment {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_comment(self);
-    }
-}
+impl IEngineTemplateEvent for Comment {}
 
 impl Display for Comment {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

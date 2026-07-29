@@ -5,3 +5,5 @@ mod i_template_boundaries_structure_handler;
 
 pub use i_template_boundaries_processor::ITemplateBoundariesProcessor;
 pub use i_template_boundaries_structure_handler::ITemplateBoundariesStructureHandler;
+mod abstract_template_boundaries_processor;
+pub use abstract_template_boundaries_processor::AbstractTemplateBoundariesProcessor;

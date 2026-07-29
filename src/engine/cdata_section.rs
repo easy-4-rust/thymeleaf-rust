@@ -190,6 +190,13 @@ impl ITemplateEvent for CDATASection {
         visitor.visit_cdata_section(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_cdata_section(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         writer.write_utf16(self.prefix.as_utf16())?;
         self.textual_event.write_content(writer)?;
@@ -197,11 +204,7 @@ impl ITemplateEvent for CDATASection {
     }
 }
 
-impl IEngineTemplateEvent for CDATASection {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_cdata_section(self);
-    }
-}
+impl IEngineTemplateEvent for CDATASection {}
 
 impl Display for CDATASection {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

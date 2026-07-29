@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io;
+use std::sync::Arc;
 
 use crate::model::{IDocType, IModelVisitor, ITemplateEvent};
 use crate::util::{JavaString, JavaWriter};
@@ -196,16 +197,19 @@ impl ITemplateEvent for DocType {
         visitor.visit_doc_type(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_doc_type(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         writer.write_utf16(self.doc_type.as_utf16())
     }
 }
 
-impl IEngineTemplateEvent for DocType {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_doc_type(self);
-    }
-}
+impl IEngineTemplateEvent for DocType {}
 
 impl Display for DocType {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {

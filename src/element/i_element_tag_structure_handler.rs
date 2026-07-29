@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::engine::{AttributeName, TemplateData};
+use crate::engine::{AttributeNameValue, TemplateData};
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel};
@@ -26,19 +26,23 @@ pub trait IElementTagStructureHandler {
     /// 替换属性。
     fn replace_attribute(
         &mut self,
-        old_attribute_name: &AttributeName,
+        old_attribute_name: AttributeNameValue,
         attribute_name: JavaString,
         attribute_value: Option<JavaString>,
         quotes: Option<AttributeValueQuotes>,
     );
-    /// 删除解析后的属性名。
-    fn remove_attribute(&mut self, attribute_name: &AttributeName);
+    /// 按完整名称删除属性。
+    fn remove_attribute(&mut self, attribute_name: JavaString);
+    /// 按 prefix 与本地名称删除属性。
+    fn remove_attribute_with_prefix(&mut self, prefix: Option<JavaString>, name: JavaString);
+    /// 按规范化属性名删除属性。
+    fn remove_attribute_name(&mut self, attribute_name: AttributeNameValue);
     /// 设置 selection target。
     fn set_selection_target(&mut self, selection_target: Option<Arc<TemplateValue>>);
     /// 设置内联器。
     fn set_inliner(&mut self, inliner: Option<Arc<dyn IInliner>>);
     /// 设置模板来源数据。
-    fn set_template_data(&mut self, template_data: TemplateData);
+    fn set_template_data(&mut self, template_data: Arc<TemplateData>);
     /// 使用文本设置正文。
     fn set_body_text(&mut self, text: JavaString, processable: bool);
     /// 使用模型设置正文。
@@ -65,5 +69,5 @@ pub trait IElementTagStructureHandler {
         iter_variable_name: JavaString,
         iter_status_variable_name: Option<JavaString>,
         iterated_object: Option<Arc<TemplateValue>>,
-    );
+    ) -> Result<(), crate::util::ValidateError>;
 }

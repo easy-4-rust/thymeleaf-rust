@@ -21,5 +21,5 @@ pub trait IElementModelStructureHandler {
     /// 设置内联器。
     fn set_inliner(&mut self, inliner: Option<Arc<dyn IInliner>>);
     /// 设置后续模型事件的模板来源数据。
-    fn set_template_data(&mut self, template_data: TemplateData);
+    fn set_template_data(&mut self, template_data: Arc<TemplateData>);
 }

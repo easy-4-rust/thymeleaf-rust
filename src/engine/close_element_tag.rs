@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io;
+use std::sync::Arc;
 
 use crate::model::{ICloseElementTag, IElementTag, IModelVisitor, ITemplateEvent};
 use crate::templatemode::TemplateMode;
@@ -132,6 +133,13 @@ impl ITemplateEvent for CloseElementTag {
         visitor.visit_close_element_tag(self);
     }
 
+    fn be_handled(
+        self: Arc<Self>,
+        handler: &mut dyn ITemplateHandler,
+    ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+        handler.handle_close_element(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         if self.element_tag.is_synthetic() {
             return Ok(());
@@ -153,11 +161,7 @@ impl ITemplateEvent for CloseElementTag {
     }
 }
 
-impl IEngineTemplateEvent for CloseElementTag {
-    fn be_handled(&self, handler: &mut dyn ITemplateHandler) {
-        handler.handle_close_element(self);
-    }
-}
+impl IEngineTemplateEvent for CloseElementTag {}
 
 impl Display for CloseElementTag {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
