@@ -2,6 +2,8 @@
 
 mod abstract_processor;
 mod i_processor;
+mod processor_set;
 
 pub use abstract_processor::AbstractProcessor;
 pub use i_processor::IProcessor;
+pub use processor_set::ProcessorSet;

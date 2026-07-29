@@ -12,7 +12,10 @@ const INVENTORY_PATH: &str = "docs/migration/baseline/java_api_inventory.json";
 const OBJECT_TABLE_PATH: &str = "docs/migration/对象级对照表.md";
 const TODO_MACRO: &str = concat!("todo", "!(");
 const UNIMPLEMENTED_MACRO: &str = concat!("unimplemented", "!(");
-const INTERNAL_HELPER_FILES: [&str; 1] = ["src/templateresource/template_resource_reader.rs"];
+const APPROVED_RUST_EXTENSION_FILES: [&str; 2] = [
+    "src/processor/processor_set.rs",
+    "src/templateresource/template_resource_reader.rs",
+];
 
 #[derive(Debug, Deserialize)]
 struct Inventory {
@@ -212,7 +215,7 @@ fn migration_check(
             relative != "src/lib.rs"
                 && !relative.ends_with("/mod.rs")
                 && !expected_files.contains(relative.as_str())
-                && !INTERNAL_HELPER_FILES.contains(&relative.as_str())
+                && !is_approved_rust_extension_file(&relative)
         })
         .count();
     let path_collisions = path_collision_count(&rows);
@@ -492,6 +495,10 @@ fn path_collision_count(rows: &[ObjectRow]) -> usize {
     counts.values().map(|count| count.saturating_sub(1)).sum()
 }
 
+fn is_approved_rust_extension_file(relative: &str) -> bool {
+    APPROVED_RUST_EXTENSION_FILES.contains(&relative)
+}
+
 fn relative_path(root: &Path, path: &Path) -> String {
     path.strip_prefix(root)
         .unwrap_or(path)
@@ -533,8 +540,8 @@ fn print_human_report(report: &MigrationReport) {
 #[cfg(test)]
 mod tests {
     use super::{
-        contains_type_declaration, is_implemented, parse_cli, parse_object_rows,
-        path_collision_count,
+        contains_type_declaration, is_approved_rust_extension_file, is_implemented, parse_cli,
+        parse_object_rows, path_collision_count,
     };
 
     #[test]
@@ -607,5 +614,18 @@ mod tests {
         assert!(contains_type_declaration("pub enum Alpha {}", "Alpha"));
         assert!(contains_type_declaration("pub trait Alpha {}", "Alpha"));
         assert!(!contains_type_declaration("pub fn alpha() {}", "Alpha"));
+    }
+
+    #[test]
+    fn recognizes_only_explicit_rust_extension_files() {
+        assert!(is_approved_rust_extension_file(
+            "src/processor/processor_set.rs"
+        ));
+        assert!(is_approved_rust_extension_file(
+            "src/templateresource/template_resource_reader.rs"
+        ));
+        assert!(!is_approved_rust_extension_file(
+            "src/processor/unregistered_helper.rs"
+        ));
     }
 }

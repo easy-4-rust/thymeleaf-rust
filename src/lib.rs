@@ -20,14 +20,14 @@ pub mod text;
 mod thymeleaf;
 pub mod util;
 
-pub use dialect::{AbstractDialect, AbstractDialectError, IDialect};
+pub use dialect::{AbstractDialect, AbstractDialectError, IDialect, IProcessorDialect};
 pub use dialect_configuration::{DialectConfiguration, DialectConfigurationError};
 pub use exceptions::{
     AlreadyInitializedException, CacheConfigurationException, ConfigurationException,
     ParserInitializationException, TemplateAssertionException, TemplateEngineException,
     TemplateInputException, TemplateOutputException, TemplateProcessingException,
 };
-pub use processor::{AbstractProcessor, IProcessor};
+pub use processor::{AbstractProcessor, IProcessor, ProcessorSet};
 pub use template_spec::{
     TemplateResolutionAttributeValue, TemplateResolutionAttributes, TemplateSelectorSet,
     TemplateSpec, TemplateSpecError,
