@@ -4,13 +4,14 @@ mod i_text_handler;
 mod parsing_locator_util;
 mod text_parse_exception;
 mod text_parse_status;
-#[allow(dead_code, reason = "TextParsingElementUtil 消费者将在下一切片迁移")]
 mod text_parsing_attribute_sequence_util;
 #[allow(
     dead_code,
     reason = "TextParser 消费者将在后续切片中迁移；当前先验证依赖对象"
 )]
 mod text_parsing_comment_util;
+#[allow(dead_code, reason = "TextParser 消费者将在后续切片迁移")]
+mod text_parsing_element_util;
 #[allow(
     dead_code,
     reason = "TextParser 消费者将在后续切片中迁移；当前先验证依赖对象"
@@ -32,6 +33,7 @@ pub(crate) use {
         TextParsingAttributeSequenceError, TextParsingAttributeSequenceUtil,
     },
     text_parsing_comment_util::{TextParsingCommentError, TextParsingCommentUtil},
+    text_parsing_element_util::{TextParsingElementError, TextParsingElementUtil},
     text_parsing_literal_util::TextParsingLiteralUtil,
     text_parsing_util::{TextParsingUtil, TextParsingUtilError},
 };
