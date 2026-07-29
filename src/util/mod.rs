@@ -6,6 +6,7 @@ mod aggregate_utils;
 mod array_utils;
 mod char_array_wrapper_sequence;
 mod content_type_utils;
+mod escaped_attribute_utils;
 mod evaluation_utils;
 mod fast_string_writer;
 mod i_writable_char_sequence;
@@ -41,6 +42,7 @@ pub use char_array_wrapper_sequence::{
     CharArrayWrapperSequence, CharArrayWrapperSequenceError, SharedCharArray,
 };
 pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
+pub use escaped_attribute_utils::EscapedAttributeUtils;
 pub use evaluation_utils::{
     EvaluationError, EvaluationUtils, JavaBigDecimalResult, JavaEvaluationArray,
     JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
