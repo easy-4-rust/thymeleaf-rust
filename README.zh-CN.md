@@ -145,11 +145,11 @@ thymeleaf crate → Vernal
 | 可行性与架构提案 | 已有 | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
-| Rust 公共 API | 已验证切片 | Foundation/配置 API、缓存对象族、`StandardCache`、`TemplateResolution`、模板资源 SPI/字符串资源/文件资源、标准表达式字面量/执行上下文/转换服务/NO-OP/Token 字符语义、`EvaluationUtils`/`Bools`、聚合/数组/List/Set/Map/Object facade、模式、版本、日志与内容类型工具；URL 与 JVM 软引用运行时边界仍待补齐 |
+| Rust 公共 API | 已验证切片 | Foundation/配置 API、缓存对象族、`StandardCache`、`TemplateResolution`、模板资源 SPI/字符串资源/文件资源、上游全部五个枚举、标准表达式字面量/执行上下文/转换服务/NO-OP/Token 字符语义、`EvaluationUtils`/`Bools`、聚合/数组/List/Set/Map/Object facade、模式、版本、日志与内容类型工具；URL 与 JVM 软引用运行时边界仍待补齐 |
 | 框架适配器 | 规划中 | 不存在适配器 Manifest 或代码 |
 | 上游兼容矩阵 | 实施中 | 已登记 491 个对象、4,291 个方法和 6,936 个参数 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
-| 测试与 CI | 切片门禁通过 | 183 个单元测试、26 个共 2,496 条记录的 Java/Rust Golden 测试、行/函数/区域覆盖率均为 100% |
+| 测试与 CI | 切片门禁通过 | 186 个单元测试、27 个共 2,560 条记录的 Java/Rust Golden 测试、行/函数/区域覆盖率均为 100% |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
 ## 文档快速开始

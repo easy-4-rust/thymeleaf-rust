@@ -5,8 +5,11 @@
 pub mod cache;
 pub mod dialect;
 mod dialect_configuration;
+pub mod engine;
 pub mod exceptions;
 pub mod expression;
+pub mod inline;
+pub mod model;
 mod template_spec;
 pub mod templatemode;
 pub mod templateresolver;
