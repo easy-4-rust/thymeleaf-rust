@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 264,
+    "rust_tests": 269,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -7945,6 +7945,38 @@
     },
     {
       "language": "rust",
+      "file": "src/reader/parser_level_comment_markup_reader.rs",
+      "line": 158,
+      "name": "generated_structure_positions_match_upstream_equivalence_algorithm",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/parser_level_comment_markup_reader.rs",
+      "line": 176,
+      "name": "handwritten_examples_match_every_original_buffer_shape",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/prototype_only_comment_markup_reader.rs",
+      "line": 171,
+      "name": "generated_structure_positions_match_upstream_equivalence_algorithm",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/reader/prototype_only_comment_markup_reader.rs",
+      "line": 189,
+      "name": "handwritten_examples_match_every_original_buffer_shape",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "src/template_spec.rs",
       "line": 646,
       "name": "constructors_validate_template_and_conflicting_fields",
@@ -9328,6 +9360,14 @@
       "file": "tests/map_object_utils_java_parity.rs",
       "line": 12,
       "name": "map_and_object_utils_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/markup_comment_reader_java_parity.rs",
+      "line": 246,
+      "name": "markup_comment_readers_match_java_golden",
       "kind": "test",
       "signals": []
     },

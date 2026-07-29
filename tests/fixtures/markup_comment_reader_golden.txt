@@ -1,0 +1,61 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+parser.0.0=|returns=-1|throwable=none
+parser.0.1=|returns=-1|throwable=none
+parser.0.2=|returns=-1|throwable=none
+parser.0.3=|returns=-1|throwable=none
+parser.1.0=plain|returns=1,1,1,1,1,-1|throwable=none
+parser.1.1=plain|returns=4,1,-1|throwable=none
+parser.1.2=plain|returns=5,-1|throwable=none
+parser.1.3=plain|returns=5,-1|throwable=none
+parser.2.0=<!-- hello -->|returns=1,1,1,1,1,1,1,1,1,1,1,1,1,1,-1|throwable=none
+parser.2.1=<!-- hello -->|returns=1,4,4,4,1,-1|throwable=none
+parser.2.2=<!-- hello -->|returns=5,5,4,-1|throwable=none
+parser.2.3=<!-- hello -->|returns=8,6,-1|throwable=none
+parser.3.0=ab|returns=1,0,0,0,0,0,0,0,0,1,-1|throwable=none
+parser.3.1=ab|returns=1,0,0,1,-1|throwable=none
+parser.3.2=ab|returns=1,0,0,1,-1|throwable=none
+parser.3.3=ab|returns=1,0,1,-1|throwable=none
+parser.4.0=<!--  -->|returns=1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,-1|throwable=none
+parser.4.1=<!--  -->|returns=1,4,0,0,0,0,4,-1|throwable=none
+parser.4.2=<!--  -->|returns=5,0,0,0,4,-1|throwable=none
+parser.4.3=<!--  -->|returns=5,0,3,1,-1|throwable=none
+parser.5.0=中文|returns=1,0,0,0,0,1,-1|throwable=none
+parser.5.1=中文|returns=1,0,1,-1|throwable=none
+parser.5.2=中文|returns=1,0,1,-1|throwable=none
+parser.5.3=中文|returns=1,1,-1|throwable=none
+prototype.0.0=|returns=-1|throwable=none
+prototype.0.1=|returns=-1|throwable=none
+prototype.0.2=|returns=-1|throwable=none
+prototype.0.3=|returns=-1|throwable=none
+prototype.1.0=plain|returns=1,1,1,1,1,-1|throwable=none
+prototype.1.1=plain|returns=4,1,-1|throwable=none
+prototype.1.2=plain|returns=5,-1|throwable=none
+prototype.1.3=plain|returns=5,-1|throwable=none
+prototype.2.0=<!-- hello -->|returns=1,1,1,1,1,1,1,1,1,1,1,1,1,1,-1|throwable=none
+prototype.2.1=<!-- hello -->|returns=1,4,4,4,1,-1|throwable=none
+prototype.2.2=<!-- hello -->|returns=5,5,4,-1|throwable=none
+prototype.2.3=<!-- hello -->|returns=8,6,-1|throwable=none
+prototype.3.0=ashownb|returns=1,0,1,1,1,1,1,0,1,-1|throwable=none
+prototype.3.1=ashownb|returns=1,4,1,1,-1|throwable=none
+prototype.3.2=ashownb|returns=1,5,0,1,-1|throwable=none
+prototype.3.3=ashownb|returns=1,5,1,-1|throwable=none
+prototype.4.0=<!--  hello  */--> -->|returns=1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,-1|throwable=none
+prototype.4.1=<!--  hello  */--> -->|returns=1,4,0,4,3,4,4,2,-1|throwable=none
+prototype.4.2=<!--  hello  */--> -->|returns=5,0,5,2,5,5,-1|throwable=none
+prototype.4.3=<!--  hello  */--> -->|returns=5,7,8,2,-1|throwable=none
+prototype.5.0=中😀文|returns=1,0,1,1,0,1,-1|throwable=none
+prototype.5.1=中😀文|returns=1,2,1,-1|throwable=none
+prototype.5.2=中😀文|returns=1,2,1,-1|throwable=none
+prototype.5.3=中😀文|returns=1,2,1,-1|throwable=none
+combined.0.0=ashownbc|returns=1,0,1,1,1,1,1,0,1,0,0,0,0,0,0,0,0,1,-1|throwable=none
+combined.0.1=ashownbc|returns=1,4,1,1,0,0,1,-1|throwable=none
+combined.0.2=ashownbc|returns=1,5,0,1,0,0,1,-1|throwable=none
+combined.0.3=ashownbc|returns=1,5,1,0,1,-1|throwable=none
+combined.1.0=tail|returns=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,-1|throwable=none
+combined.1.1=tail|returns=0,0,0,0,0,0,4,-1|throwable=none
+combined.1.2=tail|returns=0,0,0,0,0,4,-1|throwable=none
+combined.1.3=tail|returns=0,0,0,3,1,-1|throwable=none
+unfinished.parser=a|returns=1,0,0|throwable=java.io.IOException:Unfinished block structure <!--/*...*/-->
+unfinished.prototype=aopen|returns=1,3,1|throwable=java.io.IOException:Unfinished block structure <!--/*/.../*/-->
+close.throwable=java.io.IOException:close-boom
+close.count=1
