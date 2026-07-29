@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 270,
+    "rust_tests": 278,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -9133,6 +9133,54 @@
     },
     {
       "language": "rust",
+      "file": "src/util/text_utils.rs",
+      "line": 1892,
+      "name": "exposes_every_error_and_dynamic_sequence_adapter_path",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/util/text_utils.rs",
+      "line": 1938,
+      "name": "covers_fast_paths_identity_length_and_search_mismatch_branches",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/util/text_utils.rs",
+      "line": 2122,
+      "name": "covers_compare_and_all_binary_search_directions_and_failures",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/util/text_utils.rs",
+      "line": 2295,
+      "name": "covers_non_string_hash_paths_short_circuits_and_argument_order",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/util/text_utils.rs",
+      "line": 2315,
+      "name": "covers_every_public_delegating_success_path_in_the_unit_build",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/util/text_utils.rs",
+      "line": 2467,
+      "name": "exhausts_validation_and_dynamic_failure_residuals",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "src/util/validate.rs",
       "line": 252,
       "name": "preserves_not_null_and_nullable_message",
@@ -9450,6 +9498,22 @@
       "file": "tests/text_parse_exception_java_parity.rs",
       "line": 14,
       "name": "text_parse_exception_matches_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/text_utils_java_parity.rs",
+      "line": 14,
+      "name": "text_utils_matches_all_java_overloads_and_utf16_corpora",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/text_utils_java_parity.rs",
+      "line": 26,
+      "name": "text_utils_public_failure_and_short_circuit_contracts_are_exhaustive",
       "kind": "test",
       "signals": []
     },
