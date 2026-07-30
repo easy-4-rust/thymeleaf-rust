@@ -4,6 +4,7 @@
 //! `THYMELEAF_UPSTREAM=/path/to/thymeleaf cargo test --test
 //! thtest_upstream_plain_batch` 强制运行固定上游语料。
 
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,15 +27,15 @@ use thymeleaf::expression::{
 };
 use thymeleaf::templateresolver::{StringTemplateResolver, TemplateResolution};
 use thymeleaf::text::TextParserReaderError;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::{JavaLocale, JavaString};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, ITemplateResolver, StandardDialect, TemplateEngine,
-    TemplateMode, TemplateResolutionAttributes,
+    TemplateMode, TemplateResolutionAttributes, TemplateSelectorSet,
 };
 
 use support::{
     CorpusOgnlRuntime, Dialect01, ElementStackDialect, ExceptionLazyContextVariableError,
-    PrecedenceDialect, TestLinkBuilder,
+    PrecedenceDialect, TestEngineMessageResolver, TestLinkBuilder,
 };
 
 const INVENTORY: &str = include_str!("../docs/migration/baseline/thtest_inventory.json");
@@ -97,6 +98,10 @@ fn upstream_plain_output_cases_run_as_one_batch() {
                 1_257
             } else if scope == "exception" {
                 500
+            } else if scope == "validated" {
+                1_757
+            } else if scope == "directives" {
+                445
             } else {
                 panic!("unsupported THYMELEAF_SCOPE: {scope}")
             },
@@ -133,16 +138,56 @@ fn is_scope_case(test: &Value, resource_path: &str, scope: &str) -> bool {
             .expect("directives must be an array")
             .iter()
             .any(|directive| directive["name"] == "EXCEPTION"),
+        "validated" => {
+            is_scope_case(test, resource_path, "verified")
+                || is_scope_case(test, resource_path, "exception")
+        }
+        "directives" => is_directive_semantics_case(test, resource_path),
         _ => false,
     }
 }
 
+fn is_directive_semantics_case(test: &Value, resource_path: &str) -> bool {
+    const ALLOWED_DIRECTIVES: [&str; 11] = [
+        "NAME",
+        "TEMPLATE_MODE",
+        "CONTEXT",
+        "MESSAGES",
+        "FRAGMENT",
+        "INPUT",
+        "OUTPUT",
+        "EXCEPTION",
+        "EXCEPTION_MESSAGE_PATTERN",
+        "EXACT_MATCH",
+        "EXTENDS",
+    ];
+    const DOMAIN_DIRECTIVES: [&str; 5] = ["EXTENDS", "MESSAGES", "FRAGMENT", "EXACT_MATCH", "NAME"];
+
+    let names = test["directives"]
+        .as_array()
+        .expect("directives must be an array")
+        .iter()
+        .map(|directive| {
+            directive["name"]
+                .as_str()
+                .expect("directive name must be a string")
+        })
+        .collect::<Vec<_>>();
+
+    is_standard_engine_case(resource_path)
+        && names.iter().all(|name| ALLOWED_DIRECTIVES.contains(name))
+        && names.contains(&"OUTPUT")
+        && !names.contains(&"EXCEPTION")
+        && names.iter().any(|name| DOMAIN_DIRECTIVES.contains(name))
+}
+
 fn is_standard_engine_case(resource_path: &str) -> bool {
-    const CUSTOM_OR_WEB_HARNESSES: [&str; 11] = [
+    const CUSTOM_OR_WEB_HARNESSES: [&str; 12] = [
         "templateengine/aggregation/",
         "templateengine/context/",
         "templateengine/conversion/",
         "templateengine/elementprocessors/",
+        "templateengine/prepostprocessors/",
         "templateengine/processors/",
         "templateengine/features/elementstack/",
         "templateengine/features/inlining/interaction/",
@@ -211,34 +256,260 @@ fn is_context_output_case(test: &Value) -> bool {
     names == ["CONTEXT", "INPUT", "OUTPUT", "TEMPLATE_MODE"]
 }
 
-fn run_case(path: &Path) -> Result<(), String> {
-    let source = fs::read_to_string(path).map_err(|error| error.to_string())?;
-    // ClassPathFileTestResource#readAsText 会先对整个 `.thtest` 执行
-    // EscapeUtils.unescapeUnicode，然后 StandardTestReader 才切分各指令段。
+struct TestResourceLayer {
+    source: String,
+}
+
+struct EffectiveTestData {
+    template_mode: TemplateMode,
+    root_template_name: String,
+    input: String,
+    named_inputs: IndexMap<JavaString, JavaString>,
+    named_template_modes: IndexMap<JavaString, TemplateMode>,
+    context: Option<String>,
+    messages_by_locale: HashMap<Option<String>, HashMap<JavaString, JavaString>>,
+    fragment_spec: Option<String>,
+    expected_output: Option<String>,
+    expected_exception: Option<String>,
+    expected_exception_message_pattern: Option<String>,
+    exact_match: bool,
+}
+
+impl EffectiveTestData {
+    fn load(path: &Path) -> Result<Self, String> {
+        let mut layers = Vec::new();
+        load_resource_layers(path, &mut HashSet::new(), &mut layers)?;
+        let local = layers
+            .last()
+            .ok_or_else(|| format!("empty test inheritance chain: {}", path.display()))?;
+
+        let template_mode = effective_scalar(&layers, "TEMPLATE_MODE")
+            .unwrap_or_else(|| "HTML".to_owned())
+            .parse::<TemplateMode>()
+            .map_err(|error| error.to_string())?;
+        let root_name = directive_scalar(&local.source, "NAME")
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or_else(|| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("StandardTest")
+                    .to_owned()
+            });
+        let input = effective_section(&layers, "INPUT")
+            .ok_or_else(|| format!("missing INPUT in inheritance chain for {}", path.display()))?;
+
+        let mut named_inputs = IndexMap::new();
+        let mut effective_named_template_modes = IndexMap::new();
+        let mut messages_by_locale = HashMap::new();
+        let mut context_sections = Vec::new();
+        for layer in &layers {
+            for (name, content) in named_input_sections(&layer.source)? {
+                named_inputs.insert(name, content);
+            }
+            for (name, mode) in named_template_modes(&layer.source)? {
+                effective_named_template_modes.insert(name, mode);
+            }
+            if let Some(context) = directive_section(&layer.source, "CONTEXT") {
+                context_sections.push(context);
+            }
+            merge_message_sections(&layer.source, &mut messages_by_locale)?;
+        }
+
+        Ok(Self {
+            template_mode,
+            root_template_name: format!("{}-001", root_name.trim()),
+            input,
+            named_inputs,
+            named_template_modes: effective_named_template_modes,
+            context: (!context_sections.is_empty()).then(|| context_sections.join("\n")),
+            messages_by_locale,
+            fragment_spec: effective_scalar(&layers, "FRAGMENT")
+                .filter(|fragment| !fragment.trim().is_empty()),
+            expected_output: effective_section(&layers, "OUTPUT"),
+            expected_exception: effective_scalar(&layers, "EXCEPTION"),
+            expected_exception_message_pattern: effective_scalar(
+                &layers,
+                "EXCEPTION_MESSAGE_PATTERN",
+            ),
+            exact_match: effective_scalar(&layers, "EXACT_MATCH").is_some_and(|value| {
+                matches!(
+                    value.trim().to_ascii_lowercase().as_str(),
+                    "on" | "yes" | "true"
+                )
+            }),
+        })
+    }
+}
+
+fn load_resource_layers(
+    path: &Path,
+    visited: &mut HashSet<PathBuf>,
+    layers: &mut Vec<TestResourceLayer>,
+) -> Result<(), String> {
+    let canonical_path = fs::canonicalize(path)
+        .map_err(|error| format!("cannot resolve test resource {}: {error}", path.display()))?;
+    if !visited.insert(canonical_path.clone()) {
+        return Err(format!(
+            "cyclic EXTENDS chain at {}",
+            canonical_path.display()
+        ));
+    }
+
+    let source = fs::read_to_string(&canonical_path)
+        .map_err(|error| format!("cannot read {}: {error}", canonical_path.display()))?;
+    // ClassPathFileTestResource#readAsText 会先对整个资源执行
+    // EscapeUtils.unescapeUnicode，然后 StandardTestReader 才切分字段。
     let source = unescape_test_resource_unicode(&source)?;
-    let mode = inherited_directive_value(path, &source, "TEMPLATE_MODE")?
-        .ok_or_else(|| "missing TEMPLATE_MODE".to_owned())?
-        .parse::<TemplateMode>()
-        .map_err(|error| error.to_string())?;
-    let input = directive_section(&source, "INPUT").ok_or_else(|| "missing INPUT".to_owned())?;
-    let expected_exception = directive_scalar(&source, "EXCEPTION");
-    let expected = directive_section(&source, "OUTPUT");
+    if let Some(parent) =
+        directive_scalar(&source, "EXTENDS").filter(|parent| !parent.trim().is_empty())
+    {
+        let parent_path = canonical_path
+            .parent()
+            .ok_or_else(|| {
+                format!(
+                    "test resource has no parent directory: {}",
+                    canonical_path.display()
+                )
+            })?
+            .join(parent.trim());
+        load_resource_layers(&parent_path, visited, layers)?;
+    }
+    layers.push(TestResourceLayer { source });
+    Ok(())
+}
+
+fn effective_scalar(layers: &[TestResourceLayer], name: &str) -> Option<String> {
+    layers
+        .iter()
+        .rev()
+        .find_map(|layer| directive_scalar(&layer.source, name))
+}
+
+fn effective_section(layers: &[TestResourceLayer], name: &str) -> Option<String> {
+    layers
+        .iter()
+        .rev()
+        .find_map(|layer| directive_section(&layer.source, name))
+}
+
+fn merge_message_sections(
+    source: &str,
+    messages_by_locale: &mut HashMap<Option<String>, HashMap<JavaString, JavaString>>,
+) -> Result<(), String> {
+    if let Some(messages) = directive_section(source, "MESSAGES") {
+        messages_by_locale
+            .entry(None)
+            .or_default()
+            .extend(parse_message_properties(&messages)?);
+    }
+    for line in source.lines() {
+        let Some(locale) = line
+            .strip_prefix("%MESSAGES[")
+            .and_then(|line| line.strip_suffix(']'))
+        else {
+            continue;
+        };
+        if locale.trim().is_empty() {
+            return Err("MESSAGES qualifier cannot be empty".to_owned());
+        }
+        let marker = format!("%MESSAGES[{locale}]");
+        let messages = directive_section_for_marker(source, &marker)
+            .ok_or_else(|| format!("missing section for {marker}"))?;
+        messages_by_locale
+            .entry(Some(locale.trim().to_ascii_lowercase()))
+            .or_default()
+            .extend(parse_message_properties(&messages)?);
+    }
+    Ok(())
+}
+
+fn parse_message_properties(source: &str) -> Result<HashMap<JavaString, JavaString>, String> {
+    let mut logical_lines = Vec::new();
+    let mut current = String::new();
+    for line in source.lines() {
+        let trimmed_start = line.trim_start();
+        if current.is_empty()
+            && (trimmed_start.is_empty()
+                || trimmed_start.starts_with('#')
+                || trimmed_start.starts_with('!'))
+        {
+            continue;
+        }
+        if !current.is_empty() {
+            current.push_str(trimmed_start);
+        } else {
+            current.push_str(line);
+        }
+        let trailing_slashes = current
+            .chars()
+            .rev()
+            .take_while(|character| *character == '\\')
+            .count();
+        if trailing_slashes % 2 == 1 {
+            current.pop();
+            continue;
+        }
+        logical_lines.push(std::mem::take(&mut current));
+    }
+    if !current.is_empty() {
+        logical_lines.push(current);
+    }
+
+    let mut messages = HashMap::new();
+    for line in logical_lines {
+        let characters = line.char_indices().collect::<Vec<_>>();
+        let mut escaped = false;
+        let mut separator = None;
+        for (position, character) in characters {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if character == '\\' {
+                escaped = true;
+                continue;
+            }
+            if matches!(character, '=' | ':') || character.is_whitespace() {
+                separator = Some(position);
+                break;
+            }
+        }
+        let (key, value) = separator.map_or((line.as_str(), ""), |position| {
+            let mut value_start = position;
+            let bytes = line.as_bytes();
+            while value_start < bytes.len()
+                && (bytes[value_start].is_ascii_whitespace()
+                    || matches!(bytes[value_start], b'=' | b':'))
+            {
+                value_start += 1;
+            }
+            (&line[..position], &line[value_start..])
+        });
+        let key = decode_java_properties_value(key.trim_end())?;
+        let value = decode_java_properties_value(value)?;
+        messages.insert(
+            JavaString::from_rust_str(&key),
+            JavaString::from_rust_str(&value),
+        );
+    }
+    Ok(messages)
+}
+
+fn run_case(path: &Path) -> Result<(), String> {
+    let mut test_data = EffectiveTestData::load(path)?;
+    let mode = test_data.template_mode;
+    let expected_exception = test_data.expected_exception.as_deref();
+    let expected = test_data.expected_output.as_deref();
     if expected_exception.is_none() && expected.is_none() {
         return Err("missing OUTPUT or EXCEPTION".to_owned());
     }
 
-    let root_template_name = format!(
-        "{}-001",
-        path.file_name()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| "test resource file name is not valid UTF-8".to_owned())?
-    );
     let resolver = CorpusStringTemplateResolver::new(
         mode,
-        &root_template_name,
-        &input,
-        named_input_sections(&source)?,
-        named_template_modes(&source)?,
+        &test_data.root_template_name,
+        &test_data.input,
+        std::mem::take(&mut test_data.named_inputs),
+        std::mem::take(&mut test_data.named_template_modes),
     );
     let engine = TemplateEngine::new();
     let no_standard_dialect = path
@@ -276,9 +547,14 @@ fn run_case(path: &Path) -> Result<(), String> {
         .set_link_builder(Arc::new(TestLinkBuilder))
         .map_err(|error| error.to_string())?;
     engine
+        .set_message_resolver(Arc::new(TestEngineMessageResolver::new(std::mem::take(
+            &mut test_data.messages_by_locale,
+        ))))
+        .map_err(|error| error.to_string())?;
+    engine
         .set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
         .map_err(|error| error.to_string())?;
-    let context_source = directive_section(&source, "CONTEXT");
+    let context_source = test_data.context;
     let context = if no_standard_dialect {
         // thymeleaf-testing 的 CONTEXT 字段求值器独立于被测 Engine 的方言集合。
         // 因此无 StandardDialect 的用例仍由同一固定 OGNL runtime 建立 Context。
@@ -295,18 +571,18 @@ fn run_case(path: &Path) -> Result<(), String> {
     } else {
         build_context(&engine, context_source.as_deref())?
     };
-    match (
-        expected_exception.as_deref(),
-        engine.process_template(&root_template_name, &context),
-    ) {
-        (Some(expected_class), Err(error)) => {
-            let expected_message_pattern = directive_scalar(&source, "EXCEPTION_MESSAGE_PATTERN");
-            expected_exception_matches(
-                expected_class,
-                expected_message_pattern.as_deref(),
-                error.as_ref(),
-            )
-        }
+    let rendered = if let Some(fragment) = test_data.fragment_spec {
+        let selectors: TemplateSelectorSet = [Some(fragment)].into_iter().collect();
+        engine.process_template_with_selectors(&test_data.root_template_name, &selectors, &context)
+    } else {
+        engine.process_template(&test_data.root_template_name, &context)
+    };
+    match (expected_exception, rendered) {
+        (Some(expected_class), Err(error)) => expected_exception_matches(
+            expected_class,
+            test_data.expected_exception_message_pattern.as_deref(),
+            error.as_ref(),
+        ),
         (Some(expected_class), Ok(actual)) => Err(format!(
             "expected exception {expected_class}, but rendering succeeded with {:?}",
             actual.to_string_lossy()
@@ -318,7 +594,7 @@ fn run_case(path: &Path) -> Result<(), String> {
         (None, Ok(actual)) => {
             let expected = expected.expect("checked above");
             let actual = actual.to_string_lossy();
-            outputs_match(mode, &expected, &actual)
+            outputs_match(mode, test_data.exact_match, expected, &actual)
                 .then_some(())
                 .ok_or_else(|| format!("output mismatch\nexpected={expected:?}\nactual={actual:?}"))
         }
@@ -531,7 +807,11 @@ fn unescape_test_resource_unicode(input: &str) -> Result<String, String> {
 }
 
 fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Context, String> {
-    let context = Context::new();
+    let default_locale = JavaLocale::new(
+        JavaString::from_rust_str("en"),
+        JavaString::from_rust_str(""),
+    );
+    let context = Context::with_locale(Some(default_locale.clone()));
     let Some(source) = source else {
         return Ok(context);
     };
@@ -540,6 +820,17 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         .map_err(|error| error.to_string())?;
     let expression_context =
         ExpressionContext::new(Some(configuration)).map_err(|error| error.to_string())?;
+    expression_context
+        .set_locale(Some(default_locale))
+        .map_err(|error| error.to_string())?;
+    // Java 测试框架的 WebProcessingContextBuilder 总是暴露四个 Web 作用域。
+    // 即使测试尚未向其中写入值，表达式也应看到空 Map，而不是 null。
+    for scope_name in ["param", "request", "session", "application"] {
+        let name = JavaString::from_rust_str(scope_name);
+        let value = Some(Arc::new(TemplateValue::Map(Arc::new(Vec::new()))));
+        context.set_variable(Some(name.clone()), value.clone());
+        expression_context.set_variable(Some(name), value);
+    }
     for assignment in split_context_assignments(source)? {
         let (name, expression) = split_context_assignment(&assignment)?;
         // Java 基准的 DefaultContextStandardTestFieldEvaluator 先通过
@@ -552,6 +843,22 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         let value = expression
             .execute(&expression_context)
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
+        if name.eq_ignore_ascii_case("locale") {
+            if let Some(locale) = value
+                .as_deref()
+                .and_then(TemplateValue::to_java_string)
+                .map(|locale| parse_java_locale(&locale.to_string_lossy()))
+                .transpose()?
+            {
+                context
+                    .set_locale(Some(locale.clone()))
+                    .map_err(|error| error.to_string())?;
+                expression_context
+                    .set_locale(Some(locale))
+                    .map_err(|error| error.to_string())?;
+            }
+            continue;
+        }
         if !is_simple_context_name(name) {
             apply_context_mutation(&context, &expression_context, name, value, &assignment)?;
             continue;
@@ -560,10 +867,33 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         if std::env::var_os("THYMELEAF_DEBUG_CONTEXT").is_some() {
             eprintln!("CONTEXT {} = {value:?}", name.to_string_lossy());
         }
+        context.remove_variable(Some(&name));
+        expression_context.remove_variable(Some(&name));
         expression_context.set_variable(Some(name.clone()), value.clone());
         context.set_variable(Some(name), value);
     }
     Ok(context)
+}
+
+fn parse_java_locale(value: &str) -> Result<JavaLocale, String> {
+    let parts = value.split('_').collect::<Vec<_>>();
+    if parts.is_empty() || parts.len() > 3 || parts[0].is_empty() {
+        return Err(format!("Invalid locale specification: {value}"));
+    }
+    let country = parts.get(1).copied().unwrap_or("").to_ascii_uppercase();
+    let mut tag = parts[0].to_ascii_lowercase();
+    if !country.is_empty() {
+        tag.push('-');
+        tag.push_str(&country);
+    }
+    if let Some(variant) = parts.get(2).filter(|variant| !variant.is_empty()) {
+        tag.push('-');
+        tag.push_str(variant);
+    }
+    Ok(JavaLocale::new(
+        JavaString::from_rust_str(&tag),
+        JavaString::from_rust_str(&country),
+    ))
 }
 
 fn apply_context_mutation(
@@ -590,7 +920,9 @@ fn apply_context_mutation(
             root.trim(),
             properties
                 .split('.')
-                .map(|property| format!("'{property}'"))
+                // OGNL 的单引号单字符字面量是 Character；Web 作用域属性名必须
+                // 保持为 String，否则 `session.a` 写入的键无法由属性导航读回。
+                .map(|property| format!("\"{property}\""))
                 .collect::<Vec<_>>(),
             root.trim() == "param",
         )
@@ -624,15 +956,61 @@ fn apply_context_mutation(
         }
     };
     let value = value.unwrap_or_else(|| Arc::new(TemplateValue::Null));
-    let value = if request_parameter {
-        Arc::new(TemplateValue::List(Arc::new(vec![value])))
+    let updated_value = if request_parameter {
+        update_request_parameter_map(current.as_ref(), &keys, Arc::clone(&value))?
     } else {
-        value
+        update_context_map_path(current.as_ref(), &keys, Arc::clone(&value))?
     };
-    let updated = Some(update_context_map_path(current.as_ref(), &keys, value)?);
+    let updated = Some(updated_value);
     expression_context.set_variable(Some(root_name.clone()), updated.clone());
-    context.set_variable(Some(root_name), updated);
+    context.set_variable(Some(root_name.clone()), updated);
+    if root == "request"
+        && let [key] = keys.as_slice()
+        && let Some(attribute_name) = key.to_java_string()
+    {
+        // WebProcessingContextBuilder 把 request.* 写入 exchange 属性；
+        // WebEngineContext 对普通变量名也从该作用域读取。
+        expression_context.set_variable(Some(attribute_name.clone()), Some(Arc::clone(&value)));
+        context.set_variable(Some(attribute_name), Some(value));
+    }
+    if std::env::var_os("THYMELEAF_DEBUG_CONTEXT").is_some() {
+        eprintln!(
+            "CONTEXT mutation {assignment} => {:?}",
+            context.get_variable(Some(&root_name))
+        );
+    }
     Ok(())
+}
+
+fn update_request_parameter_map(
+    current: &TemplateValue,
+    keys: &[Arc<TemplateValue>],
+    value: Arc<TemplateValue>,
+) -> Result<Arc<TemplateValue>, String> {
+    let [key] = keys else {
+        return Err("request parameter mutation requires exactly one key".to_owned());
+    };
+    let TemplateValue::Map(current_entries) = current else {
+        return Err("request parameter root is not a map".to_owned());
+    };
+    let mut entries = current_entries.as_ref().clone();
+    if let Some((_, current_value)) = entries
+        .iter_mut()
+        .find(|(candidate, _)| candidate.java_equals(key.as_ref()))
+    {
+        let TemplateValue::List(values) = current_value.as_ref() else {
+            return Err("request parameter value is not a list".to_owned());
+        };
+        let mut values = values.as_ref().clone();
+        values.push(value);
+        *current_value = Arc::new(TemplateValue::List(Arc::new(values)));
+    } else {
+        entries.push((
+            Arc::clone(key),
+            Arc::new(TemplateValue::List(Arc::new(vec![value]))),
+        ));
+    }
+    Ok(Arc::new(TemplateValue::Map(Arc::new(entries))))
 }
 
 fn update_context_map_path(
@@ -911,8 +1289,8 @@ impl ITemplateResolver for CorpusStringTemplateResolver {
     }
 }
 
-fn outputs_match(mode: TemplateMode, expected: &str, actual: &str) -> bool {
-    if mode.is_markup() {
+fn outputs_match(mode: TemplateMode, exact_match: bool, expected: &str, actual: &str) -> bool {
+    if mode.is_markup() && !exact_match {
         canonical_markup_trace(expected) == canonical_markup_trace(actual)
     } else {
         expected == actual
@@ -990,27 +1368,6 @@ fn directive_value<'a>(source: &'a str, name: &str) -> Option<&'a str> {
             .filter(|(candidate, _)| *candidate == name)
             .map(|(_, value)| value.trim())
     })
-}
-
-fn inherited_directive_value(
-    path: &Path,
-    source: &str,
-    name: &str,
-) -> Result<Option<String>, String> {
-    if let Some(value) = directive_value(source, name) {
-        return Ok(Some(value.to_owned()));
-    }
-    let Some(parent) = directive_value(source, "EXTENDS") else {
-        return Ok(None);
-    };
-    let parent_path = path
-        .parent()
-        .ok_or_else(|| format!("test resource has no parent directory: {}", path.display()))?
-        .join(parent);
-    let parent_source = fs::read_to_string(&parent_path)
-        .map_err(|error| format!("cannot read EXTENDS {}: {error}", parent_path.display()))?;
-    let parent_source = unescape_test_resource_unicode(&parent_source)?;
-    inherited_directive_value(&parent_path, &parent_source, name)
 }
 
 fn directive_scalar(source: &str, name: &str) -> Option<String> {

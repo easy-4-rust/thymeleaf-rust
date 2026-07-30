@@ -173,6 +173,9 @@ fn parse_range(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
             .ok()
             .map(|value| Arc::new(value) as Arc<dyn IStandardExpression>);
     }
+    if input[0] == b'+' as u16 {
+        return parse_range(&input[1..]);
+    }
     if input[0] == b'!' as u16 {
         let operand = parse_range(&input[1..])?;
         return NegationExpression::new(Some(operand))
@@ -386,6 +389,8 @@ fn find_binary_operator<'a>(
             if position + operator.len() <= input.len()
                 && eq_ignore_ascii_case(&input[position..position + operator.len()], operator)
                 && operator_boundary(input, position, operator)
+                && !((operator == &OP_MINUS || operator == &OP_PLUS)
+                    && is_unary_sign_position(input, position))
             {
                 let replace =
                     found
@@ -404,6 +409,43 @@ fn find_binary_operator<'a>(
     found.filter(|(position, operator)| {
         !java_trim(&input[..*position]).is_empty()
             && !java_trim(&input[*position + operator.len()..]).is_empty()
+    })
+}
+
+fn is_unary_sign_position(input: &[u16], position: usize) -> bool {
+    let prefix = java_trim(&input[..position]);
+    let Some(last) = prefix.last().copied() else {
+        return true;
+    };
+    if [
+        b'+' as u16,
+        b'-' as u16,
+        b'*' as u16,
+        b'/' as u16,
+        b'%' as u16,
+        b'<' as u16,
+        b'>' as u16,
+        b'=' as u16,
+        b'!' as u16,
+        b'&' as u16,
+        b'|' as u16,
+        b'?' as u16,
+        b':' as u16,
+        b',' as u16,
+        b'(' as u16,
+        b'[' as u16,
+        b'{' as u16,
+    ]
+    .contains(&last)
+    {
+        return true;
+    }
+    [OP_DIV, OP_MOD, OP_AND, OP_OR].iter().any(|operator| {
+        prefix.len() >= operator.len()
+            && eq_ignore_ascii_case(&prefix[prefix.len() - operator.len()..], operator)
+            && prefix
+                .get(prefix.len().saturating_sub(operator.len() + 1))
+                .is_none_or(|unit| !is_word_unit(*unit))
     })
 }
 

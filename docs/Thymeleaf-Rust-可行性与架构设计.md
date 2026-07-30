@@ -530,8 +530,15 @@ Standard Engine Context 996 / 996、专用 Dialect 61 / 61。前三者中 Parsin
 `inlining/nostandard` 用例，也不与前两批重叠，因此 `verified` 统一范围当前结算
 1,257 / 1,257 个不同 `.thtest`。专用批次按 Java 测试的真实方言组合执行，并验证了
 Dialect/Processor 优先级、属性/文本/模型处理、片段插入、元素栈以及没有
-Standard Dialect 时不执行标准内联。这证明上述 OGNL 子集与当前输出批次兼容，不代表
-全部 2,608 个可执行用例、自定义 Processor harness 或 Web harness 已经完成。
+Standard Dialect 时不执行标准内联。
+
+全部 500 个 `%EXCEPTION` 用例随后作为独立语义域统一执行，严格校验 Java 异常类、
+消息和 cause 链；结果为 500 / 500。该批次覆盖 Reader 与嵌套模板异常、模板名和行列、
+内联模式、命名模板模式、Dialect 优先级、lazy variable、危险链接协议以及 OGNL
+类型化异常和属性 ACL。它与 `verified` 不重叠，因此 `validated` 并集为
+1,757 / 1,757。累计覆盖率为 region 64.86%、function 57.43%、line 66.36%。
+这证明上述 OGNL 安全子集与当前输出及异常批次兼容，不代表全部 2,608 个可执行用例、
+自定义 Processor harness 或 Web harness 已经完成；尚有 851 个用例待统一结算。
 
 上游 `instancestaticrestrictions29.thtest` 中
 `''.getClass().getClass().getName()` 依赖 Java `Class` 反射链。该语义被登记为默认

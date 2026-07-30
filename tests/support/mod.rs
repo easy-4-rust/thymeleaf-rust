@@ -15,6 +15,7 @@ mod lazy_expression_returner;
 mod list_lazy_context_variable;
 mod precedence_dialect;
 mod precedence_modify_local_variable_model_processor;
+mod test_engine_message_resolver;
 mod test_link_builder;
 mod value_lazy_context_variable;
 
@@ -29,4 +30,5 @@ pub use element_stack_text_processor::ElementStackTextProcessor;
 pub use exception_lazy_context_variable::ExceptionLazyContextVariableError;
 pub use precedence_dialect::PrecedenceDialect;
 pub use precedence_modify_local_variable_model_processor::PrecedenceModifyLocalVariableModelProcessor;
+pub use test_engine_message_resolver::TestEngineMessageResolver;
 pub use test_link_builder::TestLinkBuilder;
