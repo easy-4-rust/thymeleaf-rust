@@ -1,6 +1,7 @@
 use std::io::Write;
 
 use crate::TemplateSpec;
+use crate::engine::IThrottledTemplateWriterControl;
 use crate::exceptions::TemplateEngineException;
 use crate::util::{Charset, JavaString, JavaWriter};
 
@@ -19,6 +20,14 @@ pub type ThrottledTemplateResult<T> =
 ///
 /// 对应 Java: `org.thymeleaf.IThrottledTemplateProcessor`。
 pub trait IThrottledTemplateProcessor {
+    /// 返回与当前处理器共享同一 Writer 状态的控制器。
+    ///
+    /// 数据驱动迭代器使用该控制器观察溢出状态，并在 SSE 模式下标记事件边界。
+    /// 对应 Java: `ThrottledTemplateProcessor#getThrottledTemplateWriterControl()`。
+    fn get_throttled_template_writer_control(
+        &self,
+    ) -> Box<dyn IThrottledTemplateWriterControl + Send>;
+
     /// 返回用于跨线程追踪处理器执行的稳定标识。
     fn get_processor_identifier(&self) -> &JavaString;
 
@@ -29,12 +38,12 @@ pub trait IThrottledTemplateProcessor {
     fn is_finished(&self) -> bool;
 
     /// 不限制字符数，处理全部剩余模板并返回本次写出的 UTF-16 代码单元数。
-    fn process_all_writer(&mut self, writer: &mut dyn JavaWriter) -> ThrottledTemplateResult<i32>;
+    fn process_all_writer(&mut self, writer: Box<dyn JavaWriter>) -> ThrottledTemplateResult<i32>;
 
     /// 不限制字节数，按指定字符集处理全部剩余模板并返回写出字节数。
     fn process_all_output_stream(
         &mut self,
-        output_stream: &mut dyn Write,
+        output_stream: Box<dyn Write + Send>,
         charset: &Charset,
     ) -> ThrottledTemplateResult<i32>;
 
@@ -44,7 +53,7 @@ pub trait IThrottledTemplateProcessor {
     fn process_writer(
         &mut self,
         max_output_in_chars: i32,
-        writer: &mut dyn JavaWriter,
+        writer: Box<dyn JavaWriter>,
     ) -> ThrottledTemplateResult<i32>;
 
     /// 最多按指定字符集写出 `max_output_in_bytes` 个字节。
@@ -53,7 +62,7 @@ pub trait IThrottledTemplateProcessor {
     fn process_output_stream(
         &mut self,
         max_output_in_bytes: i32,
-        output_stream: &mut dyn Write,
+        output_stream: Box<dyn Write + Send>,
         charset: &Charset,
     ) -> ThrottledTemplateResult<i32>;
 }

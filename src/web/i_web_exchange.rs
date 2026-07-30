@@ -10,7 +10,7 @@ use super::{IWebApplication, IWebRequest, IWebSession};
 /// 一次 Web 请求/响应交换合同。
 ///
 /// 对应 Java: `org.thymeleaf.web.IWebExchange`。
-pub trait IWebExchange {
+pub trait IWebExchange: Send + Sync {
     /// 返回请求对象。
     fn get_request(&self) -> &dyn IWebRequest;
     /// 返回可空会话对象。

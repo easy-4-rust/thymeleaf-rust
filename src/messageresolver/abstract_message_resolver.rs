@@ -5,7 +5,7 @@ use crate::context::ITemplateContext;
 use crate::expression::TemplateValue;
 use crate::util::JavaString;
 
-use super::IMessageResolver;
+use super::{IMessageResolver, MessageResolutionResult};
 
 /// 保存名称和顺序，并由闭包实现消息解析行为的抽象 MessageResolver。
 ///
@@ -47,18 +47,18 @@ impl<FResolve, FAbsent> IMessageResolver for AbstractMessageResolver<FResolve, F
 where
     FResolve: Fn(
             &dyn ITemplateContext,
-            TypeId,
+            Option<TypeId>,
             &JavaString,
             Option<&[Option<Arc<TemplateValue>>]>,
-        ) -> Option<JavaString>
+        ) -> MessageResolutionResult<Option<JavaString>>
         + Send
         + Sync,
     FAbsent: Fn(
             &dyn ITemplateContext,
-            TypeId,
+            Option<TypeId>,
             &JavaString,
             Option<&[Option<Arc<TemplateValue>>]>,
-        ) -> Option<JavaString>
+        ) -> MessageResolutionResult<Option<JavaString>>
         + Send
         + Sync,
 {
@@ -73,20 +73,20 @@ where
     fn resolve_message(
         &self,
         context: &dyn ITemplateContext,
-        origin: TypeId,
+        origin: Option<TypeId>,
         key: &JavaString,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> Option<JavaString> {
+    ) -> MessageResolutionResult<Option<JavaString>> {
         (self.resolve_message)(context, origin, key, message_parameters)
     }
 
     fn create_absent_message_representation(
         &self,
         context: &dyn ITemplateContext,
-        origin: TypeId,
+        origin: Option<TypeId>,
         key: &JavaString,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> Option<JavaString> {
+    ) -> MessageResolutionResult<Option<JavaString>> {
         (self.absent_message)(context, origin, key, message_parameters)
     }
 }

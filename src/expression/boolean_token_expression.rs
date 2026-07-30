@@ -57,4 +57,14 @@ impl IStandardExpression for BooleanTokenExpression {
             .value
             .map(|value| Arc::new(TemplateValue::Boolean(value))))
     }
+
+    fn is_token_expression(&self) -> bool {
+        true
+    }
+
+    fn is_boolean_token_expression(&self) -> bool {
+        true
+    }
 }
+
+impl super::SimpleExpression for BooleanTokenExpression {}

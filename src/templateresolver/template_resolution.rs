@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use std::sync::Arc;
 
 use thiserror::Error;
@@ -15,10 +14,8 @@ use crate::{ITemplateResource, TemplateMode};
 /// 资源一定存在：只有 `is_template_resource_existence_verified()` 返回 `true` 时，
 /// 才表示 Resolver 已经调用过 `ITemplateResource#exists()` 并确认存在。
 ///
-/// 上游明确声明该对象不应视为线程安全。Rust 因而使用 `Rc` 保存未被
-/// `Send + Sync` 约束的模板资源，并使用 `Arc` 保存可跨线程共享的缓存有效性策略。
 pub struct TemplateResolution {
-    template_resource: Rc<dyn ITemplateResource>,
+    template_resource: Arc<dyn ITemplateResource>,
     template_resource_existence_verified: bool,
     template_mode: TemplateMode,
     use_decoupled_logic: bool,
@@ -42,7 +39,7 @@ impl TemplateResolution {
     /// # 错误
     /// 任一必填对象缺失时，按 Java 构造器的校验顺序返回精确参数错误。
     pub fn new(
-        template_resource: Option<Rc<dyn ITemplateResource>>,
+        template_resource: Option<Arc<dyn ITemplateResource>>,
         template_mode: Option<TemplateMode>,
         validity: Option<Arc<dyn ICacheEntryValidity>>,
     ) -> Result<Self, TemplateResolutionError> {
@@ -67,7 +64,7 @@ impl TemplateResolution {
     /// # 错误
     /// 按资源、模板模式、有效性的顺序校验必填对象，并返回 Java 精确错误消息。
     pub fn with_options(
-        template_resource: Option<Rc<dyn ITemplateResource>>,
+        template_resource: Option<Arc<dyn ITemplateResource>>,
         template_resource_existence_verified: bool,
         template_mode: Option<TemplateMode>,
         use_decoupled_logic: bool,
@@ -103,6 +100,12 @@ impl TemplateResolution {
     #[must_use]
     pub fn get_template_resource(&self) -> &dyn ITemplateResource {
         self.template_resource.as_ref()
+    }
+
+    /// 返回 Resolver 创建的同一模板资源共享身份。
+    #[must_use]
+    pub(crate) fn get_template_resource_arc(&self) -> Arc<dyn ITemplateResource> {
+        Arc::clone(&self.template_resource)
     }
 
     /// 返回 Resolver 建议的模板模式。
@@ -157,6 +160,12 @@ impl TemplateResolution {
     pub fn get_validity(&self) -> &dyn ICacheEntryValidity {
         self.validity.as_ref()
     }
+
+    /// 返回构造时传入的同一缓存有效性共享身份。
+    #[must_use]
+    pub(crate) fn get_validity_arc(&self) -> Arc<dyn ICacheEntryValidity> {
+        Arc::clone(&self.validity)
+    }
 }
 
 /// 创建 `TemplateResolution` 时的参数校验错误。
@@ -173,7 +182,6 @@ pub enum TemplateResolutionError {
 
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
     use std::sync::Arc;
 
     use super::{TemplateResolution, TemplateResolutionError};
@@ -191,10 +199,10 @@ mod tests {
             TemplateResolutionError::InvalidArgument("Template Resource cannot be null")
         );
 
-        let resource: Rc<dyn ITemplateResource> =
-            Rc::new(StringTemplateResource::new(Some("template")).expect("string resource"));
+        let resource: Arc<dyn ITemplateResource> =
+            Arc::new(StringTemplateResource::new(Some("template")).expect("string resource"));
         assert_eq!(
-            TemplateResolution::new(Some(Rc::clone(&resource)), None, None)
+            TemplateResolution::new(Some(Arc::clone(&resource)), None, None)
                 .err()
                 .expect("null mode"),
             TemplateResolutionError::InvalidArgument("Template mode cannot be null")
@@ -209,11 +217,11 @@ mod tests {
 
     #[test]
     fn three_argument_constructor_preserves_identity_and_default_flags() {
-        let resource: Rc<dyn ITemplateResource> =
-            Rc::new(StringTemplateResource::new(Some("body")).expect("string resource"));
+        let resource: Arc<dyn ITemplateResource> =
+            Arc::new(StringTemplateResource::new(Some("body")).expect("string resource"));
         let validity: Arc<dyn ICacheEntryValidity> = Arc::new(AlwaysValidCacheEntryValidity::new());
         let resolution = TemplateResolution::new(
-            Some(Rc::clone(&resource)),
+            Some(Arc::clone(&resource)),
             Some(TemplateMode::HTML),
             Some(Arc::clone(&validity)),
         )
@@ -233,8 +241,8 @@ mod tests {
 
     #[test]
     fn full_constructor_preserves_independent_flags_and_dynamic_contracts() {
-        let resource: Rc<dyn ITemplateResource> =
-            Rc::new(StringTemplateResource::new(Some("")).expect("empty resource"));
+        let resource: Arc<dyn ITemplateResource> =
+            Arc::new(StringTemplateResource::new(Some("")).expect("empty resource"));
         let validity: Arc<dyn ICacheEntryValidity> =
             Arc::new(NonCacheableCacheEntryValidity::new());
         let resolution = TemplateResolution::with_options(

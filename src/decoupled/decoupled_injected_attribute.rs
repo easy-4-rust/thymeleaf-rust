@@ -194,6 +194,26 @@ impl DecoupledInjectedAttribute {
         JavaString::from_utf16(self.buffer.clone())
     }
 
+    /// 返回向标记 parser 注入属性所需的私有 UTF-16 buffer 与全部范围。
+    ///
+    /// 对应 Java 同包
+    /// `DecoupledTemplateLogicMarkupHandler#processInjectedAttributes` 对 package-private
+    /// 字段的直接读取；Rust 将该可见性收窄为 crate 内部。
+    #[allow(clippy::type_complexity)]
+    pub(crate) fn parser_parts(&self) -> (&[u16], i32, i32, i32, i32, i32, i32, i32, i32) {
+        (
+            &self.buffer,
+            self.name_offset,
+            self.name_len,
+            self.operator_offset,
+            self.operator_len,
+            self.value_content_offset,
+            self.value_content_len,
+            self.value_outer_offset,
+            self.value_outer_len,
+        )
+    }
+
     fn slice(&self, offset: i32, len: i32) -> Result<JavaString, DecoupledInjectedAttributeError> {
         let range_is_invalid = offset < 0
             || len < 0

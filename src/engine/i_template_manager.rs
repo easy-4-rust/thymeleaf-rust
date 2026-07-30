@@ -30,7 +30,7 @@ pub trait ITemplateManager {
         template: &JavaString,
         line_offset: i32,
         col_offset: i32,
-        template_mode: TemplateMode,
+        template_mode: Option<TemplateMode>,
         use_cache: bool,
     ) -> Result<Box<dyn IModel>, crate::exceptions::TemplateInputException>;
     /// 处理已解析模型。
@@ -38,14 +38,14 @@ pub trait ITemplateManager {
         &self,
         template: &dyn IModel,
         context: &dyn ITemplateContext,
-        writer: &mut dyn JavaWriter,
+        writer: Box<dyn JavaWriter>,
     ) -> Result<(), crate::exceptions::TemplateProcessingException>;
     /// 解析并同步处理 TemplateSpec。
     fn parse_and_process(
         &self,
         template_spec: &TemplateSpec,
         context: &dyn IContext,
-        writer: &mut dyn JavaWriter,
+        writer: Box<dyn JavaWriter>,
     ) -> Result<(), crate::exceptions::TemplateProcessingException>;
     /// 解析并创建节流处理器。
     fn parse_and_process_throttled(

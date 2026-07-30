@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -11,8 +12,8 @@ use crate::model::{
 };
 
 use super::{
-    AbstractTemplateHandler, ITemplateHandler, TemplateData, TemplateEnd, TemplateModel,
-    TemplateStart,
+    AbstractTemplateHandler, ITemplateHandler, TemplateData, TemplateEnd, TemplateHandlerHandle,
+    TemplateModel, TemplateStart,
 };
 
 /// 将解析事件收集为不可变 `TemplateModel`，同时保持处理器链透明。
@@ -21,9 +22,21 @@ use super::{
 /// 引擎单例。对应 Java: `org.thymeleaf.engine.ModelBuilderTemplateHandler`。
 pub struct ModelBuilderTemplateHandler {
     base: AbstractTemplateHandler,
-    events: Vec<Arc<dyn ITemplateEvent>>,
+    events: Rc<RefCell<Vec<Arc<dyn ITemplateEvent>>>>,
     configuration: Arc<dyn IEngineConfiguration>,
     template_data: Arc<TemplateData>,
+}
+
+impl Clone for ModelBuilderTemplateHandler {
+    fn clone(&self) -> Self {
+        Self {
+            // 构建器副本只共享事件队列；每条 parser/processor 链拥有独立 next/context。
+            base: AbstractTemplateHandler::new(),
+            events: Rc::clone(&self.events),
+            configuration: Arc::clone(&self.configuration),
+            template_data: Arc::clone(&self.template_data),
+        }
+    }
 }
 
 impl ModelBuilderTemplateHandler {
@@ -34,7 +47,7 @@ impl ModelBuilderTemplateHandler {
     ) -> Self {
         Self {
             base: AbstractTemplateHandler::new(),
-            events: Vec::with_capacity(100),
+            events: Rc::new(RefCell::new(Vec::with_capacity(100))),
             configuration,
             template_data,
         }
@@ -45,17 +58,17 @@ impl ModelBuilderTemplateHandler {
         TemplateModel::new(
             Arc::clone(&self.configuration),
             Arc::clone(&self.template_data),
-            self.events.clone(),
+            self.events.borrow().clone(),
         )
     }
 }
 
 impl ITemplateHandler for ModelBuilderTemplateHandler {
-    fn set_next(&mut self, next: Option<Box<dyn ITemplateHandler>>) {
+    fn set_next(&mut self, next: Option<TemplateHandlerHandle>) {
         self.base.set_next(next);
     }
 
-    fn set_context(&mut self, context: Rc<dyn ITemplateContext>) {
+    fn set_context(&mut self, context: Arc<dyn ITemplateContext>) {
         // Java 未覆盖此方法；继承的基础实现保存上下文但构建过程不读取它。
         self.base.set_context(context);
     }
@@ -64,7 +77,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         template_start: Arc<dyn ITemplateStart>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(TemplateStart::instance());
+        self.events.borrow_mut().push(TemplateStart::instance());
         self.base.handle_template_start(template_start)
     }
 
@@ -72,7 +85,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         template_end: Arc<dyn ITemplateEnd>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(TemplateEnd::instance());
+        self.events.borrow_mut().push(TemplateEnd::instance());
         self.base.handle_template_end(template_end)
     }
 
@@ -80,7 +93,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         xml_declaration: Arc<dyn IXMLDeclaration>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(xml_declaration.clone());
+        self.events.borrow_mut().push(xml_declaration.clone());
         self.base.handle_xml_declaration(xml_declaration)
     }
 
@@ -88,7 +101,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         doc_type: Arc<dyn IDocType>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(doc_type.clone());
+        self.events.borrow_mut().push(doc_type.clone());
         self.base.handle_doc_type(doc_type)
     }
 
@@ -96,7 +109,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         cdata_section: Arc<dyn ICDATASection>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(cdata_section.clone());
+        self.events.borrow_mut().push(cdata_section.clone());
         self.base.handle_cdata_section(cdata_section)
     }
 
@@ -104,7 +117,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         comment: Arc<dyn IComment>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(comment.clone());
+        self.events.borrow_mut().push(comment.clone());
         self.base.handle_comment(comment)
     }
 
@@ -112,7 +125,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         text: Arc<dyn IText>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(text.clone());
+        self.events.borrow_mut().push(text.clone());
         self.base.handle_text(text)
     }
 
@@ -120,7 +133,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         tag: Arc<dyn IStandaloneElementTag>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(tag.clone());
+        self.events.borrow_mut().push(tag.clone());
         self.base.handle_standalone_element(tag)
     }
 
@@ -128,7 +141,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         tag: Arc<dyn IOpenElementTag>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(tag.clone());
+        self.events.borrow_mut().push(tag.clone());
         self.base.handle_open_element(tag)
     }
 
@@ -136,7 +149,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         tag: Arc<dyn ICloseElementTag>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(tag.clone());
+        self.events.borrow_mut().push(tag.clone());
         self.base.handle_close_element(tag)
     }
 
@@ -144,7 +157,7 @@ impl ITemplateHandler for ModelBuilderTemplateHandler {
         &mut self,
         instruction: Arc<dyn IProcessingInstruction>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
-        self.events.push(instruction.clone());
+        self.events.borrow_mut().push(instruction.clone());
         self.base.handle_processing_instruction(instruction)
     }
 }

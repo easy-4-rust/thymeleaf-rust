@@ -5,6 +5,7 @@ use crate::expression::{IExpressionObjects, TemplateValue};
 use crate::util::{JavaLocale, JavaString, ValidateError};
 use crate::web::IWebExchange;
 
+use super::ContextVariableEntries;
 use super::{
     AbstractExpressionContext, IContext, IContextVariableNames, IExpressionContext, IWebContext,
 };
@@ -44,7 +45,7 @@ impl WebExpressionContext {
         configuration: Option<Arc<dyn IEngineConfiguration>>,
         web_exchange: Option<Arc<dyn IWebExchange>>,
         locale: Option<JavaLocale>,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
+        variables: ContextVariableEntries<'_>,
     ) -> Result<Self, ValidateError> {
         // Java 先调用 super(configuration)，再校验 webExchange，保持首错顺序。
         let configuration = configuration.ok_or_else(|| ValidateError::IllegalArgument {
@@ -71,10 +72,7 @@ impl WebExpressionContext {
         self.base.set_variable(name, value);
     }
     /// 按输入迭代顺序批量新增或替换变量。
-    pub fn set_variables(
-        &self,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
-    ) {
+    pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         self.base.set_variables(variables);
     }
     /// 删除指定变量。
@@ -111,6 +109,9 @@ impl IContext for WebExpressionContext {
 impl IExpressionContext for WebExpressionContext {
     fn get_configuration(&self) -> &dyn IEngineConfiguration {
         self.base.get_configuration()
+    }
+    fn get_configuration_arc(&self) -> Arc<dyn IEngineConfiguration> {
+        self.base.get_configuration_arc()
     }
     fn get_expression_objects(&self) -> &dyn IExpressionObjects {
         self.base.get_expression_objects()

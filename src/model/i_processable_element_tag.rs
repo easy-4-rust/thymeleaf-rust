@@ -13,6 +13,28 @@ use super::{AttributeValueQuotes, IAttribute, IElementTag};
 ///
 /// 对应 Java: `org.thymeleaf.model.IProcessableElementTag`。
 pub trait IProcessableElementTag: IElementTag {
+    /// 返回引擎内建可处理标签的共享基础状态。
+    ///
+    /// Java 通过 `instanceof AbstractProcessableElementTag` 使用属性内表达式缓存；
+    /// 第三方标签默认返回 `None` 并直接解析。
+    fn as_engine_processable_element_tag(
+        &self,
+    ) -> Option<&crate::engine::AbstractProcessableElementTag> {
+        None
+    }
+
+    /// 若标签是开放元素，则消费共享引用并保持同一对象身份。
+    fn into_open_element_tag(self: Arc<Self>) -> Option<Arc<dyn super::IOpenElementTag>> {
+        None
+    }
+
+    /// 若标签是 standalone 元素，则消费共享引用并保持同一对象身份。
+    fn into_standalone_element_tag(
+        self: Arc<Self>,
+    ) -> Option<Arc<dyn super::IStandaloneElementTag>> {
+        None
+    }
+
     /// 返回属性数组的防御性浅副本；无属性时返回空数组。
     fn get_all_attributes(&self) -> Vec<&dyn IAttribute>;
 

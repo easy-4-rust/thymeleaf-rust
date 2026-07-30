@@ -59,9 +59,9 @@ impl NumberTokenExpression {
         }
         let mut decimal_found = false;
         for unit in input.as_utf16() {
-            if char::from_u32(u32::from(*unit)).is_some_and(|value| {
-                get_general_category(value) == GeneralCategory::DecimalNumber
-            }) {
+            if char::from_u32(u32::from(*unit))
+                .is_some_and(|value| get_general_category(value) == GeneralCategory::DecimalNumber)
+            {
                 continue;
             }
             if *unit == Self::DECIMAL_POINT && !decimal_found {
@@ -91,4 +91,14 @@ impl IStandardExpression for NumberTokenExpression {
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         Ok(Some(Arc::new(TemplateValue::Number(self.value.clone()))))
     }
+
+    fn is_token_expression(&self) -> bool {
+        true
+    }
+
+    fn is_number_token_expression(&self) -> bool {
+        true
+    }
 }
+
+impl super::SimpleExpression for NumberTokenExpression {}

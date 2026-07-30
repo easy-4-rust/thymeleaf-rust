@@ -1,0 +1,12 @@
+mod abstract_markup_template_parser;
+mod html_template_parser;
+mod inlined_output_expression_markup_handler;
+mod markup_selector;
+mod template_fragment_markup_reference_resolver;
+mod xml_template_parser;
+
+pub use abstract_markup_template_parser::AbstractMarkupTemplateParser;
+pub use html_template_parser::HTMLTemplateParser;
+pub use inlined_output_expression_markup_handler::InlinedOutputExpressionMarkupHandler;
+pub use template_fragment_markup_reference_resolver::TemplateFragmentMarkupReferenceResolver;
+pub use xml_template_parser::XMLTemplateParser;

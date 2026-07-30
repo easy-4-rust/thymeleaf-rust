@@ -16,6 +16,7 @@ use crate::{TemplateMode, TemplateResolutionAttributes, TemplateSelectorSet};
 /// 键完整包含 owner template、模板名、selectors、行列偏移、强制模板模式和模板解析
 /// 属性。selectors 与解析属性按上游约定应当已经由 `TemplateSpec` 变为非空、自然排序
 /// 且不可修改的集合；Rust 使用 `Arc` 共享同一只读集合身份，并在构造时预计算哈希。
+#[derive(Clone)]
 pub struct TemplateCacheKey {
     owner_template: Option<String>,
     template: String,

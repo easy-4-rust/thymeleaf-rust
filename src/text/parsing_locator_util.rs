@@ -1,8 +1,3 @@
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "text parser 消费者对象将在后续切片中迁移")
-)]
-
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 

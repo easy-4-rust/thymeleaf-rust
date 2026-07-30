@@ -8,7 +8,7 @@ use crate::util::JavaString;
 /// 对应 Java: `org.thymeleaf.web.IWebRequest`。
 ///
 /// 路径字段保持宿主提供的已编码形式；Header、参数与 Cookie 的多值顺序不得改写。
-pub trait IWebRequest {
+pub trait IWebRequest: Send + Sync {
     /// 返回 HTTP 方法。
     fn get_method(&self) -> Option<JavaString>;
 

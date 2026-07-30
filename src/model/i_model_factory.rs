@@ -14,7 +14,7 @@ use super::{
 /// 创建和不可变修改模板事件与模型的工厂合同。
 ///
 /// 对应 Java: `org.thymeleaf.model.IModelFactory`。
-pub trait IModelFactory {
+pub trait IModelFactory: Send + Sync {
     /// 创建空的可变模型。
     fn create_model(&self) -> Box<dyn IModel>;
     /// 创建包含一个事件的可变模型。

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use indexmap::IndexMap;
 
@@ -13,8 +13,8 @@ use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
     Attribute, AttributeDefinitions, AttributeName, Attributes, CDATASection, CloseElementTag,
-    Comment, DocType, OpenElementTag, ProcessingInstruction, StandaloneElementTag, TemplateData,
-    Text, XMLDeclaration, model::Model,
+    Comment, DocType, ElementDefinitions, OpenElementTag, ProcessingInstruction,
+    StandaloneElementTag, TemplateData, Text, XMLDeclaration, model::Model,
 };
 
 const DEFAULT_WHITE_SPACE: &str = " ";
@@ -26,21 +26,36 @@ const XML_DECLARATION_KEYWORD: &str = "xml";
 /// 派生新标签，并在删除不存在属性时保留原 `Arc` 身份。
 /// 对应 Java: `org.thymeleaf.engine.StandardModelFactory`。
 pub struct StandardModelFactory {
-    configuration: Arc<dyn IEngineConfiguration>,
+    configuration: Weak<dyn IEngineConfiguration>,
+    element_definitions: Arc<ElementDefinitions>,
+    attribute_definitions: Arc<AttributeDefinitions>,
     template_mode: TemplateMode,
 }
 
 impl StandardModelFactory {
     /// 创建绑定指定引擎配置与模板模式的标准模型工厂。
-    pub fn new(configuration: Arc<dyn IEngineConfiguration>, template_mode: TemplateMode) -> Self {
+    pub fn new(
+        configuration: Arc<dyn IEngineConfiguration>,
+        template_mode: TemplateMode,
+        element_definitions: Arc<ElementDefinitions>,
+        attribute_definitions: Arc<AttributeDefinitions>,
+    ) -> Self {
         Self {
-            configuration,
+            configuration: Arc::downgrade(&configuration),
+            element_definitions,
+            attribute_definitions,
             template_mode,
         }
     }
 
     fn attribute_definitions(&self) -> &AttributeDefinitions {
-        self.configuration.get_attribute_definitions()
+        self.attribute_definitions.as_ref()
+    }
+
+    fn configuration(&self) -> Arc<dyn IEngineConfiguration> {
+        self.configuration
+            .upgrade()
+            .expect("StandardModelFactory cannot outlive its EngineConfiguration")
     }
 
     fn check_restricted_event_for_text_template_mode(
@@ -94,17 +109,14 @@ impl StandardModelFactory {
 
 impl IModelFactory for StandardModelFactory {
     fn create_model(&self) -> Box<dyn IModel> {
-        Box::new(Model::new(
-            Arc::clone(&self.configuration),
-            self.template_mode,
-        ))
+        Box::new(Model::new(self.configuration(), self.template_mode))
     }
 
     fn create_model_with_event(
         &self,
         event: Arc<dyn ITemplateEvent>,
     ) -> Result<Box<dyn IModel>, IModelError> {
-        let mut model = Model::new(Arc::clone(&self.configuration), self.template_mode);
+        let mut model = Model::new(self.configuration(), self.template_mode);
         model.add(Some(event))?;
         Ok(Box::new(model))
     }
@@ -114,9 +126,16 @@ impl IModelFactory for StandardModelFactory {
         owner_template: &TemplateData,
         template: &JavaString,
     ) -> Result<Box<dyn IModel>, TemplateProcessingException> {
-        self.configuration
+        self.configuration()
             .get_template_manager()
-            .parse_string(owner_template, template, 0, 0, self.template_mode, false)
+            .parse_string(
+                owner_template,
+                template,
+                0,
+                0,
+                Some(self.template_mode),
+                false,
+            )
             .map_err(|error| {
                 TemplateProcessingException::with_cause(
                     Some("Error while parsing model text".to_owned()),
@@ -222,8 +241,7 @@ impl IModelFactory for StandardModelFactory {
         minimized: bool,
     ) -> Result<Arc<dyn IStandaloneElementTag>, TemplateProcessingException> {
         let definition = self
-            .configuration
-            .get_element_definitions()
+            .element_definitions
             .for_name(Some(self.template_mode), Some(&element_name))
             .map_err(processing_error)?;
         let attributes = self.build_attributes(attributes, attribute_value_quotes)?;
@@ -247,8 +265,7 @@ impl IModelFactory for StandardModelFactory {
         synthetic: bool,
     ) -> Result<Arc<dyn IOpenElementTag>, TemplateProcessingException> {
         let definition = self
-            .configuration
-            .get_element_definitions()
+            .element_definitions
             .for_name(Some(self.template_mode), Some(&element_name))
             .map_err(processing_error)?;
         let attributes = self.build_attributes(attributes, attribute_value_quotes)?;
@@ -268,8 +285,7 @@ impl IModelFactory for StandardModelFactory {
         unmatched: bool,
     ) -> Result<Arc<dyn ICloseElementTag>, TemplateProcessingException> {
         let definition = self
-            .configuration
-            .get_element_definitions()
+            .element_definitions
             .for_name(Some(self.template_mode), Some(&element_name))
             .map_err(processing_error)?;
         Ok(Arc::new(CloseElementTag::new(

@@ -54,4 +54,14 @@ impl IStandardExpression for GenericTokenExpression {
             &self.value,
         )))))
     }
+
+    fn is_token_expression(&self) -> bool {
+        true
+    }
+
+    fn is_generic_token_expression(&self) -> bool {
+        true
+    }
 }
+
+impl super::SimpleExpression for GenericTokenExpression {}

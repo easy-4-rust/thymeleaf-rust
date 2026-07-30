@@ -118,6 +118,14 @@ impl ITemplateEvent for Text {
         handler.handle_text(self)
     }
 
+    fn as_text(&self) -> Option<&dyn IText> {
+        Some(self)
+    }
+
+    fn into_text(self: Arc<Self>) -> Option<Arc<dyn IText>> {
+        Some(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         self.textual_event.write_content(writer)
     }

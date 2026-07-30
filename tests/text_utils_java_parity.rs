@@ -1,6 +1,5 @@
 //! `TextUtils` 的 Thymeleaf 3.1.5 Java/Rust UTF-16 Golden 差分测试。
 
-use std::cell::RefCell;
 use std::fmt::{Display, Write};
 use std::sync::{Arc, RwLock};
 
@@ -1517,30 +1516,30 @@ impl JavaCharSequence for CharFailure {
 
 struct ProbeSequence {
     value: JavaString,
-    trace: RefCell<String>,
+    trace: std::sync::Mutex<String>,
 }
 
 impl ProbeSequence {
     fn new(value: &str) -> Self {
         Self {
             value: java(value),
-            trace: RefCell::new(String::new()),
+            trace: std::sync::Mutex::new(String::new()),
         }
     }
 
     fn trace(&self) -> String {
-        self.trace.borrow().clone()
+        self.trace.lock().expect("trace lock").clone()
     }
 }
 
 impl JavaCharSequence for ProbeSequence {
     fn java_length(&self) -> Result<i32, TextUtilsError> {
-        self.trace.borrow_mut().push_str("L;");
+        self.trace.lock().expect("trace lock").push_str("L;");
         Ok(self.value.len() as i32)
     }
 
     fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
-        write!(self.trace.borrow_mut(), "C{index};").unwrap();
+        write!(self.trace.lock().expect("trace lock"), "C{index};").unwrap();
         self.value.java_char_at(index)
     }
 

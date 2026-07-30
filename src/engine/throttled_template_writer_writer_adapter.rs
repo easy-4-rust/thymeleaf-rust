@@ -1,11 +1,5 @@
-#![expect(
-    dead_code,
-    reason = "由后续 ThrottledTemplateProcessor 对象的字符输出路径调用"
-)]
-
-use std::cell::RefCell;
 use std::io;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateOutputException;
 use crate::util::JavaWriter;
@@ -24,7 +18,7 @@ const OVERFLOW_BUFFER_INCREMENT: usize = 256;
 /// `org.thymeleaf.engine.ThrottledTemplateWriterWriterAdapter`。
 pub(crate) struct ThrottledTemplateWriterWriterAdapter {
     template_name: String,
-    flow_controller: Rc<RefCell<TemplateFlowController>>,
+    flow_controller: Arc<Mutex<TemplateFlowController>>,
     writer: Option<Box<dyn JavaWriter>>,
     overflow: Vec<u16>,
     overflow_size: usize,
@@ -39,9 +33,12 @@ impl ThrottledTemplateWriterWriterAdapter {
     /// 创建尚未绑定输出且初始停止的字符适配器。
     pub(crate) fn new(
         template_name: String,
-        flow_controller: Rc<RefCell<TemplateFlowController>>,
+        flow_controller: Arc<Mutex<TemplateFlowController>>,
     ) -> Self {
-        flow_controller.borrow_mut().stop_processing = true;
+        flow_controller
+            .lock()
+            .expect("template flow controller lock poisoned")
+            .stop_processing = true;
         Self {
             template_name,
             flow_controller,
@@ -71,7 +68,10 @@ impl ThrottledTemplateWriterWriterAdapter {
             self.unlimited = false;
             self.limit = limit;
         }
-        self.flow_controller.borrow_mut().stop_processing = self.limit == 0;
+        self.flow_controller
+            .lock()
+            .expect("template flow controller lock poisoned")
+            .stop_processing = self.limit == 0;
 
         if self.overflow_size == 0 || self.limit == 0 {
             return Ok(());
@@ -108,7 +108,10 @@ impl ThrottledTemplateWriterWriterAdapter {
             self.limit -= writable as i32;
         }
         if self.limit == 0 {
-            self.flow_controller.borrow_mut().stop_processing = true;
+            self.flow_controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing = true;
         }
         Ok(())
     }
@@ -134,7 +137,10 @@ impl ThrottledTemplateWriterWriterAdapter {
             self.limit -= writable as i32;
         }
         if self.limit == 0 {
-            self.flow_controller.borrow_mut().stop_processing = true;
+            self.flow_controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing = true;
         }
         Ok(())
     }

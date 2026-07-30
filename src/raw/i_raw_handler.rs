@@ -6,6 +6,10 @@ use super::RawParseException;
 ///
 /// 所有位置均直接沿用 parser 的一基行列；文本 buffer 是 UTF-16 `char[]` 的借用，
 /// 不要求处理器预先创建中间字符串。
+#[expect(
+    clippy::result_large_err,
+    reason = "公开 SPI 保留具体 RawParseException，避免破坏 Java checked exception 对照"
+)]
 pub trait IRawHandler {
     /// 处理文档开始事件。
     ///

@@ -123,6 +123,10 @@ impl TextParsingElementError {
     }
 
     /// 返回 Java `TextParseException` 的行列；其他异常返回空。
+    #[allow(
+        dead_code,
+        reason = "保留 Java TextParseException 行列提取的内部语义入口"
+    )]
     pub(crate) const fn text_parse_location(&self) -> Option<(i32, i32)> {
         match self {
             Self::TextParse(exception) => match (exception.get_line(), exception.get_col()) {

@@ -1,7 +1,6 @@
 //! `TemplateResolution` 的 Thymeleaf 3.1.5 Java/Rust Golden 差分测试。
 
 use std::io::{Cursor, Read};
-use std::rc::Rc;
 use std::sync::Arc;
 
 use thymeleaf::cache::{
@@ -67,7 +66,7 @@ fn template_resolution_matches_java_golden() {
 }
 
 fn export_validation(output: &mut String) {
-    let resource: Rc<dyn ITemplateResource> = Rc::new(TestResource::new("resource", false));
+    let resource: Arc<dyn ITemplateResource> = Arc::new(TestResource::new("resource", false));
     let validity: Arc<dyn ICacheEntryValidity> = Arc::new(AlwaysValidCacheEntryValidity::new());
 
     emit_failure(
@@ -79,7 +78,7 @@ fn export_validation(output: &mut String) {
         output,
         "null.mode",
         TemplateResolution::new(
-            Some(Rc::clone(&resource)),
+            Some(Arc::clone(&resource)),
             None,
             Some(Arc::clone(&validity)),
         ),
@@ -87,7 +86,7 @@ fn export_validation(output: &mut String) {
     emit_failure(
         output,
         "null.validity",
-        TemplateResolution::new(Some(Rc::clone(&resource)), Some(TemplateMode::HTML), None),
+        TemplateResolution::new(Some(Arc::clone(&resource)), Some(TemplateMode::HTML), None),
     );
     emit_failure(
         output,
@@ -97,10 +96,10 @@ fn export_validation(output: &mut String) {
 }
 
 fn export_defaults_and_identity(output: &mut String) {
-    let resource: Rc<dyn ITemplateResource> = Rc::new(TestResource::new("missing", false));
+    let resource: Arc<dyn ITemplateResource> = Arc::new(TestResource::new("missing", false));
     let validity: Arc<dyn ICacheEntryValidity> = Arc::new(AlwaysValidCacheEntryValidity::new());
     let resolution = TemplateResolution::new(
-        Some(Rc::clone(&resource)),
+        Some(Arc::clone(&resource)),
         Some(TemplateMode::HTML),
         Some(Arc::clone(&validity)),
     )
@@ -166,14 +165,14 @@ fn export_full_flags_and_modes(output: &mut String) {
     ] {
         let existence_verified = mode.is_markup();
         let use_decoupled_logic = mode.is_text();
-        let resource: Rc<dyn ITemplateResource> = Rc::new(TestResource::new(
+        let resource: Arc<dyn ITemplateResource> = Arc::new(TestResource::new(
             format!("mode-{mode}"),
             !existence_verified,
         ));
         let validity: Arc<dyn ICacheEntryValidity> =
             Arc::new(NonCacheableCacheEntryValidity::new());
         let resolution = TemplateResolution::with_options(
-            Some(Rc::clone(&resource)),
+            Some(Arc::clone(&resource)),
             existence_verified,
             Some(mode),
             use_decoupled_logic,

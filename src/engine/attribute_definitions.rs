@@ -15,6 +15,12 @@ use super::{
 /// 按模板模式组织、且已按优先级排列的元素 Processor。
 pub type ElementProcessorsByTemplateMode = HashMap<TemplateMode, Vec<Arc<dyn IElementProcessor>>>;
 
+/// 单个模板模式下的线程安全属性定义仓储。
+///
+/// 对应 Java: `AttributeDefinitions.AttributeDefinitionRepository`。Java 使用有序数组
+/// 加读写锁；Rust 以同样的读写锁边界配合哈希索引，保留并发查找与双重检查写入语义。
+type AttributeDefinitionRepository = RwLock<HashMap<JavaString, AttributeDefinitionValue>>;
+
 /// `AttributeDefinitions` 返回的具体属性定义。
 #[derive(Clone)]
 pub enum AttributeDefinitionValue {
@@ -95,11 +101,11 @@ impl From<AttributeDefinitionError> for AttributeDefinitionsError {
 /// 对应 Java: `org.thymeleaf.engine.AttributeDefinitions`。
 pub struct AttributeDefinitions {
     processors: Arc<ElementProcessorsByTemplateMode>,
-    html_repository: RwLock<HashMap<JavaString, AttributeDefinitionValue>>,
-    xml_repository: RwLock<HashMap<JavaString, AttributeDefinitionValue>>,
-    text_repository: RwLock<HashMap<JavaString, AttributeDefinitionValue>>,
-    javascript_repository: RwLock<HashMap<JavaString, AttributeDefinitionValue>>,
-    css_repository: RwLock<HashMap<JavaString, AttributeDefinitionValue>>,
+    html_repository: AttributeDefinitionRepository,
+    xml_repository: AttributeDefinitionRepository,
+    text_repository: AttributeDefinitionRepository,
+    javascript_repository: AttributeDefinitionRepository,
+    css_repository: AttributeDefinitionRepository,
 }
 
 impl AttributeDefinitions {

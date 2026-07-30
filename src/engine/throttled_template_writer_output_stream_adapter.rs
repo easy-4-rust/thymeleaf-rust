@@ -1,11 +1,5 @@
-#![expect(
-    dead_code,
-    reason = "由后续 ThrottledTemplateProcessor 对象的字节输出路径调用"
-)]
-
-use std::cell::RefCell;
 use std::io::{self, Write};
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateOutputException;
 
@@ -20,9 +14,9 @@ use super::template_flow_controller::TemplateFlowController;
 /// `org.thymeleaf.engine.ThrottledTemplateWriterOutputStreamAdapter`。
 pub(crate) struct ThrottledTemplateWriterOutputStreamAdapter {
     template_name: String,
-    flow_controller: Rc<RefCell<TemplateFlowController>>,
+    flow_controller: Arc<Mutex<TemplateFlowController>>,
     overflow_increment_in_bytes: usize,
-    output_stream: Option<Box<dyn Write>>,
+    output_stream: Option<Box<dyn Write + Send>>,
     overflow: Vec<u8>,
     overflow_size: usize,
     max_overflow_size: usize,
@@ -36,10 +30,13 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
     /// 创建尚未绑定输出且初始停止的字节适配器。
     pub(crate) fn new(
         template_name: String,
-        flow_controller: Rc<RefCell<TemplateFlowController>>,
+        flow_controller: Arc<Mutex<TemplateFlowController>>,
         overflow_increment_in_bytes: usize,
     ) -> Self {
-        flow_controller.borrow_mut().stop_processing = true;
+        flow_controller
+            .lock()
+            .expect("template flow controller lock poisoned")
+            .stop_processing = true;
         Self {
             template_name,
             flow_controller,
@@ -56,7 +53,7 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
     }
 
     /// 绑定下一轮 OutputStream，并按 Java 语义仅重置本轮写出计数。
-    pub(crate) fn set_output_stream(&mut self, output_stream: Box<dyn Write>) {
+    pub(crate) fn set_output_stream(&mut self, output_stream: Box<dyn Write + Send>) {
         self.output_stream = Some(output_stream);
         self.written_count = 0;
     }
@@ -70,7 +67,10 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
             self.unlimited = false;
             self.limit = limit;
         }
-        self.flow_controller.borrow_mut().stop_processing = self.limit == 0;
+        self.flow_controller
+            .lock()
+            .expect("template flow controller lock poisoned")
+            .stop_processing = self.limit == 0;
         if self.overflow_size == 0 || self.limit == 0 {
             return Ok(());
         }
@@ -105,7 +105,10 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
             self.limit -= writable as i32;
         }
         if self.limit == 0 {
-            self.flow_controller.borrow_mut().stop_processing = true;
+            self.flow_controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing = true;
         }
         Ok(())
     }
@@ -130,7 +133,10 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
             self.limit -= writable as i32;
         }
         if self.limit == 0 {
-            self.flow_controller.borrow_mut().stop_processing = true;
+            self.flow_controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing = true;
         }
         Ok(())
     }
@@ -193,7 +199,7 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
         }
     }
 
-    fn output_mut(&mut self) -> io::Result<&mut (dyn Write + 'static)> {
+    fn output_mut(&mut self) -> io::Result<&mut (dyn Write + Send + 'static)> {
         self.output_stream
             .as_deref_mut()
             .ok_or_else(|| io::Error::other("Throttled output stream has not been initialized"))

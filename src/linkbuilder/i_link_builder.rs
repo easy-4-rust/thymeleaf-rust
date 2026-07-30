@@ -3,6 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 
 use crate::context::IExpressionContext;
+use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
 use crate::util::JavaString;
 
@@ -20,5 +21,5 @@ pub trait ILinkBuilder: Send + Sync {
         context: &dyn IExpressionContext,
         base: Option<&JavaString>,
         parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Option<JavaString>;
+    ) -> Result<Option<JavaString>, TemplateProcessingException>;
 }

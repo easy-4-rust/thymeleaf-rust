@@ -33,7 +33,10 @@ impl<F> AbstractCDATASectionProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractCDATASectionProcessor<F> {
+impl<F> IProcessor for AbstractCDATASectionProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -48,10 +51,12 @@ impl<F> IProcessor for AbstractCDATASectionProcessor<F> {
 impl<F> ICDATASectionProcessor for AbstractCDATASectionProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn ICDATASection,
-        &mut dyn ICDATASectionStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn ICDATASection,
+            &mut dyn ICDATASectionStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

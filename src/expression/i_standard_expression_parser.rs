@@ -17,4 +17,12 @@ pub trait IStandardExpressionParser: Send + Sync {
         context: &dyn IExpressionContext,
         input: Option<&JavaString>,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>>;
+
+    /// 是否为支持 `__...__` 预处理的标准解析器实现。
+    ///
+    /// Java 使用 `instanceof StandardExpressionParser`；Rust 以显式能力方法保留同一
+    /// 动态分派语义，第三方解析器默认不启用预处理。
+    fn supports_standard_preprocessing(&self) -> bool {
+        false
+    }
 }

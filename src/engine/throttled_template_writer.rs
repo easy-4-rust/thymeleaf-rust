@@ -1,11 +1,5 @@
-#![expect(
-    dead_code,
-    reason = "由后续 ThrottledTemplateProcessor 对象通过 SSE 或普通模式构造"
-)]
-
-use std::cell::RefCell;
 use std::io::{self, Write};
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use encoding_rs::{CoderResult, Encoder, Encoding};
 
@@ -17,7 +11,72 @@ use super::template_flow_controller::TemplateFlowController;
 use super::throttled_template_writer_output_stream_adapter::ThrottledTemplateWriterOutputStreamAdapter;
 use super::throttled_template_writer_writer_adapter::ThrottledTemplateWriterWriterAdapter;
 
-enum ThrottledTemplateWriterAdapter {
+/// 字符与字节节流适配器共享的状态控制合同。
+///
+/// 对应 Java: `ThrottledTemplateWriter.IThrottledTemplateWriterAdapter`。
+#[expect(dead_code, reason = "保留 Java 私有适配器接口的完整对象级合同")]
+trait IThrottledTemplateWriterAdapter {
+    fn is_overflown(&self) -> bool;
+    fn is_stopped(&self) -> bool;
+    fn get_written_count(&self) -> i32;
+    fn get_max_overflow_size(&self) -> i32;
+    fn get_overflow_grow_count(&self) -> i32;
+    fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException>;
+}
+
+impl IThrottledTemplateWriterAdapter for ThrottledTemplateWriterWriterAdapter {
+    fn is_overflown(&self) -> bool {
+        ThrottledTemplateWriterWriterAdapter::is_overflown(self)
+    }
+
+    fn is_stopped(&self) -> bool {
+        ThrottledTemplateWriterWriterAdapter::is_stopped(self)
+    }
+
+    fn get_written_count(&self) -> i32 {
+        ThrottledTemplateWriterWriterAdapter::get_written_count(self)
+    }
+
+    fn get_max_overflow_size(&self) -> i32 {
+        ThrottledTemplateWriterWriterAdapter::get_max_overflow_size(self)
+    }
+
+    fn get_overflow_grow_count(&self) -> i32 {
+        ThrottledTemplateWriterWriterAdapter::get_overflow_grow_count(self)
+    }
+
+    fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
+        ThrottledTemplateWriterWriterAdapter::allow(self, limit)
+    }
+}
+
+impl IThrottledTemplateWriterAdapter for ThrottledTemplateWriterOutputStreamAdapter {
+    fn is_overflown(&self) -> bool {
+        ThrottledTemplateWriterOutputStreamAdapter::is_overflown(self)
+    }
+
+    fn is_stopped(&self) -> bool {
+        ThrottledTemplateWriterOutputStreamAdapter::is_stopped(self)
+    }
+
+    fn get_written_count(&self) -> i32 {
+        ThrottledTemplateWriterOutputStreamAdapter::get_written_count(self)
+    }
+
+    fn get_max_overflow_size(&self) -> i32 {
+        ThrottledTemplateWriterOutputStreamAdapter::get_max_overflow_size(self)
+    }
+
+    fn get_overflow_grow_count(&self) -> i32 {
+        ThrottledTemplateWriterOutputStreamAdapter::get_overflow_grow_count(self)
+    }
+
+    fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
+        ThrottledTemplateWriterOutputStreamAdapter::allow(self, limit)
+    }
+}
+
+enum ThrottledTemplateWriterAdapterMode {
     Characters(ThrottledTemplateWriterWriterAdapter),
     Bytes {
         adapter: ThrottledTemplateWriterOutputStreamAdapter,
@@ -34,8 +93,8 @@ enum ThrottledTemplateWriterAdapter {
 /// 对应 Java: `org.thymeleaf.engine.ThrottledTemplateWriter`。
 pub(crate) struct ThrottledTemplateWriter {
     template_name: String,
-    flow_controller: Rc<RefCell<TemplateFlowController>>,
-    adapter: Option<ThrottledTemplateWriterAdapter>,
+    flow_controller: Arc<Mutex<TemplateFlowController>>,
+    adapter: Option<ThrottledTemplateWriterAdapterMode>,
     flushable: bool,
 }
 
@@ -43,7 +102,7 @@ impl ThrottledTemplateWriter {
     /// 创建尚未绑定输出的节流 Writer。
     pub(crate) fn new(
         template_name: String,
-        flow_controller: Rc<RefCell<TemplateFlowController>>,
+        flow_controller: Arc<Mutex<TemplateFlowController>>,
     ) -> Self {
         Self {
             template_name,
@@ -60,7 +119,7 @@ impl ThrottledTemplateWriter {
     ) -> Result<(), TemplateOutputException> {
         if matches!(
             self.adapter,
-            Some(ThrottledTemplateWriterAdapter::Bytes { .. })
+            Some(ThrottledTemplateWriterAdapterMode::Bytes { .. })
         ) {
             return Err(self.mode_error(
                 "The throttled processor has already been initialized to use byte-based output \
@@ -68,14 +127,15 @@ impl ThrottledTemplateWriter {
             ));
         }
         if self.adapter.is_none() {
-            self.adapter = Some(ThrottledTemplateWriterAdapter::Characters(
+            self.adapter = Some(ThrottledTemplateWriterAdapterMode::Characters(
                 ThrottledTemplateWriterWriterAdapter::new(
                     self.template_name.clone(),
-                    Rc::clone(&self.flow_controller),
+                    Arc::clone(&self.flow_controller),
                 ),
             ));
         }
-        if let Some(ThrottledTemplateWriterAdapter::Characters(adapter)) = self.adapter.as_mut() {
+        if let Some(ThrottledTemplateWriterAdapterMode::Characters(adapter)) = self.adapter.as_mut()
+        {
             adapter.set_writer(writer);
         }
         Ok(())
@@ -84,13 +144,13 @@ impl ThrottledTemplateWriter {
     /// 绑定字节型输出并配置字符集和首轮最大字节数。
     pub(crate) fn set_output_stream(
         &mut self,
-        output_stream: Box<dyn Write>,
+        output_stream: Box<dyn Write + Send>,
         charset: &Charset,
         max_output_in_bytes: i32,
     ) -> Result<(), TemplateOutputException> {
         if matches!(
             self.adapter,
-            Some(ThrottledTemplateWriterAdapter::Characters(_))
+            Some(ThrottledTemplateWriterAdapterMode::Characters(_))
         ) {
             return Err(self.mode_error(
                 "The throttled processor has already been initialized to use char-based output \
@@ -105,16 +165,18 @@ impl ThrottledTemplateWriter {
             };
             let encoding = Encoding::for_label(charset.name().as_bytes())
                 .expect("Charset guarantees an encoding_rs-supported canonical name");
-            self.adapter = Some(ThrottledTemplateWriterAdapter::Bytes {
+            self.adapter = Some(ThrottledTemplateWriterAdapterMode::Bytes {
                 adapter: ThrottledTemplateWriterOutputStreamAdapter::new(
                     self.template_name.clone(),
-                    Rc::clone(&self.flow_controller),
+                    Arc::clone(&self.flow_controller),
                     increment,
                 ),
                 encoder: encoding.new_encoder(),
             });
         }
-        if let Some(ThrottledTemplateWriterAdapter::Bytes { adapter, .. }) = self.adapter.as_mut() {
+        if let Some(ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. }) =
+            self.adapter.as_mut()
+        {
             adapter.set_output_stream(output_stream);
         }
         Ok(())
@@ -123,8 +185,8 @@ impl ThrottledTemplateWriter {
     /// 允许下一轮最多写出指定数量的字符或字节。
     pub(crate) fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
         match self.adapter_mut()? {
-            ThrottledTemplateWriterAdapter::Characters(adapter) => adapter.allow(limit),
-            ThrottledTemplateWriterAdapter::Bytes { adapter, .. } => adapter.allow(limit),
+            ThrottledTemplateWriterAdapterMode::Characters(adapter) => adapter.allow(limit),
+            ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. } => adapter.allow(limit),
         }
     }
 
@@ -132,8 +194,10 @@ impl ThrottledTemplateWriter {
     pub(crate) fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.flushable = true;
         match self.adapter_io_mut()? {
-            ThrottledTemplateWriterAdapter::Characters(adapter) => adapter.write_utf16(characters),
-            ThrottledTemplateWriterAdapter::Bytes { adapter, encoder } => {
+            ThrottledTemplateWriterAdapterMode::Characters(adapter) => {
+                adapter.write_utf16(characters)
+            }
+            ThrottledTemplateWriterAdapterMode::Bytes { adapter, encoder } => {
                 let bytes = Self::encode_utf16(encoder, characters, false);
                 adapter.write_bytes(&bytes)
             }
@@ -143,16 +207,16 @@ impl ThrottledTemplateWriter {
     /// 刷新当前底层输出。
     pub(crate) fn flush(&mut self) -> io::Result<()> {
         match self.adapter_io_mut()? {
-            ThrottledTemplateWriterAdapter::Characters(adapter) => adapter.flush(),
-            ThrottledTemplateWriterAdapter::Bytes { adapter, .. } => adapter.flush(),
+            ThrottledTemplateWriterAdapterMode::Characters(adapter) => adapter.flush(),
+            ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. } => adapter.flush(),
         }
     }
 
     /// 关闭当前底层输出。
     pub(crate) fn close(&mut self) -> io::Result<()> {
         match self.adapter_io_mut()? {
-            ThrottledTemplateWriterAdapter::Characters(adapter) => adapter.close(),
-            ThrottledTemplateWriterAdapter::Bytes { adapter, encoder } => {
+            ThrottledTemplateWriterAdapterMode::Characters(adapter) => adapter.close(),
+            ThrottledTemplateWriterAdapterMode::Bytes { adapter, encoder } => {
                 let final_bytes = Self::encode_utf16(encoder, &[], true);
                 adapter.write_bytes(&final_bytes)?;
                 adapter.close()
@@ -170,14 +234,14 @@ impl ThrottledTemplateWriter {
 
     fn adapter_mut(
         &mut self,
-    ) -> Result<&mut ThrottledTemplateWriterAdapter, TemplateOutputException> {
+    ) -> Result<&mut ThrottledTemplateWriterAdapterMode, TemplateOutputException> {
         if self.adapter.is_none() {
             return Err(self.mode_error("The throttled processor output has not been initialized."));
         }
         Ok(self.adapter.as_mut().expect("checked above"))
     }
 
-    fn adapter_io_mut(&mut self) -> io::Result<&mut ThrottledTemplateWriterAdapter> {
+    fn adapter_io_mut(&mut self) -> io::Result<&mut ThrottledTemplateWriterAdapterMode> {
         self.adapter
             .as_mut()
             .ok_or_else(|| io::Error::other("Throttled processor output has not been initialized"))
@@ -228,8 +292,10 @@ impl IThrottledTemplateWriterControl for ThrottledTemplateWriter {
     fn is_overflown(&mut self) -> io::Result<bool> {
         self.flush_if_needed()?;
         match self.adapter.as_ref() {
-            Some(ThrottledTemplateWriterAdapter::Characters(adapter)) => Ok(adapter.is_overflown()),
-            Some(ThrottledTemplateWriterAdapter::Bytes { adapter, .. }) => {
+            Some(ThrottledTemplateWriterAdapterMode::Characters(adapter)) => {
+                Ok(adapter.is_overflown())
+            }
+            Some(ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. }) => {
                 Ok(adapter.is_overflown())
             }
             None => Err(io::Error::other(
@@ -241,8 +307,12 @@ impl IThrottledTemplateWriterControl for ThrottledTemplateWriter {
     fn is_stopped(&mut self) -> io::Result<bool> {
         self.flush_if_needed()?;
         match self.adapter.as_ref() {
-            Some(ThrottledTemplateWriterAdapter::Characters(adapter)) => Ok(adapter.is_stopped()),
-            Some(ThrottledTemplateWriterAdapter::Bytes { adapter, .. }) => Ok(adapter.is_stopped()),
+            Some(ThrottledTemplateWriterAdapterMode::Characters(adapter)) => {
+                Ok(adapter.is_stopped())
+            }
+            Some(ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. }) => {
+                Ok(adapter.is_stopped())
+            }
             None => Err(io::Error::other(
                 "Throttled processor output has not been initialized",
             )),
@@ -251,10 +321,10 @@ impl IThrottledTemplateWriterControl for ThrottledTemplateWriter {
 
     fn get_written_count(&self) -> i32 {
         match self.adapter.as_ref() {
-            Some(ThrottledTemplateWriterAdapter::Characters(adapter)) => {
+            Some(ThrottledTemplateWriterAdapterMode::Characters(adapter)) => {
                 adapter.get_written_count()
             }
-            Some(ThrottledTemplateWriterAdapter::Bytes { adapter, .. }) => {
+            Some(ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. }) => {
                 adapter.get_written_count()
             }
             None => 0,
@@ -263,10 +333,10 @@ impl IThrottledTemplateWriterControl for ThrottledTemplateWriter {
 
     fn get_max_overflow_size(&self) -> i32 {
         match self.adapter.as_ref() {
-            Some(ThrottledTemplateWriterAdapter::Characters(adapter)) => {
+            Some(ThrottledTemplateWriterAdapterMode::Characters(adapter)) => {
                 adapter.get_max_overflow_size()
             }
-            Some(ThrottledTemplateWriterAdapter::Bytes { adapter, .. }) => {
+            Some(ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. }) => {
                 adapter.get_max_overflow_size()
             }
             None => 0,
@@ -275,10 +345,10 @@ impl IThrottledTemplateWriterControl for ThrottledTemplateWriter {
 
     fn get_overflow_grow_count(&self) -> i32 {
         match self.adapter.as_ref() {
-            Some(ThrottledTemplateWriterAdapter::Characters(adapter)) => {
+            Some(ThrottledTemplateWriterAdapterMode::Characters(adapter)) => {
                 adapter.get_overflow_grow_count()
             }
-            Some(ThrottledTemplateWriterAdapter::Bytes { adapter, .. }) => {
+            Some(ThrottledTemplateWriterAdapterMode::Bytes { adapter, .. }) => {
                 adapter.get_overflow_grow_count()
             }
             None => 0,

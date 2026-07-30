@@ -1,6 +1,6 @@
 use std::any::Any;
 
-use crate::model::IModel;
+use crate::engine::TemplateModel;
 use crate::util::JavaString;
 
 use super::{ExpressionCacheKey, ICache, TemplateCacheKey};
@@ -8,10 +8,9 @@ use super::{ExpressionCacheKey, ICache, TemplateCacheKey};
 /// 模板缓存和表达式制品缓存的管理合同。
 ///
 /// 对应 Java: `org.thymeleaf.cache.ICacheManager`。
-pub trait ICacheManager {
+pub trait ICacheManager: Send + Sync {
     /// 返回唯一模板缓存；禁用时返回 `None`。
-    fn get_template_cache(&self)
-    -> Option<&dyn ICache<TemplateCacheKey, dyn IModel + Send + Sync>>;
+    fn get_template_cache(&self) -> Option<&dyn ICache<TemplateCacheKey, TemplateModel>>;
     /// 返回唯一异构表达式制品缓存；禁用时返回 `None`。
     fn get_expression_cache(
         &self,

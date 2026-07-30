@@ -256,15 +256,70 @@ impl StandaloneElementTag {
         )
         .expect("derived standalone tag preserves validated mode")
     }
+
+    /// 创建与当前 standalone 标签字段完全一致的合成开放标签。
+    ///
+    /// 对应 Java:
+    /// `TemplateModelController#createStandaloneEquivalentModel` 中的
+    /// `OpenElementTag` 构造。
+    pub(crate) fn as_synthetic_open_equivalent(&self) -> super::OpenElementTag {
+        let element_tag = self.processable_tag.as_element_tag();
+        super::OpenElementTag::with_location(
+            element_tag.get_template_mode(),
+            element_tag.element_definition_value().clone(),
+            element_tag.get_element_complete_name().clone(),
+            self.processable_tag.attributes().cloned(),
+            element_tag.is_synthetic(),
+            element_tag.as_template_event().get_template_name().cloned(),
+            element_tag.as_template_event().get_line(),
+            element_tag.as_template_event().get_col(),
+        )
+    }
+
+    /// 创建与当前 standalone 标签字段完全一致的合成关闭标签。
+    ///
+    /// 对应 Java:
+    /// `TemplateModelController#createStandaloneEquivalentModel` 中的
+    /// `CloseElementTag` 构造。
+    pub(crate) fn as_synthetic_close_equivalent(&self) -> super::CloseElementTag {
+        let element_tag = self.processable_tag.as_element_tag();
+        super::CloseElementTag::with_location(
+            element_tag.get_template_mode(),
+            element_tag.element_definition_value().clone(),
+            element_tag.get_element_complete_name().clone(),
+            None,
+            element_tag.is_synthetic(),
+            false,
+            element_tag.as_template_event().get_template_name().cloned(),
+            element_tag.as_template_event().get_line(),
+            element_tag.as_template_event().get_col(),
+        )
+    }
 }
 
 impl IStandaloneElementTag for StandaloneElementTag {
+    fn into_engine_standalone_element_tag(self: Arc<Self>) -> Option<Arc<Self>> {
+        Some(self)
+    }
+
+    fn as_engine_standalone_element_tag(&self) -> Option<&Self> {
+        Some(self)
+    }
+
     fn is_minimized(&self) -> bool {
         self.minimized
     }
 }
 
 impl IProcessableElementTag for StandaloneElementTag {
+    fn as_engine_processable_element_tag(&self) -> Option<&AbstractProcessableElementTag> {
+        Some(&self.processable_tag)
+    }
+
+    fn into_standalone_element_tag(self: Arc<Self>) -> Option<Arc<dyn IStandaloneElementTag>> {
+        Some(self)
+    }
+
     fn get_all_attributes(&self) -> Vec<&dyn IAttribute> {
         self.processable_tag
             .attributes()

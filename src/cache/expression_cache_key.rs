@@ -10,6 +10,7 @@ use thiserror::Error;
 /// 键由表达式类型、第一表达式和可选第二表达式构成。构造时预计算 Java
 /// `String.hashCode()` 组合值，后续相等和哈希操作可先快速比较该值，再比较全部字段。
 /// 本对象应只由模板引擎内部创建。
+#[derive(Clone)]
 pub struct ExpressionCacheKey {
     expression_type: String,
     expression0: String,

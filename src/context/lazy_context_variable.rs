@@ -1,6 +1,9 @@
+use std::sync::Arc;
 use std::sync::OnceLock;
 
 use super::ILazyContextVariable;
+use crate::expression::{TemplateObject, TemplateValue};
+use crate::util::JavaString;
 
 /// 只执行一次加载逻辑的基础惰性上下文变量。
 ///
@@ -59,5 +62,29 @@ where
 {
     fn get_value(&self) -> &T {
         Self::get_value(self)
+    }
+}
+
+impl<F> TemplateObject for LazyContextVariable<Option<Arc<TemplateValue>>, F>
+where
+    F: Fn() -> Option<Arc<TemplateValue>> + Send + Sync + 'static,
+{
+    fn java_class_name(&self) -> &str {
+        "org.thymeleaf.context.LazyContextVariable"
+    }
+
+    fn to_java_string(&self) -> JavaString {
+        self.get_value()
+            .as_deref()
+            .and_then(TemplateValue::to_java_string)
+            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn resolve_lazy_context_variable(&self) -> Option<Option<Arc<TemplateValue>>> {
+        Some(self.get_value().clone())
     }
 }

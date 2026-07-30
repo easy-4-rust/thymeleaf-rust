@@ -1,0 +1,22 @@
+[package]
+name = "thymeleaf-axum"
+version = "0.1.0-alpha.1"
+edition = "2024"
+rust-version = "1.85"
+description = "Axum integration for the framework-neutral thymeleaf template engine"
+license = "MIT"
+repository = "https://github.com/easy-4-rust/thymeleaf-rust"
+
+[dependencies]
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
+thymeleaf = { path = "../.." }
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+wildcard_imports = "deny"

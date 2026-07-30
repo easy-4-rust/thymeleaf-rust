@@ -6,6 +6,11 @@ use super::ITemplateEvent;
 ///
 /// 对应 Java: `org.thymeleaf.model.IComment`。
 pub trait IComment: ITemplateEvent + JavaCharSequence {
+    /// 返回引擎内建 Comment，供 Processor 保留 parser 原始前后缀。
+    fn as_engine_comment(&self) -> Option<&crate::engine::Comment> {
+        None
+    }
+
     /// 返回包含前后缀的完整注释。
     fn get_comment(&self) -> Result<Option<JavaString>, TextUtilsError>;
 

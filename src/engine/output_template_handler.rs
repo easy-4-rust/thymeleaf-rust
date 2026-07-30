@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::context::ITemplateContext;
@@ -9,7 +8,7 @@ use crate::model::{
 };
 use crate::util::JavaWriter;
 
-use super::{AbstractTemplateHandler, ITemplateHandler};
+use super::{AbstractTemplateHandler, ITemplateHandler, TemplateHandlerHandle};
 
 const OUTPUT_ERROR_MESSAGE: &str = "An error happened during template rendering";
 
@@ -50,11 +49,11 @@ impl OutputTemplateHandler {
 }
 
 impl ITemplateHandler for OutputTemplateHandler {
-    fn set_next(&mut self, next: Option<Box<dyn ITemplateHandler>>) {
+    fn set_next(&mut self, next: Option<TemplateHandlerHandle>) {
         self.base.set_next(next);
     }
 
-    fn set_context(&mut self, context: Rc<dyn ITemplateContext>) {
+    fn set_context(&mut self, context: Arc<dyn ITemplateContext>) {
         self.base.set_context(context);
     }
 

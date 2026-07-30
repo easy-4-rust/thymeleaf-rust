@@ -38,7 +38,7 @@ pub trait IContextVariableNames {
 ///
 /// Context 刻意不继承 Map，表达式访问必须经过引擎控制层，从而避免自定义 Map
 /// 实现绕过安全限制。
-pub trait IContext: Any {
+pub trait IContext: Any + Send + Sync {
     /// 返回 `Any` 视图，供 `Contexts` 复现 Java `instanceof`/强制转换。
     fn as_any(&self) -> &dyn Any;
 
@@ -62,6 +62,45 @@ pub trait IContext: Any {
     /// Java 通过 `context instanceof IWebContext` 发现该能力；Rust 用显式 capability
     /// 避免丢失 trait object 的动态接口信息。普通上下文默认不具备 Web 能力。
     fn get_web_exchange(&self) -> Option<&dyn IWebExchange> {
+        None
+    }
+
+    /// 返回可共享的 Web exchange 身份。
+    ///
+    /// EngineContext 工厂需要把 exchange 转移到整个渲染生命周期；普通上下文默认
+    /// 不具备该能力。
+    fn get_web_exchange_arc(&self) -> Option<Arc<dyn IWebExchange>> {
+        None
+    }
+
+    /// 返回可选 Web Context capability。
+    ///
+    /// 对应 Java `context instanceof IWebContext` 后的安全强制转换。
+    fn as_web_context(&self) -> Option<&dyn super::IWebContext> {
+        None
+    }
+
+    /// 返回可选 Engine Context capability。
+    ///
+    /// 对应 Java `context instanceof IEngineContext` 后的安全强制转换。
+    fn as_engine_context(&self) -> Option<&dyn super::IEngineContext> {
+        None
+    }
+
+    /// 返回可共享的 Engine Context 身份。
+    ///
+    /// 嵌套模板处理用它复用现有上下文，而不是克隆变量。普通上下文默认不具备该
+    /// 能力。
+    fn get_engine_context_arc(&self) -> Option<Arc<dyn super::IEngineContext>> {
+        None
+    }
+
+    /// 返回可选模板处理上下文 capability。
+    ///
+    /// Java 通过 `context instanceof ITemplateContext` 判定 Message、Link 和 Fragment
+    /// 表达式是否位于模板处理链。Rust trait object 不能可靠执行横向接口强转，因此
+    /// 由实现显式暴露同一能力。
+    fn as_template_context(&self) -> Option<&dyn super::ITemplateContext> {
         None
     }
 }

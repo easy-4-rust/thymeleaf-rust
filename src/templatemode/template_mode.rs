@@ -1,7 +1,11 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use std::{any::Any, sync::Arc};
 
 use thiserror::Error;
+
+use crate::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
+use crate::util::{JavaNumber, JavaString};
 
 /// Thymeleaf 支持的模板解析与输出模式。
 ///
@@ -123,6 +127,46 @@ impl FromStr for TemplateMode {
 
     fn from_str(mode: &str) -> Result<Self, Self::Err> {
         Self::parse(Some(mode))
+    }
+}
+
+impl TemplateObject for TemplateMode {
+    fn java_class_name(&self) -> &str {
+        "org.thymeleaf.templatemode.TemplateMode"
+    }
+
+    fn to_java_string(&self) -> JavaString {
+        JavaString::from_rust_str(&self.to_string())
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn java_invoke_method(
+        &self,
+        method_name: &JavaString,
+        arguments: &[Option<Arc<TemplateValue>>],
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
+        if !arguments.is_empty() {
+            return None;
+        }
+        let value = match method_name.to_string_lossy().as_str() {
+            "isMarkup" => TemplateValue::Boolean(self.is_markup()),
+            "isText" => TemplateValue::Boolean(self.is_text()),
+            "isCaseSensitive" => TemplateValue::Boolean(self.is_case_sensitive()),
+            "name" | "toString" => TemplateValue::string(self.to_java_string()),
+            "ordinal" => TemplateValue::Number(JavaNumber::Integer(match self {
+                Self::HTML => 0,
+                Self::XML => 1,
+                Self::TEXT => 2,
+                Self::JAVASCRIPT => 3,
+                Self::CSS => 4,
+                Self::RAW => 5,
+            })),
+            _ => return None,
+        };
+        Some(Ok(Some(Arc::new(value))))
     }
 }
 

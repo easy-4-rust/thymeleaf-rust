@@ -1,7 +1,9 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use crate::util::JavaString;
+use crate::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
+use crate::util::{JavaNumber, JavaString};
 
 /// 迭代状态访问时产生的 Java 运行时错误。
 ///
@@ -17,9 +19,7 @@ impl IterationStatusVarError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
     pub const fn java_class_name(&self) -> &'static str {
-        match self {
-            Self::NullSize => "java.lang.NullPointerException",
-        }
+        "java.lang.NullPointerException"
     }
 }
 
@@ -33,68 +33,81 @@ impl Display for IterationStatusVarError {
 
 impl Error for IterationStatusVarError {}
 
-/// 模板循环中暴露给表达式的迭代状态。
-///
-/// 对应 Java: `org.thymeleaf.engine.IterationStatusVar`。
-///
-/// `size` 在迭代源无法预先确定长度时允许为 null；奇偶性按 CSS `:nth-child`
-/// 习惯从 1 开始计数。内部字段只允许 engine 同包对象推进。
-#[derive(Clone, Debug)]
-pub struct IterationStatusVar<T> {
-    pub(super) index: i32,
-    pub(super) size: Option<i32>,
-    pub(super) current: Option<T>,
+struct IterationStatusState {
+    index: i32,
+    size: Option<i32>,
+    current: Option<Arc<TemplateValue>>,
 }
 
-impl<T> IterationStatusVar<T> {
+/// 模板循环中暴露给表达式的可变迭代状态对象。
+///
+/// 每次循环复用同一对象身份，只更新 index/current；表达式通过 JavaBean 属性实时
+/// 读取最新状态。对应 Java: `org.thymeleaf.engine.IterationStatusVar`。
+pub struct IterationStatusVar {
+    state: RwLock<IterationStatusState>,
+}
+
+impl IterationStatusVar {
+    /// 创建 index 为零、指定可空总大小且 current 为 null 的状态。
+    ///
+    /// 对应 Java 包内构造与字段初始化。
+    #[must_use]
+    pub fn new(size: Option<i32>) -> Self {
+        Self {
+            state: RwLock::new(IterationStatusState {
+                index: 0,
+                size,
+                current: None,
+            }),
+        }
+    }
+
     /// 返回从零开始的当前索引。
     #[must_use]
-    pub const fn get_index(&self) -> i32 {
-        self.index
+    pub fn get_index(&self) -> i32 {
+        read_state(&self.state).index
     }
 
     /// 返回从一开始的当前计数。
-    ///
-    /// Java `int` 溢出按二进制补码回绕。
     #[must_use]
-    pub const fn get_count(&self) -> i32 {
-        self.index.wrapping_add(1)
+    pub fn get_count(&self) -> i32 {
+        self.get_index().wrapping_add(1)
     }
 
     /// 判断当前状态是否具有预先确定的总大小。
     #[must_use]
-    pub const fn has_size(&self) -> bool {
-        self.size.is_some()
+    pub fn has_size(&self) -> bool {
+        read_state(&self.state).size.is_some()
     }
 
     /// 返回可空总大小。
     #[must_use]
-    pub const fn get_size(&self) -> Option<i32> {
-        self.size
+    pub fn get_size(&self) -> Option<i32> {
+        read_state(&self.state).size
     }
 
-    /// 返回可空当前迭代对象。
+    /// 返回可空当前迭代对象并保持对象身份。
     #[must_use]
-    pub const fn get_current(&self) -> Option<&T> {
-        self.current.as_ref()
+    pub fn get_current(&self) -> Option<Arc<TemplateValue>> {
+        read_state(&self.state).current.clone()
     }
 
     /// 判断当前一基计数是否为偶数。
     #[must_use]
-    pub const fn is_even(&self) -> bool {
-        self.index.wrapping_add(1) % 2 == 0
+    pub fn is_even(&self) -> bool {
+        self.get_count() % 2 == 0
     }
 
     /// 判断当前一基计数是否为奇数。
     #[must_use]
-    pub const fn is_odd(&self) -> bool {
+    pub fn is_odd(&self) -> bool {
         !self.is_even()
     }
 
     /// 判断当前元素是否为首个元素。
     #[must_use]
-    pub const fn is_first(&self) -> bool {
-        self.index == 0
+    pub fn is_first(&self) -> bool {
+        self.get_index() == 0
     }
 
     /// 判断当前元素是否为最后一个元素。
@@ -102,34 +115,92 @@ impl<T> IterationStatusVar<T> {
     /// # 错误
     ///
     /// `size` 未知时保留 Java 自动拆箱产生的 `NullPointerException`。
-    pub const fn is_last(&self) -> Result<bool, IterationStatusVarError> {
-        match self.size {
-            Some(size) => Ok(self.index == size.wrapping_sub(1)),
-            None => Err(IterationStatusVarError::NullSize),
-        }
+    pub fn is_last(&self) -> Result<bool, IterationStatusVarError> {
+        let state = read_state(&self.state);
+        state
+            .size
+            .map(|size| state.index == size.wrapping_sub(1))
+            .ok_or(IterationStatusVarError::NullSize)
     }
 
     /// 按 Java `toString()` 布局生成状态文本。
-    ///
-    /// # 返回
-    ///
-    /// 包含 index、count、可空 size 和可空 current 的 UTF-16 字符串。
     #[must_use]
-    pub fn to_java_string(&self) -> JavaString
-    where
-        T: Display,
-    {
-        let size = self
+    pub fn to_java_string(&self) -> JavaString {
+        let state = read_state(&self.state);
+        let size = state
             .size
             .map_or_else(|| "null".to_owned(), |value| value.to_string());
-        let current = self
+        let current = state
             .current
-            .as_ref()
-            .map_or_else(|| "null".to_owned(), ToString::to_string);
+            .as_deref()
+            .and_then(TemplateValue::to_java_string)
+            .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy());
         JavaString::from_rust_str(&format!(
             "{{index = {}, count = {}, size = {size}, current = {current}}}",
-            self.index,
-            self.index.wrapping_add(1)
+            state.index,
+            state.index.wrapping_add(1)
         ))
     }
+
+    pub(super) fn set_current(&self, current: Option<Arc<TemplateValue>>) {
+        write_state(&self.state).current = current;
+    }
+
+    pub(super) fn increment_index(&self) {
+        let mut state = write_state(&self.state);
+        state.index = state.index.wrapping_add(1);
+    }
+}
+
+impl TemplateObject for IterationStatusVar {
+    fn java_class_name(&self) -> &str {
+        "org.thymeleaf.engine.IterationStatusVar"
+    }
+
+    fn to_java_string(&self) -> JavaString {
+        Self::to_java_string(self)
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn java_get_property(
+        &self,
+        property_name: &JavaString,
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
+        let value = match property_name.to_string_lossy().as_str() {
+            "index" => Some(integer_value(self.get_index())),
+            "count" => Some(integer_value(self.get_count())),
+            "size" => self.get_size().map(integer_value),
+            "current" => self.get_current(),
+            "even" => Some(boolean_value(self.is_even())),
+            "odd" => Some(boolean_value(self.is_odd())),
+            "first" => Some(boolean_value(self.is_first())),
+            "last" => match self.is_last() {
+                Ok(value) => Some(boolean_value(value)),
+                Err(error) => return Some(Err(Box::new(error))),
+            },
+            _ => return None,
+        };
+        Some(Ok(value))
+    }
+}
+
+fn integer_value(value: i32) -> Arc<TemplateValue> {
+    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+}
+
+fn boolean_value(value: bool) -> Arc<TemplateValue> {
+    Arc::new(TemplateValue::Boolean(value))
+}
+
+fn read_state(lock: &RwLock<IterationStatusState>) -> RwLockReadGuard<'_, IterationStatusState> {
+    lock.read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+fn write_state(lock: &RwLock<IterationStatusState>) -> RwLockWriteGuard<'_, IterationStatusState> {
+    lock.write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
 }

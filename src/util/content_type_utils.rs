@@ -306,16 +306,9 @@ impl ContentTypeUtils {
         let Some(content_type) = parse_nonblank_content_type(content_type)? else {
             return Ok(None);
         };
-        let Some(charset_name) = content_type.parameters().get("charset") else {
-            return Ok(None);
-        };
-        match Charset::for_name(charset_name) {
-            Ok(charset) => Ok(Some(charset)),
-            Err(CharsetError::Unsupported { .. }) => Ok(None),
-            Err(error @ CharsetError::Illegal { .. }) => {
-                Err(ContentTypeError::InvalidCharset(error))
-            }
-        }
+        content_type
+            .charset()
+            .map_err(ContentTypeError::InvalidCharset)
     }
 
     /// 将内容类型与字符集合并。
@@ -403,8 +396,23 @@ impl ContentType {
         &self.mime_type
     }
 
+    #[allow(
+        dead_code,
+        reason = "保留解析后的 MIME 参数视图，供后续 Java 对照诊断使用"
+    )]
     fn parameters(&self) -> &IndexMap<String, String> {
         &self.parameters
+    }
+
+    fn charset(&self) -> Result<Option<Charset>, CharsetError> {
+        let Some(charset_name) = self.parameters.get("charset") else {
+            return Ok(None);
+        };
+        match Charset::for_name(charset_name) {
+            Ok(charset) => Ok(Some(charset)),
+            Err(CharsetError::Unsupported { .. }) => Ok(None),
+            Err(error @ CharsetError::Illegal { .. }) => Err(error),
+        }
     }
 
     fn set_charset(&mut self, charset: Option<&Charset>) {

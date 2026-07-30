@@ -111,6 +111,16 @@ impl Comment {
         *write_lock(&self.computed_comment) = Some(result.clone());
         Ok(result)
     }
+
+    /// 返回 parser 保留的注释前缀。
+    pub(crate) const fn prefix(&self) -> &JavaString {
+        &self.prefix
+    }
+
+    /// 返回 parser 保留的注释后缀。
+    pub(crate) const fn suffix(&self) -> &JavaString {
+        &self.suffix
+    }
 }
 
 impl JavaCharSequence for Comment {
@@ -159,6 +169,10 @@ impl JavaCharSequence for Comment {
 }
 
 impl IComment for Comment {
+    fn as_engine_comment(&self) -> Option<&Self> {
+        Some(self)
+    }
+
     fn get_comment(&self) -> Result<Option<JavaString>, TextUtilsError> {
         self.compute_comment().map(Some)
     }

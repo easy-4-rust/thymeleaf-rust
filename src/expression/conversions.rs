@@ -1,0 +1,68 @@
+use std::sync::Arc;
+
+use crate::context::IExpressionContext;
+use crate::util::{JavaString, ValidateError};
+
+use super::{
+    JavaConversionResult, JavaConversionValue, JavaTargetClass, StandardConversionError,
+    StandardExpressions, TemplateValue,
+};
+
+/// 在 Standard Expression 内执行类型转换。
+///
+/// 对应 Java: `org.thymeleaf.expression.Conversions`。
+pub struct Conversions {
+    context: Arc<dyn IExpressionContext>,
+}
+
+impl Conversions {
+    /// 创建绑定表达式上下文的转换工具。
+    pub fn new(context: Option<Arc<dyn IExpressionContext>>) -> Result<Self, ValidateError> {
+        Ok(Self {
+            context: context.ok_or_else(|| ValidateError::IllegalArgument {
+                message: Some("Context cannot be null".to_owned()),
+            })?,
+        })
+    }
+
+    /// 按 Java 类名转换值；裸 `String` 解析为 `java.lang.String`。
+    pub fn convert_by_class_name<'a>(
+        &'a self,
+        target: Option<&'a TemplateValue>,
+        class_name: Option<&JavaString>,
+    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
+        let class_name = class_name.ok_or_else(|| {
+            StandardConversionError::Validation(ValidateError::IllegalArgument {
+                message: Some("Class name cannot be null".to_owned()),
+            })
+        })?;
+        let class_name = class_name.to_string_lossy();
+        let target_class = if class_name == "String" || class_name == "java.lang.String" {
+            JavaTargetClass::String
+        } else if class_name.contains('.') {
+            JavaTargetClass::Other(class_name)
+        } else {
+            JavaTargetClass::Other(format!("java.lang.{class_name}"))
+        };
+        self.convert(target, Some(&target_class))
+    }
+
+    /// 使用类型化目标类执行转换。
+    pub fn convert<'a>(
+        &'a self,
+        target: Option<&'a TemplateValue>,
+        target_class: Option<&JavaTargetClass>,
+    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
+        let service = StandardExpressions::get_conversion_service(self.context.get_configuration())
+            .map_err(|error| {
+                StandardConversionError::runtime(
+                    "org.thymeleaf.exceptions.TemplateProcessingException",
+                    error.to_string(),
+                )
+            })?;
+        let value = target.map_or(JavaConversionValue::Null, |value| {
+            JavaConversionValue::Object(value)
+        });
+        service.convert(Some(self.context.as_any()), value, target_class)
+    }
+}

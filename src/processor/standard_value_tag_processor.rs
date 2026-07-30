@@ -1,0 +1,32 @@
+use super::{
+    AbstractStandardAttributeModifierTagProcessor, delegate_standard_element_tag_processor,
+};
+use crate::TemplateMode;
+use crate::util::JavaString;
+/// HTML `th:value` 属性修改 Processor。对应 Java: `org.thymeleaf.standard.processor.StandardValueTagProcessor`。
+pub struct StandardValueTagProcessor {
+    processor: AbstractStandardAttributeModifierTagProcessor,
+}
+impl StandardValueTagProcessor {
+    /// Java precedence。
+    pub const PRECEDENCE: i32 = 1000;
+    /// 属性名。
+    pub const ATTR_NAME: &'static str = "value";
+    /// 创建 Processor。
+    pub fn new(
+        dialect_prefix: Option<JavaString>,
+    ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
+        Ok(Self {
+            processor: AbstractStandardAttributeModifierTagProcessor::new(
+                TemplateMode::HTML,
+                dialect_prefix,
+                JavaString::from_rust_str(Self::ATTR_NAME),
+                Self::PRECEDENCE,
+                false,
+                false,
+                "org.thymeleaf.standard.processor.StandardValueTagProcessor",
+            )?,
+        })
+    }
+}
+delegate_standard_element_tag_processor!(StandardValueTagProcessor, processor);

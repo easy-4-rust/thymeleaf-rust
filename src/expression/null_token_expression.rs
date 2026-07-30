@@ -53,4 +53,10 @@ impl IStandardExpression for NullTokenExpression {
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         Ok(None)
     }
+
+    fn is_token_expression(&self) -> bool {
+        true
+    }
 }
+
+impl super::SimpleExpression for NullTokenExpression {}

@@ -12,7 +12,7 @@ use crate::element::IElementTagStructureHandler;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel, IProcessableElementTag};
-use crate::util::{JavaString, Validate, ValidateError};
+use crate::util::{JavaCharSequence, JavaString, Validate, ValidateError};
 
 use super::{
     AttributeDefinitionValue, AttributeDefinitions, AttributeNameValue, AttributesError,
@@ -50,7 +50,7 @@ const REMOVE_NORMALIZED: u8 = 2;
 /// 对应 Java: `org.thymeleaf.engine.ElementTagStructureHandler`。
 pub(crate) struct ElementTagStructureHandler {
     pub(crate) set_body_text: bool,
-    pub(crate) set_body_text_value: Option<JavaString>,
+    pub(crate) set_body_text_value: Option<Arc<dyn JavaCharSequence>>,
     pub(crate) set_body_text_processable: bool,
     pub(crate) set_body_model: bool,
     pub(crate) set_body_model_value: Option<Arc<dyn IModel>>,
@@ -209,10 +209,7 @@ impl ElementTagStructureHandler {
     }
 
     /// 将上下文变更按 Java 固定顺序应用。
-    pub(crate) fn apply_context_modifications(
-        &self,
-        engine_context: Option<&mut dyn IEngineContext>,
-    ) {
+    pub(crate) fn apply_context_modifications(&self, engine_context: Option<&dyn IEngineContext>) {
         let Some(engine_context) = engine_context else {
             return;
         };
@@ -221,7 +218,7 @@ impl ElementTagStructureHandler {
         }
         if self.remove_local_variable {
             for variable_name in &self.removed_local_variable_names {
-                engine_context.remove_variable(variable_name);
+                engine_context.remove_variable(Some(variable_name));
             }
         }
         if self.set_selection_target {
@@ -389,6 +386,13 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
     }
 
     fn set_body_text(&mut self, text: JavaString, processable: bool) {
+        self.reset_all_but_variables_or_attributes();
+        self.set_body_text = true;
+        self.set_body_text_value = Some(Arc::new(text));
+        self.set_body_text_processable = processable;
+    }
+
+    fn set_body_sequence(&mut self, text: Arc<dyn JavaCharSequence>, processable: bool) {
         self.reset_all_but_variables_or_attributes();
         self.set_body_text = true;
         self.set_body_text_value = Some(text);

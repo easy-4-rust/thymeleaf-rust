@@ -177,11 +177,131 @@ impl JavaBigDecimal {
         Some(Self::from_unscaled(unscaled, 0))
     }
 
-    fn add(&self, other: &Self) -> Self {
+    pub(crate) fn add_java(&self, other: &Self) -> Self {
         let result_scale = self.scale.max(other.scale);
         let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
         let right = rescale_unscaled(&other.unscaled_value, other.scale, result_scale);
         Self::from_unscaled(left + right, result_scale)
+    }
+
+    /// 按 `DecimalFormat` 默认的 HALF_EVEN 规则调整到指定 scale。
+    pub(crate) fn with_scale_half_even(&self, target_scale: i32) -> Self {
+        if target_scale >= self.scale {
+            return Self::from_unscaled(
+                rescale_unscaled(&self.unscaled_value, self.scale, target_scale),
+                target_scale,
+            );
+        }
+        let difference = u32::try_from(i64::from(self.scale) - i64::from(target_scale))
+            .expect("positive scale difference fits u32");
+        let divisor = BigInt::from(10_u8).pow(difference);
+        let quotient = &self.unscaled_value / &divisor;
+        let remainder = &self.unscaled_value % &divisor;
+        let doubled = remainder.abs() * 2_u8;
+        let increment = doubled > divisor || (doubled == divisor && quotient.is_odd());
+        let rounded = if increment {
+            quotient
+                + if self.unscaled_value.sign() == Sign::Minus {
+                    -BigInt::from(1_u8)
+                } else {
+                    BigInt::from(1_u8)
+                }
+        } else {
+            quotient
+        };
+        Self::from_unscaled(rounded, target_scale)
+    }
+
+    /// 按 Java `BigDecimal#subtract` 语义相减。
+    pub(crate) fn subtract_java(&self, other: &Self) -> Self {
+        let result_scale = self.scale.max(other.scale);
+        let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
+        let right = rescale_unscaled(&other.unscaled_value, other.scale, result_scale);
+        Self::from_unscaled(left - right, result_scale)
+    }
+
+    /// 按 Java `BigDecimal#compareTo` 比较数值，忽略 scale 差异。
+    pub(crate) fn compare_java(&self, other: &Self) -> std::cmp::Ordering {
+        let comparison_scale = self.scale.max(other.scale);
+        let left = rescale_unscaled(&self.unscaled_value, self.scale, comparison_scale);
+        let right = rescale_unscaled(&other.unscaled_value, other.scale, comparison_scale);
+        left.cmp(&right)
+    }
+
+    /// 按 Java `BigDecimal#multiply` 语义相乘。
+    pub(crate) fn multiply_java(
+        &self,
+        other: &Self,
+    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+        let scale = checked_scale(i64::from(self.scale) + i64::from(other.scale))
+            .map_err(|_| JavaBigDecimalArithmeticError::ScaleOverflow)?;
+        Ok(Self::from_unscaled(
+            &self.unscaled_value * &other.unscaled_value,
+            scale,
+        ))
+    }
+
+    /// 按 Java `BigDecimal#divide` 执行精确除法。
+    pub(crate) fn divide_java(
+        &self,
+        divisor: &Self,
+    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+        self.divide_exact(divisor).map_err(|error| match error {
+            DivisionError::ByZero => JavaBigDecimalArithmeticError::DivisionByZero,
+            DivisionError::NonTerminating => JavaBigDecimalArithmeticError::NonTerminating,
+            DivisionError::ScaleOverflow => JavaBigDecimalArithmeticError::ScaleOverflow,
+        })
+    }
+
+    /// 按指定 scale 和 HALF_UP 模式执行 Java BigDecimal 除法。
+    pub(crate) fn divide_java_half_up(
+        &self,
+        divisor: &Self,
+        scale: i32,
+    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+        if divisor.unscaled_value.is_zero() {
+            return Err(JavaBigDecimalArithmeticError::DivisionByZero);
+        }
+        let exponent = i64::from(divisor.scale) + i64::from(scale) - i64::from(self.scale);
+        let mut numerator = self.unscaled_value.clone();
+        let mut denominator = divisor.unscaled_value.clone();
+        if exponent >= 0 {
+            numerator *= BigInt::from(10_u8).pow(
+                u32::try_from(exponent)
+                    .map_err(|_| JavaBigDecimalArithmeticError::ScaleOverflow)?,
+            );
+        } else {
+            denominator *= BigInt::from(10_u8).pow(
+                u32::try_from(-exponent)
+                    .map_err(|_| JavaBigDecimalArithmeticError::ScaleOverflow)?,
+            );
+        }
+        let quotient = &numerator / &denominator;
+        let remainder = &numerator % &denominator;
+        let rounded = if remainder.abs() * 2_u8 >= denominator.abs() {
+            if numerator.sign() == denominator.sign() {
+                quotient + 1_u8
+            } else {
+                quotient - 1_u8
+            }
+        } else {
+            quotient
+        };
+        Ok(Self::from_unscaled(rounded, scale))
+    }
+
+    /// 按 Java `BigDecimal#remainder` 返回截断商对应的余数。
+    pub(crate) fn remainder_java(
+        &self,
+        divisor: &Self,
+    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+        if divisor.unscaled_value.is_zero() {
+            return Err(JavaBigDecimalArithmeticError::DivisionByZero);
+        }
+        let result_scale = self.scale.max(divisor.scale);
+        let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
+        let right = rescale_unscaled(&divisor.unscaled_value, divisor.scale, result_scale);
+        Ok(Self::from_unscaled(left % right, result_scale))
     }
 
     fn divide_exact(&self, divisor: &Self) -> Result<Self, DivisionError> {
@@ -567,7 +687,7 @@ fn aggregate_iterable(
         let number = element.ok_or(AggregateError::IllegalArgument {
             message: null_message,
         })?;
-        total = total.add(&to_big_decimal(number)?);
+        total = total.add_java(&to_big_decimal(number)?);
         size += 1;
     }
     finish_aggregate(total, size, average)
@@ -591,7 +711,7 @@ fn aggregate_objects(
 
     let mut total = JavaBigDecimal::zero();
     for element in target {
-        total = total.add(&to_big_decimal(object_number(element)?)?);
+        total = total.add_java(&to_big_decimal(object_number(element)?)?);
     }
     finish_aggregate(total, target.len(), average)
 }
@@ -616,7 +736,7 @@ fn aggregate_number_array(
     }
     let mut total = JavaBigDecimal::zero();
     for number in numbers {
-        total = total.add(&to_big_decimal(number)?);
+        total = total.add_java(&to_big_decimal(number)?);
     }
     finish_aggregate(total, target.len(), average)
 }
@@ -641,37 +761,37 @@ fn aggregate_primitive(
     let size = match target {
         PrimitiveArray::Bytes(values) => {
             for value in values {
-                total = total.add(&JavaBigDecimal::from_i64(i64::from(*value)));
+                total = total.add_java(&JavaBigDecimal::from_i64(i64::from(*value)));
             }
             values.len()
         }
         PrimitiveArray::Shorts(values) => {
             for value in values {
-                total = total.add(&JavaBigDecimal::from_i64(i64::from(*value)));
+                total = total.add_java(&JavaBigDecimal::from_i64(i64::from(*value)));
             }
             values.len()
         }
         PrimitiveArray::Ints(values) => {
             for value in values {
-                total = total.add(&JavaBigDecimal::from_i64(i64::from(*value)));
+                total = total.add_java(&JavaBigDecimal::from_i64(i64::from(*value)));
             }
             values.len()
         }
         PrimitiveArray::Longs(values) => {
             for value in values {
-                total = total.add(&JavaBigDecimal::from_i64(*value));
+                total = total.add_java(&JavaBigDecimal::from_i64(*value));
             }
             values.len()
         }
         PrimitiveArray::Floats(values) => {
             for value in values {
-                total = total.add(&JavaBigDecimal::from_f64(f64::from(*value))?);
+                total = total.add_java(&JavaBigDecimal::from_f64(f64::from(*value))?);
             }
             values.len()
         }
         PrimitiveArray::Doubles(values) => {
             for value in values {
-                total = total.add(&JavaBigDecimal::from_f64(*value)?);
+                total = total.add_java(&JavaBigDecimal::from_f64(*value)?);
             }
             values.len()
         }
@@ -787,7 +907,7 @@ fn parse_decimal(value: &str) -> Result<JavaBigDecimal, AggregateError> {
     Ok(JavaBigDecimal::from_unscaled(unscaled, scale))
 }
 
-fn java_double_string(value: f64) -> String {
+pub(crate) fn java_double_string(value: f64) -> String {
     if value.is_nan() {
         return "NaN".to_owned();
     }
@@ -868,6 +988,20 @@ fn java_double_string(value: f64) -> String {
 enum DivisionError {
     ByZero,
     NonTerminating,
+    ScaleOverflow,
+}
+
+/// Standard Expression 使用 Java BigDecimal 运算时的 ArithmeticException 分类。
+#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
+pub(crate) enum JavaBigDecimalArithmeticError {
+    /// 除数为零。
+    #[error("Division by zero")]
+    DivisionByZero,
+    /// 精确除法结果具有无限循环小数。
+    #[error("Non-terminating decimal expansion")]
+    NonTerminating,
+    /// 结果 scale 超出 Java int 范围。
+    #[error("Underflow")]
     ScaleOverflow,
 }
 

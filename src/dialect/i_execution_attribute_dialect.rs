@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::expression::TemplateValue;
+use crate::ExecutionAttributeValue;
 
 use super::IDialect;
 
@@ -8,7 +8,7 @@ use super::IDialect;
 ///
 /// Java `Map<String,Object>` 允许 null key、null value，并且具体 Map 的遍历顺序
 /// 由方言实现决定。顺序化条目向量同时保留这些边界与实现返回的迭代次序。
-pub type ExecutionAttributeMap = Vec<(Option<String>, Option<Arc<TemplateValue>>)>;
+pub type ExecutionAttributeMap = Vec<(Option<String>, Option<Arc<ExecutionAttributeValue>>)>;
 
 /// 向模板引擎配置贡献执行属性的方言合同。
 ///

@@ -1,0 +1,24 @@
+[package]
+name = "thymeleaf-hyper"
+version = "0.1.0-alpha.1"
+edition = "2024"
+rust-version = "1.85"
+description = "Hyper integration for the framework-neutral thymeleaf template engine"
+license = "MIT"
+repository = "https://github.com/easy-4-rust/thymeleaf-rust"
+
+[dependencies]
+hyper = { version = "1.9.0", features = ["http1", "http2", "server"] }
+indexmap = "2.13.0"
+thymeleaf = { path = "../.." }
+url = "2.5.7"
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+wildcard_imports = "deny"

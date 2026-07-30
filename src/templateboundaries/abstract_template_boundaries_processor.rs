@@ -37,7 +37,11 @@ impl<FStart, FEnd> AbstractTemplateBoundariesProcessor<FStart, FEnd> {
     }
 }
 
-impl<FStart, FEnd> IProcessor for AbstractTemplateBoundariesProcessor<FStart, FEnd> {
+impl<FStart, FEnd> IProcessor for AbstractTemplateBoundariesProcessor<FStart, FEnd>
+where
+    FStart: Send + Sync,
+    FEnd: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.start_adapter.processor_class_name()
     }
@@ -53,15 +57,19 @@ impl<FStart, FEnd> ITemplateBoundariesProcessor
     for AbstractTemplateBoundariesProcessor<FStart, FEnd>
 where
     FStart: Fn(
-        &dyn ITemplateContext,
-        &dyn ITemplateStart,
-        &mut dyn ITemplateBoundariesStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn ITemplateStart,
+            &mut dyn ITemplateBoundariesStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
     FEnd: Fn(
-        &dyn ITemplateContext,
-        &dyn ITemplateEnd,
-        &mut dyn ITemplateBoundariesStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn ITemplateEnd,
+            &mut dyn ITemplateBoundariesStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process_template_start(
         &self,

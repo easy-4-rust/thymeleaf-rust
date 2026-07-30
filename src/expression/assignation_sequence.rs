@@ -1,3 +1,8 @@
+#![expect(
+    clippy::type_complexity,
+    reason = "类型完整表达 Java 可空 List 与共享实时只读视图语义"
+)]
+
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use crate::util::{JavaString, ValidateError};
@@ -13,7 +18,6 @@ pub struct AssignationSequence {
 
 impl AssignationSequence {
     /// 保存原列表身份，并在构造瞬间拒绝 null 列表或 null 元素。
-    #[expect(dead_code, reason = "仅由后续批量迁移的 AssignationUtils 解析链创建")]
     pub(crate) fn new(
         assignations: Option<Arc<RwLock<Vec<Option<Arc<Assignation>>>>>>,
     ) -> Result<Self, ValidateError> {

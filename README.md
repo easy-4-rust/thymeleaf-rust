@@ -101,8 +101,8 @@ See the detailed [feasibility and architecture proposal](docs/Thymeleaf-Rust-可
 | Project and Git repository | `thymeleaf-rust` | Confirmed |
 | Future crates.io core | `thymeleaf` | Workspace created; not published |
 | Public Rust path | `thymeleaf::...` | Foundation API implemented |
-| Integration crates | `thymeleaf-{framework}` | Planned |
-| Optional Vernal integration | `thymeleaf-vernal` | Planned |
+| Integration crates | `thymeleaf-{framework}` | Production adapters implemented; unified verification pending |
+| Optional Vernal integration | `thymeleaf-vernal` | HTTP protocol bridge implemented; unified verification pending |
 
 Names such as `thymeleaf-rust-core`, `thymeleaf-rust-axum`, and the Rust root module `thymeleaf_rust` are explicitly excluded.
 

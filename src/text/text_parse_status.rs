@@ -1,8 +1,3 @@
-#![cfg_attr(
-    not(test),
-    expect(dead_code, reason = "text parser 消费者对象将在后续切片中迁移")
-)]
-
 /// 文本模板解析器的可变扫描状态。
 ///
 /// 对应 Java: `org.thymeleaf.templateparser.text.TextParseStatus`。

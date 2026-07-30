@@ -1,3 +1,8 @@
+use crate::exceptions::TemplateEngineException;
+
+/// 增量处理结果。
+pub type EngineProcessableResult = Result<bool, Box<dyn TemplateEngineException>>;
+
 /// 可由 Thymeleaf 引擎增量推进的内部对象契约。
 ///
 /// `process()` 每次调用执行下一段可用工作，并以布尔值报告本次推进结果。接口不
@@ -12,7 +17,7 @@ pub trait IEngineProcessable {
     ///
     /// # 返回
     /// 由具体引擎对象定义的本次处理结果。
-    fn process(&mut self) -> bool;
+    fn process(&mut self) -> EngineProcessableResult;
 }
 
 #[cfg(test)]
@@ -24,9 +29,9 @@ mod tests {
     }
 
     impl IEngineProcessable for AlternatingProcessable {
-        fn process(&mut self) -> bool {
+        fn process(&mut self) -> super::EngineProcessableResult {
             self.calls += 1;
-            self.calls % 2 == 0
+            Ok(self.calls % 2 == 0)
         }
     }
 
@@ -34,10 +39,10 @@ mod tests {
     fn supports_stateful_dynamic_dispatch_without_thread_safety_constraints() {
         let mut processable = AlternatingProcessable { calls: 0 };
         let dynamic: &mut dyn IEngineProcessable = &mut processable;
-        assert!(!dynamic.process());
-        assert!(dynamic.process());
-        assert!(!dynamic.process());
-        assert!(dynamic.process());
+        assert!(!dynamic.process().expect("first"));
+        assert!(dynamic.process().expect("second"));
+        assert!(!dynamic.process().expect("third"));
+        assert!(dynamic.process().expect("fourth"));
         assert_eq!(processable.calls, 4);
     }
 }

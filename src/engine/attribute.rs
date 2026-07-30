@@ -37,6 +37,10 @@ impl Attribute {
     ///
     /// 值为 null 时操作符和引号必为 null；非 null 值缺省使用 `=` 与双引号；
     /// 空字符串不能使用无引号形态。
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "参数逐项对齐 Java Attribute 构造器，不引入失真的参数对象"
+    )]
     pub(crate) fn new(
         definition: AttributeDefinitionValue,
         complete_name: JavaString,

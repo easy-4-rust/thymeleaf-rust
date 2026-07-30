@@ -33,7 +33,10 @@ impl<F> AbstractDocTypeProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractDocTypeProcessor<F> {
+impl<F> IProcessor for AbstractDocTypeProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -48,10 +51,12 @@ impl<F> IProcessor for AbstractDocTypeProcessor<F> {
 impl<F> IDocTypeProcessor for AbstractDocTypeProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn IDocType,
-        &mut dyn IDocTypeStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn IDocType,
+            &mut dyn IDocTypeStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

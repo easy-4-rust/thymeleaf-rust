@@ -34,7 +34,10 @@ impl<F> AbstractProcessingInstructionProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractProcessingInstructionProcessor<F> {
+impl<F> IProcessor for AbstractProcessingInstructionProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -49,10 +52,12 @@ impl<F> IProcessor for AbstractProcessingInstructionProcessor<F> {
 impl<F> IProcessingInstructionProcessor for AbstractProcessingInstructionProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn IProcessingInstruction,
-        &mut dyn IProcessingInstructionStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn IProcessingInstruction,
+            &mut dyn IProcessingInstructionStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

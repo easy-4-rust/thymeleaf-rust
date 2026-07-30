@@ -8,7 +8,44 @@
 /// 自定义实现返回 `null` 的可能性。
 ///
 /// `Send + Sync` 是 Rust 并发渲染所需的宿主安全约束，不改变名称的可观察语义。
-pub trait IDialect: Send + Sync {
+pub trait IDialect: std::any::Any + Send + Sync {
+    /// 返回具体方言的 Rust 运行时类型标识。
+    fn dialect_type_id(&self) -> std::any::TypeId {
+        std::any::Any::type_id(self)
+    }
+
+    /// 判断当前对象是否为 StandardDialect。
+    ///
+    /// 对应 Java 配置聚合阶段的 `dialect instanceof StandardDialect`。
+    fn is_standard_dialect(&self) -> bool {
+        false
+    }
+
+    /// 将 Java `instanceof IProcessorDialect` 暴露为对象安全能力查询。
+    fn as_processor_dialect(&self) -> Option<&dyn super::IProcessorDialect> {
+        None
+    }
+
+    /// 将 Java `instanceof IExecutionAttributeDialect` 暴露为对象安全能力查询。
+    fn as_execution_attribute_dialect(&self) -> Option<&dyn super::IExecutionAttributeDialect> {
+        None
+    }
+
+    /// 将 Java `instanceof IExpressionObjectDialect` 暴露为对象安全能力查询。
+    fn as_expression_object_dialect(&self) -> Option<&dyn super::IExpressionObjectDialect> {
+        None
+    }
+
+    /// 将 Java `instanceof IPreProcessorDialect` 暴露为对象安全能力查询。
+    fn as_pre_processor_dialect(&self) -> Option<&dyn super::IPreProcessorDialect> {
+        None
+    }
+
+    /// 将 Java `instanceof IPostProcessorDialect` 暴露为对象安全能力查询。
+    fn as_post_processor_dialect(&self) -> Option<&dyn super::IPostProcessorDialect> {
+        None
+    }
+
     /// 返回方言名称。
     ///
     /// 对应 Java: `IDialect#getName()`。

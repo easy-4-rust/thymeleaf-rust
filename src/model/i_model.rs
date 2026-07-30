@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::IEngineConfiguration;
 use crate::TemplateMode;
+use crate::engine::TemplateData;
 use crate::util::JavaWriter;
 
 use super::{IModelVisitor, ITemplateEvent};
@@ -10,7 +11,18 @@ use super::{IModelVisitor, ITemplateEvent};
 /// 模板模型的事件序列合同。
 ///
 /// 对应 Java: `org.thymeleaf.model.IModel`。
-pub trait IModel {
+pub trait IModel: Send + Sync {
+    /// 若模型是完整 TemplateModel，返回其模板解析数据。
+    ///
+    /// Java Fragment 始终持有 TemplateModel；该 capability 保留 Fragment 插入时
+    /// 切换模板解析上下文的动态类型语义。
+    fn get_template_data(&self) -> Option<&TemplateData> {
+        None
+    }
+    /// 返回完整 TemplateModel 的共享模板解析数据身份。
+    fn get_template_data_arc(&self) -> Option<Arc<TemplateData>> {
+        None
+    }
     /// 返回创建模型时使用的同一引擎配置。
     fn get_configuration(&self) -> &dyn IEngineConfiguration;
     /// 返回模型的模板模式。

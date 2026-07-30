@@ -5,10 +5,6 @@
 /// 测试额外增加 getter/setter。
 ///
 /// 对应 Java: `org.thymeleaf.engine.TemplateFlowController`。
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "直接消费者随 engine handler 对象族在后续切片迁移")
-)]
 pub(crate) struct TemplateFlowController {
     pub(crate) stop_processing: bool,
     pub(crate) processor_template_handler_pending: bool,
@@ -21,10 +17,6 @@ impl TemplateFlowController {
     ///
     /// # 返回
     /// 独立的新流控对象。
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "直接消费者随 engine handler 对象族在后续切片迁移")
-    )]
     pub(crate) const fn new() -> Self {
         Self {
             stop_processing: false,

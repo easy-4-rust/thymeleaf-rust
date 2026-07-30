@@ -8,7 +8,7 @@ use crate::util::JavaString;
 /// Web 会话作用域合同。
 ///
 /// 对应 Java: `org.thymeleaf.web.IWebSession`。
-pub trait IWebSession {
+pub trait IWebSession: Send + Sync {
     /// 判断底层会话是否已经存在。
     fn exists(&self) -> bool;
     /// 判断会话是否包含指定属性。

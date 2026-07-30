@@ -1,9 +1,19 @@
 //! Thymeleaf markup parser 的解耦模板逻辑对象。
 
 mod decoupled_injected_attribute;
+mod decoupled_template_logic;
+mod decoupled_template_logic_builder_markup_handler;
+mod decoupled_template_logic_markup_handler;
+mod decoupled_template_logic_utils;
 mod i_decoupled_template_logic_resolver;
+mod standard_decoupled_template_logic_resolver;
 
 pub use decoupled_injected_attribute::{
     DecoupledInjectedAttribute, DecoupledInjectedAttributeError,
 };
+pub use decoupled_template_logic::DecoupledTemplateLogic;
+pub use decoupled_template_logic_builder_markup_handler::DecoupledTemplateLogicBuilderMarkupHandler;
+pub use decoupled_template_logic_markup_handler::DecoupledTemplateLogicMarkupHandler;
+pub use decoupled_template_logic_utils::DecoupledTemplateLogicUtils;
 pub use i_decoupled_template_logic_resolver::IDecoupledTemplateLogicResolver;
+pub use standard_decoupled_template_logic_resolver::StandardDecoupledTemplateLogicResolver;

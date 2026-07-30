@@ -5,6 +5,7 @@ use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
 use crate::util::{JavaLocale, JavaString, ValidateError};
 use crate::web::IWebExchange;
 
+use super::ContextVariableEntries;
 use super::{AbstractContext, IContext, IContextVariableNames, IExpressionContext};
 
 /// 表达式上下文的共享基础实现。
@@ -44,7 +45,7 @@ impl AbstractExpressionContext {
     pub fn with_locale_and_variables(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
         locale: Option<JavaLocale>,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
+        variables: ContextVariableEntries<'_>,
     ) -> Result<Arc<Self>, ValidateError> {
         Self::with_locale_variables_and_web_exchange(configuration, locale, variables, None)
     }
@@ -52,7 +53,7 @@ impl AbstractExpressionContext {
     pub(super) fn with_locale_variables_and_web_exchange(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
         locale: Option<JavaLocale>,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
+        variables: ContextVariableEntries<'_>,
         web_exchange: Option<Arc<dyn IWebExchange>>,
     ) -> Result<Arc<Self>, ValidateError> {
         let configuration = configuration.ok_or_else(|| ValidateError::IllegalArgument {
@@ -78,10 +79,7 @@ impl AbstractExpressionContext {
     }
 
     /// 按输入迭代顺序批量新增或替换变量。
-    pub fn set_variables(
-        &self,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
-    ) {
+    pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         self.base.set_variables(variables);
     }
 
@@ -125,6 +123,10 @@ impl IContext for AbstractExpressionContext {
 impl IExpressionContext for AbstractExpressionContext {
     fn get_configuration(&self) -> &dyn IEngineConfiguration {
         self.configuration.as_ref()
+    }
+
+    fn get_configuration_arc(&self) -> Arc<dyn IEngineConfiguration> {
+        Arc::clone(&self.configuration)
     }
 
     fn get_expression_objects(&self) -> &dyn IExpressionObjects {

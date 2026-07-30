@@ -1,0 +1,96 @@
+use crate::TemplateMode;
+use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
+use crate::expression::TemplateValue;
+use crate::util::{EscapedAttributeUtils, JavaString};
+
+use super::{
+    AbstractStandardExpressionAttributeTagProcessor, delegate_standard_element_tag_processor,
+};
+
+/// 将 Standard Expression 结果转义后替换目标属性的抽象 Processor。
+///
+/// 保留可空删除、目标属性改名和 restricted execution 构造语义。对应 Java:
+/// `org.thymeleaf.standard.processor.AbstractStandardAttributeModifierTagProcessor`。
+pub struct AbstractStandardAttributeModifierTagProcessor {
+    processor: AbstractStandardExpressionAttributeTagProcessor,
+}
+
+impl AbstractStandardAttributeModifierTagProcessor {
+    /// 创建目标属性与匹配属性同名的修改器。
+    pub fn new(
+        template_mode: TemplateMode,
+        dialect_prefix: Option<JavaString>,
+        attr_name: JavaString,
+        precedence: i32,
+        remove_if_empty: bool,
+        restricted_expression_execution: bool,
+        processor_class_name: &'static str,
+    ) -> Result<Self, TemplateProcessingException> {
+        Self::with_target(
+            template_mode,
+            dialect_prefix,
+            attr_name.clone(),
+            attr_name,
+            precedence,
+            remove_if_empty,
+            restricted_expression_execution,
+            processor_class_name,
+        )
+    }
+
+    /// 创建可指定完整目标属性名的修改器。
+    #[allow(clippy::too_many_arguments)]
+    pub fn with_target(
+        template_mode: TemplateMode,
+        dialect_prefix: Option<JavaString>,
+        attr_name: JavaString,
+        target_attr_complete_name: JavaString,
+        precedence: i32,
+        remove_if_empty: bool,
+        restricted_expression_execution: bool,
+        processor_class_name: &'static str,
+    ) -> Result<Self, TemplateProcessingException> {
+        Ok(Self {
+            processor: AbstractStandardExpressionAttributeTagProcessor::with_restricted_execution(
+                template_mode,
+                dialect_prefix,
+                attr_name,
+                precedence,
+                false,
+                restricted_expression_execution,
+                move |_context,
+                      _tag,
+                      attribute_name,
+                      _attribute_value,
+                      expression_result,
+                      structure_handler| {
+                    let value = expression_result
+                        .as_deref()
+                        .and_then(TemplateValue::to_java_string);
+                    let escaped = EscapedAttributeUtils::escape_attribute(
+                        Some(template_mode),
+                        value.as_ref(),
+                    )
+                    .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
+                    if remove_if_empty && escaped.as_ref().is_none_or(JavaString::is_empty) {
+                        structure_handler.remove_attribute(target_attr_complete_name.clone());
+                    } else {
+                        structure_handler.set_attribute(
+                            target_attr_complete_name.clone(),
+                            escaped.or_else(|| Some(JavaString::from_rust_str(""))),
+                            None,
+                        );
+                    }
+                    structure_handler.remove_attribute_with_prefix(
+                        attribute_name.get_prefix().cloned(),
+                        attribute_name.get_attribute_name().clone(),
+                    );
+                    Ok(())
+                },
+                processor_class_name,
+            )?,
+        })
+    }
+}
+
+delegate_standard_element_tag_processor!(AbstractStandardAttributeModifierTagProcessor, processor);

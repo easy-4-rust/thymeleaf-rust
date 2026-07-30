@@ -1,8 +1,3 @@
-#![expect(
-    dead_code,
-    reason = "构造与处理入口由后续迁移的 TemplateManager、解析器统一消费"
-)]
-
 use std::fmt::{Display, Formatter};
 use std::io;
 use std::sync::Arc;
@@ -20,6 +15,7 @@ use super::{
 ///
 /// 队列必须以 `TemplateStart` 开始并以 `TemplateEnd` 结束；所有修改入口均拒绝操作，
 /// 从而保持缓存一致性。对应 Java: `org.thymeleaf.engine.TemplateModel`。
+#[derive(Clone)]
 pub struct TemplateModel {
     configuration: Arc<dyn IEngineConfiguration>,
     template_data: Arc<TemplateData>,
@@ -98,6 +94,14 @@ impl TemplateModel {
 }
 
 impl IModel for TemplateModel {
+    fn get_template_data(&self) -> Option<&TemplateData> {
+        Some(self.template_data.as_ref())
+    }
+
+    fn get_template_data_arc(&self) -> Option<Arc<TemplateData>> {
+        Some(Arc::clone(&self.template_data))
+    }
+
     fn get_configuration(&self) -> &dyn IEngineConfiguration {
         self.configuration.as_ref()
     }

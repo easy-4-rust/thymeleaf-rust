@@ -444,14 +444,18 @@ Thymeleaf 表达式包含不同语义：
 
 | 表达式 | 含义 | 推荐实现 |
 |---|---|---|
-| `${...}` | Variable Expression | 委托中立 `ExpressionEvaluator` |
-| `*{...}` | Selection Variable Expression | 设置 Selection Root 后委托中立 `ExpressionEvaluator` |
+| `${...}` | Variable Expression | 委托核心 `NativeVariableExpressionEvaluator` |
+| `*{...}` | Selection Variable Expression | 设置 Selection Root 后委托同一原生 evaluator |
 | `#{...}` | Message Expression | 委托 MessageResolver |
 | `@{...}` | Link URL Expression | 委托 LinkBuilder |
 | `~{...}` | Fragment Expression | 委托 FragmentResolver |
 | `__${...}__` | Preprocessing | 首期谨慎支持或延后 |
 
-`thymeleaf::expression` 内部模块必须提供框架无关的 `ExpressionEvaluator`、Parser 和基础实现。`thymeleaf-vernal` 可以注册一个由 `vernal-expression` 驱动的实现，但核心不能反向依赖它。
+`thymeleaf::expression` 内部模块必须提供框架无关的 Parser、AST、值模型和 evaluator。
+`thymeleaf-vernal` 只负责把 Vernal Web 请求/响应和上下文接到该合同，不能用
+`vernal-expression`（SpEL 语义）替换 OGNL evaluator，也不能让核心反向依赖 Vernal。
+Rhai、CEL、evalexpr、JSONPath/JMESPath 都不是 Java OGNL 语法兼容实现，不能作为
+默认求值器偷换语言语义。
 
 不能直接将整个属性内容交给某一个通用表达式引擎，因为 `#{...}` 在 Thymeleaf 中是消息表达式，而通用模板表达式 Parser 可能将其解释为另一种嵌入表达式。
 
@@ -489,6 +493,51 @@ Object
 Function
 SafeHtml
 ```
+
+### 6.3 OGNL 兼容边界
+
+Rust 生态目前没有成熟、主流且兼容 Java OGNL 语法的实现，因此核心采用：
+
+```text
+OGNL source
+  → Native Parser / AST
+  → TemplateValue
+  → property / index / method capability
+  → ACL
+  → evaluator
+```
+
+默认兼容面面向 Thymeleaf 模板的只读求值，覆盖属性和索引访问、方法调用、集合
+projection/selection、条件/逻辑/算术/包含/位运算、局部表达式变量、静态成员和构造器
+语法。Java 反射无法在 Rust 中隐式复制，宿主对象通过 `TemplateObject` 暴露属性与
+方法；静态成员、构造器和宿主类型关系通过 `OgnlRuntime` 显式注册，并继续执行
+Thymeleaf 的类型、成员和受限执行上下文 ACL。
+
+`serde_json::Value` 可以作为一种输入适配，但不能成为唯一内部值模型，否则会丢失
+Java UTF-16 字符串、数字包装类型、对象身份以及“变量不存在”和“值为 null”的区别。
+默认运行时不开放任意对象写入、任意类型反射或脚本执行；这些能力既不是安全的模板
+渲染默认值，也不能通过换用另一门脚本语言来冒充 OGNL 兼容。
+
+上游 `.thtest` 的 `%CONTEXT` 是测试夹具，不是模板语法。Rust runner 先通过生产
+`VariableExpression`/OGNL 求值器顺序建立 `Context`，再处理未经包装的原模板；不能
+把整段 Context 塞进一个虚构的 `th:with`，否则会错误改变 TEXT 模式节点、双花括号
+集合字面量、源码行列和赋值作用域。Java 测试专用 Bean、lazy variable、静态工厂与
+构造器通过窄化 `TemplateObject`/`OgnlRuntime` 夹具注册，不得扩大默认反射权限。
+
+固定上游 `3.1.5.RELEASE` 语料的统一验证结果为：Parsing 69 / 69、Plain 200 / 200、
+Standard Engine Context 996 / 996、专用 Dialect 61 / 61。前三者中 Parsing 被 Plain
+包含，Context 与 Plain 不重叠；专用 Dialect 批次包含 13 个 `elementstack` 和 48 个
+`inlining/nostandard` 用例，也不与前两批重叠，因此 `verified` 统一范围当前结算
+1,257 / 1,257 个不同 `.thtest`。专用批次按 Java 测试的真实方言组合执行，并验证了
+Dialect/Processor 优先级、属性/文本/模型处理、片段插入、元素栈以及没有
+Standard Dialect 时不执行标准内联。这证明上述 OGNL 子集与当前输出批次兼容，不代表
+全部 2,608 个可执行用例、自定义 Processor harness 或 Web harness 已经完成。
+
+上游 `instancestaticrestrictions29.thtest` 中
+`''.getClass().getClass().getName()` 依赖 Java `Class` 反射链。该语义被登记为默认
+安全配置下的有意差异：核心不会为复刻这一用例向模板暴露任意运行时类型对象。宿主若
+确有受控类型查询需求，应通过 `TemplateObject`/`OgnlRuntime` 显式注册窄能力，而不是
+启用通用反射。
 
 ### 6.3 表达式 Guardrails
 

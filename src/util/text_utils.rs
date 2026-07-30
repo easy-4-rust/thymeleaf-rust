@@ -101,7 +101,7 @@ impl Error for TextUtilsError {}
 /// 对应 Java: `java.lang.CharSequence`。该 Rust 扩展接口保留 `length()` 与
 /// `charAt(int)` 的调用次数、顺序、可变底层数据和运行时异常，避免将所有实现
 /// 提前复制成不可变字符串。
-pub trait JavaCharSequence {
+pub trait JavaCharSequence: Send + Sync {
     /// 返回 Java 运行时类名；自定义适配器应覆盖为原对象的全限定类名。
     fn java_sequence_class_name(&self) -> &str {
         std::any::type_name::<Self>()

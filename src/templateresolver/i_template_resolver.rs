@@ -1,10 +1,5 @@
-use std::sync::Arc;
-
-use indexmap::IndexMap;
-
-use crate::IEngineConfiguration;
-use crate::expression::TemplateValue;
 use crate::util::JavaString;
+use crate::{IEngineConfiguration, TemplateResolutionAttributes};
 
 use super::TemplateResolution;
 
@@ -22,8 +17,6 @@ pub trait ITemplateResolver: Send + Sync {
         configuration: &dyn IEngineConfiguration,
         owner_template: Option<&JavaString>,
         template: &JavaString,
-        template_resolution_attributes: Option<
-            &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
-        >,
+        template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Option<TemplateResolution>;
 }

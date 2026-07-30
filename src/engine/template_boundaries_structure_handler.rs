@@ -78,14 +78,14 @@ impl TemplateBoundariesStructureHandler {
     ///
     /// 对应 Java:
     /// `TemplateBoundariesStructureHandler#applyContextModifications`。
-    pub(crate) fn apply_context_modifications(&self, engine_context: &mut dyn IEngineContext) {
+    pub(crate) fn apply_context_modifications(&self, engine_context: &dyn IEngineContext) {
         if self.set_local_variable {
             engine_context.set_variables(&self.added_local_variables);
         }
 
         if self.remove_local_variable {
             for variable_name in &self.removed_local_variable_names {
-                engine_context.remove_variable(variable_name);
+                engine_context.remove_variable(Some(variable_name));
             }
         }
 

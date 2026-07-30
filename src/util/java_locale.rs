@@ -1,4 +1,5 @@
 use std::sync::{OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::{fmt::Display, fmt::Formatter};
 
 use super::JavaString;
 
@@ -43,6 +44,36 @@ impl JavaLocale {
         &self.country
     }
 
+    /// 返回 Java `Locale#getLanguage()` 对应语言代码。
+    #[must_use]
+    pub fn get_language(&self) -> JavaString {
+        JavaString::from_rust_str(
+            self.language_tag
+                .to_string_lossy()
+                .split(['-', '_'])
+                .next()
+                .unwrap_or(""),
+        )
+    }
+
+    /// 返回 Java `Locale#getVariant()` 对应变体。
+    #[must_use]
+    pub fn get_variant(&self) -> JavaString {
+        let tag = self.language_tag.to_string_lossy();
+        let mut parts = tag.split(['-', '_']);
+        let _language = parts.next();
+        let country = self.country.to_string_lossy();
+        let mut remaining = parts.collect::<Vec<_>>();
+        if !country.is_empty()
+            && remaining
+                .first()
+                .is_some_and(|part| part.eq_ignore_ascii_case(&country))
+        {
+            remaining.remove(0);
+        }
+        JavaString::from_rust_str(&remaining.join("_"))
+    }
+
     /// 返回当前进程默认 Locale 的独立值快照。
     #[must_use]
     pub fn get_default() -> Self {
@@ -56,6 +87,22 @@ impl JavaLocale {
     /// - `locale`：替换 `Locale.getDefault()` 结果的值。
     pub fn set_default(locale: Self) {
         *write_recovering_poison(default_locale_lock()) = locale;
+    }
+}
+
+impl Display for JavaLocale {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        let language = self.get_language().to_string_lossy();
+        let country = self.country.to_string_lossy();
+        let variant = self.get_variant().to_string_lossy();
+        formatter.write_str(&language)?;
+        if !country.is_empty() || !variant.is_empty() {
+            write!(formatter, "_{country}")?;
+        }
+        if !variant.is_empty() {
+            write!(formatter, "_{variant}")?;
+        }
+        Ok(())
     }
 }
 

@@ -3,18 +3,18 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use indexmap::IndexMap;
 
-use crate::engine::TemplateModel;
 use crate::expression::TemplateValue;
 use crate::model::IModel;
 use crate::util::{FastStringWriter, JavaString, ValidateError};
 
-type FragmentParameterMap = IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+/// Fragment 调用参数的有序动态 Map；键和值都保留 Java null。
+pub type FragmentParameterMap = IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
 
 /// Fragment Expression 的执行结果。
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.Fragment`。
 pub struct Fragment {
-    template_model: Option<Arc<TemplateModel>>,
+    template_model: Option<Arc<dyn IModel>>,
     parameters: Option<Arc<RwLock<FragmentParameterMap>>>,
     synthetic_parameters: bool,
 }
@@ -29,7 +29,7 @@ impl Fragment {
 
     /// 创建 Fragment；参数 Map 使用只读包装但保留原 backing map 身份。
     pub fn new(
-        template_model: Option<Arc<TemplateModel>>,
+        template_model: Option<Arc<dyn IModel>>,
         parameters: Option<Arc<RwLock<FragmentParameterMap>>>,
         synthetic_parameters: bool,
     ) -> Result<Self, ValidateError> {
@@ -52,8 +52,14 @@ impl Fragment {
     }
 
     /// 返回可空模板模型。
-    pub fn get_template_model(&self) -> Option<&TemplateModel> {
+    pub fn get_template_model(&self) -> Option<&dyn IModel> {
         self.template_model.as_deref()
+    }
+
+    /// 返回共享模板模型身份，供结构处理器直接插入模型而不序列化为字符串。
+    #[must_use]
+    pub fn get_template_model_arc(&self) -> Option<Arc<dyn IModel>> {
+        self.template_model.clone()
     }
 
     /// 返回原参数 Map 的实时只读视图。
@@ -61,6 +67,12 @@ impl Fragment {
         self.parameters
             .as_ref()
             .map(|parameters| read_recovering_poison(parameters))
+    }
+
+    /// 返回参数 Map 的共享身份，供 Fragment 签名重整与局部变量注入。
+    #[must_use]
+    pub fn get_parameters_arc(&self) -> Option<Arc<RwLock<FragmentParameterMap>>> {
+        self.parameters.clone()
     }
 
     /// 判断构造瞬间非空参数是否为合成位置参数。
@@ -81,6 +93,21 @@ impl Fragment {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)?;
         Ok(writer.to_string())
+    }
+}
+
+impl super::TemplateObject for Fragment {
+    fn java_class_name(&self) -> &str {
+        "org.thymeleaf.standard.expression.Fragment"
+    }
+
+    fn to_java_string(&self) -> JavaString {
+        self.to_java_string()
+            .unwrap_or_else(|_| JavaString::from_rust_str(""))
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }
 

@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -8,14 +9,29 @@ use crate::model::{
     IStandaloneElementTag, ITemplateEnd, ITemplateStart, IText, IXMLDeclaration,
 };
 
+use super::gathering_model_execution_state::GatheringModelExecutionState;
+
 /// 模板事件处理流水线合同。
 ///
 /// 对应 Java: `org.thymeleaf.engine.ITemplateHandler`。
 pub trait ITemplateHandler {
+    /// 为允许 Java handler 重入的内部处理链创建轻量代理。
+    ///
+    /// 普通第三方 Handler 不需要实现；`ProcessorTemplateHandler` 使用该入口避免在
+    /// gathering/iteration 重放期间跨事件持有 `RefCell` 可变借用。
+    fn create_reentrant_handler(&self) -> Option<Box<dyn ITemplateHandler>> {
+        None
+    }
+
     /// 设置链中的下一处理器。
-    fn set_next(&mut self, next: Option<Box<dyn ITemplateHandler>>);
+    fn set_next(&mut self, next: Option<TemplateHandlerHandle>);
     /// 设置本次模板执行上下文。
-    fn set_context(&mut self, context: Rc<dyn ITemplateContext>);
+    fn set_context(&mut self, context: Arc<dyn ITemplateContext>);
+
+    /// 设置下一次 gathering Model 首事件消费的执行快照。
+    ///
+    /// 仅 `ProcessorTemplateHandler` 消费该状态；其他 Handler 保持默认忽略。
+    fn set_current_gathering_model(&mut self, _state: Option<GatheringModelExecutionState>) {}
     /// 处理模板开始。
     fn handle_template_start(
         &mut self,
@@ -70,3 +86,5 @@ pub trait ITemplateHandler {
         instruction: Arc<dyn IProcessingInstruction>,
     ) -> Result<(), Box<dyn TemplateEngineException>>;
 }
+/// Java Handler 引用的共享可变身份。
+pub type TemplateHandlerHandle = Rc<RefCell<Box<dyn ITemplateHandler>>>;

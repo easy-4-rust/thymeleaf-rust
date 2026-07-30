@@ -6,7 +6,9 @@ use thiserror::Error;
 use crate::context::IExpressionContext;
 use crate::util::JavaString;
 
-use super::{IExpressionObjectFactory, IExpressionObjects, TemplateValue};
+use super::{
+    IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult, TemplateValue,
+};
 
 /// 表达式工具对象容器。
 ///
@@ -82,27 +84,30 @@ impl IExpressionObjects for ExpressionObjects {
         self.expression_object_names.iter().cloned().collect()
     }
 
-    fn get_object(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_object(
+        &self,
+        name: Option<&JavaString>,
+    ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         let key = name.cloned();
 
         // HashMap#containsKey 与 get 分开，确保缓存的 Java null 不会被误判成未缓存。
         if let Some(object) = read_recovering_poison(&self.objects).get(&key) {
-            return object.clone();
+            return Ok(object.clone());
         }
         if !self.expression_object_names.contains(&key) {
-            return None;
+            return Ok(None);
         }
 
-        let context = self.context.upgrade()?;
-        let object = self
-            .expression_object_factory
-            .build_object(context.as_ref(), name);
+        let Some(context) = self.context.upgrade() else {
+            return Ok(None);
+        };
+        let object = self.expression_object_factory.build_object(context, name)?;
         if !self.expression_object_factory.is_cacheable(name) {
-            return object;
+            return Ok(object);
         }
 
         write_recovering_poison(&self.objects).insert(key, object.clone());
-        object
+        Ok(object)
     }
 }
 

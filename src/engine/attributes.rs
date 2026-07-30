@@ -235,6 +235,14 @@ impl Attributes {
         self.attributes.as_deref()
     }
 
+    /// 返回 parser/Handler 内部使用的原始属性间空白切片。
+    ///
+    /// 对应 Java 同包代码对 `Attributes.innerWhiteSpaces` 的构造语义；仅用于在
+    /// decoupled logic 注入时保留“最后一个事件是否为空白”的状态。
+    pub(crate) fn inner_white_spaces(&self) -> Option<&[JavaString]> {
+        self.inner_white_spaces.as_deref()
+    }
+
     /// 按模板出现顺序返回完整属性名到可空值的映射。
     ///
     /// 对应 Java: `Attributes#getAttributeMap()`。

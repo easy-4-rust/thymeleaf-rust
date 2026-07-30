@@ -5,12 +5,12 @@ use crate::engine::ITemplateHandler;
 use crate::exceptions::TemplateEngineException;
 use crate::util::{JavaString, JavaWriter};
 
-use super::{IModelVisitor, IProcessableElementTag};
+use super::{ICloseElementTag, IModelVisitor, IOpenElementTag, IProcessableElementTag, IText};
 
 /// parser 产生并由模板 handler 处理的不可变模板事件合同。
 ///
 /// 对应 Java: `org.thymeleaf.model.ITemplateEvent`。
-pub trait ITemplateEvent {
+pub trait ITemplateEvent: Send + Sync {
     /// 判断事件是否携带原模板的位置。
     fn has_location(&self) -> bool;
 
@@ -49,6 +49,32 @@ pub trait ITemplateEvent {
     ///
     /// 对应 Java 的 `event instanceof IProcessableElementTag` 与强制类型转换。
     fn into_processable_element_tag(self: Arc<Self>) -> Option<Arc<dyn IProcessableElementTag>> {
+        None
+    }
+
+    /// 若事件是 Text，则返回同一对象的只读 Text 视图。
+    ///
+    /// 对应 Java 内部对 `event instanceof IText` 的动态类型检查。
+    fn as_text(&self) -> Option<&dyn IText> {
+        None
+    }
+
+    /// 若事件是 Text，则消费共享引用并返回保持同一身份的 Text trait object。
+    fn into_text(self: Arc<Self>) -> Option<Arc<dyn IText>> {
+        None
+    }
+
+    /// 若事件是开放元素，则返回同一对象的只读标签视图。
+    ///
+    /// 对应 Java 内部对 `event instanceof IOpenElementTag` 的动态类型检查。
+    fn as_open_element_tag(&self) -> Option<&dyn IOpenElementTag> {
+        None
+    }
+
+    /// 若事件是关闭元素，则返回同一对象的只读标签视图。
+    ///
+    /// 对应 Java 内部对 `event instanceof ICloseElementTag` 的动态类型检查。
+    fn as_close_element_tag(&self) -> Option<&dyn ICloseElementTag> {
         None
     }
 

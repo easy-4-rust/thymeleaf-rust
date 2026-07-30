@@ -1,8 +1,9 @@
 use std::sync::OnceLock;
 
 use crate::context::ITemplateContext;
+use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaString, TextUtilsError};
+use crate::util::{JavaCharSequence, JavaString};
 
 use super::IInliner;
 
@@ -28,7 +29,7 @@ impl IInliner for NoOpInliner {
         &self,
         _context: &dyn ITemplateContext,
         _text: &dyn IText,
-    ) -> Result<Option<JavaString>, TextUtilsError> {
+    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
         Ok(None)
     }
 
@@ -36,7 +37,7 @@ impl IInliner for NoOpInliner {
         &self,
         _context: &dyn ITemplateContext,
         _cdata_section: &dyn ICDATASection,
-    ) -> Result<Option<JavaString>, TextUtilsError> {
+    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
         Ok(None)
     }
 
@@ -44,7 +45,7 @@ impl IInliner for NoOpInliner {
         &self,
         _context: &dyn ITemplateContext,
         _comment: &dyn IComment,
-    ) -> Result<Option<JavaString>, TextUtilsError> {
+    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
         Ok(None)
     }
 }

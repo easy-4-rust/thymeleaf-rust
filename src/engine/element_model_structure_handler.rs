@@ -1,8 +1,3 @@
-#![expect(
-    dead_code,
-    reason = "状态由后续迁移的 ProcessorTemplateHandler 统一消费"
-)]
-
 use std::sync::Arc;
 
 use indexmap::{IndexMap, IndexSet};
@@ -50,10 +45,7 @@ impl ElementModelStructureHandler {
     }
 
     /// 将已收集的上下文变更应用到非空引擎上下文。
-    pub(crate) fn apply_context_modifications(
-        &self,
-        engine_context: Option<&mut dyn IEngineContext>,
-    ) {
+    pub(crate) fn apply_context_modifications(&self, engine_context: Option<&dyn IEngineContext>) {
         let Some(engine_context) = engine_context else {
             return;
         };
@@ -62,7 +54,7 @@ impl ElementModelStructureHandler {
         }
         if self.remove_local_variable {
             for variable_name in &self.removed_local_variable_names {
-                engine_context.remove_variable(variable_name);
+                engine_context.remove_variable(Some(variable_name));
             }
         }
         if self.set_selection_target {

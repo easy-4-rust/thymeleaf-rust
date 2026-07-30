@@ -1,3 +1,8 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
+use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
+use crate::model::ITemplateEvent;
 use crate::processor::IProcessor;
 use crate::templatemode::TemplateMode;
 use crate::util::{Validate, ValidateError};
@@ -247,8 +252,3 @@ mod tests {
         }
     }
 }
-use std::error::Error;
-use std::fmt::{Display, Formatter};
-
-use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
-use crate::model::ITemplateEvent;

@@ -6,7 +6,7 @@ use super::{
 };
 
 /// `AbstractLazyCharSequence` 子类提供的延迟解析与未解析写出行为。
-pub trait LazyCharSequenceResolver {
+pub trait LazyCharSequenceResolver: Send + Sync {
     /// 返回 Java 具体子类全限定名，供基类 `equals` 执行精确类判断。
     fn java_class_name(&self) -> &str;
 
@@ -21,8 +21,8 @@ pub trait LazyCharSequenceResolver {
 ///
 /// 对应 Java: `org.thymeleaf.util.AbstractLazyCharSequence`。
 ///
-/// 与上游一样，本对象不承诺线程安全；Rust 使用锁只为安全表达内部缓存，不改变
-/// “写出未解析内容不会填充 resolvedText”这一关键语义。
+/// Rust 使用锁安全表达 Java 的惰性缓存，同时不改变“写出未解析内容不会填充
+/// resolvedText”这一关键语义；该能力使解析事件可以进入跨线程模板缓存。
 pub struct AbstractLazyCharSequence<R: LazyCharSequenceResolver> {
     resolver: R,
     resolved_text: RwLock<Option<JavaString>>,

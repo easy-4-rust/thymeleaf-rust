@@ -1,20 +1,15 @@
-#![expect(
-    dead_code,
-    reason = "由同批后续 ProcessorTemplateHandler 复用并读取动作状态"
-)]
-
 use std::sync::Arc;
 
 use crate::cdatasection::ICDATASectionStructureHandler;
 use crate::model::IModel;
-use crate::util::JavaString;
+use crate::util::{JavaCharSequence, JavaString};
 
 /// 引擎内部 CDATASection 结构动作状态机。
 ///
 /// 对应 Java: `org.thymeleaf.engine.CDATASectionStructureHandler`。
 pub(crate) struct CDATASectionStructureHandler {
     pub(crate) set_content: bool,
-    pub(crate) set_content_value: Option<JavaString>,
+    pub(crate) set_content_value: Option<Arc<dyn JavaCharSequence>>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -46,6 +41,12 @@ impl ICDATASectionStructureHandler for CDATASectionStructureHandler {
     }
 
     fn set_content(&mut self, content: JavaString) {
+        self.reset();
+        self.set_content = true;
+        self.set_content_value = Some(Arc::new(content));
+    }
+
+    fn set_content_sequence(&mut self, content: Arc<dyn JavaCharSequence>) {
         self.reset();
         self.set_content = true;
         self.set_content_value = Some(content);

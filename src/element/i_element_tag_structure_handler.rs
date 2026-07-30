@@ -4,6 +4,7 @@ use crate::engine::{AttributeNameValue, TemplateData};
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel};
+use crate::util::JavaCharSequence;
 use crate::util::JavaString;
 
 /// ElementTag Processor 声明标签、正文、上下文和迭代变更的完整合同。
@@ -45,6 +46,11 @@ pub trait IElementTagStructureHandler {
     fn set_template_data(&mut self, template_data: Arc<TemplateData>);
     /// 使用文本设置正文。
     fn set_body_text(&mut self, text: JavaString, processable: bool);
+    /// 使用任意 Java CharSequence 设置正文。
+    ///
+    /// 对应 Java: `IElementTagStructureHandler#setBody(CharSequence, boolean)`；该入口
+    /// 保留 LazyEscapingCharSequence 的直接 Writer 输出能力。
+    fn set_body_sequence(&mut self, text: Arc<dyn JavaCharSequence>, processable: bool);
     /// 使用模型设置正文。
     fn set_body_model(&mut self, model: Arc<dyn IModel>, processable: bool);
     /// 在元素之前插入模型。

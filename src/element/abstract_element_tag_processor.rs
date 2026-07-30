@@ -89,7 +89,10 @@ impl<F> AbstractElementTagProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractElementTagProcessor<F> {
+impl<F> IProcessor for AbstractElementTagProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -101,7 +104,20 @@ impl<F> IProcessor for AbstractElementTagProcessor<F> {
     }
 }
 
-impl<F> IElementProcessor for AbstractElementTagProcessor<F> {
+impl<F> IElementProcessor for AbstractElementTagProcessor<F>
+where
+    F: Fn(
+            &dyn ITemplateContext,
+            &dyn IProcessableElementTag,
+            &mut dyn IElementTagStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
+{
+    fn as_element_tag_processor(&self) -> Option<&dyn IElementTagProcessor> {
+        Some(self)
+    }
+
     fn get_matching_element_name(&self) -> Option<&MatchingElementName> {
         self.matching_element_name.as_ref()
     }
@@ -113,10 +129,12 @@ impl<F> IElementProcessor for AbstractElementTagProcessor<F> {
 impl<F> IElementTagProcessor for AbstractElementTagProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn IProcessableElementTag,
-        &mut dyn IElementTagStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn IProcessableElementTag,
+            &mut dyn IElementTagStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

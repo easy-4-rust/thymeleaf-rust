@@ -85,7 +85,10 @@ impl<F> AbstractAttributeModelProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractAttributeModelProcessor<F> {
+impl<F> IProcessor for AbstractAttributeModelProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.processor_class_name
     }
@@ -99,7 +102,22 @@ impl<F> IProcessor for AbstractAttributeModelProcessor<F> {
     }
 }
 
-impl<F> IElementProcessor for AbstractAttributeModelProcessor<F> {
+impl<F> IElementProcessor for AbstractAttributeModelProcessor<F>
+where
+    F: Fn(
+            &dyn ITemplateContext,
+            &mut dyn IModel,
+            &AttributeName,
+            Option<JavaString>,
+            &mut dyn IElementModelStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
+{
+    fn as_element_model_processor(&self) -> Option<&dyn IElementModelProcessor> {
+        Some(self)
+    }
+
     fn get_matching_element_name(&self) -> Option<&MatchingElementName> {
         self.matching_element_name.as_ref()
     }
@@ -112,12 +130,14 @@ impl<F> IElementProcessor for AbstractAttributeModelProcessor<F> {
 impl<F> IElementModelProcessor for AbstractAttributeModelProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &mut dyn IModel,
-        &AttributeName,
-        Option<JavaString>,
-        &mut dyn IElementModelStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &mut dyn IModel,
+            &AttributeName,
+            Option<JavaString>,
+            &mut dyn IElementModelStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

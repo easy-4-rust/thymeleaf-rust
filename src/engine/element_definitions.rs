@@ -13,6 +13,26 @@ use super::{
     XMLElementDefinition,
 };
 
+/// 单个模板模式下的线程安全元素定义仓储。
+///
+/// 对应 Java: `ElementDefinitions.ElementDefinitionRepository`。Rust 使用读写锁保护
+/// 哈希索引，等价保留 Java 的并发读取、缺失后加写锁创建与别名共同缓存语义。
+type ElementDefinitionRepository = RwLock<HashMap<JavaString, ElementDefinitionValue>>;
+
+/// 标准 HTML 元素名称及类别的初始化规格。
+///
+/// 对应 Java: `ElementDefinitions.HTMLElementDefinitionSpec`。
+struct HTMLElementDefinitionSpec {
+    name: &'static str,
+    element_type: HTMLElementType,
+}
+
+impl HTMLElementDefinitionSpec {
+    const fn new(name: &'static str, element_type: HTMLElementType) -> Self {
+        Self { name, element_type }
+    }
+}
+
 /// `ElementDefinitions` 返回的具体元素定义。
 #[derive(Clone)]
 pub enum ElementDefinitionValue {
@@ -93,11 +113,11 @@ impl From<ElementDefinitionError> for ElementDefinitionsError {
 /// 对应 Java: `org.thymeleaf.engine.ElementDefinitions`。
 pub struct ElementDefinitions {
     processors: Arc<ElementProcessorsByTemplateMode>,
-    html_repository: RwLock<HashMap<JavaString, ElementDefinitionValue>>,
-    xml_repository: RwLock<HashMap<JavaString, ElementDefinitionValue>>,
-    text_repository: RwLock<HashMap<JavaString, ElementDefinitionValue>>,
-    javascript_repository: RwLock<HashMap<JavaString, ElementDefinitionValue>>,
-    css_repository: RwLock<HashMap<JavaString, ElementDefinitionValue>>,
+    html_repository: ElementDefinitionRepository,
+    xml_repository: ElementDefinitionRepository,
+    text_repository: ElementDefinitionRepository,
+    javascript_repository: ElementDefinitionRepository,
+    css_repository: ElementDefinitionRepository,
 }
 
 impl ElementDefinitions {
@@ -116,11 +136,12 @@ impl ElementDefinitions {
             css_repository: RwLock::new(HashMap::new()),
         };
         for (name, element_type) in STANDARD_HTML_ELEMENT_SPECS {
-            let name = ElementNames::for_html_name(Some(&JavaString::from_rust_str(name)))?;
+            let spec = HTMLElementDefinitionSpec::new(name, *element_type);
+            let name = ElementNames::for_html_name(Some(&JavaString::from_rust_str(spec.name)))?;
             manager.get_or_build(
                 TemplateMode::HTML,
                 ElementNameValue::Html(name),
-                *element_type,
+                spec.element_type,
             )?;
         }
         Ok(manager)

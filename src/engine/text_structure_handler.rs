@@ -1,13 +1,8 @@
-#![expect(
-    dead_code,
-    reason = "由同批后续 ProcessorTemplateHandler 复用并读取动作状态"
-)]
-
 use std::sync::Arc;
 
 use crate::model::IModel;
 use crate::text::ITextStructureHandler;
-use crate::util::JavaString;
+use crate::util::{JavaCharSequence, JavaString};
 
 /// 引擎内部 Text 结构动作状态机。
 ///
@@ -17,7 +12,7 @@ use crate::util::JavaString;
 /// 对应 Java: `org.thymeleaf.engine.TextStructureHandler`。
 pub(crate) struct TextStructureHandler {
     pub(crate) set_text: bool,
-    pub(crate) set_text_value: Option<JavaString>,
+    pub(crate) set_text_value: Option<Arc<dyn JavaCharSequence>>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -49,6 +44,12 @@ impl ITextStructureHandler for TextStructureHandler {
     }
 
     fn set_text(&mut self, text: JavaString) {
+        self.reset();
+        self.set_text = true;
+        self.set_text_value = Some(Arc::new(text));
+    }
+
+    fn set_text_sequence(&mut self, text: Arc<dyn JavaCharSequence>) {
         self.reset();
         self.set_text = true;
         self.set_text_value = Some(text);

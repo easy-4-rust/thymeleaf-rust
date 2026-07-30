@@ -379,7 +379,7 @@ impl BufferPool {
 /// `EventProcessorTextHandler` 与 `CommentProcessorTextHandler`，包级
 /// `parse_document` 则使用调用方已经装配的 handler。所有路径最终释放缓冲区并
 /// 尝试关闭 Reader，关闭失败包括 Java Error 在内均被忽略。
-pub(crate) struct TextParser {
+pub struct TextParser {
     pool: BufferPool,
     process_comments_and_literals: bool,
     standard_dialect_present: bool,
@@ -397,7 +397,7 @@ impl TextParser {
     /// - `process_comments_and_literals`：是否识别 JS/CSS 注释和字面量；
     /// - `standard_dialect_present`：注释处理器是否启用标准内联表达式过滤。
     #[must_use]
-    pub(crate) fn new(
+    pub fn new(
         pool_size: i32,
         buffer_size: i32,
         process_comments_and_literals: bool,
@@ -416,7 +416,7 @@ impl TextParser {
     ///
     /// document null 在 handler 检查前抛出 `IllegalArgumentException`；非 null
     /// 文档通过独立 `StringReader` 进入 Reader 重载。
-    pub(crate) fn parse(
+    pub fn parse(
         &self,
         document: Option<&JavaString>,
         handler: Option<Box<dyn ITextHandler>>,
@@ -439,7 +439,7 @@ impl TextParser {
     /// # 参数
     /// reader 与 handler 按 Java 顺序校验；随后始终安装事件结构处理器，并按配置
     /// 选择是否在其外层安装注释处理器。
-    pub(crate) fn parse_reader(
+    pub fn parse_reader(
         &self,
         reader: Option<Box<dyn TextParserReader>>,
         handler: Option<Box<dyn ITextHandler>>,

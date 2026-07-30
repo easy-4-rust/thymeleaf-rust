@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::util::JavaString;
 
-use super::TemplateValue;
+use super::{StandardExpressionResult, TemplateValue};
 
 /// 模板执行期间表达式工具对象的容器合同。
 ///
@@ -18,5 +18,8 @@ pub trait IExpressionObjects {
     fn get_object_names(&self) -> Vec<Option<JavaString>>;
 
     /// 返回指定名称对应的对象；未声明或工厂返回 null 时为 `None`。
-    fn get_object(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
+    fn get_object(
+        &self,
+        name: Option<&JavaString>,
+    ) -> StandardExpressionResult<Option<Arc<TemplateValue>>>;
 }

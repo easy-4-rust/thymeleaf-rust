@@ -1,0 +1,22 @@
+[package]
+name = "thymeleaf-topcoat"
+version = "0.1.0-alpha.1"
+edition = "2024"
+rust-version = "1.95"
+description = "Topcoat integration for the framework-neutral thymeleaf template engine"
+license = "MIT"
+repository = "https://github.com/easy-4-rust/thymeleaf-rust"
+
+[dependencies]
+thymeleaf = { path = "../.." }
+topcoat = { version = "=0.5.0", default-features = false, features = ["router"] }
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+wildcard_imports = "deny"

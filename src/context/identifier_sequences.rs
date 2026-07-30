@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::sync::{Mutex, MutexGuard};
 
 use crate::util::JavaString;
 
@@ -42,9 +43,8 @@ impl Error for IdentifierSequencesError {}
 /// 模板执行期间为每个 HTML `id` 维护独立的 Java `Integer` 序列。
 ///
 /// 对应 Java: `org.thymeleaf.context.IdentifierSequences`。
-#[derive(Default)]
 pub struct IdentifierSequences {
-    id_counts: HashMap<JavaString, i32>,
+    id_counts: Mutex<HashMap<JavaString, i32>>,
 }
 
 impl IdentifierSequences {
@@ -52,18 +52,19 @@ impl IdentifierSequences {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            id_counts: HashMap::with_capacity(1),
+            id_counts: Mutex::new(HashMap::with_capacity(1)),
         }
     }
 
     /// 返回当前计数，并以 Java `int` 回绕语义递增保存值。
     pub fn get_and_increment_id_seq(
-        &mut self,
+        &self,
         id: Option<&JavaString>,
     ) -> Result<i32, IdentifierSequencesError> {
         let id = id.ok_or(IdentifierSequencesError::NullId)?;
-        let count = self.id_counts.get(id).copied().unwrap_or(1);
-        self.id_counts.insert(id.clone(), count.wrapping_add(1));
+        let mut id_counts = lock_recovering_poison(&self.id_counts);
+        let count = id_counts.get(id).copied().unwrap_or(1);
+        id_counts.insert(id.clone(), count.wrapping_add(1));
         Ok(count)
     }
 
@@ -73,7 +74,10 @@ impl IdentifierSequences {
         id: Option<&JavaString>,
     ) -> Result<i32, IdentifierSequencesError> {
         let id = id.ok_or(IdentifierSequencesError::NullId)?;
-        Ok(self.id_counts.get(id).copied().unwrap_or(1))
+        Ok(lock_recovering_poison(&self.id_counts)
+            .get(id)
+            .copied()
+            .unwrap_or(1))
     }
 
     /// 返回最近一次分配的计数。
@@ -82,10 +86,22 @@ impl IdentifierSequences {
         id: Option<&JavaString>,
     ) -> Result<i32, IdentifierSequencesError> {
         let id = id.ok_or(IdentifierSequencesError::NullId)?;
-        self.id_counts
+        lock_recovering_poison(&self.id_counts)
             .get(id)
             .copied()
             .map(|count| count.wrapping_sub(1))
             .ok_or_else(|| IdentifierSequencesError::MissingPrevious(id.clone()))
     }
+}
+
+impl Default for IdentifierSequences {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn lock_recovering_poison<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
 }

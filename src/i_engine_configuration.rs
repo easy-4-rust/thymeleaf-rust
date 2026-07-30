@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use indexmap::IndexMap;
 
+use crate::ExecutionAttributeValue;
 use crate::cache::ICacheManager;
 use crate::cdatasection::ICDATASectionProcessor;
 use crate::comment::ICommentProcessor;
@@ -12,7 +13,7 @@ use crate::dialect::IDialect;
 use crate::doctype::IDocTypeProcessor;
 use crate::element::IElementProcessor;
 use crate::engine::{AttributeDefinitions, ElementDefinitions, ITemplateManager};
-use crate::expression::{IExpressionObjectFactory, TemplateValue};
+use crate::expression::IExpressionObjectFactory;
 use crate::linkbuilder::ILinkBuilder;
 use crate::messageresolver::IMessageResolver;
 use crate::model::IModelFactory;
@@ -92,8 +93,9 @@ pub trait IEngineConfiguration: Send + Sync {
     /// 返回指定模式的后处理器。
     fn get_post_processors(&self, template_mode: TemplateMode) -> Vec<&dyn IPostProcessor>;
     /// 返回不可修改的执行属性。
-    fn get_execution_attributes(&self)
-    -> &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+    fn get_execution_attributes(
+        &self,
+    ) -> &IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>>;
     /// 返回聚合表达式对象工厂。
     fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory>;
     /// 返回模板管理器。

@@ -89,7 +89,10 @@ impl<F> AbstractElementModelProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractElementModelProcessor<F> {
+impl<F> IProcessor for AbstractElementModelProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -101,7 +104,20 @@ impl<F> IProcessor for AbstractElementModelProcessor<F> {
     }
 }
 
-impl<F> IElementProcessor for AbstractElementModelProcessor<F> {
+impl<F> IElementProcessor for AbstractElementModelProcessor<F>
+where
+    F: Fn(
+            &dyn ITemplateContext,
+            &mut dyn IModel,
+            &mut dyn IElementModelStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
+{
+    fn as_element_model_processor(&self) -> Option<&dyn IElementModelProcessor> {
+        Some(self)
+    }
+
     fn get_matching_element_name(&self) -> Option<&MatchingElementName> {
         self.matching_element_name.as_ref()
     }
@@ -113,10 +129,12 @@ impl<F> IElementProcessor for AbstractElementModelProcessor<F> {
 impl<F> IElementModelProcessor for AbstractElementModelProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &mut dyn IModel,
-        &mut dyn IElementModelStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &mut dyn IModel,
+            &mut dyn IElementModelStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

@@ -101,8 +101,8 @@ thymeleaf crate → Vernal
 | 项目与 Git 仓库 | `thymeleaf-rust` | 已确认 |
 | 未来 crates.io 核心 | `thymeleaf` | Workspace 已创建，尚未发布 |
 | Rust 公共路径 | `thymeleaf::...` | Foundation API 已实现 |
-| 整合 crate | `thymeleaf-{framework}` | 规划中 |
-| 可选 Vernal 整合 | `thymeleaf-vernal` | 规划中 |
+| 整合 crate | `thymeleaf-{framework}` | 生产适配已实现，待统一验证 |
+| 可选 Vernal 整合 | `thymeleaf-vernal` | HTTP 协议桥已实现，待统一验证 |
 
 明确排除 `thymeleaf-rust-core`、`thymeleaf-rust-axum` 和 Rust 根模块 `thymeleaf_rust` 等名称。
 

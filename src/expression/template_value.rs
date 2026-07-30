@@ -1,8 +1,10 @@
 use std::any::Any;
+use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaNumber, JavaString};
+use crate::util::{JavaEvaluationValue, JavaNumber, JavaString, java_double_string};
 
 use super::LiteralValue;
 
@@ -19,7 +21,87 @@ pub trait TemplateObject: Any + Send + Sync {
 
     /// 返回 `Any` 视图，供已注册的属性和方法访问器安全向下转型。
     fn as_any(&self) -> &dyn Any;
+
+    /// 执行 Java `Object#equals` 等价比较。
+    fn java_equals(&self, other: &dyn TemplateObject) -> bool {
+        std::ptr::eq(self.as_any(), other.as_any())
+    }
+
+    /// 若对象实现 Java Comparable，则执行同类对象比较。
+    fn java_compare_to(
+        &self,
+        _other: &dyn TemplateObject,
+    ) -> Option<Result<Ordering, TemplateObjectComparisonError>> {
+        None
+    }
+
+    /// 若对象实现 Java `Iterable`，返回当前迭代顺序的值快照。
+    ///
+    /// 默认对象不可迭代；Link 参数归一化等 Java 反射路径通过此 capability 保留
+    /// 动态对象行为。
+    fn java_iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
+        None
+    }
+
+    /// 返回 JavaBean/record 序列化可见属性的稳定顺序快照。
+    ///
+    /// Standard JavaScript Serializer 对 JavaBean 使用 Introspector、对 record 使用
+    /// record component 顺序。Rust 宿主对象通过该 capability 暴露等价属性；返回
+    /// `None` 表示对象没有可枚举属性。
+    fn java_serializable_properties(
+        &self,
+    ) -> Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>> {
+        None
+    }
+
+    /// 返回对象在 Jackson 模块中的代理序列化值。
+    ///
+    /// 外层 `None` 表示没有代理；`Some(None)` 表示序列化为 JSON null。Optional 等
+    /// 包装类型可借此保留 Java 模块的解包语义。
+    fn java_serializable_value(&self) -> Option<Option<Arc<TemplateValue>>> {
+        None
+    }
+
+    /// 按 JavaBean/OGNL 属性名读取动态属性。
+    ///
+    /// 外层 `None` 表示对象不提供该属性访问器；`Some(Ok(None))` 表示属性存在但值为
+    /// Java null；错误保留宿主 getter 抛出的运行时异常。
+    fn java_get_property(
+        &self,
+        _property_name: &JavaString,
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
+        None
+    }
+
+    /// 按 OGNL/Java 方法名调用宿主对象方法。
+    ///
+    /// 外层 `None` 表示对象不提供该方法；`Some(Ok(None))` 表示方法返回 Java
+    /// null；错误保留宿主方法抛出的运行时异常。
+    fn java_invoke_method(
+        &self,
+        _method_name: &JavaString,
+        _arguments: &[Option<Arc<TemplateValue>>],
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
+        None
+    }
+
+    /// 若对象实现 `ILazyContextVariable`，解析并返回其缓存值。
+    ///
+    /// 外层 `None` 表示普通对象；`Some(None)` 表示惰性变量解析为 Java null。
+    /// 对应 Java: `EngineContext#resolveLazy(Object)`。
+    fn resolve_lazy_context_variable(&self) -> Option<Option<Arc<TemplateValue>>> {
+        None
+    }
 }
+
+/// 宿主对象 Comparable 调用的动态错误。
+pub type TemplateObjectComparisonError = Box<dyn Error + Send + Sync>;
+
+/// 宿主对象属性 getter 的动态错误。
+pub type TemplateObjectPropertyError = Box<dyn Error + Send + Sync>;
+
+/// 宿主对象方法调用的动态错误。
+pub type TemplateObjectMethodError = Box<dyn Error + Send + Sync>;
 
 /// Thymeleaf 核心在上下文、表达式、序列化和 Processor 间传递的动态值。
 ///
@@ -68,6 +150,153 @@ impl TemplateValue {
         Self::SafeHtml(Arc::new(value))
     }
 
+    /// 转换为 `EvaluationUtils` 使用的 Java 标量运行时分类。
+    ///
+    /// 集合、数组、宿主对象和 NoOp 保留为其他对象；SafeHtml 在 Java 中仍是 String。
+    #[must_use]
+    pub fn to_evaluation_value(&self) -> JavaEvaluationValue {
+        match self {
+            Self::Null => JavaEvaluationValue::Null,
+            Self::Boolean(value) => JavaEvaluationValue::Boolean(*value),
+            Self::Number(value) => JavaEvaluationValue::Number(value.clone()),
+            Self::Character(value) => JavaEvaluationValue::Character(*value),
+            Self::String(value) | Self::SafeHtml(value) => {
+                JavaEvaluationValue::String(value.as_ref().clone())
+            }
+            Self::Literal(value) => JavaEvaluationValue::LiteralValue(Arc::clone(value)),
+            Self::Bytes(_) => JavaEvaluationValue::Other("[B".to_owned()),
+            Self::List(_) => JavaEvaluationValue::Other("java.util.List".to_owned()),
+            Self::Map(_) => JavaEvaluationValue::Other("java.util.Map".to_owned()),
+            Self::Object(value) => JavaEvaluationValue::Other(value.java_class_name().to_owned()),
+            Self::NoOp => {
+                JavaEvaluationValue::Other("org.thymeleaf.standard.expression.NoOpToken".to_owned())
+            }
+        }
+    }
+
+    /// 执行 Java `Object#toString()` 等价转换。
+    ///
+    /// `None` 仅表示 `LiteralValue` 内部为 Java null；普通 `TemplateValue::Null`
+    /// 仍按 `String.valueOf`/拼接语义返回文本 `null`。
+    #[must_use]
+    pub fn to_java_string(&self) -> Option<JavaString> {
+        let text = match self {
+            Self::Null => return Some(JavaString::from_rust_str("null")),
+            Self::Boolean(value) => value.to_string(),
+            Self::Number(JavaNumber::BigDecimal(value)) => value.to_string(),
+            Self::Number(JavaNumber::BigInteger(value)) => value.to_string(),
+            Self::Number(JavaNumber::Byte(value)) => value.to_string(),
+            Self::Number(JavaNumber::Short(value)) => value.to_string(),
+            Self::Number(JavaNumber::Integer(value)) => value.to_string(),
+            Self::Number(JavaNumber::Long(value)) => value.to_string(),
+            Self::Number(JavaNumber::Float(value)) => value.to_string(),
+            Self::Number(JavaNumber::Double(value)) => java_double_string(*value),
+            Self::Number(JavaNumber::Other { double_value, .. }) => double_value.to_string(),
+            Self::Character(value) => {
+                return Some(JavaString::from_utf16(vec![*value]));
+            }
+            Self::String(value) | Self::SafeHtml(value) => return Some(value.as_ref().clone()),
+            Self::Bytes(value) => format!("[B@{:x}", Arc::as_ptr(value) as usize),
+            Self::List(values) => {
+                let mut units = vec![b'[' as u16];
+                for (index, value) in values.iter().enumerate() {
+                    if index != 0 {
+                        units.extend_from_slice(&[b',' as u16, b' ' as u16]);
+                    }
+                    units.extend_from_slice(
+                        value
+                            .to_java_string()
+                            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                            .as_utf16(),
+                    );
+                }
+                units.push(b']' as u16);
+                return Some(JavaString::from_utf16(units));
+            }
+            Self::Map(entries) => {
+                let mut units = vec![b'{' as u16];
+                for (index, (key, value)) in entries.iter().enumerate() {
+                    if index != 0 {
+                        units.extend_from_slice(&[b',' as u16, b' ' as u16]);
+                    }
+                    units.extend_from_slice(
+                        key.to_java_string()
+                            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                            .as_utf16(),
+                    );
+                    units.push(b'=' as u16);
+                    units.extend_from_slice(
+                        value
+                            .to_java_string()
+                            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                            .as_utf16(),
+                    );
+                }
+                units.push(b'}' as u16);
+                return Some(JavaString::from_utf16(units));
+            }
+            Self::Literal(value) => return value.get_value().cloned(),
+            Self::NoOp => return Some(JavaString::from_rust_str("_")),
+            Self::Object(value) => return Some(value.to_java_string()),
+        };
+        Some(JavaString::from_rust_str(&text))
+    }
+
+    /// 执行 Java 对象的 `equals` 等价比较。
+    #[must_use]
+    pub fn java_equals(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Null, Self::Null) => true,
+            (Self::Boolean(left), Self::Boolean(right)) => left == right,
+            (Self::Number(left), Self::Number(right)) => java_number_equals(left, right),
+            (Self::Character(left), Self::Character(right)) => left == right,
+            (Self::String(left), Self::String(right))
+            | (Self::SafeHtml(left), Self::SafeHtml(right))
+            | (Self::String(left), Self::SafeHtml(right))
+            | (Self::SafeHtml(left), Self::String(right)) => left == right,
+            (Self::Bytes(left), Self::Bytes(right)) => Arc::ptr_eq(left, right),
+            (Self::List(left), Self::List(right)) => {
+                left.len() == right.len()
+                    && left
+                        .iter()
+                        .zip(right.iter())
+                        .all(|(left, right)| left.java_equals(right))
+            }
+            (Self::Map(left), Self::Map(right)) => java_map_equals(left, right),
+            (Self::Object(left), Self::Object(right)) => {
+                left.java_class_name() == right.java_class_name()
+                    && left.java_equals(right.as_ref())
+            }
+            (Self::Literal(left), Self::Literal(right)) => Arc::ptr_eq(left, right),
+            (Self::NoOp, Self::NoOp) => true,
+            _ => false,
+        }
+    }
+
+    /// 若两个对象具有相同 Java 运行时类且实现 Comparable，则返回比较结果。
+    pub fn java_compare_to(
+        &self,
+        other: &Self,
+    ) -> Option<Result<Ordering, TemplateObjectComparisonError>> {
+        match (self, other) {
+            (Self::Boolean(left), Self::Boolean(right)) => Some(Ok(left.cmp(right))),
+            (Self::Character(left), Self::Character(right)) => Some(Ok(left.cmp(right))),
+            (Self::String(left), Self::String(right))
+            | (Self::SafeHtml(left), Self::SafeHtml(right))
+            | (Self::String(left), Self::SafeHtml(right))
+            | (Self::SafeHtml(left), Self::String(right)) => {
+                Some(Ok(left.as_utf16().cmp(right.as_utf16())))
+            }
+            (Self::Number(left), Self::Number(right)) => java_number_compare(left, right).map(Ok),
+            (Self::Object(left), Self::Object(right))
+                if left.java_class_name() == right.java_class_name() =>
+            {
+                left.java_compare_to(right.as_ref())
+            }
+            _ => None,
+        }
+    }
+
     /// 返回 Java 风格运行时类名。
     #[must_use]
     pub fn java_class_name(&self) -> &str {
@@ -85,6 +314,130 @@ impl TemplateValue {
             Self::Object(object) => object.java_class_name(),
         }
     }
+}
+
+impl super::JavaConversionObject for TemplateValue {
+    fn java_to_string(
+        &self,
+    ) -> Result<super::JavaStringConversionResult<'_>, super::StandardConversionError> {
+        Ok(match self {
+            Self::String(value) | Self::SafeHtml(value) => {
+                super::JavaStringConversionResult::Borrowed(value)
+            }
+            _ => match self.to_java_string() {
+                Some(value) => super::JavaStringConversionResult::Owned(value),
+                None => super::JavaStringConversionResult::Null,
+            },
+        })
+    }
+}
+
+fn java_number_equals(left: &JavaNumber, right: &JavaNumber) -> bool {
+    match (left, right) {
+        (JavaNumber::BigDecimal(left), JavaNumber::BigDecimal(right)) => left == right,
+        (JavaNumber::BigInteger(left), JavaNumber::BigInteger(right)) => left == right,
+        (JavaNumber::Byte(left), JavaNumber::Byte(right)) => left == right,
+        (JavaNumber::Short(left), JavaNumber::Short(right)) => left == right,
+        (JavaNumber::Integer(left), JavaNumber::Integer(right)) => left == right,
+        (JavaNumber::Long(left), JavaNumber::Long(right)) => left == right,
+        (JavaNumber::Float(left), JavaNumber::Float(right)) => {
+            normalized_f32_bits(*left) == normalized_f32_bits(*right)
+        }
+        (JavaNumber::Double(left), JavaNumber::Double(right)) => {
+            normalized_f64_bits(*left) == normalized_f64_bits(*right)
+        }
+        (
+            JavaNumber::Other {
+                class_name: left_class,
+                double_value: left,
+            },
+            JavaNumber::Other {
+                class_name: right_class,
+                double_value: right,
+            },
+        ) => left_class == right_class && normalized_f64_bits(*left) == normalized_f64_bits(*right),
+        _ => false,
+    }
+}
+
+fn java_number_compare(left: &JavaNumber, right: &JavaNumber) -> Option<Ordering> {
+    match (left, right) {
+        (JavaNumber::BigDecimal(left), JavaNumber::BigDecimal(right)) => {
+            Some(left.compare_java(right))
+        }
+        (JavaNumber::BigInteger(left), JavaNumber::BigInteger(right)) => Some(left.cmp(right)),
+        (JavaNumber::Byte(left), JavaNumber::Byte(right)) => Some(left.cmp(right)),
+        (JavaNumber::Short(left), JavaNumber::Short(right)) => Some(left.cmp(right)),
+        (JavaNumber::Integer(left), JavaNumber::Integer(right)) => Some(left.cmp(right)),
+        (JavaNumber::Long(left), JavaNumber::Long(right)) => Some(left.cmp(right)),
+        (JavaNumber::Float(left), JavaNumber::Float(right)) => Some(java_f32_cmp(*left, *right)),
+        (JavaNumber::Double(left), JavaNumber::Double(right)) => Some(java_f64_cmp(*left, *right)),
+        _ => None,
+    }
+}
+
+fn normalized_f32_bits(value: f32) -> u32 {
+    if value.is_nan() {
+        f32::NAN.to_bits()
+    } else {
+        value.to_bits()
+    }
+}
+
+fn normalized_f64_bits(value: f64) -> u64 {
+    if value.is_nan() {
+        f64::NAN.to_bits()
+    } else {
+        value.to_bits()
+    }
+}
+
+fn java_f32_cmp(left: f32, right: f32) -> Ordering {
+    if left < right {
+        return Ordering::Less;
+    }
+    if left > right {
+        return Ordering::Greater;
+    }
+    i32::from_ne_bytes(normalized_f32_bits(left).to_ne_bytes()).cmp(&i32::from_ne_bytes(
+        normalized_f32_bits(right).to_ne_bytes(),
+    ))
+}
+
+fn java_f64_cmp(left: f64, right: f64) -> Ordering {
+    if left < right {
+        return Ordering::Less;
+    }
+    if left > right {
+        return Ordering::Greater;
+    }
+    i64::from_ne_bytes(normalized_f64_bits(left).to_ne_bytes()).cmp(&i64::from_ne_bytes(
+        normalized_f64_bits(right).to_ne_bytes(),
+    ))
+}
+
+fn java_map_equals(
+    left: &[(Arc<TemplateValue>, Arc<TemplateValue>)],
+    right: &[(Arc<TemplateValue>, Arc<TemplateValue>)],
+) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    let mut matched = vec![false; right.len()];
+    left.iter().all(|(left_key, left_value)| {
+        right
+            .iter()
+            .enumerate()
+            .find(|(index, (right_key, right_value))| {
+                !matched[*index]
+                    && left_key.java_equals(right_key)
+                    && left_value.java_equals(right_value)
+            })
+            .is_some_and(|(index, _)| {
+                matched[index] = true;
+                true
+            })
+    })
 }
 
 impl Debug for TemplateValue {

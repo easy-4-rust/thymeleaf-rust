@@ -14,7 +14,6 @@ pub struct Assignation {
 
 impl Assignation {
     /// 创建赋值；左侧为 null 时复现 Java 参数校验错误，右侧允许缺失。
-    #[expect(dead_code, reason = "仅由后续批量迁移的 AssignationUtils 解析链创建")]
     pub(crate) fn new(
         left: Option<Arc<dyn IStandardExpression>>,
         right: Option<Arc<dyn IStandardExpression>>,

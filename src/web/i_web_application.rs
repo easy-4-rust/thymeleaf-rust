@@ -12,7 +12,7 @@ use crate::util::JavaString;
 ///
 /// 该 SPI 不绑定 Servlet 或任一 Rust Web 框架；具体集成负责提供属性作用域和资源
 /// 读取实现。
-pub trait IWebApplication {
+pub trait IWebApplication: Send + Sync {
     /// 判断应用作用域是否包含指定可空名称。
     fn contains_attribute(&self, name: Option<&JavaString>) -> bool;
     /// 返回应用属性数量。

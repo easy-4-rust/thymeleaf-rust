@@ -3,12 +3,13 @@ use std::sync::Arc;
 
 use indexmap::IndexMap;
 
-use crate::TemplateMode;
 use crate::engine::TemplateData;
+use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
 use crate::util::JavaString;
+use crate::{TemplateMode, TemplateResolutionAttributes};
 
 use super::{IExpressionContext, IdentifierSequences};
 
@@ -17,17 +18,15 @@ use super::{IExpressionContext, IdentifierSequences};
 /// 对应 Java: `org.thymeleaf.context.ITemplateContext`。
 pub trait ITemplateContext: IExpressionContext {
     /// 返回当前事件来源模板的数据。
-    fn get_template_data(&self) -> &TemplateData;
+    fn get_template_data(&self) -> Arc<TemplateData>;
     /// 返回当前事件来源模板模式。
     fn get_template_mode(&self) -> TemplateMode;
     /// 返回从顶层模板到当前模板的调用栈。
-    fn get_template_stack(&self) -> Vec<&TemplateData>;
+    fn get_template_stack(&self) -> Vec<Arc<TemplateData>>;
     /// 返回处理时元素栈。
-    fn get_element_stack(&self) -> Vec<&dyn IProcessableElementTag>;
+    fn get_element_stack(&self) -> Vec<Arc<dyn IProcessableElementTag>>;
     /// 返回模板解析属性。
-    fn get_template_resolution_attributes(
-        &self,
-    ) -> Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>;
+    fn get_template_resolution_attributes(&self) -> Option<&TemplateResolutionAttributes>;
     /// 返回当前模式的模型工厂。
     fn get_model_factory(&self) -> &dyn IModelFactory;
     /// 判断是否存在 selection target。
@@ -35,21 +34,21 @@ pub trait ITemplateContext: IExpressionContext {
     /// 返回 selection target。
     fn get_selection_target(&self) -> Option<Arc<TemplateValue>>;
     /// 返回当前内联器。
-    fn get_inliner(&self) -> Option<&dyn IInliner>;
+    fn get_inliner(&self) -> Option<Arc<dyn IInliner>>;
     /// 解析外部化消息。
     fn get_message(
         &self,
-        origin: TypeId,
+        origin: Option<TypeId>,
         key: &JavaString,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         use_absent_message_representation: bool,
-    ) -> Option<JavaString>;
+    ) -> crate::messageresolver::MessageResolutionResult<Option<JavaString>>;
     /// 构建模板链接。
     fn build_link(
         &self,
         base: Option<&JavaString>,
         parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> JavaString;
+    ) -> Result<JavaString, TemplateProcessingException>;
     /// 返回上下文级唯一标识序列。
     fn get_identifier_sequences(&self) -> &IdentifierSequences;
 }

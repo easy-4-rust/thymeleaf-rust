@@ -34,7 +34,10 @@ impl<F> AbstractXMLDeclarationProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractXMLDeclarationProcessor<F> {
+impl<F> IProcessor for AbstractXMLDeclarationProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -49,10 +52,12 @@ impl<F> IProcessor for AbstractXMLDeclarationProcessor<F> {
 impl<F> IXMLDeclarationProcessor for AbstractXMLDeclarationProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn IXMLDeclaration,
-        &mut dyn IXMLDeclarationStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn IXMLDeclaration,
+            &mut dyn IXMLDeclarationStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

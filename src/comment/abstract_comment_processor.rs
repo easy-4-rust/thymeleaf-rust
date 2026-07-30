@@ -33,7 +33,10 @@ impl<F> AbstractCommentProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractCommentProcessor<F> {
+impl<F> IProcessor for AbstractCommentProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -48,10 +51,12 @@ impl<F> IProcessor for AbstractCommentProcessor<F> {
 impl<F> ICommentProcessor for AbstractCommentProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn IComment,
-        &mut dyn ICommentStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn IComment,
+            &mut dyn ICommentStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

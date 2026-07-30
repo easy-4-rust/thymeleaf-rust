@@ -217,9 +217,21 @@ impl OpenElementTag {
     }
 }
 
-impl IOpenElementTag for OpenElementTag {}
+impl IOpenElementTag for OpenElementTag {
+    fn into_engine_open_element_tag(self: Arc<Self>) -> Option<Arc<Self>> {
+        Some(self)
+    }
+}
 
 impl IProcessableElementTag for OpenElementTag {
+    fn as_engine_processable_element_tag(&self) -> Option<&AbstractProcessableElementTag> {
+        Some(&self.processable_tag)
+    }
+
+    fn into_open_element_tag(self: Arc<Self>) -> Option<Arc<dyn IOpenElementTag>> {
+        Some(self)
+    }
+
     fn get_all_attributes(&self) -> Vec<&dyn IAttribute> {
         self.processable_tag
             .attributes()
@@ -434,6 +446,10 @@ impl ITemplateEvent for OpenElementTag {
     }
 
     fn into_processable_element_tag(self: Arc<Self>) -> Option<Arc<dyn IProcessableElementTag>> {
+        Some(self)
+    }
+
+    fn as_open_element_tag(&self) -> Option<&dyn IOpenElementTag> {
         Some(self)
     }
 

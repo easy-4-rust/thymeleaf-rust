@@ -5,6 +5,12 @@ use crate::context::ITemplateContext;
 use crate::expression::TemplateValue;
 use crate::util::JavaString;
 
+/// 消息解析器可观察的运行时错误。
+pub type MessageResolutionError = Box<dyn std::error::Error + Send + Sync>;
+
+/// 消息解析结果。
+pub type MessageResolutionResult<T> = Result<T, MessageResolutionError>;
+
 /// 外部化消息解析器合同。
 ///
 /// 对应 Java: `org.thymeleaf.messageresolver.IMessageResolver`。
@@ -17,16 +23,16 @@ pub trait IMessageResolver: Send + Sync {
     fn resolve_message(
         &self,
         context: &dyn ITemplateContext,
-        origin: TypeId,
+        origin: Option<TypeId>,
         key: &JavaString,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> Option<JavaString>;
+    ) -> MessageResolutionResult<Option<JavaString>>;
     /// 创建未命中消息的表示；不提供表示时返回 `None`。
     fn create_absent_message_representation(
         &self,
         context: &dyn ITemplateContext,
-        origin: TypeId,
+        origin: Option<TypeId>,
         key: &JavaString,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> Option<JavaString>;
+    ) -> MessageResolutionResult<Option<JavaString>>;
 }

@@ -6,6 +6,11 @@ use super::ITemplateEvent;
 ///
 /// 对应 Java: `org.thymeleaf.model.ICDATASection`。
 pub trait ICDATASection: ITemplateEvent + JavaCharSequence {
+    /// 返回引擎内建 CDATA，供 Processor 保留 parser 原始前后缀。
+    fn as_engine_cdata_section(&self) -> Option<&crate::engine::CDATASection> {
+        None
+    }
+
     /// 返回包含前后缀的完整 CDATA section。
     fn get_cdata_section(&self) -> Result<Option<JavaString>, TextUtilsError>;
 

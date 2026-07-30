@@ -33,7 +33,10 @@ impl<F> AbstractTextProcessor<F> {
     }
 }
 
-impl<F> IProcessor for AbstractTextProcessor<F> {
+impl<F> IProcessor for AbstractTextProcessor<F>
+where
+    F: Send + Sync,
+{
     fn java_class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
@@ -48,10 +51,12 @@ impl<F> IProcessor for AbstractTextProcessor<F> {
 impl<F> ITextProcessor for AbstractTextProcessor<F>
 where
     F: Fn(
-        &dyn ITemplateContext,
-        &dyn IText,
-        &mut dyn ITextStructureHandler,
-    ) -> Result<(), Box<dyn TemplateEngineException>>,
+            &dyn ITemplateContext,
+            &dyn IText,
+            &mut dyn ITextStructureHandler,
+        ) -> Result<(), Box<dyn TemplateEngineException>>
+        + Send
+        + Sync,
 {
     fn process(
         &self,

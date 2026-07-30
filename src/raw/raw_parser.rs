@@ -123,6 +123,10 @@ impl RawParser {
     }
 
     /// 解析完整 Java String。
+    #[expect(
+        clippy::result_large_err,
+        reason = "公开 API 保留具体 Java 对照异常，不用 Box 改变调用方合同"
+    )]
     pub fn parse_string(
         &self,
         document: Option<JavaString>,
@@ -135,6 +139,10 @@ impl RawParser {
     }
 
     /// 解析 UTF-16 Reader，并始终尝试关闭它。
+    #[expect(
+        clippy::result_large_err,
+        reason = "公开 API 保留具体 Java 对照异常，不用 Box 改变调用方合同"
+    )]
     pub fn parse_reader(
         &self,
         reader: Option<&mut dyn RawReader>,
@@ -147,6 +155,10 @@ impl RawParser {
     }
 
     /// 使用指定建议 buffer 大小执行解析，供同包测试覆盖增长边界。
+    #[expect(
+        clippy::result_large_err,
+        reason = "解析热路径保留具体 RawParseException 的行列与原因字段"
+    )]
     pub fn parse_document(
         &self,
         reader: &mut dyn RawReader,
@@ -157,6 +169,10 @@ impl RawParser {
         let mut buffer = Vec::new();
         let mut buffer_allocated = false;
 
+        #[expect(
+            clippy::result_large_err,
+            reason = "闭包与外层解析合同共享具体 RawParseException"
+        )]
         let result = (|| {
             handler.handle_document_start(parsing_start_time_nanos, 1, 1)?;
 

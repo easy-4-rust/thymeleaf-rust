@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::expression::TemplateValue;
 use crate::util::{JavaLocale, JavaString, ValidateError};
 
-use super::{IContext, IContextVariableNames};
+use super::{ContextVariableEntries, IContext, IContextVariableNames};
 
 type Variables = IndexMap<Option<JavaString>, Arc<TemplateValue>>;
 
@@ -21,10 +21,7 @@ pub struct AbstractContext {
 }
 
 impl AbstractContext {
-    pub(super) fn new(
-        locale: Option<JavaLocale>,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
-    ) -> Self {
+    pub(super) fn new(locale: Option<JavaLocale>, variables: ContextVariableEntries<'_>) -> Self {
         let variables = variables.map_or_else(
             || IndexMap::with_capacity(10),
             |entries| {
@@ -67,10 +64,7 @@ impl AbstractContext {
     }
 
     /// 按迭代顺序批量新增或替换变量；null Map 等价输入不执行任何操作。
-    pub fn set_variables(
-        &self,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
-    ) {
+    pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         let Some(variables) = variables else {
             return;
         };

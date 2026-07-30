@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{self, BufReader, Read};
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use ureq::Agent;
 use url::Url;
@@ -9,6 +9,13 @@ use super::template_resource_reader::{is_java_empty_or_whitespace, transcoding_r
 use super::template_resource_utils::TemplateResourceUtils;
 use super::{ITemplateResource, TemplateResourceError};
 use crate::TemplateInputException;
+
+/// Rust 宿主为 JAR、FTP 或自定义 URL 协议提供的连接工厂。
+///
+/// Java `URL` 把协议处理器保存在 `URLStreamHandler`/`URLConnection` 中；Rust
+/// 没有对应的进程级标准注册表，因此把同一能力作为资源实例依赖显式注入。
+pub type UrlResourceConnectionHandler =
+    dyn Fn(&Url) -> io::Result<Box<dyn Read>> + Send + Sync + 'static;
 
 /// 通过本地或远程 URL 访问的模板资源。
 ///
@@ -25,6 +32,7 @@ pub struct UrlTemplateResource {
     description: String,
     path: String,
     character_encoding: Option<String>,
+    connection_handler: Option<Arc<UrlResourceConnectionHandler>>,
 }
 
 impl UrlTemplateResource {
@@ -63,6 +71,7 @@ impl UrlTemplateResource {
             url,
             description: path.to_owned(),
             character_encoding: character_encoding.map(str::to_owned),
+            connection_handler: None,
         })
     }
 
@@ -93,10 +102,38 @@ impl UrlTemplateResource {
             description,
             path,
             character_encoding: character_encoding.map(str::to_owned),
+            connection_handler: None,
         })
     }
 
-    fn from_resolved_url(url: Url, character_encoding: Option<&str>) -> Self {
+    /// 使用宿主 URL 连接处理器创建模板资源。
+    ///
+    /// 对应 Java `URL#openConnection()` 通过 `URLStreamHandler` 支持任意已注册协议的
+    /// 能力。file/http/https 仍使用内置实现；其他协议由 `connection_handler`
+    /// 打开，并在 `reader()` 与 `exists()` 中遵循同一连接合同。
+    ///
+    /// # 参数
+    /// - `path`：完整 URL 文本；
+    /// - `character_encoding`：可选 Java 字符集名称；
+    /// - `connection_handler`：为非内置协议创建新输入流的线程安全工厂。
+    ///
+    /// # 错误
+    /// URL 参数校验与解析规则和 [`Self::new`] 相同。
+    pub fn with_connection_handler(
+        path: Option<&str>,
+        character_encoding: Option<&str>,
+        connection_handler: Arc<UrlResourceConnectionHandler>,
+    ) -> Result<Self, TemplateResourceError> {
+        let mut resource = Self::new(path, character_encoding)?;
+        resource.connection_handler = Some(connection_handler);
+        Ok(resource)
+    }
+
+    fn from_resolved_url(
+        url: Url,
+        character_encoding: Option<&str>,
+        connection_handler: Option<Arc<UrlResourceConnectionHandler>>,
+    ) -> Self {
         let description = url.to_string();
         let path = url.path().to_owned();
         Self {
@@ -104,6 +141,7 @@ impl UrlTemplateResource {
             description,
             path,
             character_encoding: character_encoding.map(str::to_owned),
+            connection_handler,
         }
     }
 
@@ -127,10 +165,15 @@ impl UrlTemplateResource {
                 let (_, body) = response.into_parts();
                 Ok(Box::new(body.into_reader()))
             }
-            protocol => Err(io::Error::new(
-                io::ErrorKind::Unsupported,
-                format!("No URL resource connection handler for protocol \"{protocol}\""),
-            )),
+            protocol => self.connection_handler.as_ref().map_or_else(
+                || {
+                    Err(io::Error::new(
+                        io::ErrorKind::Unsupported,
+                        format!("No URL resource connection handler for protocol \"{protocol}\""),
+                    ))
+                },
+                |handler| handler(&self.url),
+            ),
         }
     }
 
@@ -203,6 +246,7 @@ impl ITemplateResource for UrlTemplateResource {
                 description: self.description.clone(),
                 path: self.path.clone(),
                 character_encoding: self.character_encoding.clone(),
+                connection_handler: self.connection_handler.clone(),
             }));
         }
 
@@ -220,6 +264,7 @@ impl ITemplateResource for UrlTemplateResource {
         Ok(Box::new(Self::from_resolved_url(
             relative_url,
             self.character_encoding.as_deref(),
+            self.connection_handler.clone(),
         )))
     }
 }

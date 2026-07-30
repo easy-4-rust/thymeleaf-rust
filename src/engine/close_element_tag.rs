@@ -140,6 +140,10 @@ impl ITemplateEvent for CloseElementTag {
         handler.handle_close_element(self)
     }
 
+    fn as_close_element_tag(&self) -> Option<&dyn ICloseElementTag> {
+        Some(self)
+    }
+
     fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         if self.element_tag.is_synthetic() {
             return Ok(());

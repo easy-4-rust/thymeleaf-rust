@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::expression::TemplateValue;
 use crate::util::{JavaLocale, JavaString, ValidateError};
 
+use super::ContextVariableEntries;
 use super::{AbstractContext, IContext, IContextVariableNames};
 
 /// 适用于非 Web 场景的基础模板 Context。
@@ -38,7 +39,7 @@ impl Context {
     #[must_use]
     pub fn with_locale_and_variables(
         locale: Option<JavaLocale>,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
+        variables: ContextVariableEntries<'_>,
     ) -> Self {
         Self {
             base: AbstractContext::new(locale, variables),
@@ -60,10 +61,7 @@ impl Context {
     }
 
     /// 按迭代顺序批量新增或替换变量；null Map 不执行操作。
-    pub fn set_variables(
-        &self,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
-    ) {
+    pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         self.base.set_variables(variables);
     }
 

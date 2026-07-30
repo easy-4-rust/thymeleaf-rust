@@ -71,6 +71,8 @@ impl Display for TemplateAssertionException {
 
 impl Error for TemplateAssertionException {}
 
+impl super::TemplateEngineException for TemplateAssertionException {}
+
 #[cfg(test)]
 mod tests {
     use std::error::Error;

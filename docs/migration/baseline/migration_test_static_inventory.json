@@ -3,7 +3,7 @@
   "rust_root": ".",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 290,
+    "rust_tests": 293,
     "java_case_expansion_candidates": 147,
     "rust_review_candidates": 25
   },
@@ -7323,7 +7323,7 @@
     {
       "language": "rust",
       "file": "src/cache/expression_cache_key.rs",
-      "line": 207,
+      "line": 208,
       "name": "validates_required_fields_and_allows_empty_strings",
       "kind": "test",
       "signals": []
@@ -7331,7 +7331,7 @@
     {
       "language": "rust",
       "file": "src/cache/expression_cache_key.rs",
-      "line": 234,
+      "line": 235,
       "name": "exposes_fields_display_and_exact_java_utf16_hash",
       "kind": "test",
       "signals": []
@@ -7339,7 +7339,7 @@
     {
       "language": "rust",
       "file": "src/cache/expression_cache_key.rs",
-      "line": 247,
+      "line": 248,
       "name": "equality_checks_identity_cached_hash_and_every_field",
       "kind": "test",
       "signals": [
@@ -7349,7 +7349,7 @@
     {
       "language": "rust",
       "file": "src/cache/expression_cache_key.rs",
-      "line": 280,
+      "line": 281,
       "name": "display_propagates_formatter_failures_from_each_segment",
       "kind": "test",
       "signals": [
@@ -7510,7 +7510,7 @@
     {
       "language": "rust",
       "file": "src/cache/template_cache_key.rs",
-      "line": 343,
+      "line": 344,
       "name": "validates_template_and_preserves_null_and_empty_distinctions",
       "kind": "test",
       "signals": []
@@ -7518,7 +7518,7 @@
     {
       "language": "rust",
       "file": "src/cache/template_cache_key.rs",
-      "line": 383,
+      "line": 384,
       "name": "display_preserves_owner_offsets_utf16_selectors_mode_and_attributes",
       "kind": "test",
       "signals": [
@@ -7528,7 +7528,7 @@
     {
       "language": "rust",
       "file": "src/cache/template_cache_key.rs",
-      "line": 402,
+      "line": 403,
       "name": "equality_checks_identity_cached_hash_and_every_field",
       "kind": "test",
       "signals": [
@@ -7538,7 +7538,7 @@
     {
       "language": "rust",
       "file": "src/cache/template_cache_key.rs",
-      "line": 452,
+      "line": 453,
       "name": "selector_comparison_covers_all_java_utf16_ordering_branches",
       "kind": "test",
       "signals": []
@@ -7546,7 +7546,7 @@
     {
       "language": "rust",
       "file": "src/cache/template_cache_key.rs",
-      "line": 473,
+      "line": 474,
       "name": "display_propagates_formatter_failures_from_each_segment",
       "kind": "test",
       "signals": [
@@ -7624,7 +7624,7 @@
     {
       "language": "rust",
       "file": "src/dialect/i_dialect.rs",
-      "line": 33,
+      "line": 70,
       "name": "custom_dialect_can_preserve_a_java_null_name",
       "kind": "test",
       "signals": []
@@ -7640,7 +7640,7 @@
     {
       "language": "rust",
       "file": "src/dialect_configuration.rs",
-      "line": 133,
+      "line": 140,
       "name": "constructor_without_prefix_preserves_the_unspecified_state",
       "kind": "test",
       "signals": []
@@ -7648,7 +7648,7 @@
     {
       "language": "rust",
       "file": "src/dialect_configuration.rs",
-      "line": 143,
+      "line": 150,
       "name": "explicit_null_empty_and_non_empty_prefixes_remain_distinct",
       "kind": "test",
       "signals": []
@@ -7656,7 +7656,7 @@
     {
       "language": "rust",
       "file": "src/dialect_configuration.rs",
-      "line": 160,
+      "line": 167,
       "name": "both_java_constructors_reject_a_null_dialect",
       "kind": "test",
       "signals": []
@@ -7672,7 +7672,7 @@
     {
       "language": "rust",
       "file": "src/engine/i_engine_processable.rs",
-      "line": 33,
+      "line": 38,
       "name": "supports_stateful_dynamic_dispatch_without_thread_safety_constraints",
       "kind": "test",
       "signals": []
@@ -7680,7 +7680,7 @@
     {
       "language": "rust",
       "file": "src/engine/template_flow_controller.rs",
-      "line": 46,
+      "line": 38,
       "name": "defaults_and_independent_package_state_match_java_golden",
       "kind": "test",
       "signals": []
@@ -7720,7 +7720,7 @@
     {
       "language": "rust",
       "file": "src/exceptions/template_assertion_exception.rs",
-      "line": 80,
+      "line": 82,
       "name": "formats_both_java_constructors_and_null_strings",
       "kind": "test",
       "signals": []
@@ -7728,7 +7728,7 @@
     {
       "language": "rust",
       "file": "src/exceptions/template_engine_exception.rs",
-      "line": 21,
+      "line": 31,
       "name": "all_java_subtypes_implement_the_common_contract",
       "kind": "test",
       "signals": [
@@ -7746,7 +7746,7 @@
     {
       "language": "rust",
       "file": "src/exceptions/template_output_exception.rs",
-      "line": 129,
+      "line": 133,
       "name": "preserves_location_cause_and_inherited_mutation",
       "kind": "test",
       "signals": []
@@ -7754,7 +7754,7 @@
     {
       "language": "rust",
       "file": "src/exceptions/template_processing_exception.rs",
-      "line": 222,
+      "line": 226,
       "name": "formats_every_java_location_branch",
       "kind": "test",
       "signals": []
@@ -7762,7 +7762,7 @@
     {
       "language": "rust",
       "file": "src/exceptions/template_processing_exception.rs",
-      "line": 287,
+      "line": 291,
       "name": "preserves_causes_and_mutation",
       "kind": "test",
       "signals": []
@@ -7946,7 +7946,7 @@
     {
       "language": "rust",
       "file": "src/processor/abstract_processor.rs",
-      "line": 93,
+      "line": 209,
       "name": "rejects_null_template_mode_with_exact_validate_error",
       "kind": "test",
       "signals": []
@@ -7954,7 +7954,7 @@
     {
       "language": "rust",
       "file": "src/processor/abstract_processor.rs",
-      "line": 112,
+      "line": 228,
       "name": "preserves_all_modes_precedence_boundaries_and_dynamic_contract",
       "kind": "test",
       "signals": []
@@ -7962,7 +7962,7 @@
     {
       "language": "rust",
       "file": "src/processor/i_processor.rs",
-      "line": 55,
+      "line": 148,
       "name": "preserves_nullable_values_boundaries_and_dynamic_dispatch",
       "kind": "test",
       "signals": []
@@ -8116,7 +8116,7 @@
     {
       "language": "rust",
       "file": "src/templatemode/template_mode.rs",
-      "line": 151,
+      "line": 195,
       "name": "exposes_exact_mode_flags",
       "kind": "test",
       "signals": []
@@ -8124,7 +8124,7 @@
     {
       "language": "rust",
       "file": "src/templatemode/template_mode.rs",
-      "line": 176,
+      "line": 220,
       "name": "parses_all_names_case_insensitively",
       "kind": "test",
       "signals": []
@@ -8132,7 +8132,7 @@
     {
       "language": "rust",
       "file": "src/templatemode/template_mode.rs",
-      "line": 193,
+      "line": 237,
       "name": "rejects_null_empty_and_whitespace",
       "kind": "test",
       "signals": []
@@ -8140,7 +8140,7 @@
     {
       "language": "rust",
       "file": "src/templatemode/template_mode.rs",
-      "line": 208,
+      "line": 252,
       "name": "unknown_and_untrimmed_modes_fall_back_to_html",
       "kind": "test",
       "signals": []
@@ -8148,7 +8148,7 @@
     {
       "language": "rust",
       "file": "src/templateresolver/template_resolution.rs",
-      "line": 185,
+      "line": 193,
       "name": "validates_required_objects_in_java_order_with_exact_messages",
       "kind": "test",
       "signals": []
@@ -8156,7 +8156,7 @@
     {
       "language": "rust",
       "file": "src/templateresolver/template_resolution.rs",
-      "line": 210,
+      "line": 218,
       "name": "three_argument_constructor_preserves_identity_and_default_flags",
       "kind": "test",
       "signals": []
@@ -8164,7 +8164,7 @@
     {
       "language": "rust",
       "file": "src/templateresolver/template_resolution.rs",
-      "line": 234,
+      "line": 242,
       "name": "full_constructor_preserves_independent_flags_and_dynamic_contracts",
       "kind": "test",
       "signals": []
@@ -8342,7 +8342,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 283,
+      "line": 328,
       "name": "rejects_unconvertible_file_urls_and_protocols_without_a_rust_handler",
       "kind": "test",
       "signals": []
@@ -8350,7 +8350,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 306,
+      "line": 351,
       "name": "preserves_url_parse_sources_and_maps_transport_error_kinds",
       "kind": "test",
       "signals": []
@@ -8358,7 +8358,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 331,
+      "line": 376,
       "name": "extracts_java_url_paths_without_whatwg_normalization",
       "kind": "test",
       "signals": []
@@ -8366,7 +8366,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 345,
+      "line": 390,
       "name": "exercises_file_http_validation_and_relative_public_contracts",
       "kind": "test",
       "signals": [
@@ -8426,7 +8426,7 @@
     {
       "language": "rust",
       "file": "src/text/parsing_locator_util.rs",
-      "line": 123,
+      "line": 118,
       "name": "text_parser_foundation_matches_java_golden",
       "kind": "test",
       "signals": []
@@ -8434,7 +8434,7 @@
     {
       "language": "rust",
       "file": "src/text/parsing_locator_util.rs",
-      "line": 132,
+      "line": 127,
       "name": "error_display_preserves_java_message",
       "kind": "test",
       "signals": []
@@ -8596,7 +8596,7 @@
     {
       "language": "rust",
       "file": "src/text/text_parsing_element_util.rs",
-      "line": 1150,
+      "line": 1154,
       "name": "element_parsing_matches_java_golden",
       "kind": "test",
       "signals": []
@@ -8604,7 +8604,7 @@
     {
       "language": "rust",
       "file": "src/text/text_parsing_element_util.rs",
-      "line": 1172,
+      "line": 1176,
       "name": "error_adapter_and_unreachable_null_end_callbacks_are_covered",
       "kind": "test",
       "signals": []
@@ -8652,7 +8652,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 898,
+      "line": 1032,
       "name": "preserves_big_decimal_representation_and_java_display_boundaries",
       "kind": "test",
       "signals": []
@@ -8660,7 +8660,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 920,
+      "line": 1054,
       "name": "formats_java_double_thresholds_special_values_and_signed_zero",
       "kind": "test",
       "signals": []
@@ -8668,7 +8668,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 933,
+      "line": 1067,
       "name": "sums_all_number_runtime_types_and_preserves_scale",
       "kind": "test",
       "signals": []
@@ -8676,7 +8676,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 959,
+      "line": 1093,
       "name": "averages_exactly_or_with_java_half_up_scale",
       "kind": "test",
       "signals": []
@@ -8684,7 +8684,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 986,
+      "line": 1120,
       "name": "preserves_null_validation_order_and_error_categories",
       "kind": "test",
       "signals": []
@@ -8692,7 +8692,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 1048,
+      "line": 1182,
       "name": "invokes_java_iterable_twice_and_handles_empty_targets",
       "kind": "test",
       "signals": []
@@ -8700,7 +8700,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 1078,
+      "line": 1212,
       "name": "exercises_every_primitive_overload_and_float_failure",
       "kind": "test",
       "signals": []
@@ -8708,7 +8708,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 1153,
+      "line": 1287,
       "name": "rejects_malformed_decimal_and_covers_arithmetic_errors",
       "kind": "test",
       "signals": []
@@ -8716,7 +8716,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 1185,
+      "line": 1319,
       "name": "covers_exact_division_rounding_and_scale_boundaries",
       "kind": "test",
       "signals": []
@@ -8724,7 +8724,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 1238,
+      "line": 1372,
       "name": "covers_internal_validation_and_stateful_second_iteration",
       "kind": "test",
       "signals": []
@@ -8732,7 +8732,7 @@
     {
       "language": "rust",
       "file": "src/util/aggregate_utils.rs",
-      "line": 1283,
+      "line": 1417,
       "name": "covers_every_array_null_and_number_array_validation_path",
       "kind": "test",
       "signals": []
@@ -8798,7 +8798,7 @@
     {
       "language": "rust",
       "file": "src/util/content_type_utils.rs",
-      "line": 574,
+      "line": 582,
       "name": "recognizes_every_mime_family_and_alias",
       "kind": "test",
       "signals": []
@@ -8806,7 +8806,7 @@
     {
       "language": "rust",
       "file": "src/util/content_type_utils.rs",
-      "line": 623,
+      "line": 631,
       "name": "computes_modes_from_mime_names_and_paths",
       "kind": "test",
       "signals": []
@@ -8814,7 +8814,7 @@
     {
       "language": "rust",
       "file": "src/util/content_type_utils.rs",
-      "line": 661,
+      "line": 669,
       "name": "computes_content_types_and_recognized_extensions",
       "kind": "test",
       "signals": []
@@ -8822,7 +8822,7 @@
     {
       "language": "rust",
       "file": "src/util/content_type_utils.rs",
-      "line": 687,
+      "line": 695,
       "name": "parses_and_combines_parameters_in_java_order",
       "kind": "test",
       "signals": []
@@ -8830,7 +8830,7 @@
     {
       "language": "rust",
       "file": "src/util/content_type_utils.rs",
-      "line": 736,
+      "line": 744,
       "name": "preserves_charset_lookup_categories",
       "kind": "test",
       "signals": []
@@ -8838,7 +8838,7 @@
     {
       "language": "rust",
       "file": "src/util/fast_string_writer.rs",
-      "line": 346,
+      "line": 354,
       "name": "preserves_utf16_null_snapshot_and_lifecycle_semantics",
       "kind": "test",
       "signals": []
@@ -8846,7 +8846,7 @@
     {
       "language": "rust",
       "file": "src/util/fast_string_writer.rs",
-      "line": 371,
+      "line": 379,
       "name": "preserves_overload_specific_error_class_message_and_short_circuit",
       "kind": "test",
       "signals": []
@@ -8854,7 +8854,7 @@
     {
       "language": "rust",
       "file": "src/util/fast_string_writer.rs",
-      "line": 402,
+      "line": 410,
       "name": "exposes_default_and_display_for_message_and_null_message_errors",
       "kind": "test",
       "signals": []
@@ -9190,7 +9190,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 1892,
+      "line": 1991,
       "name": "exposes_every_error_and_dynamic_sequence_adapter_path",
       "kind": "test",
       "signals": []
@@ -9198,7 +9198,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 1938,
+      "line": 2037,
       "name": "covers_fast_paths_identity_length_and_search_mismatch_branches",
       "kind": "test",
       "signals": []
@@ -9206,7 +9206,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2122,
+      "line": 2221,
       "name": "covers_compare_and_all_binary_search_directions_and_failures",
       "kind": "test",
       "signals": []
@@ -9214,7 +9214,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2295,
+      "line": 2394,
       "name": "covers_non_string_hash_paths_short_circuits_and_argument_order",
       "kind": "test",
       "signals": []
@@ -9222,7 +9222,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2315,
+      "line": 2414,
       "name": "covers_every_public_delegating_success_path_in_the_unit_build",
       "kind": "test",
       "signals": []
@@ -9230,7 +9230,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2467,
+      "line": 2566,
       "name": "exhausts_validation_and_dynamic_failure_residuals",
       "kind": "test",
       "signals": []
@@ -9559,8 +9559,16 @@
     },
     {
       "language": "rust",
+      "file": "tests/template_engine_smoke.rs",
+      "line": 9,
+      "name": "parsing001_runs_through_the_complete_html_engine_chain",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "tests/template_resolution_java_parity.rs",
-      "line": 59,
+      "line": 58,
       "name": "template_resolution_matches_java_golden",
       "kind": "test",
       "signals": []
@@ -9592,7 +9600,7 @@
     {
       "language": "rust",
       "file": "tests/text_utils_java_parity.rs",
-      "line": 14,
+      "line": 13,
       "name": "text_utils_matches_all_java_overloads_and_utf16_corpora",
       "kind": "test",
       "signals": []
@@ -9600,8 +9608,24 @@
     {
       "language": "rust",
       "file": "tests/text_utils_java_parity.rs",
-      "line": 26,
+      "line": 25,
       "name": "text_utils_public_failure_and_short_circuit_contracts_are_exhaustive",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/thtest_inventory.rs",
+      "line": 9,
+      "name": "upstream_thtest_inventory_is_complete_unique_and_structurally_valid",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/thtest_upstream_plain_batch.rs",
+      "line": 18,
+      "name": "upstream_plain_parsing_cases_run_as_one_batch",
       "kind": "test",
       "signals": []
     },
@@ -9648,7 +9672,7 @@
     {
       "language": "rust",
       "file": "xtask/src/main.rs",
-      "line": 547,
+      "line": 1108,
       "name": "parses_cli_and_rejects_invalid_shapes",
       "kind": "test",
       "signals": []
@@ -9656,7 +9680,7 @@
     {
       "language": "rust",
       "file": "xtask/src/main.rs",
-      "line": 594,
+      "line": 1155,
       "name": "parses_object_table_and_counts_collisions",
       "kind": "test",
       "signals": []
@@ -9664,7 +9688,7 @@
     {
       "language": "rust",
       "file": "xtask/src/main.rs",
-      "line": 611,
+      "line": 1172,
       "name": "recognizes_supported_type_declarations",
       "kind": "test",
       "signals": []
@@ -9672,7 +9696,7 @@
     {
       "language": "rust",
       "file": "xtask/src/main.rs",
-      "line": 619,
+      "line": 1180,
       "name": "recognizes_only_explicit_rust_extension_files",
       "kind": "test",
       "signals": []

@@ -1,3 +1,8 @@
+#![expect(
+    clippy::type_complexity,
+    reason = "类型完整表达 Java 可空 List 与共享实时只读视图语义"
+)]
+
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use crate::util::{JavaString, ValidateError};

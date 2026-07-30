@@ -83,6 +83,13 @@ impl DialectConfiguration {
         self.dialect.as_ref()
     }
 
+    /// 返回构造时传入的共享方言实例。
+    ///
+    /// 这是 Rust 所有权适配入口，保留 Java `getDialect()` 的同一对象身份。
+    pub fn get_dialect_arc(&self) -> Arc<dyn IDialect> {
+        Arc::clone(&self.dialect)
+    }
+
     /// 返回配置的显式前缀。
     ///
     /// 对应 Java: `DialectConfiguration#getPrefix()`。

@@ -3,6 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 
 use crate::context::IExpressionContext;
+use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
 use crate::util::JavaString;
 
@@ -44,7 +45,7 @@ where
             &dyn IExpressionContext,
             Option<&JavaString>,
             Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-        ) -> Option<JavaString>
+        ) -> Result<Option<JavaString>, TemplateProcessingException>
         + Send
         + Sync,
 {
@@ -61,7 +62,7 @@ where
         context: &dyn IExpressionContext,
         base: Option<&JavaString>,
         parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Option<JavaString> {
+    ) -> Result<Option<JavaString>, TemplateProcessingException> {
         (self.build_link)(context, base, parameters)
     }
 }

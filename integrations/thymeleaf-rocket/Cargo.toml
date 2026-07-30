@@ -1,0 +1,25 @@
+[package]
+name = "thymeleaf-rocket"
+version = "0.1.0-alpha.1"
+edition = "2024"
+rust-version = "1.85"
+description = "Rocket integration for the framework-neutral thymeleaf template engine"
+license = "MIT"
+repository = "https://github.com/easy-4-rust/thymeleaf-rust"
+
+[dependencies]
+futures-util = "0.3.31"
+http-body-util = "0.1.3"
+rocket = { version = "=0.5.1", default-features = false }
+thymeleaf = { path = "../.." }
+tokio-util = { version = "0.7.16", features = ["io"] }
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
+wildcard_imports = "deny"

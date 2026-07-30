@@ -12,9 +12,9 @@ use crate::TemplateInputException;
 /// 因而可能带来一次额外 I/O。`reader` 每次返回新的可关闭读取器，调用方负责在消费后
 /// 释放它。
 ///
-/// 上游明确说明实现未必线程安全，因此本 trait 不强制 `Send + Sync`。具体实现可以
-/// 根据自身所有权与宿主约束增加这些能力。
-pub trait ITemplateResource {
+/// Java 引擎会把解析后的 `TemplateModel` 放入全局共享缓存。Rust 没有 JVM 对象的
+/// 隐式跨线程能力，因此进入引擎配置和模板缓存的资源必须显式满足 `Send + Sync`。
+pub trait ITemplateResource: Send + Sync {
     /// 返回用于日志和诊断的资源描述。
     ///
     /// 对应 Java: `ITemplateResource#getDescription()`。

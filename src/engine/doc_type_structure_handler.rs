@@ -1,8 +1,3 @@
-#![expect(
-    dead_code,
-    reason = "由同批后续 ProcessorTemplateHandler 复用并读取动作状态"
-)]
-
 use std::sync::Arc;
 
 use crate::doctype::IDocTypeStructureHandler;

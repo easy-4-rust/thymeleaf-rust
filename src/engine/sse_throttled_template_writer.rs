@@ -1,17 +1,11 @@
-#![expect(
-    dead_code,
-    reason = "由后续 ThrottledTemplateProcessor 对象直接构造并调用"
-)]
-
-use std::cell::RefCell;
 use std::io::{self, Write};
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateOutputException;
 use crate::util::{Charset, JavaWriter};
 
-use super::i_sse_throttled_template_writer_control::ISSEThrottledTemplateWriterControl;
 use super::i_throttled_template_writer_control::IThrottledTemplateWriterControl;
+use super::isse_throttled_template_writer_control::ISSEThrottledTemplateWriterControl;
 use super::template_flow_controller::TemplateFlowController;
 use super::throttled_template_writer::ThrottledTemplateWriter;
 
@@ -41,10 +35,6 @@ const LINE_FEED: u16 = b'\n' as u16;
 /// 每个换行后自动补充新的 `data: ` 前缀，事件结束时写出 SSE 空行边界。
 ///
 /// 对应 Java: `org.thymeleaf.engine.SSEThrottledTemplateWriter`。
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "由后续 ThrottledTemplateProcessor 对象直接构造")
-)]
 pub(crate) struct SSEThrottledTemplateWriter {
     writer: ThrottledTemplateWriter,
     id: Option<Vec<u16>>,
@@ -53,15 +43,11 @@ pub(crate) struct SSEThrottledTemplateWriter {
     new_event: bool,
 }
 
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "由后续 ThrottledTemplateProcessor 对象直接调用")
-)]
 impl SSEThrottledTemplateWriter {
     /// 创建尚未绑定输出的 SSE 节流 Writer。
     pub(crate) fn new(
         template_name: String,
-        flow_controller: Rc<RefCell<TemplateFlowController>>,
+        flow_controller: Arc<Mutex<TemplateFlowController>>,
     ) -> Self {
         Self {
             writer: ThrottledTemplateWriter::new(template_name, flow_controller),
@@ -83,7 +69,7 @@ impl SSEThrottledTemplateWriter {
     /// 绑定字节输出。
     pub(crate) fn set_output_stream(
         &mut self,
-        output_stream: Box<dyn Write>,
+        output_stream: Box<dyn Write + Send>,
         charset: &Charset,
         max_output_in_bytes: i32,
     ) -> Result<(), TemplateOutputException> {

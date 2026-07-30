@@ -27,6 +27,15 @@ pub(crate) struct Model {
 }
 
 impl Model {
+    /// 返回配置共享身份，供同包 processable 克隆模型。
+    pub(crate) fn get_configuration_arc(&self) -> Arc<dyn IEngineConfiguration> {
+        Arc::clone(&self.configuration)
+    }
+
+    /// 返回模板模式，供同包 processable 克隆模型。
+    pub(crate) const fn get_template_mode_value(&self) -> TemplateMode {
+        self.template_mode
+    }
     /// 使用引擎配置和模板模式创建空模型。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,

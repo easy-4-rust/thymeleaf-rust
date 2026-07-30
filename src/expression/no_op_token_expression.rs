@@ -47,9 +47,15 @@ impl IStandardExpression for NoOpTokenExpression {
         _context: &dyn IExpressionContext,
         _expression_context: &'static StandardExpressionExecutionContext,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
-        static VALUE: OnceLock<Arc<TemplateValue>> = OnceLock::new();
-        Ok(Some(Arc::clone(
-            VALUE.get_or_init(|| Arc::new(TemplateValue::NoOp)),
-        )))
+        // `TemplateValue::NoOp` 本身是无状态规范值；宿主对象允许非 Send 用户对象后，
+        // 不能把整个动态值枚举放入进程级 OnceLock。枚举判别值仍保留 Java 单例的
+        // 所有模板可观察语义。
+        Ok(Some(Arc::new(TemplateValue::NoOp)))
+    }
+
+    fn is_token_expression(&self) -> bool {
+        true
     }
 }
+
+impl super::SimpleExpression for NoOpTokenExpression {}

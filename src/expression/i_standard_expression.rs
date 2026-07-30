@@ -34,8 +34,57 @@ pub trait IStandardExpression: Send + Sync {
         expression_context: &'static StandardExpressionExecutionContext,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>>;
 
+    /// 执行内建表达式但不应用 `Expression.execute` 的 LiteralValue 解包。
+    ///
+    /// 默认与公开执行一致；TextLiteral 等需要保留内部包装的对象覆盖此入口。
+    fn execute_raw(
+        &self,
+        context: &dyn IExpressionContext,
+        expression_context: &'static StandardExpressionExecutionContext,
+    ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
+        self.execute_with_context(context, expression_context)
+    }
+
     /// 判断字符串嵌入时是否需要 Java `ComplexExpression` 的括号。
     fn is_complex(&self) -> bool {
         false
+    }
+
+    /// 判断是否属于 Java `Token` 抽象类族。
+    fn is_token_expression(&self) -> bool {
+        false
+    }
+
+    /// 判断是否为 NumberTokenExpression。
+    fn is_number_token_expression(&self) -> bool {
+        false
+    }
+
+    /// 判断是否为 BooleanTokenExpression。
+    fn is_boolean_token_expression(&self) -> bool {
+        false
+    }
+
+    /// 判断是否为 GenericTokenExpression。
+    fn is_generic_token_expression(&self) -> bool {
+        false
+    }
+
+    /// 判断是否为 TextLiteralExpression。
+    fn is_text_literal_expression(&self) -> bool {
+        false
+    }
+
+    /// 判断是否为 FragmentExpression；用于禁止属性级缓存。
+    fn is_fragment_expression(&self) -> bool {
+        false
+    }
+
+    /// 若当前对象就是纯 FragmentExpression，则返回其动态能力。
+    ///
+    /// Java 使用 `instanceof FragmentExpression` 触发避免多余资源 exists 查询的
+    /// 快捷路径；Rust 用该显式 capability 保留同一分派语义。
+    fn as_fragment_expression(&self) -> Option<&super::FragmentExpression> {
+        None
     }
 }

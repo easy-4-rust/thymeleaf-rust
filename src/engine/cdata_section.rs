@@ -112,6 +112,16 @@ impl CDATASection {
         *write_lock(&self.computed_cdata_section) = Some(result.clone());
         Ok(result)
     }
+
+    /// 返回 parser 保留的 CDATA 前缀。
+    pub(crate) const fn prefix(&self) -> &JavaString {
+        &self.prefix
+    }
+
+    /// 返回 parser 保留的 CDATA 后缀。
+    pub(crate) const fn suffix(&self) -> &JavaString {
+        &self.suffix
+    }
 }
 
 impl JavaCharSequence for CDATASection {
@@ -160,6 +170,10 @@ impl JavaCharSequence for CDATASection {
 }
 
 impl ICDATASection for CDATASection {
+    fn as_engine_cdata_section(&self) -> Option<&Self> {
+        Some(self)
+    }
+
     fn get_cdata_section(&self) -> Result<Option<JavaString>, TextUtilsError> {
         self.compute_cdata_section().map(Some)
     }

@@ -4,6 +4,7 @@ use crate::IEngineConfiguration;
 use crate::expression::{IExpressionObjects, TemplateValue};
 use crate::util::{JavaLocale, JavaString, ValidateError};
 
+use super::ContextVariableEntries;
 use super::{AbstractExpressionContext, IContext, IContextVariableNames, IExpressionContext};
 
 /// 非 Web 场景的基础表达式上下文。
@@ -35,7 +36,7 @@ impl ExpressionContext {
     pub fn with_locale_and_variables(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
         locale: Option<JavaLocale>,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
+        variables: ContextVariableEntries<'_>,
     ) -> Result<Self, ValidateError> {
         AbstractExpressionContext::with_locale_and_variables(configuration, locale, variables)
             .map(|base| Self { base })
@@ -52,10 +53,7 @@ impl ExpressionContext {
     }
 
     /// 按输入迭代顺序批量新增或替换变量。
-    pub fn set_variables(
-        &self,
-        variables: Option<&[(Option<JavaString>, Option<Arc<TemplateValue>>)]>,
-    ) {
+    pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         self.base.set_variables(variables);
     }
 
@@ -95,6 +93,10 @@ impl IContext for ExpressionContext {
 impl IExpressionContext for ExpressionContext {
     fn get_configuration(&self) -> &dyn IEngineConfiguration {
         self.base.get_configuration()
+    }
+
+    fn get_configuration_arc(&self) -> Arc<dyn IEngineConfiguration> {
+        self.base.get_configuration_arc()
     }
 
     fn get_expression_objects(&self) -> &dyn IExpressionObjects {

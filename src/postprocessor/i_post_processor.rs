@@ -7,7 +7,36 @@ pub type PostProcessorHandlerFactory = fn() -> Box<dyn ITemplateHandler>;
 /// Processor 链完成后、实际输出前执行的后处理器配置合同。
 ///
 /// 对应 Java: `org.thymeleaf.postprocessor.IPostProcessor`。
-pub trait IPostProcessor {
+pub trait IPostProcessor: Send + Sync {
+    /// 返回包装器附加的方言级优先级；普通实现返回 `None`。
+    fn get_dialect_precedence(&self) -> Option<i32> {
+        None
+    }
+    /// 返回包装前的 PostProcessor；普通实现返回 `None`。
+    fn get_wrapped_post_processor(&self) -> Option<&dyn IPostProcessor> {
+        None
+    }
+    /// 判断该后处理器是否需要属性定义仓库。
+    fn is_attribute_definitions_aware(&self) -> bool {
+        false
+    }
+    /// 注入全局属性定义仓库；aware 实现需要覆盖。
+    fn set_attribute_definitions(
+        &self,
+        _attribute_definitions: std::sync::Arc<crate::engine::AttributeDefinitions>,
+    ) {
+    }
+    /// 判断该后处理器是否需要元素定义仓库。
+    fn is_element_definitions_aware(&self) -> bool {
+        false
+    }
+    /// 注入全局元素定义仓库；aware 实现需要覆盖。
+    fn set_element_definitions(
+        &self,
+        _element_definitions: std::sync::Arc<crate::engine::ElementDefinitions>,
+    ) {
+    }
+
     /// 返回唯一适用模板模式。
     fn get_template_mode(&self) -> TemplateMode;
     /// 返回方言优先级之后应用的处理器优先级。

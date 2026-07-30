@@ -1,12 +1,14 @@
 use std::collections::VecDeque;
 use std::io;
+use std::sync::{Arc, Mutex};
 
 use thiserror::Error;
 
 use crate::exceptions::TemplateProcessingException;
+use crate::expression::{TemplateObject, TemplateValue};
 use crate::util::JavaString;
 
-use super::IThrottledTemplateWriterControl;
+use super::{DataDrivenTemplateSignal, IThrottledTemplateWriterControl};
 
 const SSE_HEAD_EVENT_NAME: &[u16] = &[104, 101, 97, 100];
 const SSE_MESSAGE_EVENT_NAME: &[u16] = &[109, 101, 115, 115, 97, 103, 101];
@@ -32,13 +34,14 @@ pub enum DataDrivenTemplateIteratorError {
 /// 对应 Java: `org.thymeleaf.engine.DataDrivenTemplateIterator`。
 pub struct DataDrivenTemplateIterator<T> {
     values: VecDeque<T>,
-    writer_control: Option<Box<dyn IThrottledTemplateWriterControl>>,
+    writer_control: Option<Box<dyn IThrottledTemplateWriterControl + Send>>,
     sse_events_prefix: Option<Vec<u16>>,
     sse_events_composed_message_event_name: Vec<u16>,
     sse_events_id: i64,
     in_step: bool,
     feeding_complete: bool,
     queried: bool,
+    signal: DataDrivenTemplateSignal,
 }
 
 impl<T> DataDrivenTemplateIterator<T> {
@@ -54,11 +57,15 @@ impl<T> DataDrivenTemplateIterator<T> {
             in_step: false,
             feeding_complete: false,
             queried: false,
+            signal: DataDrivenTemplateSignal::new(),
         }
     }
 
     /// 绑定普通或 SSE 节流 Writer 控制器。
-    pub fn set_writer_control(&mut self, writer_control: Box<dyn IThrottledTemplateWriterControl>) {
+    pub fn set_writer_control(
+        &mut self,
+        writer_control: Box<dyn IThrottledTemplateWriterControl + Send>,
+    ) {
         self.writer_control = Some(writer_control);
     }
 
@@ -119,10 +126,6 @@ impl<T> DataDrivenTemplateIterator<T> {
     }
 
     /// 判断模板是否正在等待尚未喂入的数据。
-    #[expect(
-        dead_code,
-        reason = "由后续 IteratedGatheringModelProcessable 同包对象调用"
-    )]
     pub(crate) fn is_paused(&mut self) -> bool {
         self.queried = true;
         self.values.is_empty() && !self.feeding_complete
@@ -140,6 +143,7 @@ impl<T> DataDrivenTemplateIterator<T> {
         I: IntoIterator<Item = T>,
     {
         self.values.extend(new_elements);
+        self.signal.notify();
     }
 
     /// 开始模板 head 输出阶段。
@@ -148,8 +152,15 @@ impl<T> DataDrivenTemplateIterator<T> {
     }
 
     /// 标记不会再有数据喂入。
-    pub const fn feeding_complete(&mut self) {
+    pub fn feeding_complete(&mut self) {
         self.feeding_complete = true;
+        self.signal.notify();
+    }
+
+    /// 返回供响应式整合等待数据到达的共享信号。
+    #[must_use]
+    pub fn get_signal(&self) -> DataDrivenTemplateSignal {
+        self.signal.clone()
     }
 
     /// 开始模板 tail 输出阶段。
@@ -227,11 +238,46 @@ impl<T> Default for DataDrivenTemplateIterator<T> {
     }
 }
 
+impl DataDrivenTemplateIterator<Arc<TemplateValue>> {
+    /// 创建可由宿主继续喂入、同时可直接放入模板 Context 的共享迭代器。
+    ///
+    /// 返回的第一个值用于调用 `feed_buffer`、`feeding_complete` 等控制方法；第二个
+    /// 值保持同一对象身份并作为 `th:each` 的迭代目标。
+    #[must_use]
+    pub fn shared_template_value() -> (Arc<Mutex<Self>>, Arc<TemplateValue>) {
+        let iterator = Arc::new(Mutex::new(Self::new()));
+        let object: Arc<dyn TemplateObject> = iterator.clone();
+        let value = Arc::new(TemplateValue::Object(object));
+        (iterator, value)
+    }
+
+    /// 把已有共享迭代器转换为保持同一身份的模板动态值。
+    #[must_use]
+    pub fn to_template_value(iterator: &Arc<Mutex<Self>>) -> Arc<TemplateValue> {
+        let object: Arc<dyn TemplateObject> = iterator.clone();
+        Arc::new(TemplateValue::Object(object))
+    }
+}
+
 impl<T> Iterator for DataDrivenTemplateIterator<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.queried = true;
         self.values.pop_front()
+    }
+}
+
+impl TemplateObject for Mutex<DataDrivenTemplateIterator<Arc<TemplateValue>>> {
+    fn java_class_name(&self) -> &str {
+        "org.thymeleaf.engine.DataDrivenTemplateIterator"
+    }
+
+    fn to_java_string(&self) -> JavaString {
+        JavaString::from_rust_str("org.thymeleaf.engine.DataDrivenTemplateIterator")
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
     }
 }

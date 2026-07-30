@@ -17,10 +17,26 @@ fn engine_processable_dynamic_contract_matches_java_golden() {
     let concrete_pointer: *mut AlternatingProcessable = &mut concrete;
     let dynamic_pointer = {
         let dynamic: &mut dyn IEngineProcessable = &mut concrete;
-        emit(&mut output, "process.1", dynamic.process());
-        emit(&mut output, "process.2", dynamic.process());
-        emit(&mut output, "process.3", dynamic.process());
-        emit(&mut output, "process.4", dynamic.process());
+        emit(
+            &mut output,
+            "process.1",
+            dynamic.process().expect("process 1"),
+        );
+        emit(
+            &mut output,
+            "process.2",
+            dynamic.process().expect("process 2"),
+        );
+        emit(
+            &mut output,
+            "process.3",
+            dynamic.process().expect("process 3"),
+        );
+        emit(
+            &mut output,
+            "process.4",
+            dynamic.process().expect("process 4"),
+        );
         dynamic as *mut dyn IEngineProcessable as *mut ()
     };
     emit(&mut output, "process.calls", concrete.calls);
@@ -38,9 +54,9 @@ struct AlternatingProcessable {
 }
 
 impl IEngineProcessable for AlternatingProcessable {
-    fn process(&mut self) -> bool {
+    fn process(&mut self) -> Result<bool, Box<dyn thymeleaf::exceptions::TemplateEngineException>> {
         self.calls += 1;
-        self.calls % 2 == 0
+        Ok(self.calls % 2 == 0)
     }
 }
 
