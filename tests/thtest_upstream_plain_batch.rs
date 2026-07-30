@@ -38,8 +38,9 @@ use support::{
     ContextDialect, ContextVarTestDialect, ConversionTestDialect1, ConversionTestDialect4,
     CorpusOgnlRuntime, CorpusRequestParameterValues, CorpusWebExchange, Dialect01, Dialect02,
     ElementStackDialect, ExceptionLazyContextVariableError, InteractionDialect01, MarkupDialect,
-    NoOpDialect, PrePostProcessorsDialect01, PrecedenceDialect, TestEngineMessageResolver,
-    TestLinkBuilder,
+    NoOpDialect, PrePostProcessorsDialect01, PrecedenceDialect, RemoveDialect,
+    ReplaceWithNonProcessableDialect, ReplaceWithProcessableDialect, SurroundDialect,
+    TestEngineMessageResolver, TestLinkBuilder,
 };
 
 const INVENTORY: &str = include_str!("../docs/migration/baseline/thtest_inventory.json");
@@ -132,6 +133,8 @@ fn upstream_plain_output_cases_run_as_one_batch() {
                 6
             } else if scope == "web_context" {
                 5
+            } else if scope == "processor_remaining" {
+                4
             } else {
                 panic!("unsupported THYMELEAF_SCOPE: {scope}")
             },
@@ -274,6 +277,18 @@ fn is_scope_case(test: &Value, resource_path: &str, scope: &str) -> bool {
             (resource_path.starts_with("templateengine/context/base/")
                 || resource_path.starts_with("templateengine/features/session/")
                 || resource_path.starts_with("templateengine/features/servletcontext/"))
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "processor_remaining" => {
+            (resource_path.starts_with("templateengine/processors/remove/")
+                || resource_path
+                    .starts_with("templateengine/processors/replacewithnonprocessable/")
+                || resource_path.starts_with("templateengine/processors/replacewithprocessable/")
+                || resource_path.starts_with("templateengine/processors/surround/"))
                 && test["directives"]
                     .as_array()
                     .expect("directives must be an array")
@@ -772,6 +787,26 @@ fn run_case(path: &Path) -> Result<(), String> {
         if path_text.contains("/context/base/") {
             engine
                 .add_dialect(Arc::new(ContextDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/processors/remove/") {
+            engine
+                .add_dialect(Arc::new(RemoveDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/processors/replacewithnonprocessable/") {
+            engine
+                .add_dialect(Arc::new(ReplaceWithNonProcessableDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/processors/replacewithprocessable/") {
+            engine
+                .add_dialect(Arc::new(ReplaceWithProcessableDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/processors/surround/") {
+            engine
+                .add_dialect(Arc::new(SurroundDialect::new()) as Arc<dyn IDialect>)
                 .map_err(|error| error.to_string())?;
         }
         let precedence = if path_text.contains("/elementprocessors/precedencemodelbefore/")

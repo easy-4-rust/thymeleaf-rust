@@ -457,6 +457,12 @@ Thymeleaf 表达式包含不同语义：
 Rhai、CEL、evalexpr、JSONPath/JMESPath 都不是 Java OGNL 语法兼容实现，不能作为
 默认求值器偷换语言语义。
 
+crates.io 上的 `ognlib` 也只是名称相似的练习项目，不是 Object-Graph Navigation
+Language 实现，不能作为迁移依赖。Rhai 适合另行提供完整嵌入式脚本，CEL 适合安全
+规则和 Guardrails，evalexpr 适合简单算术/布尔表达式，JSONPath/JMESPath 适合查询
+`serde_json::Value`；这些都是应用可选的其他语言，不进入 `thymeleaf` 的 OGNL
+兼容合同。
+
 不能直接将整个属性内容交给某一个通用表达式引擎，因为 `#{...}` 在 Thymeleaf 中是消息表达式，而通用模板表达式 Parser 可能将其解释为另一种嵌入表达式。
 
 ### 6.2 Rust 值模型
@@ -536,9 +542,12 @@ Standard Dialect 时不执行标准内联。
 消息和 cause 链；结果为 500 / 500。该批次覆盖 Reader 与嵌套模板异常、模板名和行列、
 内联模式、命名模板模式、Dialect 优先级、lazy variable、危险链接协议以及 OGNL
 类型化异常和属性 ACL。它与 `verified` 不重叠，因此 `validated` 并集为
-1,757 / 1,757。累计覆盖率为 region 64.86%、function 57.43%、line 66.36%。
-这证明上述 OGNL 安全子集与当前输出及异常批次兼容，不代表全部 2,608 个可执行用例、
-自定义 Processor harness 或 Web harness 已经完成；尚有 851 个用例待统一结算。
+1,757 / 1,757。后续语义域继续覆盖 directive、multi-input、Link、内联交互、
+Conversion、Aggregation、Markup、Context、Precedence、Web exchange 以及
+remove/replace/surround Processor。最终 2,608 个可执行资源全部处置：2,595 个不同
+用例通过 Rust 行为验证，12 个上游已禁用 `execinfo` 资源和 1 个任意 Java 反射链
+具名处置，0 未解释。CI 原样全 workspace 覆盖率仍只有 region 43.20%、
+function 37.04%、line 44.11%，因此源码覆盖率门禁尚未闭合。
 
 上游 `instancestaticrestrictions29.thtest` 中
 `''.getClass().getClass().getName()` 依赖 Java `Class` 反射链。该语义被登记为默认

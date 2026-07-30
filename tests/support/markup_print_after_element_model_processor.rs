@@ -119,12 +119,8 @@ fn escaped_model(model: &dyn IModel) -> Result<JavaString, Box<dyn TemplateEngin
             error,
         )) as Box<dyn TemplateEngineException>
     })?;
-    let normalized = writer
-        .to_string()
-        .to_string_lossy()
-        .replace("\r\n", "\\n")
-        .replace('\r', "\\n")
-        .replace('\n', "\\n");
+    let normalized = writer.to_string().to_string_lossy().replace("\r\n", "\\n");
+    let normalized = normalized.replace(['\r', '\n'], "\\n");
     EscapedAttributeUtils::escape_attribute(
         Some(TemplateMode::HTML),
         Some(&JavaString::from_rust_str(&normalized)),

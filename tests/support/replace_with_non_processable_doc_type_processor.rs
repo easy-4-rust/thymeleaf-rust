@@ -1,23 +1,26 @@
+use std::sync::Arc;
+
 use thymeleaf::TemplateMode;
 use thymeleaf::context::ITemplateContext;
 use thymeleaf::doctype::{AbstractDocTypeProcessor, IDocTypeProcessor, IDocTypeStructureHandler};
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::IDocType;
 use thymeleaf::processor::IProcessor;
+use thymeleaf::util::JavaString;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback =
     fn(&dyn ITemplateContext, &dyn IDocType, &mut dyn IDocTypeStructureHandler) -> ProcessResult;
 
-/// 删除遇到的 DocType 模板事件。
+/// 用固定 `<replaced th:text="one"/>` 模型替换 DocType 事件，替换模型不再处理。
 ///
 /// 对应 Java:
-/// `org.thymeleaf.templateengine.processors.dialects.remove.RemoveDocTypeProcessor`。
-pub struct RemoveDocTypeProcessor {
+/// `org.thymeleaf.templateengine.processors.dialects.replacewithnonprocessable.ReplaceWithNonProcessableDocTypeProcessor`。
+pub struct ReplaceWithNonProcessableDocTypeProcessor {
     processor: AbstractDocTypeProcessor<ProcessCallback>,
 }
 
-impl RemoveDocTypeProcessor {
+impl ReplaceWithNonProcessableDocTypeProcessor {
     /// 创建 HTML 模式、precedence 1000 的事件处理器。
     #[must_use]
     pub fn new() -> Self {
@@ -25,21 +28,21 @@ impl RemoveDocTypeProcessor {
             processor: AbstractDocTypeProcessor::new(
                 Some(TemplateMode::HTML),
                 1000,
-                "org.thymeleaf.templateengine.processors.dialects.remove.RemoveDocTypeProcessor",
-                remove_event as ProcessCallback,
+                "org.thymeleaf.templateengine.processors.dialects.replacewithnonprocessable.ReplaceWithNonProcessableDocTypeProcessor",
+                replace_event as ProcessCallback,
             )
-            .expect("the fixed remove processor configuration is valid"),
+            .expect("the fixed replacement processor configuration is valid"),
         }
     }
 }
 
-impl Default for RemoveDocTypeProcessor {
+impl Default for ReplaceWithNonProcessableDocTypeProcessor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IProcessor for RemoveDocTypeProcessor {
+impl IProcessor for ReplaceWithNonProcessableDocTypeProcessor {
     fn as_doc_type_processor(&self) -> Option<&dyn IDocTypeProcessor> {
         Some(self)
     }
@@ -54,7 +57,7 @@ impl IProcessor for RemoveDocTypeProcessor {
     }
 }
 
-impl IDocTypeProcessor for RemoveDocTypeProcessor {
+impl IDocTypeProcessor for ReplaceWithNonProcessableDocTypeProcessor {
     fn process(
         &self,
         context: &dyn ITemplateContext,
@@ -65,11 +68,19 @@ impl IDocTypeProcessor for RemoveDocTypeProcessor {
     }
 }
 
-fn remove_event(
-    _context: &dyn ITemplateContext,
-    _event: &dyn IDocType,
+fn replace_event(
+    context: &dyn ITemplateContext,
+    event: &dyn IDocType,
     structure_handler: &mut dyn IDocTypeStructureHandler,
 ) -> ProcessResult {
-    structure_handler.remove_doc_type();
+    let _ = event;
+    let replacement = context
+        .get_model_factory()
+        .parse(
+            &context.get_template_data(),
+            &JavaString::from_rust_str("<replaced th:text=\"one\"/>"),
+        )
+        .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
+    structure_handler.replace_with(Arc::from(replacement), false);
     Ok(())
 }

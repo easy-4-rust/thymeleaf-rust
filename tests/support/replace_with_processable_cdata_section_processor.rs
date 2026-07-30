@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use thymeleaf::TemplateMode;
 use thymeleaf::cdatasection::{
     AbstractCDATASectionProcessor, ICDATASectionProcessor, ICDATASectionStructureHandler,
@@ -6,6 +8,7 @@ use thymeleaf::context::ITemplateContext;
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::ICDATASection;
 use thymeleaf::processor::IProcessor;
+use thymeleaf::util::JavaString;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -14,15 +17,15 @@ type ProcessCallback = fn(
     &mut dyn ICDATASectionStructureHandler,
 ) -> ProcessResult;
 
-/// 删除遇到的 CDATASection 模板事件。
+/// 用固定 `<replaced th:text="one"/>` 模型替换 CDATASection 事件，替换模型继续处理。
 ///
 /// 对应 Java:
-/// `org.thymeleaf.templateengine.processors.dialects.remove.RemoveCDATASectionProcessor`。
-pub struct RemoveCDATASectionProcessor {
+/// `org.thymeleaf.templateengine.processors.dialects.replacewithprocessable.ReplaceWithProcessableCDATASectionProcessor`。
+pub struct ReplaceWithProcessableCDATASectionProcessor {
     processor: AbstractCDATASectionProcessor<ProcessCallback>,
 }
 
-impl RemoveCDATASectionProcessor {
+impl ReplaceWithProcessableCDATASectionProcessor {
     /// 创建 HTML 模式、precedence 1000 的事件处理器。
     #[must_use]
     pub fn new() -> Self {
@@ -30,21 +33,21 @@ impl RemoveCDATASectionProcessor {
             processor: AbstractCDATASectionProcessor::new(
                 Some(TemplateMode::HTML),
                 1000,
-                "org.thymeleaf.templateengine.processors.dialects.remove.RemoveCDATASectionProcessor",
-                remove_event as ProcessCallback,
+                "org.thymeleaf.templateengine.processors.dialects.replacewithprocessable.ReplaceWithProcessableCDATASectionProcessor",
+                replace_event as ProcessCallback,
             )
-            .expect("the fixed remove processor configuration is valid"),
+            .expect("the fixed replacement processor configuration is valid"),
         }
     }
 }
 
-impl Default for RemoveCDATASectionProcessor {
+impl Default for ReplaceWithProcessableCDATASectionProcessor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IProcessor for RemoveCDATASectionProcessor {
+impl IProcessor for ReplaceWithProcessableCDATASectionProcessor {
     fn as_cdata_section_processor(&self) -> Option<&dyn ICDATASectionProcessor> {
         Some(self)
     }
@@ -59,7 +62,7 @@ impl IProcessor for RemoveCDATASectionProcessor {
     }
 }
 
-impl ICDATASectionProcessor for RemoveCDATASectionProcessor {
+impl ICDATASectionProcessor for ReplaceWithProcessableCDATASectionProcessor {
     fn process(
         &self,
         context: &dyn ITemplateContext,
@@ -70,11 +73,19 @@ impl ICDATASectionProcessor for RemoveCDATASectionProcessor {
     }
 }
 
-fn remove_event(
-    _context: &dyn ITemplateContext,
-    _event: &dyn ICDATASection,
+fn replace_event(
+    context: &dyn ITemplateContext,
+    event: &dyn ICDATASection,
     structure_handler: &mut dyn ICDATASectionStructureHandler,
 ) -> ProcessResult {
-    structure_handler.remove_cdata_section();
+    let _ = event;
+    let replacement = context
+        .get_model_factory()
+        .parse(
+            &context.get_template_data(),
+            &JavaString::from_rust_str("<replaced th:text=\"one\"/>"),
+        )
+        .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
+    structure_handler.replace_with(Arc::from(replacement), true);
     Ok(())
 }

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use thymeleaf::TemplateMode;
 use thymeleaf::context::ITemplateContext;
 use thymeleaf::exceptions::TemplateEngineException;
@@ -7,6 +9,7 @@ use thymeleaf::processinginstruction::{
     IProcessingInstructionStructureHandler,
 };
 use thymeleaf::processor::IProcessor;
+use thymeleaf::util::JavaString;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -15,15 +18,15 @@ type ProcessCallback = fn(
     &mut dyn IProcessingInstructionStructureHandler,
 ) -> ProcessResult;
 
-/// 删除遇到的 ProcessingInstruction 模板事件。
+/// 用固定 `<replaced th:text="one"/>` 模型替换 ProcessingInstruction 事件，替换模型继续处理。
 ///
 /// 对应 Java:
-/// `org.thymeleaf.templateengine.processors.dialects.remove.RemoveProcessingInstructionProcessor`。
-pub struct RemoveProcessingInstructionProcessor {
+/// `org.thymeleaf.templateengine.processors.dialects.replacewithprocessable.ReplaceWithProcessableProcessingInstructionProcessor`。
+pub struct ReplaceWithProcessableProcessingInstructionProcessor {
     processor: AbstractProcessingInstructionProcessor<ProcessCallback>,
 }
 
-impl RemoveProcessingInstructionProcessor {
+impl ReplaceWithProcessableProcessingInstructionProcessor {
     /// 创建 HTML 模式、precedence 1000 的事件处理器。
     #[must_use]
     pub fn new() -> Self {
@@ -31,21 +34,21 @@ impl RemoveProcessingInstructionProcessor {
             processor: AbstractProcessingInstructionProcessor::new(
                 Some(TemplateMode::HTML),
                 1000,
-                "org.thymeleaf.templateengine.processors.dialects.remove.RemoveProcessingInstructionProcessor",
-                remove_event as ProcessCallback,
+                "org.thymeleaf.templateengine.processors.dialects.replacewithprocessable.ReplaceWithProcessableProcessingInstructionProcessor",
+                replace_event as ProcessCallback,
             )
-            .expect("the fixed remove processor configuration is valid"),
+            .expect("the fixed replacement processor configuration is valid"),
         }
     }
 }
 
-impl Default for RemoveProcessingInstructionProcessor {
+impl Default for ReplaceWithProcessableProcessingInstructionProcessor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IProcessor for RemoveProcessingInstructionProcessor {
+impl IProcessor for ReplaceWithProcessableProcessingInstructionProcessor {
     fn as_processing_instruction_processor(&self) -> Option<&dyn IProcessingInstructionProcessor> {
         Some(self)
     }
@@ -60,7 +63,7 @@ impl IProcessor for RemoveProcessingInstructionProcessor {
     }
 }
 
-impl IProcessingInstructionProcessor for RemoveProcessingInstructionProcessor {
+impl IProcessingInstructionProcessor for ReplaceWithProcessableProcessingInstructionProcessor {
     fn process(
         &self,
         context: &dyn ITemplateContext,
@@ -71,11 +74,19 @@ impl IProcessingInstructionProcessor for RemoveProcessingInstructionProcessor {
     }
 }
 
-fn remove_event(
-    _context: &dyn ITemplateContext,
-    _event: &dyn IProcessingInstruction,
+fn replace_event(
+    context: &dyn ITemplateContext,
+    event: &dyn IProcessingInstruction,
     structure_handler: &mut dyn IProcessingInstructionStructureHandler,
 ) -> ProcessResult {
-    structure_handler.remove_processing_instruction();
+    let _ = event;
+    let replacement = context
+        .get_model_factory()
+        .parse(
+            &context.get_template_data(),
+            &JavaString::from_rust_str("<replaced th:text=\"one\"/>"),
+        )
+        .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
+    structure_handler.replace_with(Arc::from(replacement), true);
     Ok(())
 }

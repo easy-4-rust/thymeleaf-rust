@@ -66,6 +66,21 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --all-features
 
+      - name: Run fixed upstream semantic corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          scopes=(
+            validated directives prepostprocessors multiinput link
+            inlining_interaction conversion block context_vartest noop
+            aggregation markup precedence web_context processor_remaining
+          )
+          for scope in "${scopes[@]}"; do
+            THYMELEAF_UPSTREAM="$GITHUB_WORKSPACE/upstream-thymeleaf" \
+            THYMELEAF_SCOPE="$scope" \
+              cargo test --test thtest_upstream_plain_batch --quiet
+          done
+
       - name: Enforce 100% source coverage
         run: >-
           cargo llvm-cov

@@ -10,7 +10,7 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::{IModel, ITemplateEvent};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::{EscapedAttributeUtils, FastStringWriter, JavaString};
+use thymeleaf::util::JavaString;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -21,16 +21,17 @@ type ProcessCallback = fn(
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
-/// 把执行前完整模型的 HTML 转义快照写入 `aggbefore` 属性。
+/// 在聚合元素模型前后插入 `surround` 注释。
 ///
 /// 对应 Java:
-/// `org.thymeleaf.templateengine.elementprocessors.dialect.MarkupPrintBeforeElementModelProcessor`。
-pub struct MarkupPrintBeforeElementModelProcessor {
+/// `org.thymeleaf.templateengine.processors.dialects.surround.SurroundProcessor`。
+pub struct SurroundProcessor {
     processor: AbstractAttributeModelProcessor<ProcessCallback>,
 }
 
-impl MarkupPrintBeforeElementModelProcessor {
-    /// 创建 `markup:printbefore` Processor。
+impl SurroundProcessor {
+    /// 创建匹配 `surround:surround`、precedence 1000 的模型处理器。
+    #[must_use]
     pub fn new(dialect_prefix: Option<&str>) -> Self {
         Self {
             processor: AbstractAttributeModelProcessor::new(
@@ -38,19 +39,19 @@ impl MarkupPrintBeforeElementModelProcessor {
                 dialect_prefix.map(JavaString::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("printbefore")),
+                Some(JavaString::from_rust_str("surround")),
                 true,
-                500,
+                1000,
                 true,
-                "org.thymeleaf.templateengine.elementprocessors.dialect.MarkupPrintBeforeElementModelProcessor",
-                print_model as ProcessCallback,
+                "org.thymeleaf.templateengine.processors.dialects.surround.SurroundProcessor",
+                surround_model as ProcessCallback,
             )
-            .expect("the fixed print-before processor configuration is valid"),
+            .expect("the fixed surround processor configuration is valid"),
         }
     }
 }
 
-impl IProcessor for MarkupPrintBeforeElementModelProcessor {
+impl IProcessor for SurroundProcessor {
     fn as_element_processor(&self) -> Option<&dyn IElementProcessor> {
         Some(self)
     }
@@ -64,7 +65,8 @@ impl IProcessor for MarkupPrintBeforeElementModelProcessor {
         self.processor.get_precedence()
     }
 }
-impl IElementProcessor for MarkupPrintBeforeElementModelProcessor {
+
+impl IElementProcessor for SurroundProcessor {
     fn as_element_model_processor(&self) -> Option<&dyn IElementModelProcessor> {
         Some(self)
     }
@@ -75,7 +77,8 @@ impl IElementProcessor for MarkupPrintBeforeElementModelProcessor {
         self.processor.get_matching_attribute_name()
     }
 }
-impl IElementModelProcessor for MarkupPrintBeforeElementModelProcessor {
+
+impl IElementModelProcessor for SurroundProcessor {
     fn process(
         &self,
         context: &dyn ITemplateContext,
@@ -86,47 +89,22 @@ impl IElementModelProcessor for MarkupPrintBeforeElementModelProcessor {
     }
 }
 
-fn print_model(
+fn surround_model(
     context: &dyn ITemplateContext,
     model: &mut dyn IModel,
     _attribute_name: &AttributeName,
     _attribute_value: Option<JavaString>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
-    let markup = escaped_model(model)?;
-    let tag = model
-        .get(0)
-        .into_processable_element_tag()
-        .ok_or_else(|| processing_error("Model first event is not an element tag"))?;
-    let tag = context
-        .get_model_factory()
-        .set_attribute(
-            tag,
-            JavaString::from_rust_str("aggbefore"),
-            Some(markup),
-            None,
-        )
+    let model_factory = context.get_model_factory();
+    let after: Arc<dyn ITemplateEvent> = model_factory
+        .create_comment(JavaString::from_rust_str("surround"))
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
-    let event: Arc<dyn ITemplateEvent> = tag;
-    model.replace(0, Some(event)).map_err(model_error)
-}
-
-fn escaped_model(model: &dyn IModel) -> Result<JavaString, Box<dyn TemplateEngineException>> {
-    let mut writer = FastStringWriter::new();
-    model.write(&mut writer).map_err(|error| {
-        Box::new(TemplateProcessingException::with_cause(
-            Some(error.to_string()),
-            error,
-        )) as Box<dyn TemplateEngineException>
-    })?;
-    let normalized = writer.to_string().to_string_lossy().replace("\r\n", "\\n");
-    let normalized = normalized.replace(['\r', '\n'], "\\n");
-    EscapedAttributeUtils::escape_attribute(
-        Some(TemplateMode::HTML),
-        Some(&JavaString::from_rust_str(&normalized)),
-    )
-    .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?
-    .ok_or_else(|| processing_error("Escaped model unexpectedly became null"))
+    model.add(Some(after)).map_err(model_error)?;
+    let before: Arc<dyn ITemplateEvent> = model_factory
+        .create_comment(JavaString::from_rust_str("surround"))
+        .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
+    model.insert(0, Some(before)).map_err(model_error)
 }
 
 fn model_error(error: thymeleaf::model::IModelError) -> Box<dyn TemplateEngineException> {
@@ -134,8 +112,4 @@ fn model_error(error: thymeleaf::model::IModelError) -> Box<dyn TemplateEngineEx
         Some(error.to_string()),
         error,
     ))
-}
-
-fn processing_error(message: &str) -> Box<dyn TemplateEngineException> {
-    Box::new(TemplateProcessingException::new(Some(message.to_owned())))
 }

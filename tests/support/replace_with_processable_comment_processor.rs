@@ -1,23 +1,26 @@
+use std::sync::Arc;
+
 use thymeleaf::TemplateMode;
 use thymeleaf::comment::{AbstractCommentProcessor, ICommentProcessor, ICommentStructureHandler};
 use thymeleaf::context::ITemplateContext;
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::IComment;
 use thymeleaf::processor::IProcessor;
+use thymeleaf::util::JavaString;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback =
     fn(&dyn ITemplateContext, &dyn IComment, &mut dyn ICommentStructureHandler) -> ProcessResult;
 
-/// 删除遇到的 Comment 模板事件。
+/// 用固定 `<replaced th:text="one"/>` 模型替换 Comment 事件，替换模型继续处理。
 ///
 /// 对应 Java:
-/// `org.thymeleaf.templateengine.processors.dialects.remove.RemoveCommentProcessor`。
-pub struct RemoveCommentProcessor {
+/// `org.thymeleaf.templateengine.processors.dialects.replacewithprocessable.ReplaceWithProcessableCommentProcessor`。
+pub struct ReplaceWithProcessableCommentProcessor {
     processor: AbstractCommentProcessor<ProcessCallback>,
 }
 
-impl RemoveCommentProcessor {
+impl ReplaceWithProcessableCommentProcessor {
     /// 创建 HTML 模式、precedence 1000 的事件处理器。
     #[must_use]
     pub fn new() -> Self {
@@ -25,21 +28,21 @@ impl RemoveCommentProcessor {
             processor: AbstractCommentProcessor::new(
                 Some(TemplateMode::HTML),
                 1000,
-                "org.thymeleaf.templateengine.processors.dialects.remove.RemoveCommentProcessor",
-                remove_event as ProcessCallback,
+                "org.thymeleaf.templateengine.processors.dialects.replacewithprocessable.ReplaceWithProcessableCommentProcessor",
+                replace_event as ProcessCallback,
             )
-            .expect("the fixed remove processor configuration is valid"),
+            .expect("the fixed replacement processor configuration is valid"),
         }
     }
 }
 
-impl Default for RemoveCommentProcessor {
+impl Default for ReplaceWithProcessableCommentProcessor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl IProcessor for RemoveCommentProcessor {
+impl IProcessor for ReplaceWithProcessableCommentProcessor {
     fn as_comment_processor(&self) -> Option<&dyn ICommentProcessor> {
         Some(self)
     }
@@ -54,7 +57,7 @@ impl IProcessor for RemoveCommentProcessor {
     }
 }
 
-impl ICommentProcessor for RemoveCommentProcessor {
+impl ICommentProcessor for ReplaceWithProcessableCommentProcessor {
     fn process(
         &self,
         context: &dyn ITemplateContext,
@@ -65,11 +68,19 @@ impl ICommentProcessor for RemoveCommentProcessor {
     }
 }
 
-fn remove_event(
-    _context: &dyn ITemplateContext,
-    _event: &dyn IComment,
+fn replace_event(
+    context: &dyn ITemplateContext,
+    event: &dyn IComment,
     structure_handler: &mut dyn ICommentStructureHandler,
 ) -> ProcessResult {
-    structure_handler.remove_comment();
+    let _ = event;
+    let replacement = context
+        .get_model_factory()
+        .parse(
+            &context.get_template_data(),
+            &JavaString::from_rust_str("<replaced th:text=\"one\"/>"),
+        )
+        .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
+    structure_handler.replace_with(Arc::from(replacement), true);
     Ok(())
 }
