@@ -236,7 +236,7 @@ fn parse_simple(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
 fn parse_message(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
     let content = java_trim(&input[2..input.len() - 1]);
     let (base_input, parameters_input) = split_trailing_parameters(content);
-    let base = parse_default_as_literal(base_input)?;
+    let base = parse_link_base_default_as_literal(base_input)?;
     let parameters = match parameters_input {
         None => None,
         Some(parameters) => Some(Arc::new(parse_expression_sequence(parameters)?)),
@@ -249,7 +249,7 @@ fn parse_message(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
 fn parse_link(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
     let content = java_trim(&input[2..input.len() - 1]);
     let (base_input, parameters_input) = split_trailing_parameters(content);
-    let base = parse_default_as_literal(base_input)?;
+    let base = parse_link_base_default_as_literal(base_input)?;
     let parameters = match parameters_input {
         None => None,
         Some(parameters) => Some(Arc::new(parse_assignation_sequence(parameters, true)?)),
@@ -257,6 +257,39 @@ fn parse_link(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
     LinkExpression::new(Some(base), parameters)
         .ok()
         .map(|value| Arc::new(value) as Arc<dyn IStandardExpression>)
+}
+
+fn parse_link_base_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
+    let input = java_trim(input);
+    if input.len() >= 2 && input[0] == b'\'' as u16 && input[input.len() - 1] == b'\'' as u16 {
+        // 显式文本字面量必须先按 TextLiteralExpression 解引号；路径兜底仅服务
+        // `@{/path}` 这种无引号 base，不能把 `@{'/path'}` 的引号并入 URL。
+        return parse_default_as_literal(input);
+    }
+    let contains_standard_expression = input.windows(2).any(|window| {
+        matches!(
+            window,
+            [selector, open]
+                if *open == b'{' as u16
+                    && matches!(*selector, value if value == b'$' as u16
+                        || value == b'*' as u16
+                        || value == b'#' as u16
+                        || value == b'@' as u16
+                        || value == b'~' as u16)
+        )
+    });
+    if input.first() != Some(&(b'(' as u16))
+        && input.contains(&(b'/' as u16))
+        && !contains_standard_expression
+    {
+        let literal = TextLiteralExpression::wrap_string_into_literal(Some(
+            &JavaString::from_utf16(input.to_vec()),
+        ))?;
+        return Some(Arc::new(
+            TextLiteralExpression::parse_text_literal_expression(&literal),
+        ));
+    }
+    parse_default_as_literal(input)
 }
 
 fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {

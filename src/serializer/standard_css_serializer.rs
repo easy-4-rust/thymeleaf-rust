@@ -27,18 +27,26 @@ impl IStandardCSSSerializer for StandardCSSSerializer {
         let Some(object) = object else {
             return Ok(());
         };
-        let text = match object {
-            TemplateValue::Boolean(value) => {
-                JavaString::from_rust_str(if *value { "true" } else { "false" })
-            }
-            TemplateValue::Number(_) => object
+        if matches!(object, TemplateValue::Boolean(_) | TemplateValue::Number(_)) {
+            let text = object
                 .to_java_string()
-                .unwrap_or_else(|| JavaString::from_rust_str("")),
-            TemplateValue::Null => return Ok(()),
-            _ => object
-                .to_java_string()
-                .unwrap_or_else(|| JavaString::from_rust_str("")),
-        };
+                .unwrap_or_else(|| JavaString::from_rust_str(""));
+            return writer.write_utf16(text.as_utf16()).map_err(|error| {
+                TemplateProcessingException::with_cause(
+                    Some(
+                        "An exception was raised while trying to serialize object to CSS"
+                            .to_owned(),
+                    ),
+                    error,
+                )
+            });
+        }
+        if matches!(object, TemplateValue::Null) {
+            return Ok(());
+        }
+        let text = object
+            .to_java_string()
+            .unwrap_or_else(|| JavaString::from_rust_str(""));
         let escaped = escape_css_identifier(text.as_utf16());
         writer.write_utf16(&escaped).map_err(|error| {
             TemplateProcessingException::with_cause(

@@ -236,14 +236,7 @@ fn compare_processors(
     if Arc::ptr_eq(left, right) {
         return Ordering::Equal;
     }
-    left.get_precedence()
-        .cmp(&right.get_precedence())
-        .then_with(|| left.java_class_name().cmp(right.java_class_name()))
-        .then_with(|| {
-            let left = Arc::as_ptr(left) as *const () as usize;
-            let right = Arc::as_ptr(right) as *const () as usize;
-            left.cmp(&right)
-        })
+    crate::util::ProcessorComparators::compare_processors(left.as_ref(), right.as_ref())
 }
 
 fn read_lock<T>(lock: &RwLock<T>) -> RwLockReadGuard<'_, T> {

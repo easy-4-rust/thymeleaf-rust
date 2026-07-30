@@ -193,8 +193,17 @@ fn process_default_attribute(
         structure_handler.remove_attribute(new_attribute_name);
         structure_handler.remove_attribute(original_complete_name.clone());
     } else {
-        structure_handler.set_attribute(new_attribute_name, escaped, None);
-        structure_handler.remove_attribute(original_complete_name.clone());
+        // Java 使用 replaceAttribute 原位替换默认属性：除了保留属性顺序，还会让
+        // Attribute#modify 继承模板原本的单双引号风格。
+        structure_handler.replace_attribute(
+            attribute
+                .get_attribute_definition()
+                .get_attribute_name()
+                .clone(),
+            new_attribute_name,
+            escaped,
+            None,
+        );
     }
     let _ = tag;
     Ok(())

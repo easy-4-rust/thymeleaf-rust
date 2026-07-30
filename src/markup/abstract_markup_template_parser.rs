@@ -309,13 +309,22 @@ fn parse_html(
                 let start = tag.span.start;
                 let end = tag.span.end;
                 if source[start..end].starts_with("<?") {
+                    let xml_declaration = is_xml_declaration(source, start, end);
                     if should_emit_event(
                         selection,
                         &mut stack,
                         &mut document_siblings,
-                        SelectorNodeType::ProcessingInstruction,
+                        if xml_declaration {
+                            SelectorNodeType::XmlDeclaration
+                        } else {
+                            SelectorNodeType::ProcessingInstruction
+                        },
                     ) {
-                        emit_processing_instruction(source, start, end, adapter)?;
+                        if xml_declaration {
+                            emit_xml_declaration(source, start, end, adapter)?;
+                        } else {
+                            emit_processing_instruction(source, start, end, adapter)?;
+                        }
                     }
                     continue;
                 }
@@ -434,13 +443,22 @@ fn parse_html(
                         adapter.cdata(source, start, content_start, content_end, end)?;
                     }
                 } else if source[start..end].starts_with("<?") {
+                    let xml_declaration = is_xml_declaration(source, start, end);
                     if should_emit_event(
                         selection,
                         &mut stack,
                         &mut document_siblings,
-                        SelectorNodeType::ProcessingInstruction,
+                        if xml_declaration {
+                            SelectorNodeType::XmlDeclaration
+                        } else {
+                            SelectorNodeType::ProcessingInstruction
+                        },
                     ) {
-                        emit_processing_instruction(source, start, end, adapter)?;
+                        if xml_declaration {
+                            emit_xml_declaration(source, start, end, adapter)?;
+                        } else {
+                            emit_processing_instruction(source, start, end, adapter)?;
+                        }
                     }
                 } else {
                     let content_start = if source[start..end].starts_with("<!--") {
@@ -1031,6 +1049,17 @@ fn emit_xml_declaration(
         find_pseudo_attribute(rest, "encoding"),
         find_pseudo_attribute(rest, "standalone"),
     )
+}
+
+fn is_xml_declaration(source: &str, start: usize, end: usize) -> bool {
+    let suffix = if source[start..end].ends_with("?>") {
+        2
+    } else {
+        1
+    };
+    let inner = source[start + 2..end.saturating_sub(suffix)].trim_start();
+    let (target, _) = split_name(inner);
+    target.eq_ignore_ascii_case("xml")
 }
 
 fn emit_processing_instruction(

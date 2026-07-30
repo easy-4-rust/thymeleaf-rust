@@ -182,7 +182,13 @@ pub(crate) fn java_pattern(pattern: &str) -> String {
             'h' => "%I",
             'm' => "%M",
             's' => "%S",
-            'S' | 'n' => "%f",
+            'S' => {
+                output.push_str("__THYMELEAF_FRACTION_");
+                output.push_str(&count.to_string());
+                output.push_str("__");
+                continue;
+            }
+            'n' => "%f",
             'a' => "%p",
             'X' | 'x' | 'Z' => "%:z",
             'z' => "%Z",

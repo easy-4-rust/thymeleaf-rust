@@ -10,6 +10,33 @@ impl LiteralSubstitutionUtil {
     pub(crate) fn perform_literal_substitution(input: Option<&JavaString>) -> Option<JavaString> {
         let input = input?;
         let units = input.as_utf16();
+
+        // Java 允许字面量替换出现在另一个 simple expression 内，例如
+        // `@{|/orders/${id}|}`。先递归处理最外层 selector 的内容，否则状态机会把
+        // 整个 `@{...}` 当成一个不可进入的插值区间而漏掉内层 `|...|`。
+        if is_complete_outer_selector(units) && units[2..units.len() - 1].contains(&(b'|' as u16)) {
+            let content = JavaString::from_utf16(units[2..units.len() - 1].to_vec());
+            let substituted = Self::perform_literal_substitution(Some(&content))
+                .expect("non-null selector content remains non-null");
+            if substituted != content {
+                let mut nested = Vec::with_capacity(substituted.len() + 3);
+                nested.extend_from_slice(&units[..2]);
+                nested.extend_from_slice(substituted.as_utf16());
+                nested.push(b'}' as u16);
+                return Some(JavaString::from_utf16(nested));
+            }
+        }
+        if let Some((start, end)) = find_nested_selector_with_substitution(units) {
+            let selector = JavaString::from_utf16(units[start..=end].to_vec());
+            let substituted = Self::perform_literal_substitution(Some(&selector))
+                .expect("non-null nested selector remains non-null");
+            let mut nested = Vec::with_capacity(units.len() + substituted.len());
+            nested.extend_from_slice(&units[..start]);
+            nested.extend_from_slice(substituted.as_utf16());
+            nested.extend_from_slice(&units[end + 1..]);
+            return Self::perform_literal_substitution(Some(&JavaString::from_utf16(nested)));
+        }
+
         let mut output: Option<Vec<u16>> = None;
         let mut in_substitution = false;
         let mut in_insertion = false;
@@ -118,6 +145,56 @@ impl LiteralSubstitutionUtil {
 
         Some(output.map_or_else(|| input.clone(), JavaString::from_utf16))
     }
+}
+
+fn is_complete_outer_selector(input: &[u16]) -> bool {
+    input.len() >= 3
+        && matches!(
+            input[0],
+            value if value == b'$' as u16
+                || value == b'*' as u16
+                || value == b'#' as u16
+                || value == b'@' as u16
+                || value == b'~' as u16
+        )
+        && input[1] == b'{' as u16
+        && input[input.len() - 1] == b'}' as u16
+}
+
+fn find_nested_selector_with_substitution(input: &[u16]) -> Option<(usize, usize)> {
+    let mut start = 1_usize;
+    while start + 2 < input.len() {
+        if matches!(
+            input[start],
+            value if value == b'$' as u16
+                || value == b'*' as u16
+                || value == b'#' as u16
+                || value == b'@' as u16
+                || value == b'~' as u16
+        ) && input[start + 1] == b'{' as u16
+        {
+            let mut level = 1_i32;
+            let mut position = start + 2;
+            while position < input.len() {
+                match input[position] {
+                    value if value == b'{' as u16 => level += 1,
+                    value if value == b'}' as u16 => {
+                        level -= 1;
+                        if level == 0 {
+                            if input[start + 2..position].contains(&(b'|' as u16)) {
+                                return Some((start, position));
+                            }
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+                position += 1;
+            }
+        }
+        start += 1;
+    }
+    None
 }
 
 fn is_escaped(input: &[u16], position: usize) -> bool {

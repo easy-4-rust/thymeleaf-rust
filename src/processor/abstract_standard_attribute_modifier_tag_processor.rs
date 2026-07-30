@@ -59,7 +59,7 @@ impl AbstractStandardAttributeModifierTagProcessor {
                 false,
                 restricted_expression_execution,
                 move |_context,
-                      _tag,
+                      tag,
                       attribute_name,
                       _attribute_value,
                       expression_result,
@@ -74,17 +74,34 @@ impl AbstractStandardAttributeModifierTagProcessor {
                     .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
                     if remove_if_empty && escaped.as_ref().is_none_or(JavaString::is_empty) {
                         structure_handler.remove_attribute(target_attr_complete_name.clone());
-                    } else {
-                        structure_handler.set_attribute(
-                            target_attr_complete_name.clone(),
-                            escaped.or_else(|| Some(JavaString::from_rust_str(""))),
-                            None,
+                        structure_handler.remove_attribute_with_prefix(
+                            attribute_name.get_prefix().cloned(),
+                            attribute_name.get_attribute_name().clone(),
                         );
+                    } else {
+                        let value = escaped.or_else(|| Some(JavaString::from_rust_str("")));
+                        if let Some(source_attribute) = tag.get_attribute_by_name(attribute_name) {
+                            // 对应 Java StandardProcessorUtils#replaceAttribute：在原
+                            // 位置改名并继承输入模板的引号，而不是追加到属性末尾。
+                            structure_handler.replace_attribute(
+                                source_attribute
+                                    .get_attribute_definition()
+                                    .get_attribute_name()
+                                    .clone(),
+                                target_attr_complete_name.clone(),
+                                value,
+                                None,
+                            );
+                        } else {
+                            // 第三方 IProcessableElementTag 若违反回调期间属性仍存在的
+                            // 引擎约束，保持旧有的安全降级行为。
+                            structure_handler.set_attribute(
+                                target_attr_complete_name.clone(),
+                                value,
+                                None,
+                            );
+                        }
                     }
-                    structure_handler.remove_attribute_with_prefix(
-                        attribute_name.get_prefix().cloned(),
-                        attribute_name.get_attribute_name().clone(),
-                    );
                     Ok(())
                 },
                 processor_class_name,

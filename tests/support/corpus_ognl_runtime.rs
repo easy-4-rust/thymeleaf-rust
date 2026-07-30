@@ -6,6 +6,8 @@ use thymeleaf::util::{JavaNumber, JavaString};
 use super::corpus_byte_array_input_stream::CorpusByteArrayInputStream;
 use super::corpus_optional::CorpusOptional;
 use super::corpus_proxy::CorpusProxy;
+use super::corpus_simple_date_format::CorpusSimpleDateFormat;
+use super::corpus_string_array::CorpusStringArray;
 use super::exception_lazy_context_variable::ExceptionLazyContextVariable;
 use super::exception_throwing_bean::ExceptionThrowingBean;
 use super::lazy_expression_returner::LazyExpressionReturner;
@@ -49,6 +51,13 @@ impl OgnlRuntime for CorpusOgnlRuntime {
         let type_name = type_name.to_string_lossy();
         let method_name = method_name.to_string_lossy();
         match (type_name.as_str(), method_name.as_str(), arguments) {
+            ("java.util.TimeZone", "getTimeZone", [Some(value)]) => {
+                Some(Ok(Some(Arc::new(TemplateValue::string(
+                    value
+                        .to_java_string()
+                        .unwrap_or_else(|| JavaString::from_rust_str("GMT")),
+                )))))
+            }
             ("java.util.Optional", "of", [Some(value)]) => {
                 Some(optional("java.util.Optional", value))
             }
@@ -87,6 +96,22 @@ impl OgnlRuntime for CorpusOgnlRuntime {
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         let type_name = type_name.to_string_lossy();
         match (type_name.as_str(), arguments) {
+            ("java.lang.String[]", values) => Some(Ok(Some(Arc::new(TemplateValue::Object(
+                Arc::new(CorpusStringArray::new(
+                    values
+                        .iter()
+                        .map(|value| value.clone().unwrap_or_else(null_value))
+                        .collect(),
+                )),
+            ))))),
+            ("java.text.SimpleDateFormat", [Some(pattern)]) => {
+                let pattern = pattern
+                    .to_java_string()
+                    .unwrap_or_else(|| JavaString::from_rust_str(""));
+                Some(Ok(Some(Arc::new(TemplateValue::Object(Arc::new(
+                    CorpusSimpleDateFormat::new(pattern),
+                ))))))
+            }
             ("org.thymeleaf.templateengine.features.lazy.ValueLazyContextVariable", [value]) => {
                 Some(Ok(Some(Arc::new(TemplateValue::Object(Arc::new(
                     ValueLazyContextVariable::new(value.clone()),

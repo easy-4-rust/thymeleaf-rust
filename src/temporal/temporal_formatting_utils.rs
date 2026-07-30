@@ -1,3 +1,4 @@
+use chrono::Timelike;
 use chrono_tz::Tz;
 use thiserror::Error;
 
@@ -38,6 +39,7 @@ impl TemporalFormattingUtils {
             return Err(invalid("Pattern cannot be null or empty"));
         }
         let locale = locale.unwrap_or(&self.locale);
+        let has_explicit_pattern = pattern.is_some();
         let pattern = match pattern {
             None => TemporalObjects::formatter_for(target, locale)?,
             Some("SHORT") => localized_pattern(target, locale, "SHORT"),
@@ -48,39 +50,46 @@ impl TemporalFormattingUtils {
         };
 
         let formatted = match target {
-            JavaTemporal::Instant(value) if pattern.contains('Z') => {
+            JavaTemporal::Instant(value) if !has_explicit_pattern && pattern.contains('Z') => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::LocalDate(value) if zone_id.is_none() => {
+            JavaTemporal::LocalDate(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::LocalDateTime(value) if zone_id.is_none() => {
+            JavaTemporal::LocalDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::LocalTime(value) if zone_id.is_none() => {
+            JavaTemporal::LocalTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::OffsetDateTime(value) if zone_id.is_none() => {
+            JavaTemporal::OffsetDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::OffsetTime(value, offset) if zone_id.is_none() => format_offset(
-                value.format(&pattern).to_string(),
-                offset.local_minus_utc(),
-                &pattern,
-            ),
-            JavaTemporal::Year(value) if zone_id.is_none() => format_year(*value, &pattern),
-            JavaTemporal::YearMonth(year, month) if zone_id.is_none() => {
+            JavaTemporal::OffsetTime(value, offset)
+                if !has_explicit_pattern && zone_id.is_none() =>
+            {
+                format_offset(
+                    value.format(&pattern).to_string(),
+                    offset.local_minus_utc(),
+                    &pattern,
+                )
+            }
+            JavaTemporal::Year(value) if !has_explicit_pattern && zone_id.is_none() => {
+                format_year(*value, &pattern)
+            }
+            JavaTemporal::YearMonth(year, month) if !has_explicit_pattern && zone_id.is_none() => {
                 let date = chrono::NaiveDate::from_ymd_opt(*year, *month, 1)
                     .ok_or_else(|| invalid("Invalid YearMonth"))?;
                 date.format(&pattern).to_string()
             }
-            JavaTemporal::ZonedDateTime(value) if zone_id.is_none() => {
+            JavaTemporal::ZonedDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
             _ => TemporalObjects::zoned_time(target, zone_id.unwrap_or(self.default_zone_id))?
                 .format(&pattern)
                 .to_string(),
         };
+        let formatted = replace_java_fraction_markers(formatted, target)?;
         Ok(Some(JavaString::from_rust_str(&formatted)))
     }
 
@@ -228,6 +237,37 @@ impl TemporalFormattingUtils {
             })
             .transpose()
     }
+}
+
+fn replace_java_fraction_markers(
+    mut formatted: String,
+    target: &JavaTemporal,
+) -> Result<String, TemporalFormattingError> {
+    let nanosecond = match target {
+        JavaTemporal::Instant(value) => value.nanosecond(),
+        JavaTemporal::LocalDate(_) | JavaTemporal::Year(_) | JavaTemporal::YearMonth(_, _) => 0,
+        JavaTemporal::LocalDateTime(value) => value.nanosecond(),
+        JavaTemporal::LocalTime(value) | JavaTemporal::OffsetTime(value, _) => value.nanosecond(),
+        JavaTemporal::OffsetDateTime(value) => value.nanosecond(),
+        JavaTemporal::ZonedDateTime(value) => value.nanosecond(),
+    };
+    const PREFIX: &str = "__THYMELEAF_FRACTION_";
+    const SUFFIX: &str = "__";
+    while let Some(start) = formatted.find(PREFIX) {
+        let marker_end = formatted[start + PREFIX.len()..]
+            .find(SUFFIX)
+            .map(|offset| start + PREFIX.len() + offset)
+            .ok_or_else(|| invalid("Invalid Java fraction marker"))?;
+        let count = formatted[start + PREFIX.len()..marker_end]
+            .parse::<usize>()
+            .map_err(|_| invalid("Invalid Java fraction width"))?;
+        if !(1..=9).contains(&count) {
+            return Err(invalid("Fraction width must be between 1 and 9"));
+        }
+        let digits = format!("{nanosecond:09}");
+        formatted.replace_range(start..marker_end + SUFFIX.len(), &digits[..count]);
+    }
+    Ok(formatted)
 }
 
 /// Temporal 格式化或字段读取错误。

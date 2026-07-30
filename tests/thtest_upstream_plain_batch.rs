@@ -16,7 +16,7 @@ use html5gum::Tokenizer;
 use html5gum::emitters::default::Token;
 use indexmap::IndexMap;
 use serde_json::Value;
-use thymeleaf::context::{Context, ExpressionContext, IContext};
+use thymeleaf::context::{Context, ExpressionContext, IContext, WebContext};
 use thymeleaf::dialect::IDialect;
 use thymeleaf::exceptions::{
     TemplateAssertionException, TemplateInputException, TemplateProcessingException,
@@ -28,14 +28,18 @@ use thymeleaf::expression::{
 use thymeleaf::templateresolver::{StringTemplateResolver, TemplateResolution};
 use thymeleaf::text::TextParserReaderError;
 use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::web::IWebExchange;
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, ITemplateResolver, StandardDialect, TemplateEngine,
     TemplateMode, TemplateResolutionAttributes, TemplateSelectorSet,
 };
 
 use support::{
-    CorpusOgnlRuntime, Dialect01, ElementStackDialect, ExceptionLazyContextVariableError,
-    PrecedenceDialect, TestEngineMessageResolver, TestLinkBuilder,
+    ContextDialect, ContextVarTestDialect, ConversionTestDialect1, ConversionTestDialect4,
+    CorpusOgnlRuntime, CorpusRequestParameterValues, CorpusWebExchange, Dialect01, Dialect02,
+    ElementStackDialect, ExceptionLazyContextVariableError, InteractionDialect01, MarkupDialect,
+    NoOpDialect, PrePostProcessorsDialect01, PrecedenceDialect, TestEngineMessageResolver,
+    TestLinkBuilder,
 };
 
 const INVENTORY: &str = include_str!("../docs/migration/baseline/thtest_inventory.json");
@@ -101,7 +105,33 @@ fn upstream_plain_output_cases_run_as_one_batch() {
             } else if scope == "validated" {
                 1_757
             } else if scope == "directives" {
-                445
+                433
+            } else if scope == "prepostprocessors" {
+                10
+            } else if scope == "multiinput" {
+                237
+            } else if scope == "link" {
+                35
+            } else if scope == "inlining_interaction" {
+                18
+            } else if scope == "conversion" {
+                28
+            } else if scope == "processor_misc" {
+                23
+            } else if scope == "block" {
+                8
+            } else if scope == "context_vartest" {
+                38
+            } else if scope == "noop" {
+                4
+            } else if scope == "aggregation" {
+                3
+            } else if scope == "markup" {
+                11
+            } else if scope == "precedence" {
+                6
+            } else if scope == "web_context" {
+                5
             } else {
                 panic!("unsupported THYMELEAF_SCOPE: {scope}")
             },
@@ -143,6 +173,113 @@ fn is_scope_case(test: &Value, resource_path: &str, scope: &str) -> bool {
                 || is_scope_case(test, resource_path, "exception")
         }
         "directives" => is_directive_semantics_case(test, resource_path),
+        "prepostprocessors" => {
+            resource_path.starts_with("templateengine/prepostprocessors/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "multiinput" => is_multi_input_standard_case(test, resource_path),
+        "link" => {
+            resource_path.starts_with("templateengine/features/link/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "inlining_interaction" => {
+            resource_path.starts_with("templateengine/features/inlining/interaction/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "conversion" => {
+            (resource_path.starts_with("templateengine/conversion/conversion1/")
+                || resource_path.starts_with("templateengine/conversion/conversion4/"))
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "processor_misc" => {
+            (resource_path.starts_with("templateengine/elementprocessors/markup/")
+                || resource_path.starts_with("templateengine/elementprocessors/block/")
+                || resource_path.starts_with("templateengine/processors/noop/"))
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "block" => {
+            resource_path.starts_with("templateengine/elementprocessors/block/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "context_vartest" => {
+            resource_path.starts_with("templateengine/context/vartest/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "noop" => {
+            resource_path.starts_with("templateengine/processors/noop/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "aggregation" => {
+            resource_path.starts_with("templateengine/aggregation/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "markup" => {
+            resource_path.starts_with("templateengine/elementprocessors/markup/")
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
+        "precedence" => {
+            resource_path.starts_with("templateengine/elementprocessors/precedence")
+                && (test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+                    || test["directives"]
+                        .as_array()
+                        .expect("directives must be an array")
+                        .iter()
+                        .any(|directive| directive["name"] == "EXCEPTION"))
+        }
+        "web_context" => {
+            (resource_path.starts_with("templateengine/context/base/")
+                || resource_path.starts_with("templateengine/features/session/")
+                || resource_path.starts_with("templateengine/features/servletcontext/"))
+                && test["directives"]
+                    .as_array()
+                    .expect("directives must be an array")
+                    .iter()
+                    .any(|directive| directive["name"] == "OUTPUT")
+        }
         _ => false,
     }
 }
@@ -175,10 +312,68 @@ fn is_directive_semantics_case(test: &Value, resource_path: &str) -> bool {
         .collect::<Vec<_>>();
 
     is_standard_engine_case(resource_path)
+        && !is_disabled_restricted_exec_info_resource(resource_path)
         && names.iter().all(|name| ALLOWED_DIRECTIVES.contains(name))
         && names.contains(&"OUTPUT")
         && !names.contains(&"EXCEPTION")
         && names.iter().any(|name| DOMAIN_DIRECTIVES.contains(name))
+}
+
+fn is_disabled_restricted_exec_info_resource(resource_path: &str) -> bool {
+    const DISABLED_CASES: [&str; 12] = [
+        "execinfo06.thtest",
+        "execinfo08.thtest",
+        "execinfo09.thtest",
+        "execinfo10.thtest",
+        "execinfo11.thtest",
+        "execinfo12.thtest",
+        "execinfo13.thtest",
+        "execinfo14.thtest",
+        "execinfo15.thtest",
+        "execinfo20.thtest",
+        "execinfo21.thtest",
+        "execinfo22.thtest",
+    ];
+
+    // Java FeaturesTest#testExecInfo 已注释整个目录；这些 TEXT 资源又通过
+    // StandardTextTagProcessor 的 RESTRICTED 上下文访问 #execInfo，与 Java
+    // OGNLVariableExpressionEvaluator#checkRestrictedVariables 明确冲突。
+    // 保留安全拒绝语义，不把上游未执行的历史期望伪装成可通过基线。
+    resource_path.starts_with("templateengine/features/execinfo/")
+        && DISABLED_CASES
+            .iter()
+            .any(|case| resource_path.ends_with(case))
+}
+
+fn is_multi_input_standard_case(test: &Value, resource_path: &str) -> bool {
+    const ALLOWED_DIRECTIVES: [&str; 9] = [
+        "NAME",
+        "TEMPLATE_MODE",
+        "CONTEXT",
+        "MESSAGES",
+        "FRAGMENT",
+        "INPUT",
+        "OUTPUT",
+        "EXACT_MATCH",
+        "EXTENDS",
+    ];
+    let names = test["directives"]
+        .as_array()
+        .expect("directives must be an array")
+        .iter()
+        .map(|directive| {
+            directive["name"]
+                .as_str()
+                .expect("directive name must be a string")
+        })
+        .collect::<Vec<_>>();
+
+    is_standard_engine_case(resource_path)
+        && !is_disabled_restricted_exec_info_resource(resource_path)
+        && !is_directive_semantics_case(test, resource_path)
+        && names.iter().all(|name| ALLOWED_DIRECTIVES.contains(name))
+        && names.contains(&"OUTPUT")
+        && names.iter().filter(|name| **name == "INPUT").count() > 1
 }
 
 fn is_standard_engine_case(resource_path: &str) -> bool {
@@ -512,10 +707,21 @@ fn run_case(path: &Path) -> Result<(), String> {
         std::mem::take(&mut test_data.named_template_modes),
     );
     let engine = TemplateEngine::new();
-    let no_standard_dialect = path
-        .to_string_lossy()
-        .contains("/features/inlining/nostandard/");
-    if no_standard_dialect {
+    let path_text = path.to_string_lossy();
+    let no_standard_dialect = path_text.contains("/features/inlining/nostandard/");
+    if path_text.contains("/conversion/conversion1/") {
+        engine
+            .set_dialect(Arc::new(ConversionTestDialect1::new()) as Arc<dyn IDialect>)
+            .map_err(|error| error.to_string())?;
+    } else if path_text.contains("/conversion/conversion4/") {
+        engine
+            .set_dialect(Arc::new(ConversionTestDialect4::new()) as Arc<dyn IDialect>)
+            .map_err(|error| error.to_string())?;
+    } else if path_text.contains("/processors/noop/") {
+        engine
+            .set_dialect(Arc::new(NoOpDialect::new()) as Arc<dyn IDialect>)
+            .map_err(|error| error.to_string())?;
+    } else if no_standard_dialect {
         engine
             .set_dialect(Arc::new(Dialect01::new()) as Arc<dyn IDialect>)
             .map_err(|error| error.to_string())?;
@@ -529,10 +735,56 @@ fn run_case(path: &Path) -> Result<(), String> {
                 .add_dialect(Arc::new(ElementStackDialect::new()) as Arc<dyn IDialect>)
                 .map_err(|error| error.to_string())?;
         }
-        let path_text = path.to_string_lossy();
-        let precedence = if path_text.contains("/elementprocessors/precedencemodelsame/") {
+        if path
+            .to_string_lossy()
+            .contains("/templateengine/prepostprocessors/")
+        {
+            engine
+                .add_dialect(Arc::new(PrePostProcessorsDialect01::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path
+            .to_string_lossy()
+            .contains("/features/inlining/interaction/")
+        {
+            engine
+                .add_dialect(Arc::new(InteractionDialect01::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/templateengine/aggregation/") {
+            engine
+                .add_dialect(Arc::new(Dialect01::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+            engine
+                .add_dialect(Arc::new(Dialect02::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/elementprocessors/markup/") {
+            engine
+                .add_dialect(Arc::new(MarkupDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/context/vartest/") {
+            engine
+                .add_dialect(Arc::new(ContextVarTestDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        if path_text.contains("/context/base/") {
+            engine
+                .add_dialect(Arc::new(ContextDialect::new()) as Arc<dyn IDialect>)
+                .map_err(|error| error.to_string())?;
+        }
+        let precedence = if path_text.contains("/elementprocessors/precedencemodelbefore/")
+            || path_text.contains("/elementprocessors/precedencetagbefore/")
+        {
+            Some(999)
+        } else if path_text.contains("/elementprocessors/precedencemodelsame/")
+            || path_text.contains("/elementprocessors/precedencetagsame/")
+        {
             Some(1000)
-        } else if path_text.contains("/elementprocessors/precedencemodelafter/") {
+        } else if path_text.contains("/elementprocessors/precedencemodelafter/")
+            || path_text.contains("/elementprocessors/precedencetagafter/")
+        {
             Some(1001)
         } else {
             None
@@ -555,7 +807,12 @@ fn run_case(path: &Path) -> Result<(), String> {
         .set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
         .map_err(|error| error.to_string())?;
     let context_source = test_data.context;
-    let context = if no_standard_dialect {
+    let context: Box<dyn IContext> = if path_text.contains("/context/base/")
+        || path_text.contains("/features/session/")
+        || path_text.contains("/features/servletcontext/")
+    {
+        Box::new(build_web_context(&engine, context_source.as_deref())?)
+    } else if no_standard_dialect {
         // thymeleaf-testing 的 CONTEXT 字段求值器独立于被测 Engine 的方言集合。
         // 因此无 StandardDialect 的用例仍由同一固定 OGNL runtime 建立 Context。
         let context_engine = TemplateEngine::new();
@@ -567,15 +824,19 @@ fn run_case(path: &Path) -> Result<(), String> {
                 Arc::new(StringTemplateResolver::new()) as Arc<dyn ITemplateResolver>
             )
             .map_err(|error| error.to_string())?;
-        build_context(&context_engine, context_source.as_deref())?
+        Box::new(build_context(&context_engine, context_source.as_deref())?)
     } else {
-        build_context(&engine, context_source.as_deref())?
+        Box::new(build_context(&engine, context_source.as_deref())?)
     };
     let rendered = if let Some(fragment) = test_data.fragment_spec {
         let selectors: TemplateSelectorSet = [Some(fragment)].into_iter().collect();
-        engine.process_template_with_selectors(&test_data.root_template_name, &selectors, &context)
+        engine.process_template_with_selectors(
+            &test_data.root_template_name,
+            &selectors,
+            context.as_ref(),
+        )
     } else {
-        engine.process_template(&test_data.root_template_name, &context)
+        engine.process_template(&test_data.root_template_name, context.as_ref())
     };
     match (expected_exception, rendered) {
         (Some(expected_class), Err(error)) => expected_exception_matches(
@@ -812,9 +1073,6 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         JavaString::from_rust_str(""),
     );
     let context = Context::with_locale(Some(default_locale.clone()));
-    let Some(source) = source else {
-        return Ok(context);
-    };
     let configuration = engine
         .get_configuration()
         .map_err(|error| error.to_string())?;
@@ -831,6 +1089,9 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         context.set_variable(Some(name.clone()), value.clone());
         expression_context.set_variable(Some(name), value);
     }
+    let Some(source) = source else {
+        return Ok(context);
+    };
     for assignment in split_context_assignments(source)? {
         let (name, expression) = split_context_assignment(&assignment)?;
         // Java 基准的 DefaultContextStandardTestFieldEvaluator 先通过
@@ -871,6 +1132,56 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         expression_context.remove_variable(Some(&name));
         expression_context.set_variable(Some(name.clone()), value.clone());
         context.set_variable(Some(name), value);
+    }
+    Ok(context)
+}
+
+fn build_web_context(engine: &TemplateEngine, source: Option<&str>) -> Result<WebContext, String> {
+    let default_locale = JavaLocale::new(
+        JavaString::from_rust_str("en"),
+        JavaString::from_rust_str(""),
+    );
+    let exchange = Arc::new(CorpusWebExchange::new());
+    let web_exchange: Arc<dyn IWebExchange> = exchange.clone();
+    let context = WebContext::with_locale(Some(web_exchange), Some(default_locale.clone()))
+        .map_err(|error| error.to_string())?;
+    let Some(source) = source else {
+        return Ok(context);
+    };
+    let configuration = engine
+        .get_configuration()
+        .map_err(|error| error.to_string())?;
+    let expression_context =
+        ExpressionContext::new(Some(configuration)).map_err(|error| error.to_string())?;
+    expression_context
+        .set_locale(Some(default_locale))
+        .map_err(|error| error.to_string())?;
+
+    for assignment in split_context_assignments(source)? {
+        let (target, expression) = split_context_assignment(&assignment)?;
+        let expression = decode_java_properties_value(expression)?;
+        let expression = VariableExpression::new(Some(JavaString::from_rust_str(&expression)))
+            .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
+        let value = expression
+            .execute(&expression_context)
+            .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
+        if let Some(name) = target.strip_prefix("session.") {
+            let name = Some(JavaString::from_rust_str(name.trim()));
+            exchange
+                .get_session()
+                .expect("corpus web exchange always has a session")
+                .set_attribute_value(name, value);
+        } else if let Some(name) = target.strip_prefix("application.") {
+            exchange
+                .get_application()
+                .set_attribute_value(Some(JavaString::from_rust_str(name.trim())), value);
+        } else if is_simple_context_name(target) {
+            let name = Some(JavaString::from_rust_str(target));
+            context.set_variable(name.clone(), value.clone());
+            expression_context.set_variable(name, value);
+        } else {
+            return Err(format!("Unsupported Web CONTEXT mutation target: {target}"));
+        }
     }
     Ok(context)
 }
@@ -998,16 +1309,20 @@ fn update_request_parameter_map(
         .iter_mut()
         .find(|(candidate, _)| candidate.java_equals(key.as_ref()))
     {
-        let TemplateValue::List(values) = current_value.as_ref() else {
-            return Err("request parameter value is not a list".to_owned());
+        let TemplateValue::Object(values) = current_value.as_ref() else {
+            return Err("request parameter value is not an object".to_owned());
         };
-        let mut values = values.as_ref().clone();
-        values.push(value);
-        *current_value = Arc::new(TemplateValue::List(Arc::new(values)));
+        let values = values
+            .as_any()
+            .downcast_ref::<CorpusRequestParameterValues>()
+            .ok_or_else(|| "request parameter value has an unexpected type".to_owned())?;
+        *current_value = Arc::new(TemplateValue::Object(Arc::new(values.with_appended(value))));
     } else {
         entries.push((
             Arc::clone(key),
-            Arc::new(TemplateValue::List(Arc::new(vec![value]))),
+            Arc::new(TemplateValue::Object(Arc::new(
+                CorpusRequestParameterValues::new(value),
+            ))),
         ));
     }
     Ok(Arc::new(TemplateValue::Map(Arc::new(entries))))
@@ -1120,6 +1435,12 @@ fn split_context_assignments(context: &str) -> Result<Vec<String>, String> {
     let mut position = 0_usize;
     while position < units.len() {
         let character = units[position];
+        if character == '\\' && units.get(position + 1) == Some(&'\n') {
+            // Properties.load 在 OGNL 看到值之前先删除物理行续行；该规则在
+            // 字符串字面量内部同样生效。
+            position += 2;
+            continue;
+        }
         if let Some(active_quote) = quote {
             current.push(character);
             if character == active_quote && !is_escaped_character(&units, position) {
@@ -1156,9 +1477,6 @@ fn split_context_assignments(context: &str) -> Result<Vec<String>, String> {
             '}' => {
                 braces -= 1;
                 current.push(character);
-            }
-            '\\' if units.get(position + 1) == Some(&'\n') => {
-                position += 1;
             }
             ',' | '\n' if parentheses == 0 && brackets == 0 && braces == 0 => {
                 let assignment = current.trim();
@@ -1209,7 +1527,9 @@ fn is_escaped_character(input: &[char], position: usize) -> bool {
         slashes += 1;
         cursor -= 1;
     }
-    slashes % 2 == 1
+    // 当前输入仍是 Properties 原文：每两个反斜杠先折叠为一个，再交给
+    // OGNL 判断引号是否转义。
+    (slashes / 2) % 2 == 1
 }
 
 /// 仅把顶层输入及“当前模板”重新解析为字符串资源。

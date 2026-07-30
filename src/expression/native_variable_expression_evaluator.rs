@@ -234,6 +234,9 @@ impl NativeVariableExpressionEvaluator {
             })
         })?;
 
+        // Context 内部用 TemplateValue::Null 保存 Java null 哨兵，但表达式 API
+        // 必须继续以 None 暴露 Java null，DefaultExpression 才会执行右操作数。
+        let result = normalize_java_null(result);
         if !expression_context.get_perform_type_conversion() {
             return Ok(result);
         }
@@ -1036,12 +1039,31 @@ fn parse_constructor(
     {
         position += 1;
     }
-    if position == type_start || input.get(position) != Some(&(b'(' as u16)) {
+    if position == type_start {
         return None;
     }
-    let type_name = JavaString::from_utf16(input[type_start..position].to_vec());
-    let end = find_closing_parenthesis(input, position)?;
-    let arguments = split_method_arguments(&input[position + 1..end])?
+    let mut type_name_units = input[type_start..position].to_vec();
+    let (arguments, end) = if input.get(position) == Some(&(b'(' as u16)) {
+        let end = find_closing_parenthesis(input, position)?;
+        let arguments = split_method_arguments(&input[position + 1..end])?;
+        (arguments, end)
+    } else if input.get(position..position + 2) == Some(&[b'[' as u16, b']' as u16][..]) {
+        type_name_units.extend_from_slice(&[b'[' as u16, b']' as u16]);
+        position += 2;
+        while input.get(position).is_some_and(|unit| *unit <= 0x20) {
+            position += 1;
+        }
+        if input.get(position) != Some(&(b'{' as u16)) {
+            return None;
+        }
+        let end = find_closing_delimiter(input, position, b'{' as u16, b'}' as u16)?;
+        let arguments = split_method_arguments(&input[position + 1..end])?;
+        (arguments, end)
+    } else {
+        return None;
+    };
+    let type_name = JavaString::from_utf16(type_name_units);
+    let arguments = arguments
         .into_iter()
         .map(|argument| {
             parse_expression(
@@ -1433,11 +1455,12 @@ fn evaluate_path_steps(
 fn evaluate_navigation_steps(
     context: &dyn IExpressionContext,
     steps: &[PathStep],
-    mut value: Option<Arc<TemplateValue>>,
+    value: Option<Arc<TemplateValue>>,
     use_selection_as_root: bool,
     expression_context: &'static StandardExpressionExecutionContext,
     root_method_name: Option<&JavaString>,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
+    let mut value = normalize_java_null(value);
     for step in steps {
         let target = value.as_deref().ok_or_else(|| {
             ognl_processing_error(
@@ -1445,7 +1468,7 @@ fn evaluate_navigation_steps(
                 "source is null while evaluating OGNL property path".to_owned(),
             )
         })?;
-        value = match step {
+        value = normalize_java_null(match step {
             PathStep::Property(name) | PathStep::StringIndex(name) => {
                 read_dynamic_property(target, name)?
             }
@@ -1566,6 +1589,10 @@ fn evaluate_navigation_steps(
                     .get(*index)
                     .map(|value| Arc::new(TemplateValue::Character(*value)))
                     .ok_or_else(|| processing_error(format!("index {index} is out of bounds")))?,
+                TemplateValue::Object(value) if value.java_iterable_values().is_some() => value
+                    .java_iterable_values()
+                    .and_then(|values| values.get(*index).cloned())
+                    .ok_or_else(|| processing_error(format!("index {index} is out of bounds")))?,
                 _ => {
                     return Err(processing_error(format!(
                         "numeric index cannot be applied to {}",
@@ -1574,9 +1601,13 @@ fn evaluate_navigation_steps(
                 }
             }
             .into(),
-        };
+        });
     }
     Ok(value)
+}
+
+fn normalize_java_null(value: Option<Arc<TemplateValue>>) -> Option<Arc<TemplateValue>> {
+    value.filter(|value| !matches!(value.as_ref(), TemplateValue::Null))
 }
 
 fn evaluate_dynamic_subscript(
@@ -2917,6 +2948,25 @@ fn read_dynamic_property(
     name: &JavaString,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     if name == &JavaString::from_rust_str("class") {
+        if let TemplateValue::Map(entries) = target
+            && let Some(value) = entries.iter().find_map(|(key, value)| {
+                matches!(
+                    key.as_ref(),
+                    TemplateValue::String(key_value) | TemplateValue::SafeHtml(key_value)
+                        if key_value.as_ref() == name
+                )
+                .then(|| Arc::clone(value))
+            })
+        {
+            return Ok(Some(value));
+        }
+        if let TemplateValue::Object(value) = target
+            && let Some(result) = value.java_get_property(name)
+        {
+            // OGNL 的专用 PropertyAccessor（例如 ContextMap）先于 Object#getClass；
+            // 因而名为 class 的上下文变量必须遮蔽反射类属性。
+            return result.map_err(|error| processing_error(error.to_string()));
+        }
         return Ok(Some(java_class_value(target.java_class_name())));
     }
     match target {
@@ -3017,10 +3067,17 @@ fn convert_to_string(
         return Ok(None);
     };
     let service = StandardExpressions::get_conversion_service(context.get_configuration())?;
+    let conversion_value = match value.as_ref() {
+        TemplateValue::Null => JavaConversionValue::Null,
+        TemplateValue::String(string) | TemplateValue::SafeHtml(string) => {
+            JavaConversionValue::String(string)
+        }
+        object => JavaConversionValue::Object(object),
+    };
     let converted = service
         .convert(
             Some(context.as_any()),
-            JavaConversionValue::Object(value.as_ref()),
+            conversion_value,
             Some(&JavaTargetClass::String),
         )
         .map_err(|error| Box::new(error) as super::StandardExpressionError)?;

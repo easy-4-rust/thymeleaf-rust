@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use thymeleaf::context::ITemplateContext;
-use thymeleaf::expression::TemplateValue;
+use thymeleaf::expression::{Numbers, TemplateValue};
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::{JavaNumber, JavaString, NumberPointType};
 
 /// 上游测试框架的内存消息解析器。
 ///
@@ -72,9 +72,9 @@ impl IMessageResolver for TestEngineMessageResolver {
         key: &JavaString,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
     ) -> MessageResolutionResult<Option<JavaString>> {
-        Ok(self
-            .resolve_for_locale(context, key)
-            .map(|message| format_message_like_java(message, message_parameters.unwrap_or(&[]))))
+        Ok(self.resolve_for_locale(context, key).map(|message| {
+            format_message_like_java(message, message_parameters.unwrap_or(&[]), context)
+        }))
     }
 
     fn create_absent_message_representation(
@@ -95,6 +95,7 @@ impl IMessageResolver for TestEngineMessageResolver {
 fn format_message_like_java(
     message: &JavaString,
     parameters: &[Option<Arc<TemplateValue>>],
+    context: &dyn ITemplateContext,
 ) -> JavaString {
     let text = message.to_string_lossy();
     let characters = text.chars().collect::<Vec<_>>();
@@ -136,10 +137,22 @@ fn format_message_like_java(
                     position = end + 1;
                     continue;
                 };
-                let value = parameter
-                    .as_deref()
-                    .and_then(TemplateValue::to_java_string)
-                    .unwrap_or_else(|| JavaString::from_rust_str("null"));
+                let value = match parameter.as_deref() {
+                    Some(TemplateValue::Number(
+                        number @ (JavaNumber::Byte(_)
+                        | JavaNumber::Short(_)
+                        | JavaNumber::Integer(_)
+                        | JavaNumber::Long(_)
+                        | JavaNumber::BigInteger(_)),
+                    )) => Numbers::new(context.get_locale().clone())
+                        .format_integer(Some(number), 1, Some(NumberPointType::Default))
+                        .ok()
+                        .flatten()
+                        .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                    value => value
+                        .and_then(TemplateValue::to_java_string)
+                        .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                };
                 result.push_str(&value.to_string_lossy());
                 position = end + 1;
                 continue;

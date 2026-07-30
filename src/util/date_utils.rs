@@ -18,6 +18,7 @@ pub struct JavaDate {
     instant: DateTime<Utc>,
     time_zone: Option<Tz>,
     fixed_offset: Option<FixedOffset>,
+    zone_display_name: Option<String>,
     calendar: bool,
 }
 
@@ -29,6 +30,7 @@ impl JavaDate {
             instant,
             time_zone: None,
             fixed_offset: None,
+            zone_display_name: None,
             calendar: false,
         }
     }
@@ -40,17 +42,25 @@ impl JavaDate {
             instant,
             time_zone: Some(time_zone),
             fixed_offset: None,
+            zone_display_name: None,
             calendar: true,
         }
     }
 
     fn calendar_for_time_zone(instant: DateTime<Utc>, time_zone: JavaTimeZone) -> Self {
         match time_zone {
-            JavaTimeZone::Named(time_zone) => Self::calendar(instant, time_zone),
+            JavaTimeZone::Named(time_zone, zone_display_name) => Self {
+                instant,
+                time_zone: Some(time_zone),
+                fixed_offset: None,
+                zone_display_name,
+                calendar: true,
+            },
             JavaTimeZone::Fixed(fixed_offset) => Self {
                 instant,
                 time_zone: None,
                 fixed_offset: Some(fixed_offset),
+                zone_display_name: None,
                 calendar: true,
             },
         }
@@ -161,13 +171,15 @@ impl JavaDate {
         if let Some(fixed_offset) = self.fixed_offset {
             JavaTimeZone::Fixed(fixed_offset)
         } else {
-            JavaTimeZone::Named(self.time_zone.unwrap_or_else(default_time_zone))
+            JavaTimeZone::Named(self.time_zone.unwrap_or_else(default_time_zone), None)
         }
     }
 
     fn local_date_time(&self) -> NaiveDateTime {
         match self.effective_time_zone() {
-            JavaTimeZone::Named(time_zone) => self.instant.with_timezone(&time_zone).naive_local(),
+            JavaTimeZone::Named(time_zone, _) => {
+                self.instant.with_timezone(&time_zone).naive_local()
+            }
             JavaTimeZone::Fixed(fixed_offset) => {
                 self.instant.with_timezone(&fixed_offset).naive_local()
             }
@@ -176,7 +188,7 @@ impl JavaDate {
 
     fn offset_seconds(&self) -> i32 {
         match self.effective_time_zone() {
-            JavaTimeZone::Named(time_zone) => self
+            JavaTimeZone::Named(time_zone, _) => self
                 .instant
                 .with_timezone(&time_zone)
                 .offset()
@@ -187,8 +199,11 @@ impl JavaDate {
     }
 
     fn zone_display_name(&self) -> String {
+        if let Some(zone_display_name) = &self.zone_display_name {
+            return zone_display_name.clone();
+        }
         match self.effective_time_zone() {
-            JavaTimeZone::Named(time_zone) => self
+            JavaTimeZone::Named(time_zone, _) => self
                 .instant
                 .with_timezone(&time_zone)
                 .format("%Z")
@@ -198,9 +213,9 @@ impl JavaDate {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum JavaTimeZone {
-    Named(Tz),
+    Named(Tz, Option<String>),
     Fixed(FixedOffset),
 }
 
@@ -280,7 +295,7 @@ impl DateUtils {
             + Duration::milliseconds(i64::from(millisecond.unwrap_or(0)));
         let time_zone = parse_time_zone(time_zone);
         Ok(JavaDate::calendar_for_time_zone(
-            resolve_local_datetime(time_zone, naive),
+            resolve_local_datetime(&time_zone, naive),
             time_zone,
         ))
     }
@@ -301,7 +316,7 @@ impl DateUtils {
             .and_hms_opt(0, 0, 0)
             .expect("midnight");
         let time_zone = now.effective_time_zone();
-        JavaDate::calendar_for_time_zone(resolve_local_datetime(time_zone, midnight), time_zone)
+        JavaDate::calendar_for_time_zone(resolve_local_datetime(&time_zone, midnight), time_zone)
     }
 
     /// 使用 Locale 默认长日期时间格式或指定 SimpleDateFormat pattern 格式化。
@@ -503,18 +518,24 @@ fn nullable_i32(value: Option<i32>) -> String {
 
 fn parse_time_zone(value: Option<&str>) -> JavaTimeZone {
     let Some(value) = value else {
-        return JavaTimeZone::Named(default_time_zone());
+        return JavaTimeZone::Named(default_time_zone(), None);
     };
     if let Some(fixed_offset) = java_fixed_time_zone(value) {
         return JavaTimeZone::Fixed(fixed_offset);
     }
+    if let Some((time_zone, display_name)) = java_short_time_zone(value) {
+        return JavaTimeZone::Named(time_zone, Some(display_name.to_owned()));
+    }
+    let time_zone = value.parse::<Tz>().unwrap_or(chrono_tz::UTC);
     JavaTimeZone::Named(
-        value
-            .parse::<Tz>()
-            .ok()
-            .or_else(|| java_short_time_zone(value))
-            // TimeZone#getTimeZone 对未知 ID 返回 GMT，而不是 JVM 默认时区。
-            .unwrap_or(chrono_tz::UTC),
+        // TimeZone#getTimeZone 对未知 ID 返回 GMT，而不是 JVM 默认时区。
+        time_zone,
+        (time_zone != chrono_tz::UTC
+            && value.len() <= 4
+            && value
+                .chars()
+                .all(|character| character.is_ascii_uppercase()))
+        .then(|| value.to_owned()),
     )
 }
 
@@ -547,7 +568,7 @@ fn java_fixed_time_zone(value: &str) -> Option<FixedOffset> {
     FixedOffset::east_opt(sign * (hours * 3_600 + minutes * 60))
 }
 
-fn java_short_time_zone(value: &str) -> Option<Tz> {
+fn java_short_time_zone(value: &str) -> Option<(Tz, &'static str)> {
     let canonical = match value {
         "GMT" | "UTC" | "UT" | "GMT+00:00" | "GMT-00:00" => "UTC",
         "ACT" => "Australia/Darwin",
@@ -577,7 +598,46 @@ fn java_short_time_zone(value: &str) -> Option<Tz> {
         "VST" => "Asia/Ho_Chi_Minh",
         _ => return None,
     };
-    canonical.parse().ok()
+    canonical
+        .parse()
+        .ok()
+        .map(|time_zone| (time_zone, value_id(value)))
+}
+
+fn value_id(value: &str) -> &'static str {
+    match value {
+        "GMT" => "GMT",
+        "UTC" => "UTC",
+        "UT" => "UT",
+        "GMT+00:00" => "GMT+00:00",
+        "GMT-00:00" => "GMT-00:00",
+        "ACT" => "ACT",
+        "AET" => "AET",
+        "AGT" => "AGT",
+        "ART" => "ART",
+        "AST" => "AST",
+        "BET" => "BET",
+        "BST" => "BST",
+        "CAT" => "CAT",
+        "CNT" => "CNT",
+        "CST" => "CST",
+        "CTT" => "CTT",
+        "EAT" => "EAT",
+        "ECT" => "ECT",
+        "IET" => "IET",
+        "IST" => "IST",
+        "JST" => "JST",
+        "MIT" => "MIT",
+        "NET" => "NET",
+        "NST" => "NST",
+        "PLT" => "PLT",
+        "PNT" => "PNT",
+        "PRT" => "PRT",
+        "PST" => "PST",
+        "SST" => "SST",
+        "VST" => "VST",
+        _ => unreachable!("value_id is called only for a recognized Java short time-zone ID"),
+    }
 }
 
 fn default_time_zone() -> Tz {
@@ -587,9 +647,9 @@ fn default_time_zone() -> Tz {
         .unwrap_or(chrono_tz::UTC)
 }
 
-fn resolve_local_datetime(time_zone: JavaTimeZone, naive: NaiveDateTime) -> DateTime<Utc> {
+fn resolve_local_datetime(time_zone: &JavaTimeZone, naive: NaiveDateTime) -> DateTime<Utc> {
     match time_zone {
-        JavaTimeZone::Named(time_zone) => match time_zone.from_local_datetime(&naive) {
+        JavaTimeZone::Named(time_zone, _) => match time_zone.from_local_datetime(&naive) {
             LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => {
                 value.with_timezone(&Utc)
             }
@@ -833,12 +893,29 @@ fn localized_month_name(month: u32, locale: &JavaLocale, short: bool) -> &'stati
         "十一月",
         "十二月",
     ];
-    if locale.get_language().to_string_lossy() == "zh" {
-        ZH[month as usize]
-    } else if short {
-        EN_SHORT[month as usize]
-    } else {
-        EN_LONG[month as usize]
+    const ES_LONG: [&str; 12] = [
+        "enero",
+        "febrero",
+        "marzo",
+        "abril",
+        "mayo",
+        "junio",
+        "julio",
+        "agosto",
+        "septiembre",
+        "octubre",
+        "noviembre",
+        "diciembre",
+    ];
+    const ES_SHORT: [&str; 12] = [
+        "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic",
+    ];
+    match (locale.get_language().to_string_lossy().as_str(), short) {
+        ("zh", _) => ZH[month as usize],
+        ("es", true) => ES_SHORT[month as usize],
+        ("es", false) => ES_LONG[month as usize],
+        (_, true) => EN_SHORT[month as usize],
+        (_, false) => EN_LONG[month as usize],
     }
 }
 

@@ -148,7 +148,7 @@ impl FragmentExpression {
         let template_name = if template_name.is_empty() {
             None
         } else {
-            Some(parse_default_as_literal(template_name)?)
+            Some(parse_template_name_default_as_literal(template_name)?)
         };
         let fragment_selector = match fragment_spec.filter(|value| !value.is_empty()) {
             Some(value) => Some(parse_default_as_literal(value)?),
@@ -497,6 +497,30 @@ fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression
     Some(Arc::new(
         TextLiteralExpression::parse_text_literal_expression(&wrapped),
     ))
+}
+
+fn parse_template_name_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
+    let input = java_trim(input);
+    let contains_standard_expression = input.windows(2).any(|window| {
+        matches!(
+            window,
+            [selector, open]
+                if *open == b'{' as u16
+                    && matches!(*selector, value if value == b'$' as u16
+                        || value == b'*' as u16
+                        || value == b'#' as u16
+                        || value == b'@' as u16
+                        || value == b'~' as u16)
+        )
+    });
+    if input.contains(&(b'/' as u16)) && !contains_standard_expression {
+        let input = JavaString::from_utf16(input.to_vec());
+        let wrapped = TextLiteralExpression::wrap_string_into_literal(Some(&input))?;
+        return Some(Arc::new(
+            TextLiteralExpression::parse_text_literal_expression(&wrapped),
+        ));
+    }
+    parse_default_as_literal(input)
 }
 
 fn index_of_last_parentheses_group(input: &[u16]) -> Option<usize> {

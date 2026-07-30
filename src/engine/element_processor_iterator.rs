@@ -167,7 +167,5 @@ fn compare_processors(
     if Arc::ptr_eq(left, right) {
         return Ordering::Equal;
     }
-    left.get_precedence()
-        .cmp(&right.get_precedence())
-        .then_with(|| left.java_class_name().cmp(right.java_class_name()))
+    crate::util::ProcessorComparators::compare_processors(left.as_ref(), right.as_ref())
 }

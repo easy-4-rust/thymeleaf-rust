@@ -3,7 +3,9 @@ use std::sync::Arc;
 use thymeleaf::dialect::{AbstractProcessorDialect, IDialect, IProcessorDialect};
 use thymeleaf::processor::{IProcessor, ProcessorSet};
 
-use super::PrecedenceModifyLocalVariableModelProcessor;
+use super::{
+    PrecedenceModifyLocalVariableModelProcessor, PrecedenceModifyLocalVariableTagProcessor,
+};
 
 /// 验证方言与 Processor precedence 组合排序的测试方言。
 ///
@@ -50,6 +52,10 @@ impl IProcessorDialect for PrecedenceDialect {
         let mut processors = ProcessorSet::new();
         let processor: Arc<dyn IProcessor> = Arc::new(
             PrecedenceModifyLocalVariableModelProcessor::new(dialect_prefix),
+        );
+        processors.insert(Some(processor));
+        let processor: Arc<dyn IProcessor> = Arc::new(
+            PrecedenceModifyLocalVariableTagProcessor::new(dialect_prefix),
         );
         processors.insert(Some(processor));
         Some(processors)

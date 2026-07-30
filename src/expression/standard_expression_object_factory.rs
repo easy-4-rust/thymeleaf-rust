@@ -251,7 +251,9 @@ impl TemplateObject for JavaLocale {
     }
 
     fn to_java_string(&self) -> JavaString {
-        self.to_language_tag().clone()
+        // Locale#toString 使用下划线连接 language/country/variant；
+        // BCP-47 连字符形式只属于 Locale#toLanguageTag。
+        JavaString::from_rust_str(&self.to_string())
     }
 
     fn as_any(&self) -> &dyn Any {

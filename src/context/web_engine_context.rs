@@ -7,11 +7,12 @@ use indexmap::IndexMap;
 use crate::engine::TemplateData;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::{
-    IExpressionObjects, TemplateObject, TemplateObjectPropertyError, TemplateValue,
+    IExpressionObjects, TemplateObject, TemplateObjectMethodError, TemplateObjectPropertyError,
+    TemplateValue,
 };
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, JavaNumber, JavaString};
 use crate::web::IWebExchange;
 use crate::{IEngineConfiguration, TemplateMode, TemplateResolutionAttributes};
 
@@ -528,6 +529,19 @@ impl TemplateObject for RequestParameterMap {
             )))
         })))
     }
+
+    fn java_invoke_method(
+        &self,
+        method_name: &JavaString,
+        arguments: &[Option<Arc<TemplateValue>>],
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
+        if method_name.to_string_lossy() == "size" && arguments.is_empty() {
+            return Some(Ok(Some(integer_value(
+                self.web_exchange.get_request().get_parameter_count(),
+            ))));
+        }
+        None
+    }
 }
 
 impl NoOpMapImpl for RequestParameterMap {}
@@ -573,6 +587,21 @@ impl TemplateObject for SessionAttributeMap {
             .and_then(|session| session.get_attribute_value(Some(property_name)))
             .and_then(resolve_lazy)))
     }
+
+    fn java_invoke_method(
+        &self,
+        method_name: &JavaString,
+        arguments: &[Option<Arc<TemplateValue>>],
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
+        if method_name.to_string_lossy() == "size" && arguments.is_empty() {
+            let size = self
+                .web_exchange
+                .get_session()
+                .map_or(0, |session| session.get_attribute_count());
+            return Some(Ok(Some(integer_value(size))));
+        }
+        None
+    }
 }
 
 impl NoOpMapImpl for SessionAttributeMap {}
@@ -615,9 +644,26 @@ impl TemplateObject for ApplicationAttributeMap {
             .get_attribute_value(Some(property_name))
             .and_then(resolve_lazy)))
     }
+
+    fn java_invoke_method(
+        &self,
+        method_name: &JavaString,
+        arguments: &[Option<Arc<TemplateValue>>],
+    ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
+        if method_name.to_string_lossy() == "size" && arguments.is_empty() {
+            return Some(Ok(Some(integer_value(
+                self.web_exchange.get_application().get_attribute_count(),
+            ))));
+        }
+        None
+    }
 }
 
 impl NoOpMapImpl for ApplicationAttributeMap {}
+
+fn integer_value(value: i32) -> Arc<TemplateValue> {
+    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+}
 
 /// 请求参数值的只读 List 视图。
 ///

@@ -252,7 +252,14 @@ impl Strings {
             }
             ("concatReplaceNulls", [null_value, values @ ..]) => {
                 let null_value = string_argument(null_value);
-                let values = values.iter().map(string_argument).collect::<Vec<_>>();
+                // OGNL-236：通过 OGNL 调用 Java 可变参数方法时，null 元素不会
+                // 进入 Object[]。保留该已被 Thymeleaf 上游语料锁定的兼容行为；
+                // StringUtils 的直接 Rust API 仍完整执行 null 替换。
+                let values = values
+                    .iter()
+                    .filter_map(string_argument)
+                    .map(Some)
+                    .collect::<Vec<_>>();
                 Ok(Some(Arc::new(TemplateValue::string(
                     StringUtils::concat_replace_nulls(null_value.as_ref(), Some(&values)),
                 ))))

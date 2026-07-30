@@ -79,7 +79,9 @@ impl NumberUtils {
             rendered.push('-');
         }
         rendered.push_str(&integer);
-        if fraction_digits > 0 && decimal_point_type != NumberPointType::None {
+        if fraction_digits > 0 {
+            // Java NumberPointType.NONE 的 point character 是 '?'；它只禁用
+            // 千位分组，不会在请求小数位时删除整个小数部分。
             rendered.push(point_character(decimal_point_type, locale, true));
             rendered.push_str(fraction.as_deref().unwrap_or(""));
         }

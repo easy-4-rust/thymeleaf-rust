@@ -6,7 +6,7 @@ use std::sync::{OnceLock, RwLock};
 use crate::TemplateInputException;
 use crate::expression::TemplateValue;
 use crate::templateresource::ITemplateResource;
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, JavaNumber, JavaString, NumberPointType, NumberUtils};
 
 type Messages = HashMap<JavaString, JavaString>;
 type OriginMessages = HashMap<(TypeId, JavaLocale), Messages>;
@@ -66,7 +66,7 @@ impl StandardMessageResolutionUtils {
 
     /// 使用 Java `MessageFormat` 的索引占位符和引号规则格式化消息。
     pub(crate) fn format_message(
-        _locale: &JavaLocale,
+        locale: &JavaLocale,
         message: &JavaString,
         message_parameters: Option<&[Option<std::sync::Arc<TemplateValue>>]>,
     ) -> JavaString {
@@ -103,11 +103,10 @@ impl StandardMessageResolutionUtils {
                     .map(str::trim)
                     .and_then(|value| value.parse::<usize>().ok());
                 if let Some(parameter_index) = parameter_index {
-                    let value = parameters
-                        .get(parameter_index)
-                        .and_then(Option::as_deref)
-                        .and_then(TemplateValue::to_java_string)
-                        .unwrap_or_else(|| JavaString::from_rust_str("null"));
+                    let value = format_message_parameter(
+                        parameters.get(parameter_index).and_then(Option::as_deref),
+                        locale,
+                    );
                     result.push_str(&value.to_string_lossy());
                     index = end + 1;
                     continue;
@@ -177,6 +176,30 @@ impl StandardMessageResolutionUtils {
                 )
             })
     }
+}
+
+fn format_message_parameter(value: Option<&TemplateValue>, locale: &JavaLocale) -> JavaString {
+    if let Some(TemplateValue::Number(
+        number @ (JavaNumber::Byte(_)
+        | JavaNumber::Short(_)
+        | JavaNumber::Integer(_)
+        | JavaNumber::Long(_)
+        | JavaNumber::BigInteger(_)),
+    )) = value
+        && let Ok(Some(formatted)) = NumberUtils::format(
+            Some(number),
+            Some(1),
+            Some(NumberPointType::Default),
+            Some(0),
+            Some(NumberPointType::Default),
+            Some(locale),
+        )
+    {
+        return formatted;
+    }
+    value
+        .and_then(TemplateValue::to_java_string)
+        .unwrap_or_else(|| JavaString::from_rust_str("null"))
 }
 
 fn find_format_element_end(characters: &[char], start: usize) -> Option<usize> {

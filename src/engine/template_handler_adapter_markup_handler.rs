@@ -523,12 +523,16 @@ impl TemplateHandlerAdapterMarkupHandler {
                 ));
             }
             let name_end = position;
-            position = consume_whitespace(source, position, content_end);
+            let after_name = position;
+            let after_name_whitespace = consume_whitespace(source, position, content_end);
 
             let mut operator = None;
             let mut value = None;
             let mut quotes = None;
-            if position < content_end && source.as_bytes()[position] == b'=' {
+            if after_name_whitespace < content_end
+                && source.as_bytes()[after_name_whitespace] == b'='
+            {
+                position = after_name_whitespace;
                 operator = Some(JavaString::from_rust_str("="));
                 position += 1;
                 position = consume_whitespace(source, position, content_end);
@@ -576,6 +580,10 @@ impl TemplateHandlerAdapterMarkupHandler {
                     value = Some(JavaString::from_rust_str(""));
                     quotes = Some(AttributeValueQuotes::DOUBLE);
                 }
+            } else {
+                // 无值 HTML 属性之后的空白属于下一属性的前导空白，不能作为
+                // “属性名与等号之间的空白”吞掉。对应 attoparser 的属性序列事件。
+                position = after_name;
             }
 
             let complete_name = JavaString::from_rust_str(&source[name_start..name_end]);

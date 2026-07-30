@@ -60,9 +60,13 @@ impl Conversions {
                     error.to_string(),
                 )
             })?;
-        let value = target.map_or(JavaConversionValue::Null, |value| {
-            JavaConversionValue::Object(value)
-        });
+        let value = match target {
+            None | Some(TemplateValue::Null) => JavaConversionValue::Null,
+            Some(TemplateValue::String(value) | TemplateValue::SafeHtml(value)) => {
+                JavaConversionValue::String(value)
+            }
+            Some(value) => JavaConversionValue::Object(value),
+        };
         service.convert(Some(self.context.as_any()), value, target_class)
     }
 }
