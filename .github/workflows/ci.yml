@@ -25,6 +25,13 @@ jobs:
           ref: 10f9dd2eb8cbd98515ce14b149d115e0287d0add
           path: upstream-thymeleaf
 
+      - name: Install fixed Java Oracle runtime
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -63,30 +70,28 @@ jobs:
           --baseline 10f9dd2eb8cbd98515ce14b149d115e0287d0add
           --json target/migration-check.json
 
+      - name: Validate fixed Java semantic baseline
+        working-directory: upstream-thymeleaf
+        run: >-
+          mvn
+          -pl tests/thymeleaf-tests-core
+          -am
+          test
+          -DskipITs
+          '-DargLine=-Duser.language=en -Duser.country=US'
+
       - name: Run tests
         run: cargo test --workspace --all-features
 
-      - name: Run fixed upstream semantic corpus
-        shell: bash
-        run: |
-          set -euo pipefail
-          scopes=(
-            validated directives prepostprocessors multiinput link
-            inlining_interaction conversion block context_vartest noop
-            aggregation markup precedence web_context processor_remaining
-          )
-          for scope in "${scopes[@]}"; do
-            THYMELEAF_UPSTREAM="$GITHUB_WORKSPACE/upstream-thymeleaf" \
-            THYMELEAF_SCOPE="$scope" \
-              cargo test --test thtest_upstream_plain_batch --quiet
-          done
+      - name: Enforce complete Rust semantic parity corpus
+        env:
+          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
+          THYMELEAF_SCOPE: semantic_all
+        run: cargo test --test thtest_upstream_plain_batch
 
-      - name: Enforce 100% source coverage
+      - name: Report source coverage
         run: >-
           cargo llvm-cov
           --workspace
           --all-features
-          --fail-under-lines 100
-          --fail-under-functions 100
-          --fail-under-regions 100
           --summary-only

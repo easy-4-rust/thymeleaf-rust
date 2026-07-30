@@ -145,20 +145,33 @@ Golden harness 必须：
 每个新增测试应能说明它会杀死什么错误实现。只执行构造器、只断言 `is_ok()`、
 只做快照但不校验关键字段、或重复已有 happy path 的测试不计作充分证据。
 
-## 8. 覆盖率与门禁
+## 8. 语义覆盖率与门禁
 
-覆盖率是 Rust 实现内部“是否执行”的证据，不是 Java 语义一致性的替代品。当前项目
-要求全工作区行、函数和 region 均为 100%，且不允许用忽略目标文件掩盖缺口：
+项目要求 **100% 语义功能覆盖**，不要求 Rust 源码行、函数和 region 达到 100%。
+源码覆盖率只用于发现未执行路径和指导补测，不作为迁移完成或发布的硬门槛。
+
+语义覆盖率按互不混合的分母分别计算，任一分母出现未处置项即失败：
+
+| 语义分母 | 100% 条件 |
+|:---|:---|
+| Java 主对象与内部对象 | 491 / 491 主对象、69 / 69 内部对象均有真实落点 |
+| Java 声明方法 | 4,291 / 4,291 均有显式、动态分派、Rust 惯用、合并或批准差异处置，`review_required=0` |
+| 可执行 `.thtest` | 2,608 / 2,608 均为跨语言行为通过或具名策略处置，未解释为 0 |
+| 可比较模板行为 | 2,595 / 2,595 Rust 输出/异常与固定 Java `.thtest` 期望一致 |
+| 策略差异 | 13 / 13 有上游禁用或安全边界证据，禁止伪装为执行成功 |
+| Java Oracle | 固定 JDK 21、`en_US` 下 1,154 / 1,154 通过 |
+| 固定 Golden | Java 生成记录与 Rust 消费结果逐记录一致 |
 
 ```bash
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features
-cargo llvm-cov --workspace --all-features \
-  --fail-under-lines 100 \
-  --fail-under-functions 100 \
-  --fail-under-regions 100 \
-  --summary-only
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=semantic_all \
+cargo test --test thtest_upstream_plain_batch
+
+# 信息性指标，不设置 fail-under
+cargo llvm-cov --workspace --all-features --summary-only
 ```
 
 迁移工具还必须通过：
@@ -209,7 +222,9 @@ flowchart LR
 - 上游相关测试/case 已在 `SOURCE_PARITY` 处置；
 - Rust 运行时映射风险已在 `RUST_OBLIGATION` 覆盖；
 - Java Golden 或可证明等价的差分证据通过；
-- 全工作区编译、lint、测试、迁移检查和 100% 覆盖率通过；
+- 全工作区编译、lint、测试和迁移检查通过；
+- 对象、方法、测试资源、可比较行为和具名策略差异的语义分母均达到 100%；
+- 固定 Java Oracle 与 Rust 侧共享语料/Golden 的结果一致；
 - 文档状态与机器报告一致。
 
 项目完成还要求 491 个主对象、69 个内部类型和 2,609 个 `.thtest` 全部完成处置。

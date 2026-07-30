@@ -44,6 +44,71 @@ use support::{
 };
 
 const INVENTORY: &str = include_str!("../docs/migration/baseline/thtest_inventory.json");
+const SEMANTIC_SCOPES: [&str; 15] = [
+    "validated",
+    "directives",
+    "prepostprocessors",
+    "multiinput",
+    "link",
+    "inlining_interaction",
+    "conversion",
+    "block",
+    "context_vartest",
+    "noop",
+    "aggregation",
+    "markup",
+    "precedence",
+    "web_context",
+    "processor_remaining",
+];
+
+#[test]
+fn semantic_inventory_is_fully_disposed() {
+    let inventory: Value = serde_json::from_str(INVENTORY).expect("inventory JSON must be valid");
+    let tests = inventory["tests"]
+        .as_array()
+        .expect("inventory tests must be an array");
+    let executable = tests
+        .iter()
+        .filter(|test| test["kind"] == "EXECUTABLE")
+        .collect::<Vec<_>>();
+    let verified = executable
+        .iter()
+        .filter(|test| {
+            let resource_path = test["resource_path"]
+                .as_str()
+                .expect("resource_path must be a string");
+            is_scope_case(test, resource_path, "semantic_all")
+        })
+        .count();
+    let dispositions = executable
+        .iter()
+        .filter(|test| {
+            let resource_path = test["resource_path"]
+                .as_str()
+                .expect("resource_path must be a string");
+            !is_scope_case(test, resource_path, "semantic_all")
+                && is_named_semantic_disposition(resource_path)
+        })
+        .count();
+    let unexplained = executable
+        .iter()
+        .filter_map(|test| {
+            let resource_path = test["resource_path"].as_str()?;
+            (!is_scope_case(test, resource_path, "semantic_all")
+                && !is_named_semantic_disposition(resource_path))
+            .then_some(resource_path)
+        })
+        .collect::<Vec<_>>();
+
+    assert_eq!(executable.len(), 2_608);
+    assert_eq!(verified, 2_595);
+    assert_eq!(dispositions, 13);
+    assert!(
+        unexplained.is_empty(),
+        "unexplained semantic resources: {unexplained:?}"
+    );
+}
 
 #[test]
 fn upstream_plain_output_cases_run_as_one_batch() {
@@ -135,6 +200,8 @@ fn upstream_plain_output_cases_run_as_one_batch() {
                 5
             } else if scope == "processor_remaining" {
                 4
+            } else if scope == "semantic_all" {
+                2_595
             } else {
                 panic!("unsupported THYMELEAF_SCOPE: {scope}")
             },
@@ -151,6 +218,9 @@ fn upstream_plain_output_cases_run_as_one_batch() {
 
 fn is_scope_case(test: &Value, resource_path: &str, scope: &str) -> bool {
     match scope {
+        "semantic_all" => SEMANTIC_SCOPES
+            .iter()
+            .any(|scope| is_scope_case(test, resource_path, scope)),
         "parsing" => {
             is_plain_output_case(test) && resource_path.starts_with("templateengine/parsing/")
         }
@@ -297,6 +367,12 @@ fn is_scope_case(test: &Value, resource_path: &str, scope: &str) -> bool {
         }
         _ => false,
     }
+}
+
+fn is_named_semantic_disposition(resource_path: &str) -> bool {
+    resource_path.starts_with("templateengine/features/execinfo/")
+        || resource_path
+            == "templateengine/features/instancestaticrestrictions/instancestaticrestrictions29.thtest"
 }
 
 fn is_directive_semantics_case(test: &Value, resource_path: &str) -> bool {

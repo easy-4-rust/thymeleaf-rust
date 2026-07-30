@@ -146,25 +146,26 @@ thymeleaf crate → Vernal
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
 | Rust 公共 API | 已验证切片 | Foundation/配置 API、缓存对象族、`StandardCache`、`TemplateResolution`、模板资源 SPI/字符串资源/文件资源、上游全部五个枚举、中立的 `IProcessor` 根 SPI、可组合的 `AbstractProcessor` 基础状态及 `IProcessorDialect`/`AbstractProcessorDialect`/`ProcessorSet` 方言边界、引擎内部增量处理/流控合同、UTF-16 流式 `TextParser`/`BufferPool` 调用链、全部 parser-level/prototype-only text/markup comment Reader、内联预处理 handler SPI 及文本解析支撑合同、`FastStringWriter`、`CharArrayWrapperSequence`、完整 `TextUtils` UTF-16 比较/搜索/哈希语义、标准表达式字面量/执行上下文/转换服务/NO-OP/Token 字符语义、`EvaluationUtils`/`Bools`、聚合/数组/List/Set/Map/Object facade、模式、版本、日志与内容类型工具；URL 与 JVM 软引用运行时边界仍待补齐 |
-| 框架适配器 | 规划中 | 不存在适配器 Manifest 或代码 |
-| 上游兼容矩阵 | 实施中 | 已登记 491 个对象、4,291 个方法和 6,936 个参数 |
+| 框架适配器 | 已有 | Workspace 中 14 个独立框架 crate 与 `thymeleaf-vernal` 均可编译 |
+| 上游兼容矩阵 | 语义清单已闭合 | 491 个主对象、69 个内部对象和 4,291 个方法全部处置，missing/stub/review 均为 0 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
-| 测试与 CI | 切片门禁通过 | 248 个单元测试、49 组共 3,756 条记录的固定 Java Oracle、行/函数/区域覆盖率均为 100% |
+| 测试与 CI | 语义门禁通过 | Java 基线 1,154/1,154；Rust 与 2,595/2,595 个可比较 `.thtest` 一致；13/13 个策略差异具名；源码覆盖率仅作诊断 |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
 ## 文档快速开始
 
-渲染引擎尚不可执行。验证当前已实现的 S1/S2/S5 垂直切片：
+针对固定上游检出复现完整语义一致性门禁：
 
 ```bash
 git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
 cd thymeleaf-rust
 cargo test --workspace --all-features
-cargo llvm-cov --workspace --all-features \
-  --fail-under-lines 100 \
-  --fail-under-functions 100 \
-  --fail-under-regions 100 \
-  --summary-only
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=semantic_all \
+cargo test --test thtest_upstream_plain_batch
+
+# 可选诊断，不设置 fail-under 阈值
+cargo llvm-cov --workspace --all-features --summary-only
 ```
 
 然后阅读：

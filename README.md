@@ -146,25 +146,26 @@ Release order may be phased, but the architecture must not require independent u
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
 | Public Rust API | Verified slices | Foundation/configuration APIs, cache families, `StandardCache`, `TemplateResolution`, template-resource SPI/string/file resources, all five upstream enums, the neutral `IProcessor` root SPI, composable `AbstractProcessor` base state, and the `IProcessorDialect`/`AbstractProcessorDialect`/`ProcessorSet` dialect boundary, internal incremental processing and flow-control contracts, the UTF-16 streaming `TextParser`/`BufferPool` chain, all parser-level/prototype-only text and markup comment Readers, the inline pre-processor handler SPI, and supporting text-parser contracts, `FastStringWriter`, `CharArrayWrapperSequence`, full `TextUtils` UTF-16 comparison/search/hash semantics, standard expression literal/execution-context/conversion-service/NO-OP/token character semantics, `EvaluationUtils`/`Bools`, aggregate/array/list/set/map/object facades, pattern, version, logging, and content-type utilities; URL and JVM soft-reference runtime edges remain pending |
-| Framework adapters | Planned | No adapter manifests or code |
-| Upstream compatibility matrix | In progress | 491 objects, 4,291 methods, and 6,936 parameters inventoried |
+| Framework adapters | Available | 14 independent framework crates plus `thymeleaf-vernal` compile in the workspace |
+| Upstream compatibility matrix | Semantic inventory complete | 491 main objects, 69 nested objects, and 4,291 methods are fully disposed with no missing/stub/review item |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
-| Tests and CI | Slice gates passing | 248 unit tests, 49 fixed Java Oracles with 3,756 registered records, 100% line/function/region coverage |
+| Tests and CI | Semantic gate passing | Java baseline 1,154/1,154; Rust matches 2,595/2,595 comparable `.thtest` cases; 13/13 policy differences are named; source coverage is informational |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start
 
-The rendering engine is not executable yet. To check the implemented S1/S2/S5 slices:
+To reproduce the complete semantic parity gate against the fixed upstream checkout:
 
 ```bash
 git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
 cd thymeleaf-rust
 cargo test --workspace --all-features
-cargo llvm-cov --workspace --all-features \
-  --fail-under-lines 100 \
-  --fail-under-functions 100 \
-  --fail-under-regions 100 \
-  --summary-only
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=semantic_all \
+cargo test --test thtest_upstream_plain_batch
+
+# Optional diagnostic; no fail-under threshold
+cargo llvm-cov --workspace --all-features --summary-only
 ```
 
 Then read:

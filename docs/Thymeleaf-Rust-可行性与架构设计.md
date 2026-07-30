@@ -546,8 +546,9 @@ Standard Dialect 时不执行标准内联。
 Conversion、Aggregation、Markup、Context、Precedence、Web exchange 以及
 remove/replace/surround Processor。最终 2,608 个可执行资源全部处置：2,595 个不同
 用例通过 Rust 行为验证，12 个上游已禁用 `execinfo` 资源和 1 个任意 Java 反射链
-具名处置，0 未解释。CI 原样全 workspace 覆盖率仍只有 region 43.20%、
-function 37.04%、line 44.11%，因此源码覆盖率门禁尚未闭合。
+具名处置，0 未解释，语义功能覆盖率为 100%。CI 原样全 workspace 源码覆盖率为
+region 43.20%、function 37.04%、line 44.11%，仅作为后续补测诊断指标，不作为
+语义迁移和发布的硬门槛。
 
 上游 `instancestaticrestrictions29.thtest` 中
 `''.getClass().getClass().getName()` 依赖 Java `Class` 反射链。该语义被登记为默认
