@@ -149,7 +149,7 @@ thymeleaf crate → Vernal
 | 框架适配器 | 已有 | Workspace 中 14 个独立框架 crate 与 `thymeleaf-vernal` 均可编译 |
 | 上游兼容矩阵 | 语义清单已闭合 | 491 个主对象、69 个内部对象和 4,291 个方法全部处置，missing/stub/review 均为 0 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
-| 测试与 CI | 语义门禁通过 | Java 基线 1,154/1,154；Rust 与 2,595/2,595 个可比较 `.thtest` 一致；13/13 个策略差异具名；源码覆盖率仅作诊断 |
+| 测试与 CI | 语义门禁通过 | Java 五模块基线 2,156/2,156；SOURCE_PARITY 875/875、0 缺失；Rust 与 2,595/2,595 个可比较 `.thtest` 一致；源码覆盖率仅作诊断 |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
 
 ## 文档快速开始
@@ -182,15 +182,13 @@ cargo llvm-cov --workspace --all-features --summary-only
 
 ## 兼容方向
 
-初始设计以 Thymeleaf 3.1 系列的核心语义为目标。只有在固定并验证具体上游版本、Processor、表达式行为、错误语义、排除项和统计口径后，才会发布兼容性结论和百分比。
+兼容基线固定为 Thymeleaf 3.1.5.RELEASE 提交
+`10f9dd2eb8cbd98515ce14b149d115e0287d0add`。现有证据包括对象与方法清单、
+覆盖 2,156 个 Java 运行时 case 的 875/875 SOURCE_PARITY 处置、49 组 Java/Rust
+Golden，以及 2,595 个可比较上游 `.thtest` 结果。
 
-当前已经具备固定 Java API 清单和 Foundation Golden 差分测试。后续规划证据包括：
-
-- 公共 API 与 Processor 清单；
-- Java/Rust Golden Output 对比；
-- Fragment、转义、URL、Locale 与错误 Parity Test；
-- 面向非法和边界输入的 Differential Test；
-- 包含迁移建议的显式差异登记。
+后续证据工作集中在提升保守的对象级成熟度标签、扩展适配器 Full/Stream/Error/
+Cancellation 测试，以及持续维护显式差异登记。
 
 Thymeleaf 上游采用 Apache License 2.0。任何从上游调整而来的源码、测试或 Fixture 都必须保留适用的版权、许可证、NOTICE、署名和修改说明。
 

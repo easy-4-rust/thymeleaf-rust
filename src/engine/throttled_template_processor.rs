@@ -162,17 +162,11 @@ impl ThrottledTemplateProcessor {
                         ))
                     })?
             {
-                let processed_result = {
-                    let controller = self
-                        .flow_controller
-                        .lock()
-                        .expect("template flow controller lock poisoned");
-                    self.template_model.process_throttled(
-                        self.template_handler.as_mut(),
-                        self.offset,
-                        Some(&controller),
-                    )
-                };
+                let processed_result = self.template_model.process_throttled(
+                    self.template_handler.as_mut(),
+                    self.offset,
+                    Some(&self.flow_controller),
+                );
                 let processed = match processed_result {
                     Ok(processed) => processed,
                     Err(error) => return self.fail_boxed(error),

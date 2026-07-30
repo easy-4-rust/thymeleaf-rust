@@ -149,7 +149,7 @@ Release order may be phased, but the architecture must not require independent u
 | Framework adapters | Available | 14 independent framework crates plus `thymeleaf-vernal` compile in the workspace |
 | Upstream compatibility matrix | Semantic inventory complete | 491 main objects, 69 nested objects, and 4,291 methods are fully disposed with no missing/stub/review item |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
-| Tests and CI | Semantic gate passing | Java baseline 1,154/1,154; Rust matches 2,595/2,595 comparable `.thtest` cases; 13/13 policy differences are named; source coverage is informational |
+| Tests and CI | Semantic gate passing | Java five-module baseline 2,156/2,156; SOURCE_PARITY 875/875 with 0 missing; Rust matches 2,595/2,595 comparable `.thtest` cases; source coverage is informational |
 | crates.io package | Not published | `thymeleaf` remains a planned publication name |
 
 ## Documentation quick start
@@ -182,15 +182,14 @@ Then read:
 
 ## Compatibility direction
 
-The initial design targets the core semantics of the Thymeleaf 3.1 line. Exact upstream versions, supported processors, expression behavior, error parity, exclusions, and compatibility percentages will be published only after they are pinned and verified.
+Compatibility is pinned to Thymeleaf 3.1.5.RELEASE commit
+`10f9dd2eb8cbd98515ce14b149d115e0287d0add`. Evidence includes object and method
+inventories, 875/875 SOURCE_PARITY dispositions covering 2,156 Java runtime cases,
+49 Java/Rust Golden groups, and 2,595 comparable upstream `.thtest` results.
 
-Evidence now includes a fixed Java API inventory and a Foundation Golden differential test. Remaining planned evidence includes:
-
-- public API and processor inventories;
-- Java/Rust golden-output comparisons;
-- fragment, escaping, URL, locale, and error parity tests;
-- differential tests for malformed and boundary inputs;
-- an explicit difference register with migration guidance.
+Remaining evidence work focuses on raising conservative object-level maturity labels,
+expanding adapter full/stream/error/cancellation tests, and maintaining the explicit
+difference register.
 
 The upstream Thymeleaf project is licensed under Apache License 2.0. Any source, tests, or fixtures adapted from upstream must preserve the applicable copyright, license, NOTICE, attribution, and modification requirements.
 

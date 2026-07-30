@@ -105,12 +105,16 @@
 - `SPLIT`：一个源测试拆为多个 Rust 测试；
 - `MERGED`：多个源 case 由同一参数化/Golden 测试覆盖；
 - `NOT_APPLICABLE`：必须有可复核的技术理由；
+- `POLICY_DIFFERENCE`：宿主框架或安全边界有意不同，必须绑定中立替代合同和理由；
 - `MISSING`：尚未迁移，不能算完成。
 
-静态审计当前识别 875 个 Java 测试方法/注解和 147 个需要展开复核的参数化/动态
-候选；2,609 个 `.thtest` 单独计数。完整原始枚举见
-[`baseline/migration_test_static_inventory.json`](baseline/migration_test_static_inventory.json)。
-静态扫描只是发现工具，不等于 case 已逐项处置。
+静态审计识别 875 个 Java 测试方法/注解和 147 个参数化/动态候选；固定 JDK 21、
+`en_US` 的 Surefire 报告将其展开为五模块 2,156 个运行时 case。完整原始枚举见
+[`baseline/migration_test_static_inventory.json`](baseline/migration_test_static_inventory.json)，
+逐项处置见
+[`baseline/source_parity_inventory.json`](baseline/source_parity_inventory.json)。
+当前 875 / 875 源码入口、2,156 / 2,156 运行时 case 均已登记，`MISSING=0`。
+静态扫描仍只负责发现；是否闭合由 `tests/source_parity_inventory.rs` 验证。
 
 ### 6.1 批量迁移与统一验证顺序
 
@@ -159,7 +163,8 @@ Golden harness 必须：
 | 可执行 `.thtest` | 2,608 / 2,608 均为跨语言行为通过或具名策略处置，未解释为 0 |
 | 可比较模板行为 | 2,595 / 2,595 Rust 输出/异常与固定 Java `.thtest` 期望一致 |
 | 策略差异 | 13 / 13 有上游禁用或安全边界证据，禁止伪装为执行成功 |
-| Java Oracle | 固定 JDK 21、`en_US` 下 1,154 / 1,154 通过 |
+| Java SOURCE_PARITY | 875 / 875 源码入口、五模块 2,156 / 2,156 运行时 case 均有处置，`MISSING=0` |
+| Java Oracle | 固定 JDK 21、`en_US` 下五模块 2,156 / 2,156 通过；Core 为 1,154 / 1,154 |
 | 固定 Golden | Java 生成记录与 Rust 消费结果逐记录一致 |
 
 ```bash

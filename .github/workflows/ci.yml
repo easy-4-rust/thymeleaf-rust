@@ -74,11 +74,28 @@ jobs:
         working-directory: upstream-thymeleaf
         run: >-
           mvn
-          -pl tests/thymeleaf-tests-core
+          -pl
+          tests/thymeleaf-tests-core,tests/thymeleaf-tests-spring5,tests/thymeleaf-tests-spring6,tests/thymeleaf-tests-springsecurity5,tests/thymeleaf-tests-springsecurity6
           -am
           test
           -DskipITs
           '-DargLine=-Duser.language=en -Duser.country=US'
+
+      - name: Enforce Java source and runtime case parity ledger
+        env:
+          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
+        run: |
+          python3 scripts/generate_source_parity_inventory.py \
+            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-core/target/surefire-reports \
+            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-spring5/target/surefire-reports \
+            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-spring6/target/surefire-reports \
+            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-springsecurity5/target/surefire-reports \
+            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-springsecurity6/target/surefire-reports \
+            --output target/source_parity_inventory.json
+          cmp \
+            docs/migration/baseline/source_parity_inventory.json \
+            target/source_parity_inventory.json
+          cargo test --test source_parity_inventory
 
       - name: Run tests
         run: cargo test --workspace --all-features

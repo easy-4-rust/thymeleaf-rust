@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateEngineException;
 use crate::model::{IModel, IModelError, IModelVisitor, ITemplateEvent};
@@ -66,7 +66,7 @@ impl TemplateModel {
         &self,
         handler: &mut dyn ITemplateHandler,
         offset: usize,
-        controller: Option<&TemplateFlowController>,
+        controller: Option<&Arc<Mutex<TemplateFlowController>>>,
     ) -> Result<usize, Box<dyn TemplateEngineException>> {
         if controller.is_none() {
             self.process(handler)?;
@@ -79,7 +79,13 @@ impl TemplateModel {
         let controller = controller.expect("controller was checked");
         let mut processed = 0;
         for event in self.queue.iter().skip(offset) {
-            if controller.stop_processing {
+            // Java 控制器是普通共享对象；Rust 只在读取标志时持锁，避免处理器链写入
+            // 同一控制器时发生不可重入 Mutex 自锁。
+            if controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing
+            {
                 break;
             }
             Arc::clone(event).be_handled(handler)?;

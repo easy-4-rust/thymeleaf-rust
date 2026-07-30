@@ -199,6 +199,10 @@ fn render_chunks(
             }
         }
     }
+    // 节流处理器会保留最后一个 OutputStream，其中仍持有 Sender 克隆。仅依赖析构
+    // 顺序会使接收端在已收到完整正文后继续等待 EOF；显式关闭通道，确保所有宿主
+    // 的响应流在模板完成时立即结束。对应 Spring Reactive 测试对完成信号的要求。
+    sender.close_channel();
 }
 
 struct RenderMetadata {
