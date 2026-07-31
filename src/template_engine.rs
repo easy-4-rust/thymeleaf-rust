@@ -274,7 +274,10 @@ impl TemplateEngine {
 
     /// 返回模板解析器配置快照。
     pub fn get_template_resolvers(&self) -> Vec<Arc<dyn ITemplateResolver>> {
-        lock(&self.state).template_resolvers.clone()
+        self.configuration.get().map_or_else(
+            || lock(&self.state).template_resolvers.clone(),
+            |configuration| configuration.template_resolver_arcs(),
+        )
     }
 
     /// 替换全部模板解析器，并按对象身份去重。
@@ -370,7 +373,10 @@ impl TemplateEngine {
 
     /// 返回消息解析器配置快照。
     pub fn get_message_resolvers(&self) -> Vec<Arc<dyn IMessageResolver>> {
-        lock(&self.state).message_resolvers.clone()
+        self.configuration.get().map_or_else(
+            || lock(&self.state).message_resolvers.clone(),
+            |configuration| configuration.message_resolver_arcs(),
+        )
     }
 
     /// 替换全部消息解析器，并按对象身份去重。
@@ -421,7 +427,10 @@ impl TemplateEngine {
 
     /// 返回链接构建器配置快照。
     pub fn get_link_builders(&self) -> Vec<Arc<dyn ILinkBuilder>> {
-        lock(&self.state).link_builders.clone()
+        self.configuration.get().map_or_else(
+            || lock(&self.state).link_builders.clone(),
+            |configuration| configuration.link_builder_arcs(),
+        )
     }
 
     /// 替换全部链接构建器，并按对象身份去重。

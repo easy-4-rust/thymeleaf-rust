@@ -66,8 +66,10 @@ pub trait IModel: Send + Sync {
 pub enum IModelError {
     /// 不可变 TemplateModel 被要求修改。
     #[error(
-        "Modifications are not allowed on immutable model objects. This model object is an \
-         immutable implementation of the org.thymeleaf.model.IModel interface"
+        "Modifications are not allowed on immutable model objects. This model object is an immutable \
+         implementation of the org.thymeleaf.model.IModel interface, and no modifications are allowed in \
+         order to keep cache consistency and improve performance. To modify model events, convert first your \
+         immutable model object to a mutable one by means of the org.thymeleaf.model.IModel#cloneModel() method"
     )]
     ImmutableModel,
     /// 事件索引越界。
@@ -80,11 +82,20 @@ pub enum IModelError {
     )]
     TemplateBoundaryInsertion,
     /// 两个模型来自不同引擎配置。
-    #[error("Cannot add model created using a different Template Engine Configuration.")]
+    #[error(
+        "Cannot add model of class org.thymeleaf.engine.Model to the current template, as it was created using a different Template Engine Configuration."
+    )]
     DifferentConfiguration,
     /// 两个模型使用不同模板模式。
-    #[error("Cannot add model created using a different Template Mode.")]
-    DifferentTemplateMode,
+    #[error(
+        "Cannot add model of class org.thymeleaf.engine.Model to the current template, as it was created using a different Template Mode: {model_mode} instead of the current {current_mode}"
+    )]
+    DifferentTemplateMode {
+        /// 被插入模型的模板模式。
+        model_mode: TemplateMode,
+        /// 当前模型的模板模式。
+        current_mode: TemplateMode,
+    },
     /// 自定义事件不是 Thymeleaf 支持的事件子接口。
     #[error("Cannot handle template event type")]
     UnsupportedEvent,

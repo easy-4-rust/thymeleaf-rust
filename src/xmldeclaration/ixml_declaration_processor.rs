@@ -10,6 +10,10 @@ use super::IXMLDeclarationStructureHandler;
 /// 对应 Java: `org.thymeleaf.processor.xmldeclaration.IXMLDeclarationProcessor`。
 pub trait IXMLDeclarationProcessor: IProcessor {
     /// 处理 XML declaration。
+    ///
+    /// 对应 Java: `IXMLDeclarationProcessor#process(ITemplateContext,
+    /// IXMLDeclaration, IXMLDeclarationStructureHandler)`。事件不可变，结构变更通过
+    /// handler 声明。
     fn process(
         &self,
         context: &dyn ITemplateContext,

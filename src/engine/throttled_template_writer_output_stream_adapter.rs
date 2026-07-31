@@ -205,3 +205,171 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
             .ok_or_else(|| io::Error::other("Throttled output stream has not been initialized"))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io::{self, Write};
+    use std::sync::{Arc, Mutex};
+
+    use super::super::template_flow_controller::TemplateFlowController;
+    use super::ThrottledTemplateWriterOutputStreamAdapter;
+
+    /// 在适配器测试中收集输出字节的最小 OutputStream 实现。
+    struct RecordingOutputStream {
+        output: Arc<Mutex<Vec<u8>>>,
+    }
+
+    impl Write for RecordingOutputStream {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.output
+                .lock()
+                .expect("recording output stream lock poisoned")
+                .extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn hex_output(output: &Arc<Mutex<Vec<u8>>>) -> String {
+        output
+            .lock()
+            .expect("recording output stream lock poisoned")
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect()
+    }
+
+    #[test]
+    fn direct_output_stream_adapter_state_machine_matches_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let mut adapter = ThrottledTemplateWriterOutputStreamAdapter::new(
+            "template".to_owned(),
+            Arc::clone(&controller),
+            2,
+        );
+        adapter.set_output_stream(Box::new(RecordingOutputStream {
+            output: Arc::clone(&output),
+        }));
+
+        adapter.allow(2).expect("Java Golden allow(2) must succeed");
+        adapter
+            .write_bytes(&[0x61, 0x62, 0x63, 0x64])
+            .expect("Java Golden byte adapter write must succeed");
+        assert_eq!(hex_output(&output), "6162");
+        assert_eq!(adapter.get_written_count(), 2);
+        assert!(adapter.is_overflown());
+        assert!(adapter.is_stopped());
+        assert!(
+            controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing
+        );
+        assert_eq!(adapter.get_max_overflow_size(), 2);
+        assert_eq!(adapter.get_overflow_grow_count(), 0);
+
+        adapter
+            .allow(i32::MAX)
+            .expect("Java Golden unlimited allow must drain overflow");
+        assert_eq!(hex_output(&output), "61626364");
+        assert_eq!(adapter.get_written_count(), 4);
+        assert!(!adapter.is_overflown());
+        assert!(!adapter.is_stopped());
+        assert!(
+            !controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing
+        );
+        assert_eq!(adapter.get_max_overflow_size(), 2);
+        assert_eq!(adapter.get_overflow_grow_count(), 0);
+    }
+
+    #[test]
+    fn overflow_capacity_growth_matches_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let mut adapter = ThrottledTemplateWriterOutputStreamAdapter::new(
+            "template".to_owned(),
+            Arc::clone(&controller),
+            2,
+        );
+        adapter.set_output_stream(Box::new(RecordingOutputStream {
+            output: Arc::clone(&output),
+        }));
+
+        adapter.allow(0).expect("Java Golden allow(0) must succeed");
+        adapter
+            .write_bytes(&[0, 1, 2, 3, 4, 5])
+            .expect("Java Golden buffered bytes must succeed");
+        adapter
+            .write_bytes(&[6])
+            .expect("Java Golden buffer growth byte must succeed");
+
+        assert_eq!(hex_output(&output), "");
+        assert_eq!(adapter.get_written_count(), 0);
+        assert!(adapter.is_overflown());
+        assert!(adapter.is_stopped());
+        assert!(
+            controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing
+        );
+        assert_eq!(adapter.get_max_overflow_size(), 7);
+        assert_eq!(adapter.get_overflow_grow_count(), 1);
+    }
+
+    #[test]
+    fn overflow_drain_io_failure_matches_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let mut adapter =
+            ThrottledTemplateWriterOutputStreamAdapter::new("template".to_owned(), controller, 2);
+        adapter.set_output_stream(Box::new(FailOnSecondWriteOutputStream { writes: 0 }));
+        adapter
+            .allow(1)
+            .expect("initial Java Golden allow must succeed");
+        adapter
+            .write_bytes(&[0x61, 0x62])
+            .expect("first direct write must buffer its overflow");
+
+        let error = adapter
+            .allow(i32::MAX)
+            .expect_err("Java Golden overflow drain must wrap I/O failure");
+        assert_golden(
+            "byteAdapterOverflowIo",
+            &format!("TemplateOutputException:{error}"),
+        );
+    }
+
+    /// 第一次写入成功、第二次写入失败的 OutputStream。
+    struct FailOnSecondWriteOutputStream {
+        writes: usize,
+    }
+
+    impl Write for FailOnSecondWriteOutputStream {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.writes += 1;
+            if self.writes > 1 {
+                return Err(io::Error::other("overflow byte sink failure"));
+            }
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn assert_golden(key: &str, actual: &str) {
+        let expected = include_str!("../../tests/fixtures/throttled_template_writer_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{key}=")))
+            .expect("Java Golden record");
+        assert_eq!(actual, expected, "Java Golden key {key}");
+    }
+}

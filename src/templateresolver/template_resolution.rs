@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use thiserror::Error;
-
 use crate::cache::ICacheEntryValidity;
 use crate::{ITemplateResource, TemplateMode};
+
+use super::TemplateResolutionError;
 
 /// 模板解析器成功解析模板后的完整结果。
 ///
@@ -103,6 +103,8 @@ impl TemplateResolution {
     }
 
     /// 返回 Resolver 创建的同一模板资源共享身份。
+    ///
+    /// 对应 Java: `TemplateResolution#getTemplateResource()` 的 Rust 内部共享所有权适配。
     #[must_use]
     pub(crate) fn get_template_resource_arc(&self) -> Arc<dyn ITemplateResource> {
         Arc::clone(&self.template_resource)
@@ -162,22 +164,12 @@ impl TemplateResolution {
     }
 
     /// 返回构造时传入的同一缓存有效性共享身份。
+    ///
+    /// 对应 Java: `TemplateResolution#getValidity()` 的 Rust 内部共享所有权适配。
     #[must_use]
     pub(crate) fn get_validity_arc(&self) -> Arc<dyn ICacheEntryValidity> {
         Arc::clone(&self.validity)
     }
-}
-
-/// 创建 `TemplateResolution` 时的参数校验错误。
-///
-/// 对应 Java: `org.thymeleaf.util.Validate` 在
-/// `org.thymeleaf.templateresolver.TemplateResolution` 构造器中抛出的
-/// `IllegalArgumentException`。
-#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
-pub enum TemplateResolutionError {
-    /// 必填参数为 Java `null`。
-    #[error("{0}")]
-    InvalidArgument(&'static str),
 }
 
 #[cfg(test)]

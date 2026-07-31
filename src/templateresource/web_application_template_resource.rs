@@ -9,9 +9,14 @@ use super::{ITemplateResource, TemplateResourceError};
 
 /// 从 Web 应用根目录读取模板的资源。
 ///
-/// 路径清理后强制以 `/` 开头；每次读取都向应用请求新流，并按可选 Java charset
-/// 转码为 UTF-8。对应 Java:
-/// `org.thymeleaf.templateresource.WebApplicationTemplateResource`。
+/// 资源路径从 Web 应用文件根开始；Servlet 宿主中通常对应 `/WEB-INF`。路径清理后
+/// 强制以 `/` 开头，每次读取都向应用请求新流，并按可选 Java charset 转码为 UTF-8。
+/// 该对象通常由 `WebApplicationTemplateResolver` 创建。
+///
+/// 对应 Java: `org.thymeleaf.templateresource.WebApplicationTemplateResource`。
+///
+/// # 起始版本
+/// 上游自 Thymeleaf 3.1.0 提供该对象。
 pub struct WebApplicationTemplateResource {
     web_application: Arc<dyn IWebApplication>,
     path: String,
@@ -23,16 +28,28 @@ impl WebApplicationTemplateResource {
     ///
     /// # 参数
     ///
-    /// - `web_application`：不可空应用对象。
+    /// - `web_application`：应用对象；`None` 对应 Java `null`。
     /// - `path`：不可空且非空白资源路径。
     /// - `character_encoding`：可空字符集名称。
     ///
-    /// 对应 Java: `WebApplicationTemplateResource#WebApplicationTemplateResource`。
+    /// # 返回值
+    /// 返回路径已清理且以 `/` 开头的 Web 应用资源。
+    ///
+    /// # 错误
+    /// 先校验应用对象，再校验资源路径；缺失值返回与 Java 构造器一致的参数错误。
+    ///
+    /// 对应 Java:
+    /// `WebApplicationTemplateResource#WebApplicationTemplateResource(IWebApplication,String,String)`。
     pub fn new(
-        web_application: Arc<dyn IWebApplication>,
+        web_application: Option<Arc<dyn IWebApplication>>,
         path: Option<&str>,
         character_encoding: Option<&str>,
     ) -> Result<Self, TemplateResourceError> {
+        let web_application = web_application.ok_or_else(|| {
+            TemplateResourceError::InvalidArgument(
+                "Web Application object cannot be null".to_owned(),
+            )
+        })?;
         let path = path
             .filter(|value| !is_java_empty_or_whitespace(value))
             .ok_or_else(|| {

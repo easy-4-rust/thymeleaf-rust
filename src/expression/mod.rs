@@ -142,7 +142,7 @@ pub use generic_token_expression::GenericTokenExpression;
 pub use greater_lesser_expression::GreaterLesserExpression;
 pub use greater_or_equal_to_expression::GreaterOrEqualToExpression;
 pub use greater_than_expression::GreaterThanExpression;
-pub use i_expression_object_factory::IExpressionObjectFactory;
+pub use i_expression_object_factory::{ExpressionObjectNames, IExpressionObjectFactory};
 pub use i_expression_objects::IExpressionObjects;
 pub use i_standard_conversion_service::{
     IStandardConversionService, JavaConversionObject, JavaConversionResult, JavaConversionValue,

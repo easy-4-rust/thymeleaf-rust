@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::sync::atomic::{AtomicU64, Ordering as AtomicOrdering};
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use indexmap::IndexMap;
@@ -13,10 +14,13 @@ use super::{
     ElementDefinitionValue,
 };
 
+static NEXT_TAG_IDENTITY: AtomicU64 = AtomicU64::new(1);
+
 /// 可处理 open/standalone 标签共享的属性查询与 Processor 合并状态。
 ///
 /// 对应 Java: `org.thymeleaf.engine.AbstractProcessableElementTag`。
 pub struct AbstractProcessableElementTag {
+    identity: u64,
     element_tag: AbstractElementTag,
     attributes: Option<Arc<Attributes>>,
     associated_processors: RwLock<Option<Vec<Arc<dyn IElementProcessor>>>>,
@@ -36,6 +40,7 @@ impl AbstractProcessableElementTag {
         synthetic: bool,
     ) -> Self {
         Self {
+            identity: NEXT_TAG_IDENTITY.fetch_add(1, AtomicOrdering::Relaxed),
             element_tag: AbstractElementTag::new(
                 template_mode,
                 element_definition,
@@ -64,6 +69,7 @@ impl AbstractProcessableElementTag {
         col: i32,
     ) -> Self {
         Self {
+            identity: NEXT_TAG_IDENTITY.fetch_add(1, AtomicOrdering::Relaxed),
             element_tag: AbstractElementTag::with_location(
                 template_mode,
                 element_definition,
@@ -82,6 +88,15 @@ impl AbstractProcessableElementTag {
     #[must_use]
     pub const fn as_element_tag(&self) -> &AbstractElementTag {
         &self.element_tag
+    }
+
+    /// 返回此不可变标签实例的内部身份号。
+    ///
+    /// 对应 Java: 对 `AbstractProcessableElementTag` 的引用身份比较。编号避免 Rust
+    /// 短生命周期 `Arc` 释放后地址复用，从而错误地把新标签识别为旧标签。
+    #[must_use]
+    pub(crate) const fn identity(&self) -> u64 {
+        self.identity
     }
 
     /// 返回可空属性快照。

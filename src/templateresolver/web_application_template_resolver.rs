@@ -5,7 +5,10 @@ use crate::util::JavaString;
 use crate::web::IWebApplication;
 use crate::{IEngineConfiguration, ITemplateResource, WebApplicationTemplateResource};
 
-use super::{AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution};
+use super::{
+    AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution,
+    TemplateResolverError,
+};
 
 /// 从 Web 应用根目录解析模板的可配置 Resolver。
 ///
@@ -28,6 +31,28 @@ impl WebApplicationTemplateResolver {
             ),
             web_application,
         }
+    }
+
+    /// 使用可空宿主应用创建 Resolver。
+    ///
+    /// 该入口用于保留 Java 构造器的空值校验顺序；正常 Rust 调用可使用 [`Self::new`]。
+    ///
+    /// # 参数
+    /// - `web_application`：Web 应用对象；`None` 对应 Java `null`。
+    ///
+    /// # 返回值
+    /// 返回绑定非空 Web 应用的 Resolver。
+    ///
+    /// # 错误
+    /// 应用缺失时返回与 Java 构造器一致的参数错误。
+    pub fn try_new(
+        web_application: Option<Arc<dyn IWebApplication>>,
+    ) -> Result<Self, TemplateResolverError> {
+        web_application.map(Self::new).ok_or_else(|| {
+            TemplateResolverError::InvalidArgument(
+                "Web Application object cannot be null".to_owned(),
+            )
+        })
     }
 }
 
@@ -60,21 +85,21 @@ impl ITemplateResolver for WebApplicationTemplateResolver {
         _owner_template: Option<&JavaString>,
         template: &JavaString,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-    ) -> Option<TemplateResolution> {
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
             template,
             || {
                 let resource_name = self.resolver.compute_resource_name(template);
                 WebApplicationTemplateResource::new(
-                    Arc::clone(&self.web_application),
+                    Some(Arc::clone(&self.web_application)),
                     Some(&resource_name.to_string_lossy()),
                     self.resolver
                         .get_character_encoding()
                         .map(JavaString::to_string_lossy)
                         .as_deref(),
                 )
-                .ok()
-                .map(|resource| Arc::new(resource) as Arc<dyn ITemplateResource>)
+                .map(|resource| Some(Arc::new(resource) as Arc<dyn ITemplateResource>))
+                .map_err(TemplateResolverError::from)
             },
             || self.resolver.compute_template_mode(template),
             || self.resolver.compute_validity(template),

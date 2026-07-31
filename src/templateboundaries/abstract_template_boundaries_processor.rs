@@ -18,6 +18,11 @@ pub struct AbstractTemplateBoundariesProcessor<FStart, FEnd> {
 
 impl<FStart, FEnd> AbstractTemplateBoundariesProcessor<FStart, FEnd> {
     /// 创建以两个闭包表达 Java 抽象边界处理方法的 Processor。
+    ///
+    /// 对应 Java:
+    /// `AbstractTemplateBoundariesProcessor#AbstractTemplateBoundariesProcessor(TemplateMode, int)`。
+    /// `process_start` 与 `process_end` 分别映射两个 Java 抽象方法并共享相同的
+    /// 模板模式、优先级、运行时类名和异常装饰规则。
     pub fn new(
         template_mode: Option<TemplateMode>,
         precedence: i32,
@@ -77,6 +82,7 @@ where
         template_start: &dyn ITemplateStart,
         structure_handler: &mut dyn ITemplateBoundariesStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
+        // 对应 Java AbstractTemplateBoundariesProcessor#processTemplateStart。
         self.start_adapter.execute(template_start, |callback| {
             callback(context, template_start, structure_handler)
         })
@@ -88,6 +94,7 @@ where
         template_end: &dyn ITemplateEnd,
         structure_handler: &mut dyn ITemplateBoundariesStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
+        // 对应 Java AbstractTemplateBoundariesProcessor#processTemplateEnd。
         self.start_adapter.execute(template_end, |_| {
             (self.end_callback)(context, template_end, structure_handler)
         })

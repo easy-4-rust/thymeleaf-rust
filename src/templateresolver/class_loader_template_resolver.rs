@@ -3,20 +3,25 @@ use std::sync::Arc;
 
 use crate::TemplateResolutionAttributes;
 use crate::util::JavaString;
-use crate::{EmbeddedTemplateResource, IEngineConfiguration, ITemplateResource};
+use crate::{ClassLoaderTemplateResource, IEngineConfiguration, ITemplateResource};
 
-use super::{AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution};
+use super::{
+    AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution,
+    TemplateResolverError,
+};
 
 /// 从 Rust 应用的嵌入式资源搜索路径解析模板。
 ///
 /// 对应 Java: `org.thymeleaf.templateresolver.ClassLoaderTemplateResolver`。
-pub struct EmbeddedTemplateResolver {
+pub struct ClassLoaderTemplateResolver {
     resolver: AbstractConfigurableTemplateResolver,
     search_roots: Option<Vec<PathBuf>>,
 }
 
-impl EmbeddedTemplateResolver {
+impl ClassLoaderTemplateResolver {
     /// 使用默认应用资源搜索顺序创建解析器。
+    ///
+    /// 对应 Java: `ClassLoaderTemplateResolver#ClassLoaderTemplateResolver()`。
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -28,6 +33,9 @@ impl EmbeddedTemplateResolver {
     }
 
     /// 使用显式有序搜索根目录创建解析器。
+    ///
+    /// 对应 Java: `ClassLoaderTemplateResolver#ClassLoaderTemplateResolver(ClassLoader)`；
+    /// Rust 以显式搜索根表达类加载器的有序资源域。
     #[must_use]
     pub fn with_search_roots(search_roots: Vec<PathBuf>) -> Self {
         Self {
@@ -37,26 +45,26 @@ impl EmbeddedTemplateResolver {
     }
 }
 
-impl Default for EmbeddedTemplateResolver {
+impl Default for ClassLoaderTemplateResolver {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl std::ops::Deref for EmbeddedTemplateResolver {
+impl std::ops::Deref for ClassLoaderTemplateResolver {
     type Target = AbstractConfigurableTemplateResolver;
     fn deref(&self) -> &Self::Target {
         &self.resolver
     }
 }
 
-impl std::ops::DerefMut for EmbeddedTemplateResolver {
+impl std::ops::DerefMut for ClassLoaderTemplateResolver {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.resolver
     }
 }
 
-impl ITemplateResolver for EmbeddedTemplateResolver {
+impl ITemplateResolver for ClassLoaderTemplateResolver {
     fn get_name(&self) -> Option<&JavaString> {
         self.resolver.get_name()
     }
@@ -71,7 +79,7 @@ impl ITemplateResolver for EmbeddedTemplateResolver {
         _owner_template: Option<&JavaString>,
         template: &JavaString,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-    ) -> Option<TemplateResolution> {
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
             template,
             || {
@@ -81,19 +89,19 @@ impl ITemplateResolver for EmbeddedTemplateResolver {
                     .get_character_encoding()
                     .map(JavaString::to_string_lossy);
                 let resource = match &self.search_roots {
-                    Some(search_roots) => EmbeddedTemplateResource::with_search_roots(
+                    Some(search_roots) => ClassLoaderTemplateResource::with_search_roots(
                         search_roots.clone(),
                         Some(&resource_name.to_string_lossy()),
                         encoding.as_deref(),
                     ),
-                    None => EmbeddedTemplateResource::new(
+                    None => ClassLoaderTemplateResource::new(
                         Some(&resource_name.to_string_lossy()),
                         encoding.as_deref(),
                     ),
                 };
                 resource
-                    .ok()
-                    .map(|resource| Arc::new(resource) as Arc<dyn ITemplateResource>)
+                    .map(|resource| Some(Arc::new(resource) as Arc<dyn ITemplateResource>))
+                    .map_err(TemplateResolverError::from)
             },
             || self.resolver.compute_template_mode(template),
             || self.resolver.compute_validity(template),

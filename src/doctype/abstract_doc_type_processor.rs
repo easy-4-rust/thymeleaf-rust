@@ -16,6 +16,10 @@ pub struct AbstractDocTypeProcessor<F> {
 
 impl<F> AbstractDocTypeProcessor<F> {
     /// 创建以闭包表达 Java 抽象 `doProcess` 方法的 Processor。
+    ///
+    /// 对应 Java:
+    /// `AbstractDocTypeProcessor#AbstractDocTypeProcessor(TemplateMode, int)`。
+    /// 构造时校验模板模式；回调异常按 Java `process` 规则保留或包装。
     pub fn new(
         template_mode: Option<TemplateMode>,
         precedence: i32,
@@ -64,6 +68,7 @@ where
         doc_type: &dyn IDocType,
         structure_handler: &mut dyn IDocTypeStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
+        // 对应 Java AbstractDocTypeProcessor#process。
         self.adapter.execute(doc_type, |callback| {
             callback(context, doc_type, structure_handler)
         })

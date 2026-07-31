@@ -92,7 +92,7 @@ pub use standard_conditional_comment_utils::{
 pub use standard_expression_utils::StandardExpressionUtils;
 pub use standard_processor_utils::StandardProcessorUtils;
 pub use string_utils::{StringUtils, StringUtilsError};
-pub(crate) use text_utils::java_case_fold_unit;
 pub use text_utils::{JavaCharSequence, TextUtils, TextUtilsError};
+pub(crate) use text_utils::{java_case_fold_unit, java_lower};
 pub use validate::{Validate, ValidateError};
 pub use version_utils::{VersionQualifier, VersionSpec, VersionUtils};

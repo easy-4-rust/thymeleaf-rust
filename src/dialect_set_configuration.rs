@@ -10,7 +10,7 @@ use crate::doctype::IDocTypeProcessor;
 use crate::element::IElementProcessor;
 use crate::engine::{
     AttributeDefinitions, AttributeDefinitionsError, ElementDefinitions, ElementDefinitionsError,
-    ElementProcessorsByTemplateMode,
+    ElementProcessorsByTemplateMode, TemplateHandlerClass,
 };
 use crate::exceptions::ConfigurationException;
 use crate::expression::{IExpressionObjectFactory, StandardExpressionResult, TemplateValue};
@@ -20,9 +20,14 @@ use crate::processinginstruction::IProcessingInstructionProcessor;
 use crate::processor::IProcessor;
 use crate::templateboundaries::ITemplateBoundariesProcessor;
 use crate::text::ITextProcessor;
-use crate::util::{JavaString, ProcessorComparators, ProcessorConfigurationUtils};
+use crate::util::{
+    JavaString, ProcessorComparators, ProcessorConfigurationUtils, Validate, ValidateError,
+};
 use crate::xmldeclaration::IXMLDeclarationProcessor;
-use crate::{DialectConfiguration, ExecutionAttributeValue, IDialect, TemplateMode};
+use crate::{
+    DialectConfiguration, DialectSetConfigurationError, ExecutionAttributeValue, IDialect,
+    TemplateMode,
+};
 
 /// 聚合全部 Dialect 的 Processor、执行属性和表达式对象工厂。
 ///
@@ -54,9 +59,27 @@ impl DialectSetConfiguration {
     /// 构建不可变方言聚合快照。
     ///
     /// 对应 Java: `DialectSetConfiguration#build(Set<DialectConfiguration>)`。
+    ///
+    /// # 参数
+    ///
+    /// - `dialect_configurations`：按注册顺序排列的方言配置；`None` 对应 Java `null`。
+    ///
+    /// # 返回值
+    ///
+    /// 成功时返回完成排序、定义注入和只读发布的聚合快照。
+    ///
+    /// # 错误
+    ///
+    /// 配置集合为空引用时返回 Java 参数异常；方言贡献冲突或非法时返回配置异常。
     pub fn build(
-        dialect_configurations: Vec<DialectConfiguration>,
-    ) -> Result<Self, ConfigurationException> {
+        dialect_configurations: Option<Vec<DialectConfiguration>>,
+    ) -> Result<Self, DialectSetConfigurationError> {
+        Validate::not_null(
+            dialect_configurations.as_ref(),
+            Some("Dialect configuration set cannot be null"),
+        )?;
+        let dialect_configurations =
+            dialect_configurations.expect("validated dialect configuration set");
         let mut dialects = Vec::<Arc<dyn IDialect>>::new();
         let mut standard_dialect_present = false;
         let mut standard_dialect_prefix = None;
@@ -95,14 +118,14 @@ impl DialectSetConfiguration {
                 let processor_set = processor_dialect.get_processors(prefix).ok_or_else(|| {
                     configuration_error(format!(
                         "Dialect should not return null processor set: {}",
-                        dialect.get_name().unwrap_or("")
+                        dialect.java_class_name()
                     ))
                 })?;
                 for processor in processor_set.iter() {
                     let processor = processor.cloned().ok_or_else(|| {
                         configuration_error(format!(
                             "Dialect should not return null processor in processor set: {}",
-                            dialect.get_name().unwrap_or("")
+                            dialect.java_class_name()
                         ))
                     })?;
                     let mode = processor.get_template_mode().ok_or_else(|| {
@@ -138,7 +161,8 @@ impl DialectSetConfiguration {
                                 key.as_ref()
                                     .map(JavaString::to_string_lossy)
                                     .unwrap_or_else(|| "null".to_owned())
-                            )));
+                            ))
+                            .into());
                         }
                         execution_attributes.insert(key, value);
                     }
@@ -146,34 +170,81 @@ impl DialectSetConfiguration {
             }
 
             if let Some(expression_dialect) = dialect.as_expression_object_dialect() {
-                expression_factories.push(expression_dialect.get_expression_object_factory());
+                if let Some(factory) = expression_dialect.get_expression_object_factory() {
+                    expression_factories.push(factory);
+                }
             }
 
             if let Some(pre_processor_dialect) = dialect.as_pre_processor_dialect() {
-                let dialect_precedence =
-                    pre_processor_dialect.get_dialect_pre_processor_precedence();
-                for processor in pre_processor_dialect.get_pre_processors() {
-                    pre_processors
-                        .entry(processor.get_template_mode())
-                        .or_default()
-                        .push(ProcessorConfigurationUtils::wrap_pre_processor(
-                            processor,
-                            dialect_precedence,
-                        ));
+                if let Some(dialect_pre_processors) = pre_processor_dialect.get_pre_processors() {
+                    for processor in dialect_pre_processors {
+                        let processor = processor.ok_or_else(|| {
+                            configuration_error(format!(
+                                "Pre-Processor list for dialect {} includes a null entry, which is forbidden.",
+                                dialect.java_class_name()
+                            ))
+                        })?;
+                        let template_mode = processor.get_template_mode().ok_or_else(|| {
+                            configuration_error(format!(
+                                "Template mode cannot be null (pre-processor: {}, dialect{})",
+                                processor.java_class_name(),
+                                dialect.java_class_name()
+                            ))
+                        })?;
+                        let handler_class = processor.get_handler_class().ok_or_else(|| {
+                            configuration_error(format!(
+                                "Pre-Processor {} for dialect {} returns a null handler class, which is forbidden.",
+                                processor.java_class_name(),
+                                processor.java_class_name()
+                            ))
+                        })?;
+                        validate_pre_processor_handler(
+                            handler_class,
+                            processor.as_ref(),
+                            dialect.as_ref(),
+                        )?;
+                        pre_processors
+                            .entry(template_mode)
+                            .or_default()
+                            .push(processor);
+                    }
                 }
             }
 
             if let Some(post_processor_dialect) = dialect.as_post_processor_dialect() {
-                let dialect_precedence =
-                    post_processor_dialect.get_dialect_post_processor_precedence();
-                for processor in post_processor_dialect.get_post_processors() {
-                    post_processors
-                        .entry(processor.get_template_mode())
-                        .or_default()
-                        .push(ProcessorConfigurationUtils::wrap_post_processor(
-                            processor,
-                            dialect_precedence,
-                        ));
+                if let Some(dialect_post_processors) = post_processor_dialect.get_post_processors()
+                {
+                    for processor in dialect_post_processors {
+                        let processor = processor.ok_or_else(|| {
+                            configuration_error(format!(
+                                "Post-Processor list for dialect {} includes a null entry, which is forbidden.",
+                                dialect.java_class_name()
+                            ))
+                        })?;
+                        let template_mode = processor.get_template_mode().ok_or_else(|| {
+                            configuration_error(format!(
+                                "Template mode cannot be null (post-processor: {}, dialect{})",
+                                processor.java_class_name(),
+                                dialect.java_class_name()
+                            ))
+                        })?;
+                        let handler_class = processor.get_handler_class().ok_or_else(|| {
+                            configuration_error(format!(
+                                "Post-Processor {} for dialect {} returns a null handler class, which is forbidden.",
+                                processor.java_class_name(),
+                                processor.java_class_name()
+                            ))
+                        })?;
+                        validate_post_processor_handler(
+                            handler_class,
+                            processor.as_ref(),
+                            dialect.as_ref(),
+                        )?;
+                        post_processors
+                            .entry(template_mode)
+                            .or_default()
+                            .push(processor);
+                    }
                 }
             }
         }
@@ -190,11 +261,13 @@ impl DialectSetConfiguration {
             processors.sort_by(|left, right| {
                 ProcessorComparators::compare_pre_processors(left.as_ref(), right.as_ref())
             });
+            processors.dedup_by(|left, right| Arc::ptr_eq(left, right));
         }
         for processors in post_processors.values_mut() {
             processors.sort_by(|left, right| {
                 ProcessorComparators::compare_post_processors(left.as_ref(), right.as_ref())
             });
+            processors.dedup_by(|left, right| Arc::ptr_eq(left, right));
         }
 
         let element_definition_processors = clone_element_processor_map(&element_processors);
@@ -352,72 +425,138 @@ impl DialectSetConfiguration {
     }
 
     /// 返回指定模式的 TemplateBoundaries Processor。
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java `Template mode cannot be null` 校验错误；
+    /// 成功时返回按 Java Processor comparator 排序的借用列表，未配置时为空。
     pub fn get_template_boundaries_processors(
         &self,
-        mode: TemplateMode,
-    ) -> Vec<&dyn ITemplateBoundariesProcessor> {
-        processor_refs(&self.template_boundaries_processors, mode)
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn ITemplateBoundariesProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.template_boundaries_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 CDATA Processor。
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
     pub fn get_cdata_section_processors(
         &self,
-        mode: TemplateMode,
-    ) -> Vec<&dyn ICDATASectionProcessor> {
-        processor_refs(&self.cdata_section_processors, mode)
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn ICDATASectionProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.cdata_section_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 Comment Processor。
-    pub fn get_comment_processors(&self, mode: TemplateMode) -> Vec<&dyn ICommentProcessor> {
-        processor_refs(&self.comment_processors, mode)
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    pub fn get_comment_processors(
+        &self,
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn ICommentProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.comment_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 DOCTYPE Processor。
-    pub fn get_doc_type_processors(&self, mode: TemplateMode) -> Vec<&dyn IDocTypeProcessor> {
-        processor_refs(&self.doc_type_processors, mode)
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    pub fn get_doc_type_processors(
+        &self,
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn IDocTypeProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.doc_type_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 Element Processor。
-    pub fn get_element_processors(&self, mode: TemplateMode) -> Vec<&dyn IElementProcessor> {
-        processor_refs(&self.element_processors, mode)
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    pub fn get_element_processors(
+        &self,
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn IElementProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.element_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 ProcessingInstruction Processor。
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
     pub fn get_processing_instruction_processors(
         &self,
-        mode: TemplateMode,
-    ) -> Vec<&dyn IProcessingInstructionProcessor> {
-        processor_refs(&self.processing_instruction_processors, mode)
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn IProcessingInstructionProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.processing_instruction_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 Text Processor。
-    pub fn get_text_processors(&self, mode: TemplateMode) -> Vec<&dyn ITextProcessor> {
-        processor_refs(&self.text_processors, mode)
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    pub fn get_text_processors(
+        &self,
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn ITextProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.text_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
     /// 返回指定模式的 XMLDeclaration Processor。
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
     pub fn get_xml_declaration_processors(
         &self,
-        mode: TemplateMode,
-    ) -> Vec<&dyn IXMLDeclarationProcessor> {
-        processor_refs(&self.xml_declaration_processors, mode)
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn IXMLDeclarationProcessor>, ValidateError> {
+        Ok(processor_refs(
+            &self.xml_declaration_processors,
+            require_template_mode(mode)?,
+        ))
     }
 
-    /// 返回指定模式的 PreProcessor，保持方言出现顺序并按 Processor precedence、
-    /// handler 类名和身份排序。
-    pub fn get_pre_processors(&self, mode: TemplateMode) -> Vec<&dyn IPreProcessor> {
-        self.pre_processors
-            .get(&mode)
+    /// 返回指定模式的 PreProcessor。
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回按 Processor precedence
+    /// 和配置实现类名排序的借用列表。Java 实现不会叠加方言级 precedence。
+    pub fn get_pre_processors(
+        &self,
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn IPreProcessor>, ValidateError> {
+        Ok(self
+            .pre_processors
+            .get(&require_template_mode(mode)?)
             .map(|processors| processors.iter().map(AsRef::as_ref).collect())
-            .unwrap_or_default()
+            .unwrap_or_default())
     }
 
     /// 返回指定模式的 PostProcessor。
-    pub fn get_post_processors(&self, mode: TemplateMode) -> Vec<&dyn IPostProcessor> {
-        self.post_processors
-            .get(&mode)
+    ///
+    /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回按 Processor precedence
+    /// 和配置实现类名排序的借用列表。Java 实现不会叠加方言级 precedence。
+    pub fn get_post_processors(
+        &self,
+        mode: Option<TemplateMode>,
+    ) -> Result<Vec<&dyn IPostProcessor>, ValidateError> {
+        Ok(self
+            .post_processors
+            .get(&require_template_mode(mode)?)
             .map(|processors| processors.iter().map(AsRef::as_ref).collect())
-            .unwrap_or_default()
+            .unwrap_or_default())
     }
 }
 
@@ -437,6 +576,7 @@ impl AggregateExpressionObjectFactory {
         self.factories.iter().rev().find(|factory| {
             factory
                 .get_all_expression_object_names()
+                .expect("Expression Object Factory returned a null object-name set")
                 .iter()
                 .any(|candidate| candidate.as_ref() == name)
         })
@@ -444,18 +584,21 @@ impl AggregateExpressionObjectFactory {
 }
 
 impl IExpressionObjectFactory for AggregateExpressionObjectFactory {
-    fn get_all_expression_object_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_expression_object_names(&self) -> Option<crate::expression::ExpressionObjectNames> {
         if self.factories.len() == 1 {
             return self.factories[0].get_all_expression_object_names();
         }
         if self.factories.is_empty() {
-            return Vec::new();
+            return None;
         }
         let mut names = IndexSet::new();
         for factory in self.factories.iter().rev() {
-            names.extend(factory.get_all_expression_object_names());
+            let factory_names = factory
+                .get_all_expression_object_names()
+                .expect("Expression Object Factory returned a null object-name set");
+            names.extend(factory_names.iter().cloned());
         }
-        names.into_iter().collect()
+        Some(names.into_iter().collect::<Vec<_>>().into())
     }
 
     fn build_object(
@@ -463,6 +606,9 @@ impl IExpressionObjectFactory for AggregateExpressionObjectFactory {
         context: Arc<dyn IExpressionContext>,
         expression_object_name: Option<&JavaString>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
+        if self.factories.len() == 1 {
+            return self.factories[0].build_object(context, expression_object_name);
+        }
         let Some(factory) = self.factory_for(expression_object_name) else {
             return Ok(None);
         };
@@ -470,6 +616,9 @@ impl IExpressionObjectFactory for AggregateExpressionObjectFactory {
     }
 
     fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool {
+        if self.factories.len() == 1 {
+            return self.factories[0].is_cacheable(expression_object_name);
+        }
         self.factory_for(expression_object_name)
             .is_some_and(|factory| factory.is_cacheable(expression_object_name))
     }
@@ -623,6 +772,75 @@ fn initialize_post_processor_definitions(
             processor.set_attribute_definitions(Arc::clone(attribute_definitions));
         }
     }
+}
+
+fn require_template_mode(
+    template_mode: Option<TemplateMode>,
+) -> Result<TemplateMode, ValidateError> {
+    Validate::not_null(template_mode.as_ref(), Some("Template mode cannot be null"))?;
+    Ok(template_mode.expect("validated template mode"))
+}
+
+fn validate_pre_processor_handler(
+    handler_class: &TemplateHandlerClass,
+    pre_processor: &dyn IPreProcessor,
+    dialect: &dyn IDialect,
+) -> Result<(), ConfigurationException> {
+    if !handler_class.implements_template_handler() {
+        return Err(configuration_error(format!(
+            "Handler class {} specified for pre-processor {} in dialect {} does not implement required interface org.thymeleaf.engine.ITemplateHandler",
+            handler_class.get_name(),
+            pre_processor.java_class_name(),
+            dialect.java_class_name()
+        )));
+    }
+    if !handler_class.has_zero_argument_constructor() {
+        let message = format!(
+            "Pre-Processor class {} specified for pre-processor {} in dialect {} does not implement required zero-argument constructor.",
+            handler_class.get_name(),
+            pre_processor.java_class_name(),
+            dialect.java_class_name()
+        );
+        return Err(ConfigurationException::with_cause(
+            Some(message),
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("{}.<init>()", handler_class.get_name()),
+            ),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_post_processor_handler(
+    handler_class: &TemplateHandlerClass,
+    post_processor: &dyn IPostProcessor,
+    dialect: &dyn IDialect,
+) -> Result<(), ConfigurationException> {
+    if !handler_class.implements_template_handler() {
+        return Err(configuration_error(format!(
+            "Handler class {} specified for post-processor {} in dialect {} does not implement required interface org.thymeleaf.engine.ITemplateHandler",
+            handler_class.get_name(),
+            post_processor.java_class_name(),
+            dialect.java_class_name()
+        )));
+    }
+    if !handler_class.has_zero_argument_constructor() {
+        let message = format!(
+            "Post-Processor class {} specified for post-processor {} in dialect {} does not implement required zero-argument constructor.",
+            handler_class.get_name(),
+            post_processor.java_class_name(),
+            dialect.java_class_name()
+        );
+        return Err(ConfigurationException::with_cause(
+            Some(message),
+            std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("{}.<init>()", handler_class.get_name()),
+            ),
+        ));
+    }
+    Ok(())
 }
 
 fn configuration_error(message: String) -> ConfigurationException {

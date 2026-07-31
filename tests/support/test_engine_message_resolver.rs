@@ -65,25 +65,31 @@ impl IMessageResolver for TestEngineMessageResolver {
         None
     }
 
-    fn resolve_message(
+    fn resolve_message_nullable(
         &self,
-        context: &dyn ITemplateContext,
+        context: Option<&dyn ITemplateContext>,
         _origin: Option<TypeId>,
-        key: &JavaString,
+        key: Option<&JavaString>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
     ) -> MessageResolutionResult<Option<JavaString>> {
+        let (Some(context), Some(key)) = (context, key) else {
+            return Ok(None);
+        };
         Ok(self.resolve_for_locale(context, key).map(|message| {
             format_message_like_java(message, message_parameters.unwrap_or(&[]), context)
         }))
     }
 
-    fn create_absent_message_representation(
+    fn create_absent_message_representation_nullable(
         &self,
-        context: &dyn ITemplateContext,
+        context: Option<&dyn ITemplateContext>,
         _origin: Option<TypeId>,
-        key: &JavaString,
+        key: Option<&JavaString>,
         _message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
     ) -> MessageResolutionResult<Option<JavaString>> {
+        let (Some(context), Some(key)) = (context, key) else {
+            return Ok(None);
+        };
         Ok(Some(JavaString::from_rust_str(&format!(
             "??{}_{}??",
             key.to_string_lossy(),

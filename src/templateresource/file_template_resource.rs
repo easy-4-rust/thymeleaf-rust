@@ -210,9 +210,9 @@ mod tests {
         FileTemplateResource, ITemplateResource, compute_absolute_file_path,
         normalize_java_file_path,
     };
-    use crate::templateresource::template_resource_reader::{
-        JavaCharsetDecoder, TranscodingReader, is_java_empty_or_whitespace,
-    };
+    use crate::templateresource::java_charset_decoder::JavaCharsetDecoder;
+    use crate::templateresource::template_resource_reader::is_java_empty_or_whitespace;
+    use crate::templateresource::transcoding_reader::TranscodingReader;
 
     #[test]
     fn validates_string_and_file_constructor_boundaries() {

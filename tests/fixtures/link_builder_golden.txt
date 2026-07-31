@@ -1,0 +1,63 @@
+java_baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+state.name.default=org.thymeleaf.linkbuilder.StandardLinkBuilder
+state.order.default=null
+state.name.null=null
+state.order.negative=-17
+validation.context.null=java.lang.IllegalArgumentException|Expression context cannot be null
+validation.base.null=null
+classification.empty=
+classification.base=relative/path
+classification.absolute.http=https://example.org/x
+classification.absolute.embedded_scheme=prefix:https://example.org/x
+classification.absolute.protocol_relative=//example.org/x
+classification.absolute.mailto_case=MaIlTo:user@example.org
+classification.server_relative=/root/path
+classification.fragment.last=path#first?q=x#last
+classification.fragment.zero=#fragment?q=x
+security.javascript.lower=org.thymeleaf.exceptions.TemplateProcessingException|'javascript:' is forbidden in this context. Link expressions cannot contain inlined JavaScript code.
+security.javascript.mixed=org.thymeleaf.exceptions.TemplateProcessingException|'javascript:' is forbidden in this context. Link expressions cannot contain inlined JavaScript code.
+security.javascript.leading_space= javascript:alert(1)
+security.javascript_similar=javascriptx:alert(1)
+classification.context_non_web=org.thymeleaf.exceptions.TemplateProcessingException|Link base "/context/path" cannot be context relative (/...) unless the context used for executing the engine implements the org.thymeleaf.context.IWebContext interface
+query.scalar=path?name=a%20b
+query.existing=path?fixed=yes&name=a%3Db%26c%2Bd%23e
+query.null_value=path?flag
+query.empty_string=path?empty=
+query.list=path?item=one&item&item=two
+query.empty_list=path?
+query.empty_list_then_value=path?&next=value
+query.null_key=path?null=value
+query.insertion_order=path?first=1&second&third=3&third=4
+query.defensive.result=path/7
+query.defensive.size=1
+query.defensive.value=7
+query.number_types=path?n=9223372036854775807&n=123456789012345678901234567890&n=1.2300&n=true
+template.path=orders/a/b%20c
+template.segment=ordersa%2Fb%20c
+template.query=orders?item=a%3Db%26c%2Bd%23e
+template.repeated=a%20b/x/a%20b
+template.direct_preferred=a/b/x{/id}
+template.list.leading_nulls=x
+template.list.middle_null=a,,b
+template.null=
+template.replacement_contains_template=%7Bid%7D/tail
+template.path_and_remaining=orders/a/b?q=x%20y
+escape.path_ascii=-._~!$&'()*+,;=:@/%20%3F%23%5B%5D
+escape.segment_ascii=-._~!$&'()*+,;=:@%2F%20%3F%23%5B%5D
+escape.query_ascii=path?v=-._~!$%26'()*%2B,;%3D:@/%20?%23%5B%5D
+escape.unicode=path/%E4%B8%AD%E6%96%87%F0%9F%98%80
+escape.isolated.input_units=0061,D800,0062,DC00
+escape.isolated.path_units=0061,0025,0033,0046,0062,0025,0033,0046
+escape.isolated.query_units=0070,0061,0074,0068,003F,0076,003D,0061,0025,0033,0046,0062,0025,0033,0046
+web.null_application_path=T[/x]
+web.empty_application_path=T[/x]
+web.root_application_path=T[/x]
+web.application_path=T[/app/x?q=v]
+web.absolute_transformed=T[https://example.org/x]
+hooks.result=P[/hook/x/7]
+hooks.context_calls=1
+hooks.process_calls=1
+hooks.original_identity=true
+hooks.original_size=1
+hooks.process_input=/hook/x/7
+hooks.process_null=null

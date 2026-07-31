@@ -108,8 +108,8 @@ impl PreProcessorPrecedenceComparator {
             })
             .then_with(|| {
                 left_processor
-                    .get_handler_class_name()
-                    .cmp(right_processor.get_handler_class_name())
+                    .java_class_name()
+                    .cmp(right_processor.java_class_name())
             })
             .then_with(|| {
                 pre_processor_identity(left_processor).cmp(&pre_processor_identity(right_processor))
@@ -146,8 +146,8 @@ impl PostProcessorPrecedenceComparator {
             })
             .then_with(|| {
                 left_processor
-                    .get_handler_class_name()
-                    .cmp(right_processor.get_handler_class_name())
+                    .java_class_name()
+                    .cmp(right_processor.java_class_name())
             })
             .then_with(|| {
                 post_processor_identity(left_processor)

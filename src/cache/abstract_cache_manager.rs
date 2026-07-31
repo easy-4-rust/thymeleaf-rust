@@ -81,3 +81,97 @@ impl AbstractCacheManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Barrier};
+
+    use crate::cache::{ICache, ICacheEntryValidityChecker, TemplateCacheKey};
+    use crate::engine::TemplateModel;
+
+    use super::AbstractCacheManager;
+
+    #[derive(Default)]
+    struct RecordingTemplateCache {
+        clear_count: AtomicUsize,
+    }
+
+    impl ICache<TemplateCacheKey, TemplateModel> for RecordingTemplateCache {
+        fn put(&self, _key: TemplateCacheKey, _value: Arc<TemplateModel>) {}
+
+        fn get(&self, _key: &TemplateCacheKey) -> Option<Arc<TemplateModel>> {
+            None
+        }
+
+        fn get_with_validity_checker(
+            &self,
+            _key: &TemplateCacheKey,
+            _validity_checker: &dyn ICacheEntryValidityChecker<TemplateCacheKey, TemplateModel>,
+        ) -> Option<Arc<TemplateModel>> {
+            None
+        }
+
+        fn clear(&self) {
+            self.clear_count.fetch_add(1, Ordering::SeqCst);
+        }
+
+        fn clear_key(&self, _key: &TemplateCacheKey) {}
+
+        fn key_set(&self) -> HashSet<TemplateCacheKey> {
+            HashSet::new()
+        }
+    }
+
+    #[test]
+    fn initializes_once_under_concurrency_and_clears_once_per_request() {
+        let manager = Arc::new(AbstractCacheManager::new());
+        let cache = Arc::new(RecordingTemplateCache::default());
+        let initialize_count = Arc::new(AtomicUsize::new(0));
+        let barrier = Arc::new(Barrier::new(9));
+
+        let mut handles = Vec::new();
+        for _ in 0..8 {
+            let manager = Arc::clone(&manager);
+            let cache = Arc::clone(&cache);
+            let initialize_count = Arc::clone(&initialize_count);
+            let barrier = Arc::clone(&barrier);
+            handles.push(std::thread::spawn(move || {
+                barrier.wait();
+                let initialized = manager.get_template_cache(|| {
+                    initialize_count.fetch_add(1, Ordering::SeqCst);
+                    Some(cache)
+                });
+                assert!(initialized.is_some());
+            }));
+        }
+        barrier.wait();
+        for handle in handles {
+            handle.join().expect("cache initialization thread");
+        }
+
+        assert_eq!(initialize_count.load(Ordering::SeqCst), 1);
+        manager.clear_initialized_caches();
+        assert_eq!(cache.clear_count.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn remembers_disabled_cache_without_retrying_initializer() {
+        let manager = AbstractCacheManager::new();
+        let initialize_count = AtomicUsize::new(0);
+
+        for _ in 0..2 {
+            assert!(
+                manager
+                    .get_template_cache(|| {
+                        initialize_count.fetch_add(1, Ordering::SeqCst);
+                        None
+                    })
+                    .is_none()
+            );
+        }
+
+        assert_eq!(initialize_count.load(Ordering::SeqCst), 1);
+    }
+}

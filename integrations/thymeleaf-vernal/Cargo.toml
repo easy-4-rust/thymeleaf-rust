@@ -13,6 +13,10 @@ http = "1.3"
 thymeleaf = { path = "../.." }
 vernal-http = { git = "https://github.com/easy-4-rust/vernal.git", rev = "8dce0d5c32f1ba3a4078791cdef8654860680bc7" }
 
+[dev-dependencies]
+futures-executor = "0.3.31"
+http-body = "1.0"
+
 [lints.rust]
 missing_docs = "deny"
 unsafe_code = "forbid"

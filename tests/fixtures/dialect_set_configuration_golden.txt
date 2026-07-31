@@ -1,0 +1,59 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+shape.execution=getExecutionAttributes():Map
+shape.expression=getExpressionObjectFactory():IExpressionObjectFactory
+shape.pre=getDialectPreProcessorPrecedence():int,getPreProcessors():Set
+shape.post=getDialectPostProcessorPrecedence():int,getPostProcessors():Set
+shape.configuration.public=build(Set):DialectSetConfiguration,getAttributeDefinitions():AttributeDefinitions,getCDATASectionProcessors(TemplateMode):Set,getCommentProcessors(TemplateMode):Set,getDialectConfigurations():Set,getDialects():Set,getDocTypeProcessors(TemplateMode):Set,getElementDefinitions():ElementDefinitions,getElementProcessors(TemplateMode):Set,getExecutionAttribute(String):Object,getExecutionAttributes():Map,getExpressionObjectFactory():IExpressionObjectFactory,getPostProcessors(TemplateMode):Set,getPreProcessors(TemplateMode):Set,getProcessingInstructionProcessors(TemplateMode):Set,getStandardDialectPrefix():String,getTemplateBoundariesProcessors(TemplateMode):Set,getTextProcessors(TemplateMode):Set,getXMLDeclarationProcessors(TemplateMode):Set,hasExecutionAttribute(String):boolean,isStandardDialectPresent():boolean
+empty.configurations=0
+empty.dialects=0
+empty.standard=false
+empty.prefix=null
+empty.attributes={}
+empty.expression.names=null
+empty.pre.html=[]
+empty.post.raw=[]
+empty.configurations.mutable=java.lang.UnsupportedOperationException:null|cause=null
+empty.attributes.mutable=java.lang.UnsupportedOperationException:null|cause=null
+attributes.entries={null=null-key, null-value=null, alpha=1, beta=2}
+attributes.null.present=true
+attributes.null.value=null
+attributes.missing.present=false
+attributes.conflict=org.thymeleaf.exceptions.ConfigurationException:Conflicting execution attribute. Two or more dialects specify an execution attribute with the same name "alpha".|cause=null
+attributes.conflict.null=org.thymeleaf.exceptions.ConfigurationException:Conflicting execution attribute. Two or more dialects specify an execution attribute with the same name "null".|cause=null
+expression.multi.names=[b, shared, a]
+expression.multi.shared=B:shared
+expression.multi.a=A:a
+expression.multi.unknown=null
+expression.multi.cache.shared=false
+expression.multi.calls=1|2
+expression.single.names=[known]
+expression.single.unknown=ONLY:unknown
+expression.single.cache.unknown=true
+expression.single.calls=2
+pre.order=[APreProcessor:5,APreProcessor:20,BPreProcessor:20]
+post.order=[APostProcessor:5,APostProcessor:20,BPostProcessor:20]
+pre.dialect_precedence.calls=0
+post.dialect_precedence.calls=0
+pre.empty.xml=[]
+post.empty.xml=[]
+build.null=java.lang.IllegalArgumentException:Dialect configuration set cannot be null|cause=null
+pre.null.entry=org.thymeleaf.exceptions.ConfigurationException:Pre-Processor list for dialect org.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect includes a null entry, which is forbidden.|cause=null
+pre.null.mode=org.thymeleaf.exceptions.ConfigurationException:Template mode cannot be null (pre-processor: org.thymeleaf.DialectSetConfigurationGolden$APreProcessor, dialectorg.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect)|cause=null
+pre.null.handler=org.thymeleaf.exceptions.ConfigurationException:Pre-Processor org.thymeleaf.DialectSetConfigurationGolden$APreProcessor for dialect org.thymeleaf.DialectSetConfigurationGolden$APreProcessor returns a null handler class, which is forbidden.|cause=null
+pre.wrong.handler=org.thymeleaf.exceptions.ConfigurationException:Handler class java.lang.String specified for pre-processor org.thymeleaf.DialectSetConfigurationGolden$APreProcessor in dialect org.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect does not implement required interface org.thymeleaf.engine.ITemplateHandler|cause=null
+pre.no_zero_arg=org.thymeleaf.exceptions.ConfigurationException:Pre-Processor class org.thymeleaf.DialectSetConfigurationGolden$NoPublicConstructorHandler specified for pre-processor org.thymeleaf.DialectSetConfigurationGolden$APreProcessor in dialect org.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect does not implement required zero-argument constructor.|cause=java.lang.NoSuchMethodException
+post.null.entry=org.thymeleaf.exceptions.ConfigurationException:Post-Processor list for dialect org.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect includes a null entry, which is forbidden.|cause=null
+post.null.mode=org.thymeleaf.exceptions.ConfigurationException:Template mode cannot be null (post-processor: org.thymeleaf.DialectSetConfigurationGolden$APostProcessor, dialectorg.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect)|cause=null
+post.null.handler=org.thymeleaf.exceptions.ConfigurationException:Post-Processor org.thymeleaf.DialectSetConfigurationGolden$APostProcessor for dialect org.thymeleaf.DialectSetConfigurationGolden$APostProcessor returns a null handler class, which is forbidden.|cause=null
+post.wrong.handler=org.thymeleaf.exceptions.ConfigurationException:Handler class java.lang.String specified for post-processor org.thymeleaf.DialectSetConfigurationGolden$APostProcessor in dialect org.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect does not implement required interface org.thymeleaf.engine.ITemplateHandler|cause=null
+post.no_zero_arg=org.thymeleaf.exceptions.ConfigurationException:Post-Processor class org.thymeleaf.DialectSetConfigurationGolden$NoPublicConstructorHandler specified for post-processor org.thymeleaf.DialectSetConfigurationGolden$APostProcessor in dialect org.thymeleaf.DialectSetConfigurationGolden$CapabilityDialect does not implement required zero-argument constructor.|cause=java.lang.NoSuchMethodException
+getter.boundaries.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.cdata.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.comment.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.doctype.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.element.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.instruction.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.text.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.declaration.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.pre.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null
+getter.post.null=java.lang.IllegalArgumentException:Template mode cannot be null|cause=null

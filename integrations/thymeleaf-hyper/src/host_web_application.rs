@@ -18,7 +18,14 @@ pub struct HostWebApplication {
 }
 
 impl HostWebApplication {
-    /// 使用有序资源根目录创建应用作用域。
+    /// 使用有序资源根目录创建应用作用域。对应 Java:
+    /// `JakartaServletWebApplication#JakartaServletWebApplication`。
+    ///
+    /// # 参数
+    /// - `resource_roots`：按查找优先级排列的宿主资源根目录。
+    ///
+    /// # 返回
+    /// 空属性集且使用给定资源根目录的新应用作用域。
     #[must_use]
     pub fn new(resource_roots: Vec<PathBuf>) -> Self {
         Self {
@@ -39,6 +46,7 @@ impl HostWebApplication {
 
 impl IWebApplication for HostWebApplication {
     fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+        require_name(name);
         read_attributes(&self.attributes).contains_key(&name.cloned())
     }
 
@@ -55,6 +63,7 @@ impl IWebApplication for HostWebApplication {
     }
 
     fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+        require_name(name);
         read_attributes(&self.attributes)
             .get(&name.cloned())
             .cloned()
@@ -62,6 +71,7 @@ impl IWebApplication for HostWebApplication {
     }
 
     fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+        require_owned_name(&name);
         let mut attributes = write_attributes(&self.attributes);
         if value.is_some() {
             attributes.insert(name, value);
@@ -71,14 +81,17 @@ impl IWebApplication for HostWebApplication {
     }
 
     fn remove_attribute(&self, name: Option<&JavaString>) {
+        require_name(name);
         write_attributes(&self.attributes).shift_remove(&name.cloned());
     }
 
     fn resource_exists(&self, path: Option<&JavaString>) -> bool {
+        require_path(path);
         self.resolve_resource(path).is_some()
     }
 
     fn get_resource_as_stream(&self, path: Option<&JavaString>) -> Option<Box<dyn Read + Send>> {
+        require_path(path);
         let file = File::open(self.resolve_resource(path)?).ok()?;
         Some(Box::new(BufReader::new(file)))
     }
@@ -92,4 +105,22 @@ fn read_attributes<T>(lock: &RwLock<T>) -> std::sync::RwLockReadGuard<'_, T> {
 fn write_attributes<T>(lock: &RwLock<T>) -> std::sync::RwLockWriteGuard<'_, T> {
     lock.write()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+fn require_name(name: Option<&JavaString>) {
+    if name.is_none() {
+        panic!("Name cannot be null");
+    }
+}
+
+fn require_owned_name(name: &Option<JavaString>) {
+    if name.is_none() {
+        panic!("Name cannot be null");
+    }
+}
+
+fn require_path(path: Option<&JavaString>) {
+    if path.is_none() {
+        panic!("Path cannot be null");
+    }
 }

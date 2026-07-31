@@ -472,3 +472,368 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    use indexmap::IndexMap;
+
+    use super::ElementTagStructureHandler;
+    use crate::cache::AlwaysValidCacheEntryValidity;
+    use crate::context::{EngineContext, IContext, ITemplateContext};
+    use crate::element::IElementTagStructureHandler;
+    use crate::engine::{
+        Attribute, AttributeDefinitionValue, AttributeDefinitions, ElementDefinitionValue,
+        ElementDefinitions, ElementProcessorsByTemplateMode, OpenElementTag, TemplateData,
+        model::Model,
+    };
+    use crate::expression::TemplateValue;
+    use crate::model::{AttributeValueQuotes, IModel, IProcessableElementTag};
+    use crate::templatemode::TemplateMode;
+    use crate::templateresource::StringTemplateResource;
+    use crate::util::{JavaLocale, JavaString};
+    use crate::{ITemplateEngine, TemplateEngine};
+
+    fn java(value: &str) -> JavaString {
+        JavaString::from_rust_str(value)
+    }
+
+    fn snapshot(handler: &ElementTagStructureHandler) -> String {
+        format!(
+            "{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+            handler.set_body_text,
+            handler.set_body_model,
+            handler.insert_before_model,
+            handler.remove_element,
+            handler.iterate_element,
+            handler.set_local_variable,
+            handler.added_local_variables.len(),
+            handler.remove_local_variable,
+            handler.removed_local_variable_names.len(),
+            handler.set_attribute,
+            handler.set_attribute_values.len(),
+            handler.remove_attribute,
+            handler.remove_attribute_values.len(),
+            handler
+                .iter_variable_name
+                .as_ref()
+                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+        )
+    }
+
+    /// 建立真实的 HTML 定义仓库，确保测试经过生产属性名解析和不可变标签转换。
+    fn definitions() -> (AttributeDefinitions, ElementDefinitions) {
+        let processors: ElementProcessorsByTemplateMode = HashMap::new();
+        let attribute_definitions =
+            AttributeDefinitions::new(processors.clone()).expect("attribute definitions");
+        let element_definitions = ElementDefinitions::new(processors).expect("element definitions");
+        (attribute_definitions, element_definitions)
+    }
+
+    /// 用真实 `OpenElementTag` 建立两个已有属性，避免用 mock 掩盖属性转换语义。
+    fn open_tag(
+        attribute_definitions: &AttributeDefinitions,
+        element_definitions: &ElementDefinitions,
+    ) -> Arc<OpenElementTag> {
+        let element_definition = ElementDefinitionValue::Html(
+            element_definitions
+                .for_html_name(Some(&java("element")))
+                .expect("element definition"),
+        );
+        let attributes = ["data-a", "data-b"]
+            .into_iter()
+            .zip(["one", "two"])
+            .map(|(name, value)| {
+                let definition = AttributeDefinitionValue::Html(
+                    attribute_definitions
+                        .for_html_name(Some(&java(name)))
+                        .expect("attribute definition"),
+                );
+                Arc::new(Attribute::new(
+                    definition,
+                    java(name),
+                    None,
+                    Some(java(value)),
+                    Some(AttributeValueQuotes::DOUBLE),
+                    None,
+                    -1,
+                    -1,
+                ))
+            })
+            .collect();
+        Arc::new(OpenElementTag::new(
+            TemplateMode::HTML,
+            element_definition,
+            java("element"),
+            Some(crate::engine::Attributes::new(
+                Some(attributes),
+                // 两个属性各自有一个前置空白；Java 的 `innerWhiteSpaces` 长度必须与
+                // 属性数相同（或多一个结尾空白），删除最后一个属性才能保持格式。
+                Some(vec![java(" "), java(" ")]),
+            )),
+            false,
+        ))
+    }
+
+    fn template_data(name: &str) -> TemplateData {
+        TemplateData::new(
+            Some(java(name)),
+            None,
+            Some(Arc::new(
+                StringTemplateResource::new(Some(name)).expect("string template resource"),
+            )),
+            Some(TemplateMode::HTML),
+            Some(Arc::new(AlwaysValidCacheEntryValidity::new())),
+        )
+    }
+
+    #[test]
+    fn action_state_matches_java_golden() {
+        let mut handler = ElementTagStructureHandler::new();
+        let mut actual = vec![("initial", snapshot(&handler))];
+        {
+            let contract: &mut dyn IElementTagStructureHandler = &mut handler;
+            contract.set_local_variable(java("a"), None);
+            contract.set_local_variable(java("b"), None);
+            contract.remove_local_variable(java("old"));
+            contract.set_attribute(java("x"), Some(java("1")), None);
+            contract.set_attribute(java("y"), None, Some(AttributeValueQuotes::SINGLE));
+            contract.remove_attribute(java("gone"));
+            contract.remove_attribute_with_prefix(Some(java("th")), java("each"));
+        }
+        actual.push(("combined", snapshot(&handler)));
+        (&mut handler as &mut dyn IElementTagStructureHandler).remove_element();
+        actual.push(("removeElement", snapshot(&handler)));
+        (&mut handler as &mut dyn IElementTagStructureHandler)
+            .iterate_element(java("item"), None, None)
+            .expect("non-empty Java iteration variable");
+        actual.push(("iterate", snapshot(&handler)));
+        (&mut handler as &mut dyn IElementTagStructureHandler).reset();
+        actual.push(("reset", snapshot(&handler)));
+
+        for (key, value) in actual {
+            let expected =
+                include_str!("../../tests/fixtures/element_tag_structure_handler_golden.txt")
+                    .lines()
+                    .find_map(|line| line.strip_prefix(&format!("{key}=")))
+                    .expect("Java Golden record");
+            assert_eq!(value, expected, "Java Golden {key}");
+        }
+    }
+
+    #[test]
+    fn applies_attribute_actions_in_java_remove_replace_set_order() {
+        let (attribute_definitions, element_definitions) = definitions();
+        let initial = open_tag(&attribute_definitions, &element_definitions);
+        let mut handler = ElementTagStructureHandler::new();
+        {
+            let contract: &mut dyn IElementTagStructureHandler = &mut handler;
+            // Java 的三个动作列表分开保存，执行时不能按调用顺序交错：必须先删、再替换、最后设置。
+            contract.set_attribute(java("data-c"), Some(java("final")), None);
+            contract.remove_attribute(java("data-a"));
+            contract.replace_attribute(
+                crate::engine::AttributeNameValue::Html(
+                    crate::engine::AttributeNames::for_html_name(Some(&java("data-b")))
+                        .expect("old attribute name"),
+                ),
+                java("data-c"),
+                Some(java("replacement")),
+                Some(AttributeValueQuotes::SINGLE),
+            );
+            contract.set_attribute(java("data-d"), None, None);
+        }
+
+        let result = handler
+            .apply_attributes(
+                &attribute_definitions,
+                initial as Arc<dyn IProcessableElementTag>,
+            )
+            .expect("production attribute transformation");
+        let attributes = result.get_attribute_map();
+        assert_eq!(attributes.len(), 2);
+        assert_eq!(attributes.get(&java("data-c")), Some(&Some(java("final"))));
+        assert_eq!(attributes.get(&java("data-d")), Some(&None));
+        assert!(attributes.get(&java("data-a")).is_none());
+        assert!(attributes.get(&java("data-b")).is_none());
+        assert_eq!(
+            attributes
+                .keys()
+                .map(JavaString::to_string_lossy)
+                .collect::<Vec<_>>(),
+            vec!["data-c", "data-d"],
+            "Java 的替换阶段先于设置阶段，因此最后属性顺序固定"
+        );
+        let actual = attributes
+            .iter()
+            .map(|(name, value)| {
+                format!(
+                    "{}={}",
+                    name.to_string_lossy(),
+                    value
+                        .as_ref()
+                        .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        let expected =
+            include_str!("../../tests/fixtures/element_tag_structure_handler_golden.txt")
+                .lines()
+                .find_map(|line| line.strip_prefix("attributes="))
+                .expect("Java Golden attributes record");
+        assert_eq!(actual, expected, "Java Golden attributes");
+    }
+
+    #[test]
+    fn applies_context_actions_to_a_real_engine_context_in_java_order() {
+        let engine = TemplateEngine::new();
+        let configuration = engine.get_configuration().expect("engine configuration");
+        let old = java("old");
+        let new = java("new");
+        let mut initial = IndexMap::new();
+        initial.insert(
+            Some(old.clone()),
+            Some(Arc::new(TemplateValue::string(java("root-value")))),
+        );
+        let context = EngineContext::new(
+            configuration,
+            template_data("root"),
+            None,
+            JavaLocale::new(java("en"), java("US")),
+            Some(&initial),
+        );
+        let selection = Arc::new(TemplateValue::string(java("selection")));
+        let mut handler = ElementTagStructureHandler::new();
+        {
+            let contract: &mut dyn IElementTagStructureHandler = &mut handler;
+            // 同名 set 后 remove 只有在 Java 固定顺序（setVariables 后 removeVariable）下才会消失。
+            contract.set_local_variable(
+                old.clone(),
+                Some(Arc::new(TemplateValue::string(java("new-old")))),
+            );
+            contract.set_local_variable(
+                new.clone(),
+                Some(Arc::new(TemplateValue::string(java("new-value")))),
+            );
+            contract.remove_local_variable(old.clone());
+            contract.set_selection_target(Some(Arc::clone(&selection)));
+            contract.set_template_data(Arc::new(template_data("nested")));
+        }
+
+        handler.apply_context_modifications(Some(context.as_ref()));
+        assert!(context.get_variable(Some(&old)).is_none());
+        assert!(matches!(
+            context.get_variable(Some(&new)).as_deref(),
+            Some(TemplateValue::String(value)) if value.to_string_lossy() == "new-value"
+        ));
+        assert!(matches!(
+            context.get_selection_target().as_deref(),
+            Some(TemplateValue::String(value)) if value.to_string_lossy() == "selection"
+        ));
+        assert_eq!(
+            context
+                .get_template_data()
+                .get_template()
+                .expect("nested template")
+                .to_string_lossy(),
+            "nested"
+        );
+    }
+
+    #[test]
+    fn structural_actions_are_mutually_exclusive_and_keep_model_identity() {
+        let engine = TemplateEngine::new();
+        let configuration = engine.get_configuration().expect("engine configuration");
+        let model: Arc<dyn IModel> = Arc::new(Model::new(configuration, TemplateMode::HTML));
+        let mut handler = ElementTagStructureHandler::new();
+        {
+            let contract: &mut dyn IElementTagStructureHandler = &mut handler;
+            // 变量和属性不属于结构互斥组，后续每个结构动作都必须保留它们。
+            contract.set_local_variable(java("kept"), None);
+            contract.set_attribute(java("data-kept"), Some(java("yes")), None);
+            contract.set_body_text(java("text"), true);
+        }
+        assert!(handler.set_body_text && handler.set_body_text_processable);
+        assert!(handler.set_body_model_value.is_none());
+
+        (&mut handler as &mut dyn IElementTagStructureHandler)
+            .set_body_model(Arc::clone(&model), false);
+        assert!(handler.set_body_model && !handler.set_body_model_processable);
+        assert!(Arc::ptr_eq(
+            handler.set_body_model_value.as_ref().expect("body model"),
+            &model
+        ));
+        assert!(!handler.set_body_text);
+
+        (&mut handler as &mut dyn IElementTagStructureHandler).insert_before(Arc::clone(&model));
+        assert!(handler.insert_before_model);
+        assert!(Arc::ptr_eq(
+            handler
+                .insert_before_model_value
+                .as_ref()
+                .expect("before model"),
+            &model
+        ));
+        assert!(!handler.set_body_model);
+
+        (&mut handler as &mut dyn IElementTagStructureHandler)
+            .insert_immediately_after(Arc::clone(&model), true);
+        assert!(
+            handler.insert_immediately_after_model
+                && handler.insert_immediately_after_model_processable
+        );
+        assert!(Arc::ptr_eq(
+            handler
+                .insert_immediately_after_model_value
+                .as_ref()
+                .expect("after model"),
+            &model
+        ));
+        assert!(!handler.insert_before_model);
+
+        (&mut handler as &mut dyn IElementTagStructureHandler)
+            .replace_with_text(java("replacement"), false);
+        assert!(handler.replace_with_text && !handler.replace_with_text_processable);
+        assert_eq!(
+            handler
+                .replace_with_text_value
+                .as_ref()
+                .expect("replacement text")
+                .to_string_lossy(),
+            "replacement"
+        );
+        assert!(!handler.insert_immediately_after_model);
+
+        (&mut handler as &mut dyn IElementTagStructureHandler)
+            .replace_with_model(Arc::clone(&model), true);
+        assert!(handler.replace_with_model && handler.replace_with_model_processable);
+        assert!(Arc::ptr_eq(
+            handler
+                .replace_with_model_value
+                .as_ref()
+                .expect("replacement model"),
+            &model
+        ));
+        assert!(!handler.replace_with_text);
+
+        for action in [
+            IElementTagStructureHandler::remove_tags,
+            IElementTagStructureHandler::remove_body,
+            IElementTagStructureHandler::remove_all_but_first_child,
+            IElementTagStructureHandler::remove_element,
+        ] {
+            action(&mut handler);
+            assert_eq!(
+                usize::from(handler.remove_tags)
+                    + usize::from(handler.remove_body)
+                    + usize::from(handler.remove_all_but_first_child)
+                    + usize::from(handler.remove_element),
+                1,
+                "每次删除动作只能留下它自己"
+            );
+            assert!(handler.set_local_variable && handler.set_attribute);
+        }
+    }
+}

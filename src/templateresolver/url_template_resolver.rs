@@ -2,10 +2,14 @@ use std::sync::Arc;
 
 use crate::TemplateResolutionAttributes;
 use crate::cache::{ICacheEntryValidity, NonCacheableCacheEntryValidity};
+use crate::templateresource::UrlResourceConnectionHandler;
 use crate::util::JavaString;
-use crate::{IEngineConfiguration, ITemplateResource, UrlTemplateResource};
+use crate::{IEngineConfiguration, ITemplateResource, TemplateResourceError, UrlTemplateResource};
 
-use super::{AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution};
+use super::{
+    AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution,
+    TemplateResolverError,
+};
 
 /// 从 URL 解析模板资源的可配置解析器。
 ///
@@ -15,25 +19,60 @@ use super::{AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateRes
 /// 对应 Java: `org.thymeleaf.templateresolver.UrlTemplateResolver`。
 pub struct UrlTemplateResolver {
     resolver: AbstractConfigurableTemplateResolver,
+    connection_handler: Option<Arc<UrlResourceConnectionHandler>>,
 }
 
 impl UrlTemplateResolver {
     /// 创建使用标准可配置默认值的 URL 解析器。
+    ///
+    /// 对应 Java: `UrlTemplateResolver#UrlTemplateResolver()`。
     #[must_use]
     pub fn new() -> Self {
         Self {
             resolver: AbstractConfigurableTemplateResolver::new(
                 "org.thymeleaf.templateresolver.UrlTemplateResolver",
             ),
+            connection_handler: None,
         }
     }
 
-    fn compute_validity(&self, template: &JavaString) -> Arc<dyn ICacheEntryValidity> {
-        if template
-            .to_string_lossy()
-            .to_lowercase()
-            .contains(";jsessionid")
-        {
+    /// 设置非 file/HTTP/HTTPS 协议的连接处理器。
+    ///
+    /// Java 通过 JVM 全局 URL 协议处理器扩展自定义协议；Rust 把相同职责显式放在
+    /// Resolver 实例上，并传递给它创建的每个相对资源。
+    ///
+    /// 对应 Java: JVM `URLStreamHandler` 扩展点的 Resolver 级 Rust 等价入口。
+    pub fn set_connection_handler(
+        &mut self,
+        connection_handler: Option<Arc<UrlResourceConnectionHandler>>,
+    ) {
+        self.connection_handler = connection_handler;
+    }
+
+    /// 返回当前自定义 URL 协议处理器。
+    ///
+    /// 对应 Java: JVM `URLStreamHandler` 扩展状态的 Resolver 级 Rust 等价视图。
+    #[must_use]
+    pub fn get_connection_handler(&self) -> Option<&Arc<UrlResourceConnectionHandler>> {
+        self.connection_handler.as_ref()
+    }
+
+    /// 计算 URL 模板的缓存有效性。
+    ///
+    /// 包含 `;jsessionid` 且能由 Java 正则 `.` 覆盖完整输入的模板强制不缓存，避免
+    /// 同一资源因不同会话标识产生多个缓存条目；其余输入委托公共可配置策略。
+    ///
+    /// 对应 Java: `UrlTemplateResolver#computeValidity(...)`。
+    #[must_use]
+    pub fn compute_validity(&self, template: &JavaString) -> Arc<dyn ICacheEntryValidity> {
+        let text = template.to_string_lossy();
+        let java_dot_matches_entire_template = !text.chars().any(|character| {
+            matches!(
+                character,
+                '\n' | '\r' | '\u{0085}' | '\u{2028}' | '\u{2029}'
+            )
+        });
+        if java_dot_matches_entire_template && text.to_lowercase().contains(";jsessionid") {
             return Arc::new(NonCacheableCacheEntryValidity::new());
         }
         self.resolver.compute_validity(template)
@@ -74,20 +113,38 @@ impl ITemplateResolver for UrlTemplateResolver {
         _owner_template: Option<&JavaString>,
         template: &JavaString,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-    ) -> Option<TemplateResolution> {
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
             template,
             || {
                 let resource_name = self.resolver.compute_resource_name(template);
-                UrlTemplateResource::new(
-                    Some(&resource_name.to_string_lossy()),
-                    self.resolver
-                        .get_character_encoding()
-                        .map(JavaString::to_string_lossy)
-                        .as_deref(),
-                )
-                .ok()
-                .map(|resource| Arc::new(resource) as Arc<dyn ITemplateResource>)
+                let resource_name = resource_name.to_string_lossy();
+                let character_encoding = self
+                    .resolver
+                    .get_character_encoding()
+                    .map(JavaString::to_string_lossy);
+                let resource = self.connection_handler.as_ref().map_or_else(
+                    || {
+                        UrlTemplateResource::new(
+                            Some(&resource_name),
+                            character_encoding.as_deref(),
+                        )
+                    },
+                    |handler| {
+                        UrlTemplateResource::with_connection_handler(
+                            Some(&resource_name),
+                            character_encoding.as_deref(),
+                            Arc::clone(handler),
+                        )
+                    },
+                );
+                match resource {
+                    Ok(resource) => Ok(Some(Arc::new(resource) as Arc<dyn ITemplateResource>)),
+                    // Java 只把 MalformedURLException 解释为“该 Resolver 不适用”；
+                    // 参数错误和模板输入错误仍须向调用方传播。
+                    Err(TemplateResourceError::MalformedUrl { .. }) => Ok(None),
+                    Err(error) => Err(TemplateResolverError::from(error)),
+                }
             },
             || self.resolver.compute_template_mode(template),
             || self.compute_validity(template),

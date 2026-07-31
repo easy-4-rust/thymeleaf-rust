@@ -20,7 +20,15 @@ pub struct HostWebRequest {
 }
 
 impl HostWebRequest {
-    /// 从 Hyper/http 请求创建只读快照。
+    /// 从 Hyper/http 请求创建只读快照。对应 Java:
+    /// `JakartaServletWebRequest#JakartaServletWebRequest`。
+    ///
+    /// # 参数
+    /// - `request`：宿主 HTTP 请求。
+    /// - `application_path`：Servlet context path 的中立等价文本。
+    ///
+    /// # 返回
+    /// 保留 URI、Header、参数和 Cookie 多值顺序的请求快照。
     #[must_use]
     pub fn from_request<B>(request: &hyper::Request<B>, application_path: &str) -> Self {
         let uri = request.uri();
@@ -88,6 +96,7 @@ impl IWebRequest for HostWebRequest {
     }
 
     fn contains_header(&self, name: Option<&JavaString>) -> bool {
+        require_name(name);
         contains_case_insensitive(&self.headers, name)
     }
 
@@ -104,10 +113,12 @@ impl IWebRequest for HostWebRequest {
     }
 
     fn get_header_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+        require_name(name);
         get_case_insensitive(&self.headers, name)
     }
 
     fn contains_parameter(&self, name: Option<&JavaString>) -> bool {
+        require_name(name);
         self.parameters.contains_key(&name.cloned())
     }
 
@@ -124,15 +135,23 @@ impl IWebRequest for HostWebRequest {
     }
 
     fn get_parameter_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+        require_name(name);
         self.parameters.get(&name.cloned()).cloned().flatten()
     }
 
     fn contains_cookie(&self, name: Option<&JavaString>) -> bool {
+        require_name(name);
         self.cookies.contains_key(&name.cloned())
     }
 
     fn get_cookie_count(&self) -> i32 {
-        i32::try_from(self.cookies.len()).unwrap_or(i32::MAX)
+        let count = self
+            .cookies
+            .values()
+            .filter_map(Option::as_ref)
+            .map(Vec::len)
+            .sum::<usize>();
+        i32::try_from(count).unwrap_or(i32::MAX)
     }
 
     fn get_all_cookie_names(&self) -> Vec<Option<JavaString>> {
@@ -144,6 +163,7 @@ impl IWebRequest for HostWebRequest {
     }
 
     fn get_cookie_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+        require_name(name);
         self.cookies.get(&name.cloned()).cloned().flatten()
     }
 }
@@ -229,4 +249,10 @@ fn get_case_insensitive(
             .then(|| value.clone())
             .flatten()
     })
+}
+
+fn require_name(name: Option<&JavaString>) {
+    if name.is_none() {
+        panic!("Name cannot be null");
+    }
 }

@@ -1868,7 +1868,10 @@ fn java_upper(value: u16) -> u16 {
     case_map(value, true)
 }
 
-fn java_lower(value: u16) -> u16 {
+/// 按 JDK 21 `Character.toLowerCase(char)` 对单个 UTF-16 code unit 做简单小写映射。
+///
+/// 返回值仍是单个 code unit，不使用可能扩张为多个字符的字符串级 lowercase。
+pub(crate) fn java_lower(value: u16) -> u16 {
     case_map(value, false)
 }
 

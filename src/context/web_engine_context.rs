@@ -97,6 +97,14 @@ impl WebEngineContext {
         locale: JavaLocale,
         variables: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
     ) -> Arc<ExchangeAttributeMap> {
+        let core_variables = variables.map(|variables| {
+            variables
+                .iter()
+                .filter_map(|(name, value)| {
+                    normalize_web_value(value.clone()).map(|value| (name.clone(), Some(value)))
+                })
+                .collect::<IndexMap<_, _>>()
+        });
         if let Some(variables) = variables {
             for (name, value) in variables {
                 web_exchange.set_attribute_value(name.clone(), normalize_web_value(value.clone()));
@@ -110,7 +118,9 @@ impl WebEngineContext {
                     template_data,
                     template_resolution_attributes,
                     locale,
-                    None,
+                    // 内部 core 同步保留每层变量记录，仅用于严格复现 Java 的
+                    // `getStringRepresentationByLevel()`；变量读取仍以 exchange 为准。
+                    core_variables.as_ref(),
                     expression_context,
                     None,
                 ),
@@ -135,11 +145,20 @@ impl WebEngineContext {
     /// 对应 Java: `WebEngineContext#getStringRepresentationByLevel()`。
     #[must_use]
     pub fn get_string_representation_by_level(&self) -> String {
-        let mut result = self.core.get_string_representation_by_level();
-        let attributes = format_attribute_map(&self.web_exchange.get_attribute_map());
-        result.push_str(" exchange=");
-        result.push_str(&attributes);
-        result
+        // Java 委托 ExchangeAttributeMap；该诊断串只报告按层记录的上下文变更，
+        // 不附加 exchange 的私有实现信息。
+        let mut representation = self.core.get_string_representation_by_level();
+        // `ExchangeAttributeMap` 用数组保留同层变量第一次修改的顺序，而普通
+        // `EngineContext` 为诊断目的按名称排序。将 core 的层级骨架替换为 Web 的
+        // 变更序列，保留 Java 两种实现这一可观察差别。
+        for level in read_changes(&self.local_changes).iter() {
+            replace_level_variable_map(
+                &mut representation,
+                level.level,
+                &format_web_level_changes(&level.changes),
+            );
+        }
+        representation
     }
 
     fn set_web_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
@@ -165,6 +184,14 @@ impl WebEngineContext {
                     },
                 );
             }
+        }
+        // Exchange 是运行时事实来源，而 core 保留与 Java ExchangeAttributeMap 同步的
+        // 诊断层级记录。两者必须一起更新，才能在嵌套层展示 old/new 变量状态。
+        if let Some(value) = value.as_ref() {
+            self.core
+                .set_variable(name.clone(), Some(Arc::clone(value)));
+        } else {
+            self.core.remove_variable(name.as_ref());
         }
         self.web_exchange.set_attribute_value(name, value);
     }
@@ -200,8 +227,8 @@ impl IContext for WebEngineContext {
         self.web_exchange.contains_attribute(name)
     }
 
-    fn get_variable_names(&self) -> Box<dyn IContextVariableNames + '_> {
-        Box::new(WebEngineVariableNames { context: self })
+    fn get_variable_names(&self) -> Arc<dyn IContextVariableNames + '_> {
+        Arc::new(WebEngineVariableNames { context: self })
     }
 
     fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
@@ -255,6 +282,10 @@ impl IContext for WebEngineContext {
 impl IWebContext for WebEngineContext {
     fn get_exchange(&self) -> &dyn IWebExchange {
         self.web_exchange.as_ref()
+    }
+
+    fn get_exchange_arc(&self) -> Arc<dyn IWebExchange> {
+        Arc::clone(&self.web_exchange)
     }
 }
 
@@ -334,9 +365,12 @@ impl ITemplateContext for WebEngineContext {
                 return Ok(link);
             }
         }
-        Err(TemplateProcessingException::new(Some(
-            "No configured link builder instance was able to build link".to_owned(),
-        )))
+        let base = base.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+        Err(TemplateProcessingException::new(Some(format!(
+            "No configured link builder instance was able to build link with base \"{base}\" and \
+             parameters {}",
+            format_link_parameters(parameters)
+        ))))
     }
 
     fn get_identifier_sequences(&self) -> &IdentifierSequences {
@@ -867,4 +901,74 @@ fn format_parameter_values(values: &[Option<JavaString>]) -> String {
     }
     output.push(']');
     output
+}
+
+fn format_link_parameters(
+    parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+) -> String {
+    let Some(parameters) = parameters else {
+        return "null".to_owned();
+    };
+    let mut result = String::from("{");
+    for (index, (name, value)) in parameters.iter().enumerate() {
+        if index != 0 {
+            result.push_str(", ");
+        }
+        result.push_str(
+            &name
+                .as_ref()
+                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+        );
+        result.push('=');
+        result.push_str(
+            &value
+                .as_deref()
+                .and_then(TemplateValue::to_java_string)
+                .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
+        );
+    }
+    result.push('}');
+    result
+}
+
+fn format_web_level_changes(changes: &IndexMap<Option<JavaString>, WebVariableChange>) -> String {
+    let mut output = String::from("{");
+    let mut written = 0_usize;
+    for (name, change) in changes {
+        if same_identity(change.new_value.as_ref(), change.old_value.as_ref()) {
+            continue;
+        }
+        if written != 0 {
+            output.push_str(", ");
+        }
+        output.push_str(
+            &name
+                .as_ref()
+                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+        );
+        output.push('=');
+        output.push_str(
+            &change
+                .new_value
+                .as_deref()
+                .and_then(TemplateValue::to_java_string)
+                .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
+        );
+        written += 1;
+    }
+    output.push('}');
+    output
+}
+
+fn replace_level_variable_map(representation: &mut String, level: i32, replacement: &str) {
+    let marker = format!("{level}:{{");
+    let Some(marker_start) = representation.find(&marker) else {
+        return;
+    };
+    let map_start = marker_start + marker.len() - 1;
+    let Some(map_end_relative) = representation[map_start..].find('}') else {
+        return;
+    };
+    let map_end = map_start + map_end_relative;
+    representation.replace_range(map_start..=map_end, replacement);
 }

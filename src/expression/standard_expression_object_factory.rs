@@ -1,27 +1,54 @@
 use std::any::Any;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 use crate::context::IExpressionContext;
-use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, JavaString, ValidateError};
 
 use super::{
-    Aggregates, Arrays, Bools, Calendars, Conversions, Dates, ExecutionInfo,
+    Aggregates, Arrays, Bools, Calendars, Conversions, Dates, ExecutionInfo, ExpressionObjectNames,
     IExpressionObjectFactory, Ids, Lists, Maps, Messages, Numbers, Objects, Sets,
     StandardExpressionResult, Strings, TemplateObject, TemplateValue, Temporals, Uris,
 };
 
 /// Standard Dialect 使用的表达式对象工厂。
 ///
+/// 工厂声明 Standard 表达式可见的全部名称，并按 Context 能力构建对象。无状态工具
+/// 在整个进程中保持单例身份；Locale、Context、selection 和模板执行相关对象按构建
+/// 请求创建，再由 [`super::ExpressionObjects`] 决定是否在本次模板执行内缓存。
+///
 /// 对应 Java: `org.thymeleaf.standard.expression.StandardExpressionObjectFactory`。
 pub struct StandardExpressionObjectFactory;
 
+static ALL_EXPRESSION_OBJECT_NAMES: LazyLock<ExpressionObjectNames> = LazyLock::new(|| {
+    StandardExpressionObjectFactory::all_names()
+        .iter()
+        .map(|name| Some(JavaString::from_rust_str(name)))
+        .collect::<Vec<_>>()
+        .into()
+});
+static URIS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Uris::new()));
+static BOOLS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Bools::new()));
+static OBJECTS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Objects::new()));
+static ARRAYS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Arrays::new()));
+static LISTS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Lists::new()));
+static SETS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Sets::new()));
+static MAPS_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Maps::new()));
+static AGGREGATES_EXPRESSION_OBJECT: LazyLock<Arc<TemplateValue>> =
+    LazyLock::new(|| object_value(Aggregates::new()));
+
 impl StandardExpressionObjectFactory {
-    /// 当前 Context。
+    /// 当前表达式 Context。
     pub const CONTEXT_EXPRESSION_OBJECT_NAME: &'static str = "ctx";
     /// 求值根对象。
     pub const ROOT_EXPRESSION_OBJECT_NAME: &'static str = "root";
-    /// OGNL 当前对象别名。
+    /// OGNL 当前对象别名；该名称不由工厂构建，仅用于受限访问检查。
     pub const THIS_EXPRESSION_OBJECT_NAME: &'static str = "this";
     /// Context 变量 Map。
     pub const VARIABLES_EXPRESSION_OBJECT_NAME: &'static str = "vars";
@@ -29,7 +56,7 @@ impl StandardExpressionObjectFactory {
     pub const SELECTION_TARGET_EXPRESSION_OBJECT_NAME: &'static str = "object";
     /// 当前 Locale。
     pub const LOCALE_EXPRESSION_OBJECT_NAME: &'static str = "locale";
-    /// 已移除的 request 对象名。
+    /// 已移除但为提供解释性错误而保留的 request 对象名。
     pub const REQUEST_EXPRESSION_OBJECT_NAME: &'static str = "request";
     /// 已移除的 response 对象名。
     pub const RESPONSE_EXPRESSION_OBJECT_NAME: &'static str = "response";
@@ -41,7 +68,7 @@ impl StandardExpressionObjectFactory {
     pub const CONVERSIONS_EXPRESSION_OBJECT_NAME: &'static str = "conversions";
     /// URI 工具。
     pub const URIS_EXPRESSION_OBJECT_NAME: &'static str = "uris";
-    /// java.time 工具。
+    /// `java.time` 工具。自 Thymeleaf 3.1.0 起提供。
     pub const TEMPORALS_EXPRESSION_OBJECT_NAME: &'static str = "temporals";
     /// Calendar 工具。
     pub const CALENDARS_EXPRESSION_OBJECT_NAME: &'static str = "calendars";
@@ -72,7 +99,14 @@ impl StandardExpressionObjectFactory {
     /// 模板执行信息。
     pub const EXECUTION_INFO_OBJECT_NAME: &'static str = "execInfo";
 
-    /// 创建无状态工厂。
+    /// 创建无状态、可在线程间共享的标准工厂。
+    ///
+    /// 对应 Java: `StandardExpressionObjectFactory#StandardExpressionObjectFactory()`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回新的工厂值；所有实例共享名称集合与无状态表达式对象单例。
+    #[must_use]
     pub const fn new() -> Self {
         Self
     }
@@ -116,13 +150,34 @@ impl Default for StandardExpressionObjectFactory {
 }
 
 impl IExpressionObjectFactory for StandardExpressionObjectFactory {
-    fn get_all_expression_object_names(&self) -> Vec<Option<JavaString>> {
-        Self::all_names()
-            .iter()
-            .map(|name| Some(JavaString::from_rust_str(name)))
-            .collect()
+    /// 返回按 Java `LinkedHashSet` 顺序冻结的完整名称集合。
+    ///
+    /// 对应 Java: `StandardExpressionObjectFactory#getAllExpressionObjectNames()`。
+    fn get_all_expression_object_names(&self) -> Option<ExpressionObjectNames> {
+        Some(Arc::clone(&ALL_EXPRESSION_OBJECT_NAMES))
     }
 
+    /// 根据名称和 Context 能力惰性构建标准表达式对象。
+    ///
+    /// 普通表达式 Context 无法构建依赖 `ITemplateContext` 的 `messages`、`ids` 和
+    /// `execInfo`；selection 不存在时 `object` 回退为 Context。已移除的四个 Servlet
+    /// 对象始终返回解释性参数错误。
+    ///
+    /// 对应 Java: `StandardExpressionObjectFactory#buildObject`。
+    ///
+    /// # 参数
+    ///
+    /// - `context`：当前模板执行的表达式 Context。
+    /// - `expression_object_name`：待构建对象的可空名称。
+    ///
+    /// # 返回值
+    ///
+    /// 返回构建对象；未知名称或 Context 能力不足时返回 `None`。
+    ///
+    /// # 错误
+    ///
+    /// 访问已移除的 request、session、servletContext 或 response 名称时返回
+    /// `ValidateError::IllegalArgument`。
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
@@ -139,13 +194,15 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
                 | Self::SESSION_EXPRESSION_OBJECT_NAME
                 | Self::SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME
         ) {
-            return Err(Box::new(TemplateProcessingException::new(Some(format!(
-                "The '{}','{}','{}' and '{}' expression utility objects are no longer available by default for template expressions and their use is not recommended. In cases where they are really needed, they should be manually added as context variables.",
-                Self::REQUEST_EXPRESSION_OBJECT_NAME,
-                Self::SESSION_EXPRESSION_OBJECT_NAME,
-                Self::SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME,
-                Self::RESPONSE_EXPRESSION_OBJECT_NAME
-            )))));
+            return Err(Box::new(ValidateError::IllegalArgument {
+                message: Some(format!(
+                    "The '{}','{}','{}' and '{}' expression utility objects are no longer available by default for template expressions and their use is not recommended. In cases where they are really needed, they should be manually added as context variables.",
+                    Self::REQUEST_EXPRESSION_OBJECT_NAME,
+                    Self::SESSION_EXPRESSION_OBJECT_NAME,
+                    Self::SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME,
+                    Self::RESPONSE_EXPRESSION_OBJECT_NAME
+                )),
+            }));
         }
         if name == Self::SELECTION_TARGET_EXPRESSION_OBJECT_NAME {
             if let Some(value) = context
@@ -172,8 +229,8 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
             Self::CONVERSIONS_EXPRESSION_OBJECT_NAME => {
                 Conversions::new(Some(context)).ok().map(object_value)
             }
-            Self::URIS_EXPRESSION_OBJECT_NAME => Some(object_value(Uris::new())),
-            Self::BOOLS_EXPRESSION_OBJECT_NAME => Some(object_value(Bools::new())),
+            Self::URIS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&URIS_EXPRESSION_OBJECT)),
+            Self::BOOLS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&BOOLS_EXPRESSION_OBJECT)),
             Self::STRINGS_EXPRESSION_OBJECT_NAME => {
                 Some(object_value(Strings::new(context.get_locale())))
             }
@@ -189,12 +246,14 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
             Self::TEMPORALS_EXPRESSION_OBJECT_NAME => {
                 Temporals::new(context.get_locale()).ok().map(object_value)
             }
-            Self::OBJECTS_EXPRESSION_OBJECT_NAME => Some(object_value(Objects::new())),
-            Self::ARRAYS_EXPRESSION_OBJECT_NAME => Some(object_value(Arrays::new())),
-            Self::LISTS_EXPRESSION_OBJECT_NAME => Some(object_value(Lists::new())),
-            Self::SETS_EXPRESSION_OBJECT_NAME => Some(object_value(Sets::new())),
-            Self::MAPS_EXPRESSION_OBJECT_NAME => Some(object_value(Maps::new())),
-            Self::AGGREGATES_EXPRESSION_OBJECT_NAME => Some(object_value(Aggregates::new())),
+            Self::OBJECTS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&OBJECTS_EXPRESSION_OBJECT)),
+            Self::ARRAYS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&ARRAYS_EXPRESSION_OBJECT)),
+            Self::LISTS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&LISTS_EXPRESSION_OBJECT)),
+            Self::SETS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&SETS_EXPRESSION_OBJECT)),
+            Self::MAPS_EXPRESSION_OBJECT_NAME => Some(Arc::clone(&MAPS_EXPRESSION_OBJECT)),
+            Self::AGGREGATES_EXPRESSION_OBJECT_NAME => {
+                Some(Arc::clone(&AGGREGATES_EXPRESSION_OBJECT))
+            }
             Self::MESSAGES_EXPRESSION_OBJECT_NAME if context.as_template_context().is_some() => {
                 Messages::new(Some(context)).ok().map(object_value)
             }
@@ -209,6 +268,12 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
         Ok(value)
     }
 
+    /// 判断对象是否能在一次模板执行内复用。
+    ///
+    /// 只有随 selection 栈变化的 `object` 不可缓存；可空或未知名称均遵循 Java
+    /// 条件表达式结果。
+    ///
+    /// 对应 Java: `StandardExpressionObjectFactory#isCacheable(String)`。
     fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool {
         expression_object_name.is_some_and(|name| {
             name != &JavaString::from_rust_str(Self::SELECTION_TARGET_EXPRESSION_OBJECT_NAME)
@@ -235,6 +300,13 @@ impl TemplateObject for ContextExpressionObject {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn java_equals(&self, other: &dyn TemplateObject) -> bool {
+        other
+            .as_any()
+            .downcast_ref::<Self>()
+            .is_some_and(|other| Arc::ptr_eq(&self.context, &other.context))
     }
 
     fn java_get_property(

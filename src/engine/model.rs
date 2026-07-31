@@ -183,7 +183,10 @@ impl IModel for Model {
             return Err(IModelError::DifferentConfiguration);
         }
         if self.template_mode != model.get_template_mode() {
-            return Err(IModelError::DifferentTemplateMode);
+            return Err(IModelError::DifferentTemplateMode {
+                model_mode: model.get_template_mode(),
+                current_mode: self.template_mode,
+            });
         }
 
         // TemplateModel 的边界事件不可嵌套；普通模型则完整插入。
@@ -234,5 +237,407 @@ impl Display for Model {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer).map_err(|_| std::fmt::Error)?;
         formatter.write_str(&writer.to_string().to_string_lossy())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::Model;
+    use crate::engine::template_flow_controller::TemplateFlowController;
+    use crate::engine::{ITemplateHandler, TemplateEnd, TemplateStart, Text};
+    use crate::model::{
+        ICDATASection, ICloseElementTag, IComment, IDocType, IModel, IModelError, IModelVisitor,
+        IOpenElementTag, IProcessingInstruction, IStandaloneElementTag, ITemplateEnd,
+        ITemplateEvent, ITemplateStart, IText, IXMLDeclaration,
+    };
+    use crate::util::{FastStringWriter, JavaString};
+    use crate::{ITemplateEngine, TemplateEngine, TemplateMode};
+
+    /// 只记录 Text 的最小处理器；其余事件方法保持成功，模拟 Java 可链接 Handler。
+    struct RecordingHandler(Vec<String>);
+
+    impl ITemplateHandler for RecordingHandler {
+        fn set_next(&mut self, _: Option<crate::engine::TemplateHandlerHandle>) {}
+        fn set_context(&mut self, _: Arc<dyn crate::context::ITemplateContext>) {}
+        fn handle_template_start(
+            &mut self,
+            _: Arc<dyn ITemplateStart>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_template_end(
+            &mut self,
+            _: Arc<dyn ITemplateEnd>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_xml_declaration(
+            &mut self,
+            _: Arc<dyn IXMLDeclaration>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_doc_type(
+            &mut self,
+            _: Arc<dyn IDocType>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_cdata_section(
+            &mut self,
+            _: Arc<dyn ICDATASection>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_comment(
+            &mut self,
+            _: Arc<dyn IComment>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_text(
+            &mut self,
+            text: Arc<dyn IText>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            self.0.push(
+                text.get_text()
+                    .expect("text access")
+                    .expect("non-null text")
+                    .to_string_lossy(),
+            );
+            Ok(())
+        }
+        fn handle_standalone_element(
+            &mut self,
+            _: Arc<dyn IStandaloneElementTag>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_open_element(
+            &mut self,
+            _: Arc<dyn IOpenElementTag>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_close_element(
+            &mut self,
+            _: Arc<dyn ICloseElementTag>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_processing_instruction(
+            &mut self,
+            _: Arc<dyn IProcessingInstruction>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+    }
+
+    /// 只记录 Text 的最小访问器，用于验证事件分派顺序。
+    struct RecordingVisitor(Vec<String>);
+
+    impl IModelVisitor for RecordingVisitor {
+        fn visit_template_start(&mut self, _: &dyn ITemplateStart) {}
+        fn visit_template_end(&mut self, _: &dyn ITemplateEnd) {}
+        fn visit_xml_declaration(&mut self, _: &dyn IXMLDeclaration) {}
+        fn visit_doc_type(&mut self, _: &dyn IDocType) {}
+        fn visit_cdata_section(&mut self, _: &dyn ICDATASection) {}
+        fn visit_comment(&mut self, _: &dyn IComment) {}
+        fn visit_text(&mut self, text: &dyn IText) {
+            self.0.push(
+                text.get_text()
+                    .expect("text access")
+                    .expect("non-null text")
+                    .to_string_lossy(),
+            );
+        }
+        fn visit_standalone_element_tag(&mut self, _: &dyn IStandaloneElementTag) {}
+        fn visit_open_element_tag(&mut self, _: &dyn IOpenElementTag) {}
+        fn visit_close_element_tag(&mut self, _: &dyn ICloseElementTag) {}
+        fn visit_processing_instruction(&mut self, _: &dyn IProcessingInstruction) {}
+    }
+
+    /// 记录模板边界事件的最小 Handler。
+    #[derive(Default)]
+    struct BoundaryHandler {
+        starts: usize,
+        ends: usize,
+    }
+
+    impl ITemplateHandler for BoundaryHandler {
+        fn set_next(&mut self, _: Option<crate::engine::TemplateHandlerHandle>) {}
+        fn set_context(&mut self, _: Arc<dyn crate::context::ITemplateContext>) {}
+        fn handle_template_start(
+            &mut self,
+            _: Arc<dyn ITemplateStart>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            self.starts += 1;
+            Ok(())
+        }
+        fn handle_template_end(
+            &mut self,
+            _: Arc<dyn ITemplateEnd>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            self.ends += 1;
+            Ok(())
+        }
+        fn handle_xml_declaration(
+            &mut self,
+            _: Arc<dyn IXMLDeclaration>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_doc_type(
+            &mut self,
+            _: Arc<dyn IDocType>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_cdata_section(
+            &mut self,
+            _: Arc<dyn ICDATASection>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_comment(
+            &mut self,
+            _: Arc<dyn IComment>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_text(
+            &mut self,
+            _: Arc<dyn IText>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_standalone_element(
+            &mut self,
+            _: Arc<dyn IStandaloneElementTag>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_open_element(
+            &mut self,
+            _: Arc<dyn IOpenElementTag>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_close_element(
+            &mut self,
+            _: Arc<dyn ICloseElementTag>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+        fn handle_processing_instruction(
+            &mut self,
+            _: Arc<dyn IProcessingInstruction>,
+        ) -> Result<(), Box<dyn crate::exceptions::TemplateEngineException>> {
+            Ok(())
+        }
+    }
+
+    /// 记录模板边界事件的最小 Visitor。
+    #[derive(Default)]
+    struct BoundaryVisitor {
+        starts: usize,
+        ends: usize,
+    }
+
+    impl IModelVisitor for BoundaryVisitor {
+        fn visit_template_start(&mut self, _: &dyn ITemplateStart) {
+            self.starts += 1;
+        }
+        fn visit_template_end(&mut self, _: &dyn ITemplateEnd) {
+            self.ends += 1;
+        }
+        fn visit_xml_declaration(&mut self, _: &dyn IXMLDeclaration) {}
+        fn visit_doc_type(&mut self, _: &dyn IDocType) {}
+        fn visit_cdata_section(&mut self, _: &dyn ICDATASection) {}
+        fn visit_comment(&mut self, _: &dyn IComment) {}
+        fn visit_text(&mut self, _: &dyn IText) {}
+        fn visit_standalone_element_tag(&mut self, _: &dyn IStandaloneElementTag) {}
+        fn visit_open_element_tag(&mut self, _: &dyn IOpenElementTag) {}
+        fn visit_close_element_tag(&mut self, _: &dyn ICloseElementTag) {}
+        fn visit_processing_instruction(&mut self, _: &dyn IProcessingInstruction) {}
+    }
+
+    fn event(value: &str) -> Arc<dyn ITemplateEvent> {
+        Arc::new(Text::new(Some(Arc::new(JavaString::from_rust_str(value)))))
+    }
+
+    fn golden(key: &str) -> &str {
+        include_str!("../../tests/fixtures/model_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{key}=")))
+            .expect("Java Golden record")
+    }
+
+    #[test]
+    fn mutable_model_preserves_java_edit_identity_and_configuration_contracts() {
+        let engine = TemplateEngine::new();
+        let configuration = engine.get_configuration().expect("configuration");
+        let mut model = Model::new(Arc::clone(&configuration), TemplateMode::HTML);
+        let a = event("a");
+        let b = event("b");
+        let c = event("c");
+        model.add(Some(Arc::clone(&a))).expect("add a");
+        model.insert(0, Some(Arc::clone(&b))).expect("insert b");
+        model.replace(1, Some(Arc::clone(&c))).expect("replace c");
+        assert_eq!(
+            format!("{},{},true,true", model.size(), model),
+            golden("edited")
+        );
+        assert!(Arc::ptr_eq(&model.get(0), &b));
+        assert!(Arc::ptr_eq(&model.get(1), &c));
+        assert_eq!(model.insert(3, None), Ok(()));
+        assert_eq!(format!("{},{}", model.size(), model), golden("nullInsert"));
+        assert_eq!(model.remove(2), Err(IModelError::IndexOutOfBounds(2)));
+
+        let clone = model.clone_model();
+        assert!(Arc::ptr_eq(&model.get(0), &clone.get(0)));
+        assert_eq!(clone.size(), 2);
+        assert_eq!(golden("clone"), "true,bc");
+        let mut reset_clone = Model::new(Arc::clone(&configuration), TemplateMode::XML);
+        reset_clone
+            .add(Some(event("different")))
+            .expect("populate reset clone");
+        reset_clone.reset_as_clone_of(&model);
+        assert_eq!(
+            format!(
+                "{},{},{}",
+                reset_clone.get_template_mode(),
+                reset_clone,
+                reset_clone.same_as(&model)
+            ),
+            golden("resetClone")
+        );
+        reset_clone
+            .replace(0, Some(event("x")))
+            .expect("replace cloned event");
+        assert_eq!(
+            reset_clone.same_as(&model).to_string(),
+            golden("sameAsChanged")
+        );
+        let mut writer = FastStringWriter::new();
+        model.write(&mut writer).expect("write events");
+        assert_eq!(writer.to_string().to_string_lossy(), "bc");
+
+        let mut same_configuration = Model::new(Arc::clone(&configuration), TemplateMode::HTML);
+        same_configuration
+            .add_model(Some(&model))
+            .expect("append model");
+        assert_eq!(same_configuration.to_string(), golden("sameConfig"));
+        let other_engine = TemplateEngine::new();
+        let other_configuration = other_engine
+            .get_configuration()
+            .expect("other configuration");
+        let mut other = Model::new(other_configuration, TemplateMode::HTML);
+        other
+            .add(Some(event("other")))
+            .expect("populate other model");
+        let error = model
+            .add_model(Some(&other))
+            .expect_err("different configuration must be rejected");
+        assert_eq!(error, IModelError::DifferentConfiguration);
+        assert_eq!(
+            error.to_string(),
+            golden("differentConfig")
+                .split_once(':')
+                .expect("Java error class/message")
+                .1
+        );
+        let mut different_mode = Model::new(Arc::clone(&configuration), TemplateMode::XML);
+        different_mode
+            .add(Some(event("xml")))
+            .expect("populate different-mode model");
+        let error = model
+            .add_model(Some(&different_mode))
+            .expect_err("different template mode must be rejected");
+        assert_eq!(
+            error,
+            IModelError::DifferentTemplateMode {
+                model_mode: TemplateMode::XML,
+                current_mode: TemplateMode::HTML,
+            }
+        );
+        assert_eq!(
+            error.to_string(),
+            golden("differentMode")
+                .split_once(':')
+                .expect("Java error class/message")
+                .1
+        );
+        model.reset().expect("reset");
+        assert_eq!(format!("{},{}", model.size(), model), golden("reset"));
+    }
+
+    #[test]
+    fn dispatches_events_in_order_and_honors_throttled_offset_and_stop() {
+        let engine = TemplateEngine::new();
+        let configuration = engine.get_configuration().expect("configuration");
+        let mut model = Model::new(configuration, TemplateMode::HTML);
+        model.add(Some(event("b"))).expect("b");
+        model.add(Some(event("c"))).expect("c");
+        let mut handler = RecordingHandler(Vec::new());
+        model.process(&mut handler).expect("full processing");
+        assert_eq!(handler.0.concat(), golden("dispatch"));
+        handler.0.clear();
+        let controller = TemplateFlowController::new();
+        assert_eq!(
+            model
+                .process_throttled(&mut handler, 1, Some(&controller))
+                .expect("offset"),
+            1
+        );
+        assert_eq!(
+            handler.0.concat(),
+            golden("throttled").split_once(',').expect("count/text").1
+        );
+        let mut stopped = TemplateFlowController::new();
+        stopped.stop_processing = true;
+        assert_eq!(
+            model
+                .process_throttled(&mut handler, 0, Some(&stopped))
+                .expect("stopped"),
+            0
+        );
+        let mut visitor = RecordingVisitor(Vec::new());
+        model.accept(&mut visitor);
+        assert_eq!(visitor.0.concat(), golden("visitor"));
+    }
+
+    #[test]
+    fn template_boundaries_are_singletons_and_dispatch_like_java() {
+        let start = TemplateStart::instance();
+        let end = TemplateEnd::instance();
+        let mut handler = BoundaryHandler::default();
+        Arc::clone(&start)
+            .be_handled(&mut handler)
+            .expect("start handling");
+        Arc::clone(&end)
+            .be_handled(&mut handler)
+            .expect("end handling");
+        let mut visitor = BoundaryVisitor::default();
+        start.accept(&mut visitor);
+        end.accept(&mut visitor);
+        let mut writer = FastStringWriter::new();
+        start.write(&mut writer).expect("start write");
+        end.write(&mut writer).expect("end write");
+        assert_eq!(
+            format!(
+                "{},{},{},{},{},{},{}",
+                Arc::ptr_eq(&start, &TemplateStart::instance()),
+                Arc::ptr_eq(&end, &TemplateEnd::instance()),
+                writer.to_string().to_string_lossy(),
+                handler.starts,
+                handler.ends,
+                visitor.starts,
+                visitor.ends,
+            ),
+            golden("boundaries")
+        );
     }
 }

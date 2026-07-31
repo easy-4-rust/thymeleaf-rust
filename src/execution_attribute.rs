@@ -9,6 +9,7 @@ use std::sync::Arc;
 #[derive(Clone)]
 pub struct ExecutionAttributeValue {
     value: Arc<dyn Any + Send + Sync>,
+    type_name: &'static str,
 }
 
 impl ExecutionAttributeValue {
@@ -25,6 +26,7 @@ impl ExecutionAttributeValue {
     {
         Self {
             value: Arc::new(value),
+            type_name: std::any::type_name::<T>(),
         }
     }
 
@@ -40,5 +42,46 @@ impl ExecutionAttributeValue {
         T: Any + Send + Sync,
     {
         self.value.downcast_ref::<T>()
+    }
+
+    /// 返回配置日志使用的 Java `Object#toString()` 等价诊断文本。
+    ///
+    /// 常用标量和字符串按值输出；其他执行组件没有通用 Rust `Display` 合同，因此
+    /// 返回其稳定具体类型名，避免把 trait-object 地址或调试内存表示写入日志。
+    ///
+    /// # 返回值
+    ///
+    /// 返回不包含对象地址的稳定诊断字符串。
+    #[must_use]
+    pub fn diagnostic_string(&self) -> String {
+        macro_rules! scalar {
+            ($type:ty) => {
+                if let Some(value) = self.downcast_ref::<$type>() {
+                    return value.to_string();
+                }
+            };
+        }
+
+        if let Some(value) = self.downcast_ref::<String>() {
+            return value.clone();
+        }
+        if let Some(value) = self.downcast_ref::<crate::util::JavaString>() {
+            return value.to_string_lossy();
+        }
+        scalar!(bool);
+        scalar!(i8);
+        scalar!(i16);
+        scalar!(i32);
+        scalar!(i64);
+        scalar!(isize);
+        scalar!(u8);
+        scalar!(u16);
+        scalar!(u32);
+        scalar!(u64);
+        scalar!(usize);
+        scalar!(f32);
+        scalar!(f64);
+        scalar!(char);
+        self.type_name.to_owned()
     }
 }

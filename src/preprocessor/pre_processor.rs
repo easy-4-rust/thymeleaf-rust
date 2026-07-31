@@ -1,59 +1,111 @@
 use crate::TemplateMode;
+use crate::engine::TemplateHandlerClass;
+use crate::util::{Validate, ValidateError};
 
-use super::{IPreProcessor, PreProcessorHandlerFactory};
+use super::IPreProcessor;
 
-/// 方言声明的模板预处理器配置。
+/// PreProcessor 的基础不可变实现。
 ///
-/// Rust 以零参数工厂函数等价表示 Java `Class<? extends ITemplateHandler>`，每次调用
-/// 都必须创建全新 handler。对应 Java: `org.thymeleaf.preprocessor.PreProcessor`。
+/// 该实现足以覆盖方言注册 PreProcessor 的大多数场景。它保存唯一模板模式、
+/// Handler 类型令牌和优先级；构造成功后这些值保持不变。
+///
+/// 对应 Java: `org.thymeleaf.preprocessor.PreProcessor`。
+///
+/// # 起始版本
+///
+/// 上游自 Thymeleaf 3.0.0 提供该对象。
 pub struct PreProcessor {
     template_mode: TemplateMode,
-    handler_factory: PreProcessorHandlerFactory,
-    handler_class_name: &'static str,
+    handler_class: TemplateHandlerClass,
     precedence: i32,
 }
 
 impl PreProcessor {
-    /// 创建预处理器配置。
+    /// 创建不可变的 PreProcessor 配置。
+    ///
+    /// 对应 Java:
+    /// `PreProcessor#PreProcessor(TemplateMode, Class<? extends ITemplateHandler>, int)`。
     ///
     /// # 参数
     ///
-    /// - `template_mode`：唯一适用的模板模式。
-    /// - `handler_factory`：创建全新 handler 的函数。
-    /// - `handler_class_name`：Java `Class#getName()` 等价稳定名称。
-    /// - `precedence`：方言内优先级。
+    /// - `template_mode`：唯一适用的模板模式；`None` 表示空值；
+    /// - `handler_class`：实现实际逻辑的 Handler 类型令牌；`None` 表示空值；
+    /// - `precedence`：方言内优先级，保留完整有符号 32 位范围。
     ///
-    /// 对应 Java: `PreProcessor#PreProcessor`。
-    #[must_use]
-    pub const fn new(
-        template_mode: TemplateMode,
-        handler_factory: PreProcessorHandlerFactory,
-        handler_class_name: &'static str,
+    /// # 返回值
+    ///
+    /// 校验成功后返回字段不可从外部修改的配置。
+    ///
+    /// # 错误
+    ///
+    /// 先校验 `template_mode`，再校验 `handler_class`。空值分别返回
+    /// `Template mode cannot be null` 和 `Handler class cannot be null`。
+    pub fn new(
+        template_mode: Option<TemplateMode>,
+        handler_class: Option<TemplateHandlerClass>,
         precedence: i32,
-    ) -> Self {
-        Self {
-            template_mode,
-            handler_factory,
-            handler_class_name,
+    ) -> Result<Self, ValidateError> {
+        Validate::not_null(template_mode.as_ref(), Some("Template mode cannot be null"))?;
+        Validate::not_null(handler_class.as_ref(), Some("Handler class cannot be null"))?;
+
+        Ok(Self {
+            template_mode: template_mode.expect("validated template mode"),
+            handler_class: handler_class.expect("validated handler class"),
             precedence,
-        }
+        })
+    }
+
+    /// 返回构造时指定的唯一模板模式。
+    ///
+    /// 对应 Java: `PreProcessor#getTemplateMode()`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回不可变模板模式。
+    #[must_use]
+    pub const fn get_template_mode(&self) -> TemplateMode {
+        self.template_mode
+    }
+
+    /// 返回构造时指定的 PreProcessor 优先级。
+    ///
+    /// 对应 Java: `PreProcessor#getPrecedence()`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回不可变优先级。
+    #[must_use]
+    pub const fn get_precedence(&self) -> i32 {
+        self.precedence
+    }
+
+    /// 返回构造时指定的 Handler 类型令牌。
+    ///
+    /// 对应 Java: `PreProcessor#getHandlerClass()`。
+    ///
+    /// # 返回值
+    ///
+    /// 重复调用返回同一个不可变类型令牌。
+    #[must_use]
+    pub const fn get_handler_class(&self) -> &TemplateHandlerClass {
+        &self.handler_class
     }
 }
 
 impl IPreProcessor for PreProcessor {
-    fn get_template_mode(&self) -> TemplateMode {
-        self.template_mode
+    fn get_template_mode(&self) -> Option<TemplateMode> {
+        Some(PreProcessor::get_template_mode(self))
     }
 
     fn get_precedence(&self) -> i32 {
-        self.precedence
+        PreProcessor::get_precedence(self)
     }
 
-    fn get_handler_factory(&self) -> PreProcessorHandlerFactory {
-        self.handler_factory
+    fn get_handler_class(&self) -> Option<&TemplateHandlerClass> {
+        Some(PreProcessor::get_handler_class(self))
     }
 
-    fn get_handler_class_name(&self) -> &'static str {
-        self.handler_class_name
+    fn java_class_name(&self) -> &'static str {
+        "org.thymeleaf.preprocessor.PreProcessor"
     }
 }

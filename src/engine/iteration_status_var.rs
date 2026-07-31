@@ -204,3 +204,125 @@ fn write_state(lock: &RwLock<IterationStatusState>) -> RwLockWriteGuard<'_, Iter
     lock.write()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::IterationStatusVar;
+    use crate::expression::{TemplateObject, TemplateValue};
+    use crate::util::JavaString;
+
+    #[test]
+    fn status_machine_overflow_and_java_bean_properties_match_java_golden() {
+        let unknown = IterationStatusVar::new(None);
+        assert_golden("unknown", &record(&unknown));
+        assert_eq!(
+            unknown
+                .is_last()
+                .expect_err("unknown Java size must fail")
+                .to_string(),
+            unknown_last_error()
+        );
+        assert_property(&unknown, "index", Some("0"));
+        assert_property(&unknown, "count", Some("1"));
+        assert_property(&unknown, "size", None);
+        assert_property(&unknown, "current", None);
+        assert_property(&unknown, "even", Some("false"));
+        assert_property(&unknown, "odd", Some("true"));
+        assert_property(&unknown, "first", Some("true"));
+        let last = unknown
+            .java_get_property(&JavaString::from_rust_str("last"))
+            .expect("last property accessor")
+            .expect_err("last property must preserve Java null-unboxing error");
+        assert_eq!(last.to_string(), unknown_last_error());
+        assert!(
+            unknown
+                .java_get_property(&JavaString::from_rust_str("missing"))
+                .is_none()
+        );
+
+        let known = IterationStatusVar::new(Some(3));
+        known.set_current(Some(Arc::new(TemplateValue::string(
+            JavaString::from_rust_str("value"),
+        ))));
+        assert_golden("known0", &record(&known));
+        assert_property(&known, "last", Some("false"));
+        known.increment_index();
+        assert_golden("known1", &record(&known));
+        known.increment_index();
+        known.set_current(None);
+        assert_golden("known2", &record(&known));
+        assert_property(&known, "last", Some("true"));
+
+        let overflow = IterationStatusVar::new(Some(i32::MIN));
+        {
+            let mut state = super::write_state(&overflow.state);
+            state.index = i32::MAX;
+        }
+        assert_golden("overflow", &record(&overflow));
+        assert_property(&overflow, "count", Some("-2147483648"));
+        assert_property(&overflow, "last", Some("true"));
+    }
+
+    fn record(status: &IterationStatusVar) -> String {
+        let values = format!(
+            "{},{},{},{},{},{},{},{}",
+            status.get_index(),
+            status.get_count(),
+            status.has_size(),
+            nullable(status.get_size().map(|value| value.to_string())),
+            nullable(
+                status
+                    .get_current()
+                    .and_then(|value| value.to_java_string())
+                    .map(|value| value.to_string_lossy())
+            ),
+            status.is_even(),
+            status.is_odd(),
+            status.is_first(),
+        );
+        let last = status
+            .is_last()
+            .map(|value| value.to_string())
+            .unwrap_or_else(|error| format!("{}:{}", error.java_class_name(), error));
+        format!(
+            "{values},last={last},text={}",
+            status.to_java_string().to_string_lossy()
+        )
+    }
+
+    fn assert_golden(key: &str, actual: &str) {
+        let expected = include_str!("../../tests/fixtures/iteration_status_var_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{key}=")))
+            .expect("Java Golden record");
+        assert_eq!(actual, expected, "Java Golden key {key}");
+    }
+
+    fn assert_property(status: &IterationStatusVar, property: &str, expected: Option<&str>) {
+        let actual = status
+            .java_get_property(&JavaString::from_rust_str(property))
+            .expect("known JavaBean property")
+            .expect("known property must not fail")
+            .and_then(|value| value.to_java_string())
+            .map(|value| value.to_string_lossy());
+        assert_eq!(actual.as_deref(), expected, "property {property}");
+    }
+
+    fn nullable(value: Option<String>) -> String {
+        value.unwrap_or_else(|| "null".to_owned())
+    }
+
+    fn unknown_last_error() -> String {
+        include_str!("../../tests/fixtures/iteration_status_var_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix("unknown="))
+            .and_then(|line| line.split(",last=").nth(1))
+            .and_then(|line| line.split(",text=").next())
+            .expect("Java Golden null-size error")
+            .split_once(':')
+            .map(|(_, message)| message.to_owned())
+            .expect("Java class and exception message")
+    }
+}

@@ -52,3 +52,60 @@ impl XMLElementName {
         &self.complete_namespaced_element_name
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::util::JavaString;
+
+    use super::super::element_names::ElementNames;
+
+    #[test]
+    fn xml_name_contract_matches_java_golden() {
+        let prefixed = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("p:Code")))
+            .expect("valid prefixed XML name");
+        let same = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("p:Code")))
+            .expect("valid same XML name");
+        let different_case = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("p:code")))
+            .expect("valid differently cased XML name");
+        let bare = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("Code")))
+            .expect("valid bare XML name");
+        let actual = format!(
+            "prefixed={}\nbare={}\nequalsSame={}\nequalsDifferentCase={}\nhashSame={}\n",
+            describe(&prefixed),
+            describe(&bare),
+            prefixed.as_element_name() == same.as_element_name(),
+            prefixed.as_element_name() == different_case.as_element_name(),
+            prefixed.as_element_name().hash_code() == same.as_element_name().hash_code(),
+        );
+        assert_eq!(
+            actual,
+            include_str!("../../tests/fixtures/xml_element_name_golden.txt")
+        );
+    }
+
+    fn describe(name: &super::XMLElementName) -> String {
+        let base = name.as_element_name();
+        let complete_names = base.get_complete_element_names();
+        let complete = complete_names.read().expect("complete names lock");
+        let complete = complete
+            .iter()
+            .map(|value| {
+                value
+                    .as_ref()
+                    .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "{},{},{},[{}],{},{}",
+            base.get_element_name().to_string_lossy(),
+            base.is_prefixed(),
+            base.get_prefix()
+                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+            complete,
+            base.to_java_string().expect("valid").to_string_lossy(),
+            name.get_complete_namespaced_element_name()
+                .to_string_lossy(),
+        )
+    }
+}

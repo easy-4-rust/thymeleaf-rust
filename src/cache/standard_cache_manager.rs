@@ -307,6 +307,10 @@ impl Default for StandardCacheManager {
 }
 
 impl ICacheManager for StandardCacheManager {
+    fn java_class_name(&self) -> &'static str {
+        "org.thymeleaf.cache.StandardCacheManager"
+    }
+
     fn get_template_cache(&self) -> Option<&dyn ICache<TemplateCacheKey, TemplateModel>> {
         self.cache_manager
             .get_template_cache(|| self.initialize_template_cache())
@@ -340,6 +344,5 @@ impl ICacheManager for StandardCacheManager {
         if let Some(cache) = self.get_expression_cache() {
             cache.clear();
         }
-        self.cache_manager.clear_initialized_caches();
     }
 }

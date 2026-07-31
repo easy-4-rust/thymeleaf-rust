@@ -10,6 +10,10 @@ use super::ICDATASectionStructureHandler;
 /// 对应 Java: `org.thymeleaf.processor.cdatasection.ICDATASectionProcessor`。
 pub trait ICDATASectionProcessor: IProcessor {
     /// 处理 CDATA 事件。
+    ///
+    /// 对应 Java: `ICDATASectionProcessor#process(ITemplateContext,
+    /// ICDATASection, ICDATASectionStructureHandler)`。事件不可变，结构变更通过
+    /// `structure_handler` 声明。
     fn process(
         &self,
         context: &dyn ITemplateContext,

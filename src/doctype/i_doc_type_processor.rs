@@ -10,6 +10,9 @@ use super::IDocTypeStructureHandler;
 /// 对应 Java: `org.thymeleaf.processor.doctype.IDocTypeProcessor`。
 pub trait IDocTypeProcessor: IProcessor {
     /// 处理 DOCTYPE 事件。
+    ///
+    /// 对应 Java: `IDocTypeProcessor#process(ITemplateContext, IDocType,
+    /// IDocTypeStructureHandler)`。事件不可变，结构变更通过 handler 声明。
     fn process(
         &self,
         context: &dyn ITemplateContext,

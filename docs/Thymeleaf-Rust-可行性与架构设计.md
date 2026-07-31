@@ -1,8 +1,9 @@
 # Thymeleaf-Rust 可行性与架构设计
 
-> 文档状态：架构提案
-> 版本：v0.3
-> 日期：2026-07-28
+> 文档状态：实现支撑的架构基线
+> 版本：v1.1
+> 创建日期：2026-07-28
+> 最后更新：2026-07-31
 > 项目/仓库名称：`thymeleaf-rust`
 > 对外发布主 crate：`thymeleaf`
 > 核心定位：Web 框架中立、Vernal 中立
@@ -11,48 +12,61 @@
 
 ## 1. 文档目的
 
-本文评估在 Rust 中实现一个兼容 Thymeleaf 核心模板语义的服务端渲染引擎，并将其提供给 Topcoat、Actix Web、Axum、Gotham、Hyper、Ntex、Poem、Rocket、Salvo、Tide、Warp、Tower、Tonic 等框架使用的可行性。
+本文记录在 Rust 中迁移 Thymeleaf 核心模板语义的架构决策、当前实现和后续生产化
+边界。项目向 Topcoat、Actix Web、Axum、Gotham、Hyper、Ntex、Poem、Rocket、
+Salvo、Tide、Warp、Tower、Tonic 等框架提供统一的动态内容渲染能力。
 
 本文重点回答：
 
-1. Thymeleaf-Rust 是否可行；
-2. 应复用 Thymeleaf 的哪些架构思想；
-3. 如何设计框架无关的 Rust 渲染内核；
-4. 如何在保持完全中立的前提下选择性复用 Vernal Framework 组件；
-5. 各 Rust Web 框架的适配优先级；
-6. 实施过程中最主要的技术困难、风险和优势；
-7. 建议的分阶段落地路线。
+1. 当前 Rust 内核是否保留 Thymeleaf 的关键运行时拓扑；
+2. Resolver、Parser、TemplateModel、Processor、Expression 和 Writer 如何协作；
+3. 如何保持框架无关的 Rust 渲染内核；
+4. 完整渲染、节流渲染和数据驱动渲染如何穿过中立 Web 边界；
+5. 独立框架适配器与 `thymeleaf-vernal` 如何保持平级；
+6. 当前实现、明确策略差异和生产化风险分别是什么；
+7. 哪些证据支撑兼容性结论。
 
 本评估基于以下代码与设计资料：
 
 - [Thymeleaf 上游源码](https://github.com/thymeleaf/thymeleaf)
 - Vernal Framework 的 Spring 组件替换约定与 Web 组件设计资料
 - Vernal HTTP、Web、Expression、Cache、Tower 及各 Web 框架适配器源码
+- 两个本地仓库的 CodeGraph 索引、符号关系和三层影响分析
+- [`migration/对象级对照表.md`](migration/对象级对照表.md)、
+  [`migration/方法级对照表.md`](migration/方法级对照表.md)和
+  [`migration/迁移测试对照表.md`](migration/迁移测试对照表.md)
 
 ## 2. 核心结论
 
 ### 2.1 可行性判断
 
-实现一个 Rust 原生、兼容 Thymeleaf 主要模板语义的 SSR 模板引擎是可行的。它必须首先是一个独立、中立的模板引擎，然后才可以选择性接入 Vernal Framework。
+Rust 原生、兼容 Thymeleaf 核心模板语义的 SSR 引擎已经证明可行。当前实现首先是
+独立、中立的 `thymeleaf`，然后由薄适配器选择性接入各 Web 框架和 Vernal。
 
-但需要区分两个目标：
+当前状态必须分层描述：
 
-| 目标 | 可行性 | 判断 |
-|---|---:|---|
-| 实现 Thymeleaf 风格的自然模板、表达式、Processor、Fragment、Dialect、缓存和流式渲染 | 高 | 推荐实施 |
-| 达到 Thymeleaf 3.1 全部行为、Spring 集成和边界输出完全兼容 | 中低 | 长期工程，不应作为首期目标 |
+| 范围 | 当前状态 | 证据与边界 |
+|:---|:---:|:---|
+| Engine、Parser、TemplateModel、Processor、Fragment、Dialect、缓存 | 已实现 | 491 个主对象、69 个内部对象和 4,291 个方法均已处置 |
+| Thymeleaf 核心可比较模板行为 | 已验证 | 2,595 / 2,595 个固定上游 `.thtest` 行为一致 |
+| Java SOURCE_PARITY | 已闭合 | 875 / 875 源码入口、2,156 / 2,156 运行时 case、0 `MISSING` |
+| Spring MVC、WebFlux、SpEL、Spring Security 类型 | 明确不进入核心 | 以 `POLICY_DIFFERENCE` 和中立宿主合同登记 |
+| 独立框架适配器 | 已实现薄层 | 13 个框架 crate 与 `thymeleaf-vernal` 可构建；28 个适配器/Hyper 宿主合同测试通过，真实服务器生命周期测试待加强 |
+| crates.io 发布 | 未完成 | 发布前仍需能力矩阵、安全审计和适配器验收 |
 
 推荐的产品定位是：
 
-> Thymeleaf-Rust 是一个兼容 Thymeleaf 核心模板语义、采用 Rust 原生架构实现、通过中立渲染协议接入多个 Web 框架的运行时动态内容渲染引擎。它既可以独立集成任意 Web 框架，也可以作为 Vernal 的可选渲染框架。
+> Thymeleaf-Rust 是一个迁移 Thymeleaf 3.1.5.RELEASE 核心模板语义、采用 Rust 原生
+> 并发与类型模型、通过中立渲染协议接入多个 Web 框架的运行时动态内容渲染引擎。
+> 它既可以独立集成 Web 框架，也可以作为 Vernal 的可选渲染框架。
 
 不建议采用以下方案：
 
-- 不建议逐类翻译 Thymeleaf Java 源码；
-- 不建议复制 Java 的继承层次和反射模型；
+- 不采用逐行语法翻译；对象和方法必须可追踪，但逻辑按 Rust 类型与 trait 语义落位；
+- 不复制 Java 的继承层次和任意反射模型；
 - 不建议让渲染内核依赖 Axum、Actix Web、Topcoat、Vernal 或其他宿主框架；
 - 不建议在不同适配器中复制模板解析和渲染逻辑；
-- 不建议在兼容矩阵尚未完成前宣称“完全兼容 Thymeleaf”。
+- 不把 Spring 专用 API 策略差异或尚未完成的宿主测试描述成核心行为一致。
 
 ### 2.2 强制中立性原则
 
@@ -104,7 +118,7 @@ RenderedTemplate
 核心 crate 的 `thymeleaf::web` 模块可以进一步提供中立的：
 
 ```rust
-http::Response<ThymeleafBody>
+http::Response<RenderedTemplateBody>
 ```
 
 随后形成两条彼此独立的转换路径：
@@ -149,140 +163,505 @@ Vernal 已有的 `HttpBody` 支持：
 
 ```rust
 use thymeleaf::{Context, TemplateEngine};
-use thymeleaf::web::{RenderedTemplate, ThymeleafBody};
+use thymeleaf::web::{RenderedTemplate, RenderedTemplateBody};
 ```
 
 使用 Axum 等独立适配器时，依赖名称为 `thymeleaf-axum`。该整合 crate 通过扩展 trait 暴露能力，但面向业务的核心类型仍来自 `thymeleaf::...`。
 
-## 3. Thymeleaf 核心架构分析
+## 3. Java 与 Rust 核心架构
 
-Thymeleaf 不是简单的 HTML 字符串替换器。它采用模板解析、事件模型、Processor 链和输出 Handler 组合的执行架构。
+Thymeleaf 不是 HTML 字符串替换器，而是 Resolver、Parser、事件模型、Processor 链和
+输出 Handler 组合的执行引擎。CodeGraph 证明 Rust 版保留了相同的运行时拓扑，而不是
+把模板交给第三方模板引擎。
 
-### 3.1 核心执行链
+### 3.1 CodeGraph 结构证据
+
+| 仓库 | 索引文件 | 符号节点 | 关系边 | 主要语言 |
+|:---|---:|---:|---:|:---|
+| Thymeleaf Java | 1,783 | 29,289 | 75,439 | Java 1,543 个文件 |
+| thymeleaf-rust | 824 | 18,238 | 68,085 | Rust 751、Java Golden 69 |
+
+Java `TemplateManager` 的三层影响面包含 92 个符号，横跨核心 Engine、Fragment、
+Inliner、Spring MVC、WebFlux 和示例应用；Rust `TemplateManager` 的三层影响面为
+35 个符号，集中在 Engine、Configuration 和 Manager SPI。数量差异主要来自 Spring、
+Servlet 和示例应用被移出 Rust 核心，不能单独用来推断功能缺失。
+
+### 3.2 Java 上游调用链
 
 ```mermaid
 flowchart LR
-    SPEC["TemplateSpec"] --> RESOLVER["TemplateResolver"]
-    RESOLVER --> RESOURCE["TemplateResource"]
-    RESOURCE --> MODE{"TemplateMode"}
-
-    MODE -->|HTML/XML| MARKUP["Markup Parser"]
-    MODE -->|TEXT/JS/CSS| TEXT["Text Parser"]
-    MODE -->|RAW| RAW["Raw Parser"]
-
+    API["TemplateEngine.process / processThrottled"] --> INIT["惰性 initialize"]
+    INIT --> CONFIG["EngineConfiguration<br/>冻结 Resolver / Dialect / Cache"]
+    API --> MANAGER["TemplateManager.parseAndProcess"]
+    MANAGER --> CACHE{"Template Cache"}
+    CACHE -->|命中| MODEL["TemplateModel"]
+    CACHE -->|未命中| RESOLVER["TemplateResolver 链"]
+    RESOLVER --> MODE{"TemplateMode"}
+    MODE --> MARKUP["HTML / XML Parser"]
+    MODE --> TEXT["TEXT / JavaScript / CSS Parser"]
+    MODE --> RAW["RAW Parser"]
     MARKUP --> EVENTS["Template Event Stream"]
     TEXT --> EVENTS
     RAW --> EVENTS
-
-    EVENTS --> MODEL["不可变 TemplateModel"]
+    EVENTS --> MODEL
     MODEL --> PRE["PreProcessor"]
     PRE --> PROCESSOR["ProcessorTemplateHandler"]
-    PROCESSOR --> POST["PostProcessor"]
-    POST --> OUTPUT["Output Handler"]
-    OUTPUT --> SINK["Writer / Throttled Writer"]
+    PROCESSOR --> EXPR["Standard Expression + OGNL"]
+    EXPR --> POST["PostProcessor"]
+    POST --> OUTPUT["OutputTemplateHandler"]
+    OUTPUT --> WRITER["Writer / Throttled Writer"]
 ```
 
-核心调用路径如下：
-
-1. `TemplateEngine.process()` 接收模板、Context 和输出 Writer；
-2. 调用 `TemplateManager.parseAndProcess()`；
-3. 根据缓存键查找已经解析的 `TemplateModel`；
-4. 缓存未命中时由 TemplateResolver 解析模板资源；
-5. 根据 TemplateMode 选择 HTML、XML、TEXT、JAVASCRIPT、CSS 或 RAW Parser；
-6. Parser 产生模板事件；
-7. 可缓存模板被构造成不可变 `TemplateModel`；
-8. `TemplateModel` 将事件重放给 Processor Handler 链；
-9. Processor 对元素、属性、文本、注释、模板边界等事件进行处理；
-10. 最终由 Output Handler 写入 Writer 或受背压控制的输出器。
-
-### 3.2 最值得复用的设计思想
-
-Rust 版应重点复用以下设计：
-
-- TemplateResolver 链；
-- TemplateMode；
-- 不可变、可缓存、可重放的 TemplateModel；
-- 基于事件的 Processor Pipeline；
-- Dialect 与 Processor precedence；
-- Context 层级和局部变量栈；
-- Fragment 模型及其参数；
-- Template、Expression 分层缓存；
-- 完整渲染和受背压流式渲染双模式；
-- 输出模式相关的转义策略。
-
-不应照搬以下 Java 实现细节：
-
-- Java 反射；
-- 运行时 Class 实例化；
-- 大量抽象类继承；
-- Java `Object` 作为所有 Context 值；
-- Writer 作为唯一输出边界；
-- 依赖 Java GC SoftReference 的缓存策略；
-- Spring、Servlet、Reactive Streams 类型直接进入核心层。
-
-## 4. 推荐总体架构
-
-### 4.1 分层架构
+### 3.3 thymeleaf-rust 当前核心调用链
 
 ```mermaid
 flowchart TB
-    subgraph Core["Thymeleaf-Rust 框架无关内核"]
-        RES["TemplateResolver<br/>文件、嵌入资源、远程资源"]
-        PARSER["Parser<br/>HTML/XML/TEXT/JS/CSS/RAW"]
-        MODEL["Arc&lt;TemplateModel&gt;<br/>不可变事件或 Arena 模型"]
-        DIALECT["Dialect Registry<br/>Processor + Precedence"]
-        EXPR["Expression Facade<br/>${}、*{}、#{}、@{}、~{}"]
-        CTX["EngineContext<br/>变量栈、Selection、Locale"]
-        PIPELINE["Render Pipeline<br/>Full / Stream"]
-        CACHE["Template / Expression / Fragment Cache"]
-    end
+    INPUT["TemplateSpec + IContext"] --> ENGINE["TemplateEngine<br/>OnceLock + Mutex 冻结配置"]
+    ENGINE --> CONFIG["EngineConfiguration<br/>应用级不可变运行时快照"]
+    DIALECT["DialectSetConfiguration<br/>聚合 Processor / Pre / Post<br/>ExecutionAttribute / ExpressionObjectFactory"] --> CONFIG
+    RESOLVERS["TemplateResolver · MessageResolver<br/>LinkBuilder · CacheManager"] --> CONFIG
+    ENGINE --> MANAGER["TemplateManager<br/>parse_and_process / parse_and_process_throttled"]
+    CONFIG --> MANAGER
+    MANAGER --> CACHE{"Template Cache 命中？"}
+    CACHE -->|命中| MODEL["Arc&lt;TemplateModel&gt;<br/>不可变、可重放"]
+    CACHE -->|未命中| RESOLVER["按 order 执行 ITemplateResolver trait 链"]
+    RESOLVER --> RESOURCE["TemplateResolution + TemplateResource"]
+    RESOURCE --> MODE{"TemplateMode"}
+    MODE --> MARKUP["HTMLTemplateParser / XMLTemplateParser"]
+    MODE --> TEXT["Text / JavaScript / CSS Parser"]
+    MODE --> RAW["RawTemplateParser"]
+    MARKUP --> EVENTS["ITemplateEvent 流"]
+    TEXT --> EVENTS
+    RAW --> EVENTS
+    EVENTS --> BUILDER["ModelBuilderTemplateHandler"]
+    BUILDER --> MODEL
+    MODEL -. "仅 Validity 允许时写入" .-> STORE["Template Cache"]
+    MODEL --> CHAIN["PreProcessor → ProcessorTemplateHandler → PostProcessor"]
+    CHAIN --> FULL["OutputTemplateHandler → JavaWriter<br/>完整 UTF-16 输出"]
+    CHAIN --> THROTTLED["ThrottledTemplateProcessor<br/>FlowController 驱动分块输出"]
 
-    subgraph Contract["中立渲染协议"]
-        VALUE["TemplateValue / ExpressionEvaluator"]
-        RCACHE["TemplateCache / ExpressionCache"]
-        BODY["RenderedTemplate<br/>Full(Bytes) / Stream(Frame&lt;Bytes&gt;)"]
-    end
-
-    subgraph Direct["独立框架适配层"]
-        TOP["thymeleaf-topcoat"]
-        AX["thymeleaf-axum / actix-web"]
-        PS["thymeleaf-poem / salvo"]
-        RW["thymeleaf-rocket / warp"]
-        NGT["thymeleaf-ntex / gotham / tide"]
-        HT["thymeleaf-hyper / tower"]
-        TONIC["thymeleaf-tonic"]
-    end
-
-    subgraph Vernal["可选 Vernal 集成层"]
-        BRIDGE["thymeleaf-vernal"]
-        VE["vernal-expression / vernal-cache"]
-        VH["vernal-http / vernal-web / vernal-tower"]
-        VADAPTERS["vernal-topcoat / actix-web / axum / gotham / hyper / ntex / poem / rocket / salvo / tide / warp / tower / tonic"]
-    end
-
-    RES --> PARSER
-    PARSER --> MODEL
-    MODEL --> PIPELINE
-    DIALECT --> PIPELINE
-    CTX --> PIPELINE
-    EXPR --> VALUE
-    CACHE --> RCACHE
-    MODEL --> CACHE
-    PIPELINE --> BODY
-    BODY --> TOP
-    BODY --> AX
-    BODY --> PS
-    BODY --> RW
-    BODY --> NGT
-    BODY --> HT
-    BODY --> TONIC
-    BODY --> BRIDGE
-    BRIDGE --> VE
-    BRIDGE --> VH
-    VH --> VADAPTERS
+    CONFIG -. "固定顺序、优先级和协作者" .-> CHAIN
+    CHAIN -. "Processor 按需调用" .-> COLLAB["StandardExpressionParser / Evaluator<br/>MessageResolver / LinkBuilder / Fragment"]
 ```
 
-### 4.2 推荐 crate 模型
+运行步骤如下：
+
+1. `TemplateEngine` 首次调用时安装默认 `StringTemplateResolver`，构造并冻结
+   `EngineConfiguration`；
+2. `DialectSetConfiguration` 按 TemplateMode 和 Processor 类型聚合方言能力；
+3. `TemplateManager` 先检查模板缓存，再按 Resolver order 解析模板；
+4. `TemplateResolution` 决定资源、模式、缓存有效性和解耦逻辑；
+5. 六种 Parser 把资源转换成模板事件，并由 `ModelBuilderTemplateHandler` 构成不可变
+   `TemplateModel`；缓存有效性只决定是否保存该模型，不改变后续 Handler 语义；
+6. Handler 链依次执行 PreProcessor、`ProcessorTemplateHandler`、PostProcessor 和输出；
+7. Standard Dialect 注册标准 `th:*` Processor，表达式 Parser 负责外层语法、预处理和缓存；
+8. 完整渲染写入 `JavaWriter`，节流渲染复用同一模型和 Processor 链，由 FlowController
+   控制推进。
+
+### 3.4 配置聚合是核心控制平面
+
+CodeGraph 给出的初始化调用链是：
+
+```text
+TemplateEngine::initialize
+  → EngineConfiguration::new
+    → DialectSetConfiguration::build
+      → TemplateManager::new
+```
+
+`DialectSetConfiguration` 不是普通配置 DTO。它在 Engine 对外可用前完成以下一次性工作：
+
+1. 按模板模式和 Processor 类型分类、包装并排序全部方言 Processor；
+2. 聚合 PreProcessor、PostProcessor、ExecutionAttribute 和 ExpressionObjectFactory；
+3. 构造 `ElementDefinitions` 与 `AttributeDefinitions`，并回注需要定义感知能力的对象；
+4. 固定 Standard Dialect 是否存在及其实际前缀；
+5. 把冲突执行属性、非法 Processor 集合和 Handler 构造能力等问题转化为初始化失败。
+
+这形成了清晰的状态边界：
+
+| 平面 | 创建时机 | 可变性 | 失败影响 |
+|:---|:---|:---|:---|
+| 配置控制平面 | Engine 首次初始化 | 初始化后冻结 | 阻止 Engine 进入可服务状态 |
+| 解析与模型平面 | 模板首次解析或缓存未命中 | `TemplateModel` 不可变，可缓存重放 | 当前模板解析失败 |
+| 请求执行平面 | 每次渲染 | Context 与 Handler 游标请求级隔离 | 当前渲染失败 |
+| 交付平面 | 输出阶段 | Full 固定；Stream 按 Frame 推进 | 同步错误或流内晚期错误 |
+
+因此，第三方 Dialect 的扩展点位于配置控制平面和请求执行平面的交界处，而不是宿主
+Web 适配层。框架适配器不能自行聚合 Processor、改变 precedence 或创建第二套
+ExpressionObjectFactory。
+
+### 3.5 忠实迁移与 Rust 原生替代
+
+| 保留的可观察语义 | Rust 实现策略 |
+|:---|:---|
+| Resolver 顺序、缓存键、TemplateMode | 稳定排序、类型化 key、Rust enum |
+| 不可变、可缓存、可重放的 TemplateModel | `Arc<TemplateModel>` 和事件 trait |
+| Dialect 与 Processor precedence | trait SPI、`ProcessorSet` 和能力方法 |
+| Context 层级、Selection、Locale、变量不存在与 null | trait capability、`TemplateValue`、`JavaLocale` |
+| Java UTF-16 字符、哈希、索引边界 | `JavaString` 保存 UTF-16 code unit |
+| 完整与节流双输出 | `JavaWriter`、`IThrottledTemplateProcessor`、中立 HTTP Body |
+| OGNL 常用只读语义 | 内建 AST 和安全求值器，不开放任意反射/Class/静态调用 |
+| Java SoftReference 自动回收 | 显式缓存策略；不伪造 GC 行为 |
+
+Spring、Servlet、Reactive Streams 和 SpEL 类型不进入核心；其宿主能力由
+`thymeleaf::web` 与独立 `thymeleaf-{framework}` crate 承接。
+
+## 4. 当前总体架构
+
+### 4.1 核心组件与依赖方向
+
+```mermaid
+flowchart TB
+    APP["调用方<br/>TemplateSpec + IContext"] --> API
+
+    subgraph CRATE["thymeleaf：单一、完整、框架中立的核心 crate"]
+        subgraph API["公共入口"]
+            API_ENGINE["TemplateEngine / ITemplateEngine"]
+            API_SPEC["TemplateSpec"]
+            API_CONTEXT["Context / IContext"]
+            API_SPEC --> API_ENGINE
+            API_CONTEXT --> API_ENGINE
+        end
+
+        subgraph CONTROL["应用级、初始化后冻结的控制平面"]
+            CONFIG["EngineConfiguration"]
+            DIALECT_SET["DialectSetConfiguration<br/>Processor 分类/排序 · Pre/Post<br/>ExecutionAttribute · ExpressionObjectFactory"]
+            SPI["Dialect · Processor · TemplateResolver<br/>MessageResolver · LinkBuilder · CacheManager"]
+            SPI --> DIALECT_SET --> CONFIG
+        end
+
+        subgraph INGEST["解析与模型平面"]
+            MANAGER["TemplateManager"]
+            CACHE_HIT{"Template Cache 命中？"}
+            RESOLVER["有序 TemplateResolver 链"]
+            RESOURCE["TemplateResolution + TemplateResource<br/>TemplateMode + Validity"]
+            PARSER["HTML / XML / TEXT / JS / CSS / RAW Parser"]
+            BUILDER["ModelBuilderTemplateHandler"]
+            MODEL["不可变、可重放 TemplateModel<br/>IEngineTemplateEvent 序列"]
+            TEMPLATE_CACHE["Template Cache<br/>Arc&lt;TemplateModel&gt;"]
+
+            MANAGER --> CACHE_HIT
+            CACHE_HIT -->|是| MODEL
+            CACHE_HIT -->|否| RESOLVER --> RESOURCE --> PARSER --> BUILDER --> MODEL
+            MODEL -. "仅 Validity 允许时保存" .-> TEMPLATE_CACHE
+            TEMPLATE_CACHE -. "后续读取" .-> CACHE_HIT
+        end
+
+        subgraph EXECUTION["请求级事件执行平面"]
+            CONTEXT_FACTORY["IEngineContextFactory<br/>StandardEngineContextFactory"]
+            CONTEXT_MANAGER["EngineContextManager<br/>根层创建 · 嵌套复用 · 层级恢复"]
+            ENGINE_CONTEXT["EngineContext<br/>变量、Locale、Selection、Web Capability"]
+            CHAIN["PreProcessor → ProcessorTemplateHandler → PostProcessor"]
+            SERVICES["Expression · Message · Link · Fragment<br/>TemplateValue + 安全求值"]
+            EVENTS["处理后的模板事件"]
+
+            CONTEXT_FACTORY --> CONTEXT_MANAGER --> ENGINE_CONTEXT
+            ENGINE_CONTEXT --> CHAIN
+            MODEL --> CHAIN --> EVENTS
+            CHAIN -. "按 Processor 语义调用" .-> SERVICES
+        end
+
+        subgraph DELIVERY["交付平面"]
+            FULL["process / process_to_writer<br/>OutputTemplateHandler → JavaWriter"]
+            THROTTLED["process_throttled<br/>ThrottledTemplateProcessor + FlowController"]
+            EVENTS --> FULL
+            EVENTS --> THROTTLED
+            FULL --> FULL_RESULT["JavaString / Writer"]
+            THROTTLED --> THROTTLED_RESULT["IThrottledTemplateProcessor"]
+        end
+
+        API_ENGINE --> MANAGER
+        API_ENGINE --> CONTEXT_MANAGER
+        CONFIG -. "固定顺序、优先级与策略" .-> MANAGER
+        CONFIG -. "提供冻结后的 Context Factory" .-> CONTEXT_FACTORY
+        CONFIG -. "提供 Processor 与协作者" .-> CHAIN
+    end
+
+    FULL_RESULT --> RESULT["非 Web 完整输出"]
+    THROTTLED_RESULT --> RESULT
+
+    FRAMEWORK["Axum / Actix Web / Rocket 等原生类型"] -. "不得进入核心签名" .-> CRATE
+    VERNAL["Vernal 原生类型"] -. "不得进入核心签名" .-> CRATE
+```
+
+这不是“Parser 直接生成 HTML”的流水线，而是配置平面驱动事件平面的执行引擎：
+
+1. `TemplateEngine` 首次执行时冻结 Resolver、Dialect、Processor、Cache、Message 和
+   Link 等有序协作者；
+2. `TemplateManager` 决定缓存命中、资源解析和模板模式；当前 Rust 实现在缓存未命中时
+   始终通过 `ModelBuilderTemplateHandler` 物化 `TemplateModel`，`Validity` 只决定
+   是否把模型保存进缓存；
+3. `EngineContext` 和 Handler Chain 属于一次渲染，`ProcessorTemplateHandler` 消费
+   统一事件协议，结构处理结果继续作为事件流动；
+4. 完整与节流入口复用相同 Resolver、Parser、Model、Processor 和表达式语义，只在
+   输出驱动与背压边界分叉；
+5. `thymeleaf::web::ThymeleafRenderer` 位于核心执行管线之外，只通过
+   `ITemplateEngine` 调用 `process` 或 `process_throttled`，再把结果封装为中立 HTTP
+   输出；框架专属类型不能反向进入 Engine、Parser、Expression 或 Processor SPI。
+
+根模板与嵌套模板的 Context 生命周期也只有一条路径：根层由
+`StandardEngineContextFactory` 检查 `IWebContext` capability，创建普通
+`EngineContext` 或保持同一 exchange 身份的 `WebEngineContext`；嵌套层由
+`EngineContextManager` 复用现有对象，先提升 level，再压入新的 `TemplateData`，
+退出时按层级恢复。`WebContext` 与 `WebExpressionContext` 因而共享同一工厂和处理链，
+Web capability 不会把核心分叉为另一套 Engine。
+
+关键对象的生命周期和扩展边界：
+
+| 对象/平面 | 生命周期 | 状态所有权 | 允许扩展 | 禁止进入 |
+|---|---|---|---|---|
+| `TemplateEngine` / `EngineConfiguration` | 应用级 | 冻结后的 Resolver、Dialect、Processor、Cache 配置 | 注册中立 SPI | Request/Response、框架容器类型 |
+| `TemplateManager` / Parser | 随 Engine | 模板解析器与缓存访问 | `ITemplateResolver`、`ITemplateResource` | Controller、Middleware |
+| `TemplateModel` | 可跨请求缓存 | 不可变事件序列与 `TemplateData` | Processor 对事件的请求级解释 | 宿主 Session、连接状态 |
+| `EngineContext` / Handler Chain | 请求级 | 变量、Locale、Selection、执行游标 | Expression、Message、Link、Fragment 协作者 | 跨请求共享可变状态 |
+| `ThymeleafRenderer` / `RenderedTemplate` | 响应级 | Charset、Header、Full/Stream Body | 标准 `http` / `http-body` 消费方 | Axum、Actix Web、Rocket 等原生类型 |
+
+错误边界同样属于核心架构合同：
+
+| 失败位置 | 当前传播方式 | Header 是否已固定 | 适配器责任 |
+|:---|:---|:---:|:---|
+| Engine 初始化、Dialect 聚合 | `RenderError` 同步返回 | 否 | 映射宿主错误页或 5xx |
+| Resolver、Parser、Full Processor | `process` 错误同步返回 | 否 | 不得重试执行模板，除非应用显式定义策略 |
+| Stream 创建前的元数据/线程创建 | `render_stream` 同步返回错误 | 否 | 映射宿主错误 |
+| Stream 工作线程中的解析/处理 | Body 产生 `Err(RenderError)` 项并终止 | 是 | 无损转发并记录，不能再替换状态/Header |
+| 客户端断连、Body 丢弃 | Receiver 关闭，工作线程停止后续发送 | 是 | 观察断连并释放宿主请求资源 |
+
+这张表限定了适配器能做什么：它可以映射错误类型和连接生命周期，但不能吞掉流内错误、
+重新执行 Processor 链或在 Header 发出后伪造第二个响应。
+
+核心一次完整渲染的实际调用关系如下：
+
+```mermaid
+sequenceDiagram
+    participant App as 调用方
+    participant Engine as TemplateEngine
+    participant Manager as TemplateManager
+    participant Cache as Template Cache
+    participant Resolver as TemplateResolver
+    participant Parser as Mode Parser
+    participant Model as TemplateModel
+    participant Chain as Processor Handler Chain
+    participant Writer as JavaWriter
+
+    App->>Engine: process(TemplateSpec, IContext)
+    Engine->>Manager: parse_and_process(...)
+    Manager->>Cache: get(TemplateCacheKey)
+    alt 缓存命中
+        Cache-->>Manager: Arc<TemplateModel>
+    else 缓存未命中
+        Manager->>Resolver: resolve_template(...)
+        Resolver-->>Manager: TemplateResolution
+        Manager->>Parser: parse_standalone(..., ModelBuilder)
+        Parser-->>Manager: TemplateModel
+        opt Resolution Validity 可缓存
+            Manager->>Cache: put(Arc<TemplateModel>)
+        end
+    end
+    Manager->>Chain: replay model events
+    Chain->>Writer: processed output events
+    Writer-->>Engine: UTF-16 output / I/O result
+    Engine-->>App: JavaString or Result
+```
+
+### 4.2 中立 Web 与宿主适配架构
+
+```mermaid
+flowchart LR
+    subgraph HOST["宿主框架"]
+        HOST_INPUT["Request / Session / Application"]
+        HOST_OUTPUT["Response / Responder / Reply / Service"]
+    end
+
+    subgraph INTEGRATION["整合 crate：只做协议适配"]
+        INPUT_ADAPTER["入站 Capability Wrapper"]
+        OUTPUT_ADAPTER["Status / Header / Body 转换"]
+    end
+
+    subgraph NEUTRAL["thymeleaf：中立 Web 与渲染合同"]
+        INPUT_PORTS["IWebApplication · IWebExchange<br/>IWebRequest · IWebSession"]
+        CONTEXT["WebContext / IContext<br/>可选 Web Capability"]
+        PLAIN["普通 IContext<br/>非 Web 渲染"]
+        REQUEST["TemplateSpec + Arc&lt;dyn IContext&gt;"]
+        RENDERER["ThymeleafRenderer"]
+        CORE["同一 ITemplateEngine<br/>Resolver / Parser / Model / Processor"]
+        FULL_ENGINE["process → JavaString"]
+        STREAM_ENGINE["process_throttled → IThrottledTemplateProcessor"]
+        FULL["Charset 编码 + Content-Length<br/>RenderedTemplateBody::Full(Bytes)"]
+        STREAM["工作线程驱动 Processor<br/>容量 1 Frame 通道形成背压"]
+        DATA["DataDrivenTemplateIterator + Signal<br/>可选数据驱动输入"]
+        RESULT["RenderedTemplate<br/>StatusCode + HeaderMap + RenderedTemplateBody"]
+
+        INPUT_PORTS --> CONTEXT --> REQUEST
+        PLAIN --> REQUEST
+        REQUEST --> RENDERER
+        RENDERER --> CORE
+        CORE --> FULL_ENGINE --> FULL --> RESULT
+        CORE --> STREAM_ENGINE --> STREAM --> RESULT
+        DATA -. "喂入并唤醒同一节流路径" .-> STREAM_ENGINE
+    end
+
+    HOST_INPUT --> INPUT_ADAPTER --> INPUT_PORTS
+    RESULT --> OUTPUT_ADAPTER --> HOST_OUTPUT
+
+    DIRECT["thymeleaf-{framework}<br/>独立集成"] -. "实现 Wrapper/转换；依赖 thymeleaf" .-> INTEGRATION
+    VERNAL["thymeleaf-vernal<br/>可选、平级集成"] -. "实现 Vernal Bridge；依赖 thymeleaf" .-> INTEGRATION
+```
+
+Web 中立边界是双向端口，而不是单纯统一 Response：
+
+- **入站端口**：`IWebApplication`、`IWebExchange`、`IWebRequest`、`IWebSession`
+  只表达模板引擎可观察的 Web 能力；它们支持 Context 变量、URL 构建、Session/
+  Application 属性和 Web TemplateResource，但不泄漏 Axum、Actix Web、Rocket 等类型；
+- **执行端口**：`ThymeleafRenderer` 接收 `TemplateSpec` 与普通或 Web `IContext`，
+  再调用同一个 `ITemplateEngine`；因此 Web 渲染与非 Web 渲染共享 Resolver、Parser、
+  Model 和 Processor Pipeline；
+- **出站端口**：`RenderedTemplate` 统一状态、Header 和 Body，宿主适配器只完成原生
+  Response/Responder/Reply/Service 转换。
+
+因此，整合层只有两个合法触点：在请求进入时实现中立 Web Capability，在渲染完成后
+消费中立 `RenderedTemplate`。控制平面、解析与模型平面、Processor 执行平面都属于
+`thymeleaf` 的语义内核，不是适配器扩展面。这个“双端口、单内核”约束同时适用于
+`thymeleaf-{framework}` 和 `thymeleaf-vernal`。
+
+这里必须区分三个层次：`ITemplateEngine` 产生 Java 语义完整输出或节流处理器；
+`ThymeleafRenderer` 负责字符集、HTTP 元数据、工作线程和 Frame 通道；整合 crate
+最后才把中立结果转换为宿主类型。任何适配器都不能跳过 `ThymeleafRenderer` 后自行
+定义另一套 Charset、背压或流内错误语义。
+
+CodeGraph 当前只在 `thymeleaf-hyper` 中发现生产级 `HostWebRequest`、
+`HostWebExchange` 和 `HostWebSession` 入站实现；13 个框架 crate 均已消费
+`RenderedTemplate` 出站合同。所以上图是已经固定的统一端口架构，但不能据此声称所有
+框架的入站 Wrapper 已完成。其余宿主必须在真实 HTTP 验收时逐一补齐或明确复用
+Hyper/http 层桥接。
+
+当前态、目标态和验收缺口必须分开：
+
+| 能力 | 当前状态 | 目标状态 | 验收证据 |
+|---|---|---|---|
+| 核心渲染语义 | 已实现，行为验证持续推进 | 与固定 Java 上游保持显式语义处置 | Golden、JUnit SOURCE_PARITY、`.thtest` |
+| 中立出站合同 | `RenderedTemplate`、Full/Stream Body 已实现 | 所有宿主无损消费同一状态、Header 和帧语义 | 核心 Web 合同测试 + 适配器合同测试 |
+| 中立入站合同 | Capability trait 已实现；Hyper Host Wrapper 已实现 | 每个宿主实现原生 Request/Session/Application 映射，或明确复用共享桥 | 真实请求、Session、URL、Web Resource 测试 |
+| 独立框架适配 | 13 个整合 crate 已进入 Workspace | 每个适配器独立发布、独立配置、独立端到端验收 | Full/Stream/Error/Cancellation/Trailer |
+| Vernal 集成 | `thymeleaf-vernal` 协议桥已实现 | 与各 `vernal-{framework}` 组合时保持同一渲染语义 | Vernal 宿主端到端合同 |
+| 流式执行 | 容量 1 通道提供下游背压；当前每个流启动工作线程 | 明确线程预算、取消传播和受控执行器策略 | 负载、断连、慢消费者、资源上限测试 |
+
+三种部署模式是平级能力，而不是逐层叠加关系：
+
+| 模式 | 编译期依赖路径 | Context/能力来源 | 最终输出 |
+|:---|:---|:---|:---|
+| 非 Web 渲染 | 业务库/任务 → `thymeleaf` | 普通 `IContext` | `JavaString`、`JavaWriter` 或节流处理器 |
+| 独立 Web 集成 | 应用 → `thymeleaf-{framework}` → `thymeleaf` | 框架适配器包装 Request/Session/Application | 框架原生 Response/Body |
+| Vernal Web 集成 | Vernal 应用 → `thymeleaf-vernal` → `thymeleaf` | Vernal Bridge 提供同一组中立 Capability | Vernal View/HTTP Body |
+
+因此，使用 `thymeleaf-axum` 不需要 Vernal；使用 `thymeleaf-vernal` 也不要求应用直接
+依赖 `thymeleaf-axum`。两条 Web 路径在 `thymeleaf` 的中立端口汇合，而不是相互包装。
+
+完整与流式 Web 调用的真实时序如下：
+
+```mermaid
+sequenceDiagram
+    participant Host as 宿主 Handler
+    participant Adapter as thymeleaf-{framework} / thymeleaf-vernal
+    participant Renderer as ThymeleafRenderer
+    participant Engine as ITemplateEngine
+    participant Worker as Render Worker
+    participant Processor as IThrottledTemplateProcessor
+    participant Body as RenderedTemplateBody
+
+    Host->>Adapter: 原生 Request + View Model
+    Adapter->>Renderer: TemplateSpec + IContext
+    alt Full
+        Renderer->>Engine: process(...)
+        Engine-->>Renderer: JavaString
+        Renderer->>Renderer: Charset 编码 + Content-Length
+        Renderer-->>Adapter: RenderedTemplate::Full(Bytes)
+    else Stream / Data Stream
+        Renderer->>Engine: get_configuration()
+        Renderer->>Worker: spawn，移交 TemplateSpec + Arc<IContext>
+        Renderer-->>Adapter: RenderedTemplate::Stream
+        Worker->>Engine: process_throttled(...)
+        Engine-->>Worker: IThrottledTemplateProcessor
+        loop 直到 is_finished 或取消/错误
+            Worker->>Processor: process_output_stream(chunk_size)
+            Processor-->>Body: Frame<Bytes> / RenderError
+        end
+    end
+    Adapter-->>Host: 原生 Response / Responder / Reply / Service
+```
+
+流式模式在返回 `RenderedTemplate::Stream` 之前只同步完成配置与响应元数据检查；
+Resolver、Parser 和 Processor 的后续错误可能发生在工作线程中，此时只能作为 Body
+错误结束流，不能再修改已经提交的状态码和 Header。
+
+出站中立边界的具体职责是：
+
+- `ThymeleafRenderer` 负责调用核心 Engine、字符集编码、Content-Type、完整/节流选择；
+- `RenderedTemplate` 只保存标准 `StatusCode`、`HeaderMap` 和中立 Body；
+- `RenderedTemplateBody::Full` 提供确定长度的 `Bytes`；
+- `RenderedTemplateBody::Stream` 提供 `http-body` 数据帧和下游背压；
+- `render_data_stream` 只是以 `DataDrivenTemplateIterator` 驱动相同节流管线，不创建
+  第二套模板语义；
+- 整合 crate 只转换 Status、Header、Body、Responder、Reply 或 Service 类型；
+- `thymeleaf-vernal` 与其他整合 crate 平级，不能成为独立适配器的传递依赖。
+
+责任矩阵：
+
+| 能力 | `thymeleaf` 核心/中立 Web 合同 | `thymeleaf-{framework}` | `thymeleaf-vernal` |
+|---|---|---|---|
+| 模板解析与处理语义 | 唯一实现 | 禁止复制 | 禁止复制 |
+| Request/Session/Application | 定义最小 Capability trait | 包装宿主原生对象 | 包装/桥接 Vernal 对象 |
+| Link、Message、Fragment、Expression | 唯一实现和 SPI | 只提供 Context 能力 | 可注册 Vernal 侧实现 |
+| Charset、Content-Type、Full/Stream | 统一生成 | 转换为宿主 Body | 转换为 Vernal HTTP Body |
+| 请求作用域与断连 | 暴露渲染生命周期和错误 | 观察宿主生命周期 | 连接 Vernal 生命周期 |
+| 业务 Handler/Controller | 不负责 | 框架应用负责 | Vernal 应用负责 |
+
+依赖方向可以压缩为：
+
+```mermaid
+flowchart LR
+    HOST["框架原生应用"] --> DIRECT["thymeleaf-{framework}<br/>Topcoat · Actix Web · Axum · Gotham · Hyper · Ntex · Poem<br/>Rocket · Salvo · Tide · Warp · Tower · Tonic"]
+    VHOST["vernal-{framework} 应用"] --> VERNAL["thymeleaf-vernal"]
+    DIRECT --> CORE["thymeleaf<br/>核心 + 中立 Web 合同"]
+    VERNAL --> CORE
+
+    CORE -. "不得依赖" .-> DIRECT
+    CORE -. "不得依赖" .-> VERNAL
+    DIRECT -. "不依赖" .-> VERNAL
+    VERNAL -. "不依赖" .-> DIRECT
+```
+
+上图只表达 Cargo/API 依赖方向；运行时数据从核心产生 `RenderedTemplate` 后再流向
+适配器。把“运行时输出流向”和“编译期依赖方向”分开，是避免错误理解中立性的关键。
+
+### 4.3 可执行的中立性约束
+
+“框架中立”必须由依赖、API 和测试共同保证，而不是文档口号：
+
+1. `thymeleaf` 的正常依赖图不得包含任何目标 Web 框架或 Vernal crate；
+2. `thymeleaf` 公共签名不得出现框架原生 Request、Response、Body、Extractor 或
+   Middleware 类型；
+3. 每个整合 crate 只能依赖 `thymeleaf` 的公共 API，不得访问内部 Parser、Processor
+   实现或复制 Standard Dialect；
+4. 同一模板、Context 和渲染选项经不同适配器得到的正文、Content-Type 和错误语义必须
+   一致；
+5. Full、Stream、Error、Cancellation、Trailer 和客户端断连必须在每个真实宿主中验收；
+6. `thymeleaf-vernal` 与所有 `thymeleaf-{framework}` 平级，任何一方不得成为另一方的
+   必选或传递依赖；
+7. Tonic 只消费动态 String/Bytes、Gateway 或服务内容，不把普通 HTML Body 伪装成
+   gRPC 协议响应。
+
+可以用下面的判定表审查任何新适配器：
+
+| 检查项 | 通过条件 | 失败示例 |
+|:---|:---|:---|
+| 核心依赖 | `thymeleaf` 的 normal dependency 不出现宿主或 Vernal | 核心直接依赖 `axum` |
+| 公共类型 | Engine/Parser/Processor API 只出现核心或标准中立类型 | `TemplateEngine::render` 返回 `actix_web::HttpResponse` |
+| 模板语义 | Resolver、Parser、Expression、Processor 只在核心实现 | 适配器自行解析 `th:*` |
+| Full/Stream | 两者均消费 `RenderedTemplate`，不另建 Body 协议 | Warp 与 Axum 使用不同 Chunk/Error 规则 |
+| 错误与取消 | 流内错误无损传递，断连停止消费，不自动重跑模板 | Header 发出后改写为第二个 500 Response |
+| Vernal 关系 | 直接适配与 Vernal 适配平级、互不传递依赖 | `thymeleaf-axum` 强制依赖 `thymeleaf-vernal` |
+
+### 4.4 Crate 模型
 
 引擎只发布一个核心 crate。Engine、Context、TemplateModel、事件、错误、Processor/Dialect SPI、各模板 Parser、表达式系统、Standard Dialect、中立 Web 输出和核心测试设施均属于 `thymeleaf` 的内部模块，不再拆分成独立 crate。
 
@@ -310,32 +689,30 @@ flowchart TB
 
 ### 5.1 TemplateEngine
 
-`TemplateEngine` 是只读、线程安全、初始化后冻结的引擎入口。
-
-建议职责：
-
-- 保存 EngineConfiguration；
-- 管理 TemplateResolver；
-- 管理 Dialect；
-- 管理 Parser；
-- 管理 Template、Expression 和 Fragment 缓存；
-- 提供完整和流式渲染入口；
-- 创建请求级 EngineContext；
-- 记录 tracing span 和 metrics。
-
-建议公开能力：
+`TemplateEngine` 是线程安全、首次处理时完成初始化并冻结配置的引擎入口。当前公开核心
+合同由 `ITemplateEngine` 固定：
 
 ```rust
-render(template, context) -> Result<RenderedTemplate>
-
-render_to_writer(template, context, writer) -> Result<()>
-
-render_stream(template, context) -> Result<TemplateStream>
-
-clear_template_cache()
-
-clear_expression_cache()
+process(&TemplateSpec, &dyn IContext) -> TemplateEngineResult<JavaString>
+process_to_writer(&TemplateSpec, &dyn IContext, Box<dyn JavaWriter>) -> TemplateEngineResult<()>
+process_throttled(&TemplateSpec, &dyn IContext)
+    -> TemplateEngineResult<Box<dyn IThrottledTemplateProcessor>>
 ```
+
+HTTP 结果不是 `TemplateEngine` 的返回类型。`thymeleaf::web::ThymeleafRenderer` 在
+该合同之上提供 `render_full`、`render_stream` 和 `render_data_stream`，从而让核心
+执行语义与 Web 交付策略保持分离。
+
+当前职责包括：
+
+- 首次调用时构造并冻结 `EngineConfiguration`；
+- 聚合 TemplateResolver、Dialect、Processor、MessageResolver、LinkBuilder 与 Cache；
+- 通过 `TemplateManager` 解析、缓存并重放 `TemplateModel`；
+- 为每次渲染创建请求级 EngineContext 与 Handler Chain；
+- 提供完整 Writer 输出和 Java 语义节流处理器。
+
+生产化仍需补齐的横切能力包括 tracing/metrics 预算、流式执行器资源上限以及面向发布的
+缓存与诊断策略；这些目标不能写成当前已完成的 API。
 
 Parser 和渲染 Processor 本质上主要是 CPU 工作，不应为了“全异步”而让每一个模板事件都经过 `async fn`。
 
@@ -547,7 +924,7 @@ Conversion、Aggregation、Markup、Context、Precedence、Web exchange 以及
 remove/replace/surround Processor。最终 2,608 个可执行资源全部处置：2,595 个不同
 用例通过 Rust 行为验证，12 个上游已禁用 `execinfo` 资源和 1 个任意 Java 反射链
 具名处置，0 未解释，语义功能覆盖率为 100%。CI 原样全 workspace 源码覆盖率为
-region 43.20%、function 37.04%、line 44.11%，仅作为后续补测诊断指标，不作为
+region 59.61%、function 55.82%、line 61.19%，仅作为后续补测诊断指标，不作为
 语义迁移和发布的硬门槛。
 
 上游 `instancestaticrestrictions29.thtest` 中
@@ -556,7 +933,7 @@ region 43.20%、function 37.04%、line 44.11%，仅作为后续补测诊断指�
 确有受控类型查询需求，应通过 `TemplateObject`/`OgnlRuntime` 显式注册窄能力，而不是
 启用通用反射。
 
-### 6.3 表达式 Guardrails
+### 6.4 表达式 Guardrails
 
 默认安全策略应包括：
 
@@ -937,18 +1314,19 @@ JS 内联应使用 `serde_json` 生成合法 JSON/JavaScript 数据，不能通�
 ```mermaid
 sequenceDiagram
     participant H as Handler
+    participant R as ThymeleafRenderer
     participant E as TemplateEngine
-    participant C as Cache
+    participant M as TemplateManager
     participant P as Processor Pipeline
-    participant R as HTTP Response
 
-    H->>E: render(template, context)
-    E->>C: get TemplateModel
-    C-->>E: Arc<TemplateModel>
-    E->>P: replay model
-    P-->>E: Bytes
-    E-->>H: RenderedView::Full
-    H->>R: Response<HttpBody::Full>
+    H->>R: render_full(TemplateSpec, Context)
+    R->>E: process()
+    E->>M: parse_and_process()
+    M->>P: parse/replay TemplateModel
+    P-->>E: JavaString
+    E-->>R: UTF-16 output
+    R->>R: encode charset + Content-Length
+    R-->>H: RenderedTemplate::Full(Bytes)
 ```
 
 #### Stream Render
@@ -965,21 +1343,29 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant Client
-    participant Body as HttpBody
-    participant Stream as TemplateStream
-    participant Model as TemplateModel
-    participant Proc as Processor Pipeline
+    participant H as Framework Handler
+    participant R as ThymeleafRenderer
+    participant W as Render Worker
+    participant P as ThrottledTemplateProcessor
+    participant C as Capacity-1 Channel
+    participant B as Framework Body
 
-    Client->>Body: poll_frame()
-    Body->>Stream: poll_next()
-    Stream->>Model: 请求下一段事件
-    Model->>Proc: 重放事件
-    Proc-->>Stream: Bytes chunk
-    Stream-->>Body: Frame<Bytes>
-    Body-->>Client: 数据帧
-    Client-->>Body: 背压或继续轮询
+    H->>R: render_stream(TemplateSpec, Arc<Context>)
+    R->>W: spawn thymeleaf-render
+    R-->>H: RenderedTemplate::Stream
+    W->>P: process_output_stream(chunk_size)
+    P->>C: Frame<Bytes>
+    Note over C: 容量为 1；下游变慢时发送端阻塞
+    B->>C: poll_next()
+    C-->>B: Frame<Bytes>
+    W->>P: 重复推进，直到 is_finished
+    W->>C: close_channel()
+    C-->>B: EOF
 ```
+
+当前实现用独立 OS 线程隔离请求级非并发 Processor，并以容量为 1 的 channel 形成真实
+背压。该模型语义清晰，但高并发下的线程数量、栈内存、调度成本和取消延迟必须通过负载
+测试量化；必要时应引入可配置执行器或受控线程池，而不能无依据改为无界任务创建。
 
 ### 12.2 流式错误策略
 
@@ -992,7 +1378,7 @@ HTTP Header 一旦发送，后续渲染错误不能再切换为标准 500 页面
 - 开发模式可向 HTML 注入安全注释；
 - 生产模式不得把表达式、路径或 Model 值发送给客户端；
 - 记录已输出字节数、模板名、SourceSpan；
-- 客户端断开时立即取消剩余渲染。
+- 客户端断开时停止后续发送；长时间运行的单个 Processor 是否能及时取消需要专门测试。
 
 ## 13. 缓存设计
 
@@ -1082,6 +1468,21 @@ Arc<TemplateModel>
 
 发布阶段可以按优先级逐步完成，但架构和公共 API 不得把任何一个框架定义成二等集成，也不得要求独立用户引入 Vernal。
 
+当前 CodeGraph 结果表明，`RenderedTemplate` 有 27 个适配调用者，覆盖
+Actix Web、Axum、Gotham、Ntex、Poem、Rocket、Salvo、Tide、Warp、Hyper、Tower、
+Tonic、Topcoat 和 Vernal 等边界。适配器已经是薄层：主要执行状态码、Header 和 Body
+转换；模板处理逻辑仍由核心 `ThymeleafRenderer` 完成。
+
+当前共享中立 Web 测试覆盖：
+
+- 完整 Body、Content-Type 和 Content-Length；
+- 分块输出和下游逐帧消费；
+- 节流处理器完成信号；
+- 非法 Charset 错误。
+
+尚未闭合的是每个宿主框架自身的真实 HTTP Full、Stream、Error、Cancellation 和
+Trailer 测试。仅编译通过不能等同于宿主运行时兼容。
+
 ### 14.2 Axum
 
 推荐提供：
@@ -1152,7 +1553,7 @@ Hyper 和 Tower 更适合作为底层协议和 Service 抽象，而不是面向�
 - Hyper 提供标准 HTTP Server 和 Body；
 - Tower 提供 Service/Layer；
 - Axum 和多个框架可以共享 Tower 适配；
-- 独立适配器可以直接消费 `ThymeleafBody`；
+- 独立适配器可以直接消费 `RenderedTemplateBody`；
 - Vernal 场景则由 `vernal-tower` 处理请求作用域与 Body 生命周期，并使用 `vernal_http::HttpBody`。
 
 ### 14.8 Topcoat
@@ -1297,7 +1698,24 @@ Fragment 是模板引擎从“变量替换”走向“页面组件系统”的�
 
 统一 `http::Response<HttpBody>` 可以大幅降低差异，但不能完全消除专属适配代码。
 
-### 15.7 安全和 XSS
+当前优先风险不是适配器代码量，而是宿主生命周期验证：`RenderedTemplate` 的共享合同
+已有测试，但各框架的 Body poll、请求作用域、客户端断开和错误转换仍需真实服务器测试。
+
+### 15.7 流式执行器与资源预算
+
+当前 `render_stream` 和 `render_data_stream` 为每个响应创建一个 OS 线程，并使用容量
+为 1 的 channel 建立背压。这能避免请求级 Processor 跨线程并发，但必须量化：
+
+- 高并发下线程数和栈内存；
+- 慢客户端造成的发送阻塞时间；
+- 客户端取消后工作线程退出延迟；
+- 单个慢 Processor 无法及时抢占的问题；
+- 数据驱动渲染等待信号时的调度开销。
+
+若压测证明该模型超出预算，应提供可配置执行器或有界渲染线程池，同时保留同一
+Processor 不并发执行的语义。
+
+### 15.8 安全和 XSS
 
 模板引擎会直接生成浏览器可执行内容，因此安全要求高于普通字符串模板：
 
@@ -1309,7 +1727,7 @@ Fragment 是模板引擎从“变量替换”走向“页面组件系统”的�
 - 表达式求值可能造成 DoS；
 - 热更新目录可能被非授权写入。
 
-### 15.8 兼容性测试规模
+### 15.9 兼容性测试规模
 
 需要长期维护 Java Thymeleaf 与 Rust 引擎的差异矩阵。
 
@@ -1559,7 +1977,10 @@ expected-error.json
 - Processor 重处理；
 - 模板路径规范化。
 
-## 19. 分阶段实施路线
+## 19. 历史分阶段实施路线
+
+本节保留立项时的阶段边界，用于解释当前对象和 crate 为什么这样组织，不再代表实时
+待办。核心语义迁移及适配器生产代码已经越过这些阶段；当前优先级以第 24 节为准。
 
 ### 19.1 Phase 0：架构合同与技术原型
 
@@ -1569,7 +1990,7 @@ expected-error.json
 - 固定 Core 不依赖 Web 框架和 Vernal 的中立性合同；
 - 验证 HTML Parser；
 - 验证不可变 TemplateModel；
-- 验证中立 `ThymeleafBody` 流式输出；
+- 验证中立 `RenderedTemplateBody` 流式输出；
 - 验证适配器可以在不修改 Core 的情况下转换 Full/Stream 结果。
 
 交付物：
@@ -1583,7 +2004,7 @@ expected-error.json
 - `TemplateCache`；
 - `ViewEngine`；
 - `RenderedView`；
-- `ThymeleafBody`；
+- `RenderedTemplateBody`；
 - HTML Parser 对比报告；
 - Axum Hello Template；
 - Hyper/Tower Body 原型；
@@ -1701,7 +2122,9 @@ expected-error.json
 - 版本迁移策略；
 - 稳定 Dialect API。
 
-## 20. MVP 范围控制
+## 20. 历史 MVP 范围控制
+
+本节记录最初的范围约束。当前实现范围与证据状态以第 2、14、18 和 24 节为准。
 
 ### 20.1 首期应实现
 
@@ -1785,7 +2208,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 ### ADR-001：内核不依赖具体 Web 框架
 
-状态：建议接受。
+状态：已接受并实现。
 
 决策：
 
@@ -1797,7 +2220,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 ### ADR-002：采用不可变、可重放的 TemplateModel
 
-状态：建议接受。
+状态：已接受并实现。
 
 决策：
 
@@ -1808,7 +2231,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 ### ADR-003：Thymeleaf 外层表达式与 SpEL 求值分离
 
-状态：建议接受。
+状态：已接受；核心安全求值器已实现，Vernal 可插拔验证待加强。
 
 决策：
 
@@ -1820,20 +2243,20 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 ### ADR-004：统一输出为中立 RenderedTemplate 和标准 HTTP Body
 
-状态：建议接受。
+状态：已接受并实现。
 
 决策：
 
 - Full Render 输出 `Bytes`；
 - Stream Render 输出 `Stream<Frame<Bytes>>`；
-- `thymeleaf::web` 模块提供中立 `ThymeleafBody`；
+- `thymeleaf::web` 模块提供中立 `RenderedTemplateBody`；
 - 独立适配器将其转换为各框架 Response；
 - `thymeleaf-vernal` 将其转换为 `vernal_http::HttpBody`；
 - Core 不暴露任何框架或 Vernal 类型。
 
 ### ADR-005：Topcoat 与 Thymeleaf-Rust 作为并列 ViewEngine
 
-状态：建议接受。
+状态：已接受；独立适配器已实现，双 ViewEngine 真实宿主验证待加强。
 
 决策：
 
@@ -1845,7 +2268,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 ### ADR-006：Tonic 是正式的动态内容集成目标
 
-状态：建议接受。
+状态：已接受；独立适配器已实现，Gateway/Service 端到端测试待加强。
 
 决策：
 
@@ -1857,7 +2280,7 @@ Thymeleaf 源码采用 Apache License 2.0。
 
 ### ADR-007：仓库名称与发布名称分离
 
-状态：建议接受。
+状态：已接受并落实到 Cargo Workspace。
 
 决策：
 
@@ -1869,20 +2292,19 @@ Thymeleaf 源码采用 Apache License 2.0。
 - 禁止使用 `thymeleaf_rust` 作为 Rust 根模块；
 - `thymeleaf-vernal` 表示 Thymeleaf 面向 Vernal 的可选整合 crate，命名遵循与 `thymeleaf-spring` 相同的“核心在前、宿主在后”约定。
 
-## 24. 最终建议
+## 24. 最终结论与下一阶段
 
-Thymeleaf-Rust 值得实施，但应遵循以下主线：
+核心架构、语义清单和中立适配边界已经落位。下一阶段不再回到逐对象实现，而是沿以下
+生产化主线推进：
 
 ```mermaid
 flowchart LR
-    A["先定义 Engine、Model、Processor 合同"] --> B["验证 HTML Parser"]
-    B --> C["实现 Standard Dialect MVP"]
-    C --> D["固定中立 RenderedTemplate / Body"]
-    D --> E["独立集成所有目标 Web 框架"]
-    D --> F["通过 thymeleaf-vernal 接入所有 vernal-* 场景"]
-    E --> G["扩展流式、方言和高级能力"]
-    F --> G
-    G --> H["建立 Thymeleaf 兼容矩阵"]
+    A["已闭合<br/>核心对象、方法与模板语义"] --> B["适配器真实 HTTP 验收"]
+    B --> C["流式线程、背压与取消压测"]
+    C --> D["第三方 Dialect / Processor 兼容套件"]
+    D --> E["固定能力矩阵与安全边界"]
+    E --> F["crates.io 发布审计"]
+    F --> G["版本化兼容与持续回归"]
 ```
 
 最重要的工程判断是：
@@ -1895,9 +2317,9 @@ flowchart LR
 6. 通过 `thymeleaf-vernal` 将同一 Engine 接入所有对应 `vernal-*` 场景；
 7. 将 Topcoat 视为可以独立组合、也可以在 Vernal 中并列注册的编译期响应式 ViewEngine；
 8. 将 Tonic 视为正式的动态 String/Bytes、Gateway 和服务内容渲染目标；
-9. 用 Java/Rust 双运行 Golden Test 驱动兼容性；
-10. 首期聚焦最常用的 HTML 和 Standard Dialect 能力；
-11. 在实现前先完成 HTML Parser、TemplateModel 和中立流式 Body 三个技术原型。
+9. 用 Java/Rust Golden、SOURCE_PARITY 和共享 `.thtest` 持续驱动兼容性；
+10. 不用源码覆盖率或对象文件存在替代行为证据；
+11. 发布前优先解决各适配器端到端验证和每流一个 OS 线程的资源预算。
 
 建议项目命名：
 

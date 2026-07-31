@@ -1,0 +1,38 @@
+baseline	10f9dd2eb8cbd98515ce14b149d115e0287d0add
+initialization.before	false
+ordering.template.before	20,null,-1
+ordering.message.before	20,null,-1
+ordering.link.before	20,null,-1
+initialization.after	true
+ordering.template.after	-1,20,null
+ordering.message.after	-1,20,null
+ordering.link.after	-1,20,null
+initialization.freeze	java.lang.IllegalStateException:Template engine has already been initialized (probably because it has already been executed or a fully-built Configuration object has been requested from it. At this state, no modifications on its configuration are allowed.
+process.string	<p>Rust</p>
+process.spec	<p>Rust</p>
+process.writer.output	<p>Rust</p>
+process.writer.flush_count	1
+process.selectors	<p id="b">B</p>
+process.selectors_writer.output	<p id="a">A</p>
+process.selectors_writer.flush_count	1
+process.selectors_throttled.count	15
+process.selectors_throttled.output	<p id="b">B</p>
+process.empty	
+process.flush_failure	org.thymeleaf.exceptions.TemplateOutputException:An error happened while flushing output writer (template: "output")
+throttle.chars.identifier_nonempty	true
+throttle.chars.spec	<p>abcdef</p>
+throttle.chars.initial_finished	false
+throttle.chars.zero	0
+throttle.chars.counts	3,3,3,3,1
+throttle.chars.output	<p>abcdef</p>
+throttle.chars.final_finished	true
+throttle.chars.after_finished	0
+throttle.chars.all_count	11
+throttle.chars.all_output	all-at-once
+throttle.bytes.initial_finished	false
+throttle.bytes.counts	3,3,1
+throttle.bytes.output	Aé中B
+throttle.bytes.final_finished	true
+throttle.bytes.all_count	7
+throttle.bytes.all_output	Aé中B
+throttle.mode_switch	org.thymeleaf.exceptions.TemplateOutputException:The throttled processor has already been initialized to use char-based output (Writer), but an OutputStream has been specified. (template: "abcdef")

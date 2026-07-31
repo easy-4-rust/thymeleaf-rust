@@ -16,6 +16,10 @@ pub struct AbstractTextProcessor<F> {
 
 impl<F> AbstractTextProcessor<F> {
     /// 创建以闭包表达 Java 抽象 `doProcess` 方法的 Processor。
+    ///
+    /// 对应 Java: `AbstractTextProcessor#AbstractTextProcessor(TemplateMode, int)`。
+    /// `template_mode` 为 `None` 时保留 `"Template mode cannot be null"` 校验；
+    /// `processor_class_name` 用于异常包装，`do_process` 对应子类实现。
     pub fn new(
         template_mode: Option<TemplateMode>,
         precedence: i32,
@@ -64,6 +68,7 @@ where
         text: &dyn IText,
         structure_handler: &mut dyn ITextStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
+        // 对应 Java AbstractTextProcessor#process：委托 doProcess，并统一装饰异常位置。
         self.adapter
             .execute(text, |callback| callback(context, text, structure_handler))
     }

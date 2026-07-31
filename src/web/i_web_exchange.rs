@@ -11,6 +11,20 @@ use super::{IWebApplication, IWebRequest, IWebSession};
 ///
 /// 对应 Java: `org.thymeleaf.web.IWebExchange`。
 pub trait IWebExchange: Send + Sync {
+    /// 返回 Servlet Web exchange capability。
+    ///
+    /// 对应 Java: `IWebExchange instanceof IServletWebExchange`。核心 crate 保持 Web
+    /// 框架中立，因此默认实现返回 `None`；仅 Servlet 宿主适配器可以覆盖此方法，声明
+    /// 自身同时具备 Java Servlet exchange 语义。
+    ///
+    /// # 返回值
+    ///
+    /// `Some` 表示可安全作为 Java `IServletWebExchange` 使用；`None` 表示普通中立
+    /// Web exchange，不能被 `Contexts#getServletWebExchange` 强制转换。
+    fn as_servlet_web_exchange(&self) -> Option<&dyn IWebExchange> {
+        None
+    }
+
     /// 返回请求对象。
     fn get_request(&self) -> &dyn IWebRequest;
     /// 返回可空会话对象。

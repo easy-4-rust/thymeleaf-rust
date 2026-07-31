@@ -318,11 +318,16 @@ fn extract_java_url_path(location: &str) -> String {
 mod tests {
     use std::error::Error;
     use std::fs;
-    use std::io::{self, BufRead, BufReader, Write};
+    use std::io::{self, BufRead, BufReader, Cursor, Read, Write};
     use std::net::TcpListener;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex};
     use std::thread;
 
-    use super::{ITemplateResource, UrlTemplateResource, extract_java_url_path, ureq_to_io_error};
+    use super::{
+        ITemplateResource, UrlResourceConnectionHandler, UrlTemplateResource,
+        extract_java_url_path, ureq_to_io_error,
+    };
     use url::Url;
 
     #[test]
@@ -370,6 +375,78 @@ mod tests {
         assert_eq!(
             ureq_to_io_error(ureq::Error::ConnectionFailed).kind(),
             io::ErrorKind::Other
+        );
+    }
+
+    #[test]
+    fn custom_protocol_handler_is_used_and_inherited_by_relative_resources() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let locations = Arc::new(Mutex::new(Vec::new()));
+        let handler_calls = Arc::clone(&calls);
+        let handler_locations = Arc::clone(&locations);
+        let handler: Arc<UrlResourceConnectionHandler> = Arc::new(move |url| {
+            handler_calls.fetch_add(1, Ordering::SeqCst);
+            handler_locations
+                .lock()
+                .expect("custom URL locations lock")
+                .push(url.to_string());
+            if url.path().ends_with("missing.html") {
+                return Err(io::Error::new(io::ErrorKind::NotFound, "missing"));
+            }
+            Ok(Box::new(Cursor::new(
+                format!("custom:{}", url.path()).into_bytes(),
+            )))
+        });
+
+        let resource = UrlTemplateResource::with_connection_handler(
+            Some("memory://templates/root/main.html"),
+            Some("UTF-8"),
+            Arc::clone(&handler),
+        )
+        .expect("custom URL resource");
+        assert!(resource.exists());
+        let mut contents = String::new();
+        resource
+            .reader()
+            .expect("custom URL reader")
+            .read_to_string(&mut contents)
+            .expect("custom URL contents");
+        assert_eq!(contents, "custom:/root/main.html");
+
+        let relative = resource
+            .relative(Some("child.html"))
+            .expect("relative custom URL resource");
+        let mut relative_contents = String::new();
+        relative
+            .reader()
+            .expect("relative custom URL reader")
+            .read_to_string(&mut relative_contents)
+            .expect("relative custom URL contents");
+        assert_eq!(relative_contents, "custom:/root/child.html");
+
+        let missing = resource
+            .relative(Some("missing.html"))
+            .expect("missing custom URL resource object");
+        assert!(!missing.exists());
+        assert_eq!(
+            missing
+                .reader()
+                .err()
+                .expect("custom URL handler error")
+                .kind(),
+            io::ErrorKind::NotFound
+        );
+
+        assert_eq!(calls.load(Ordering::SeqCst), 5);
+        assert_eq!(
+            *locations.lock().expect("custom URL locations lock"),
+            vec![
+                "memory://templates/root/main.html",
+                "memory://templates/root/main.html",
+                "memory://templates/root/child.html",
+                "memory://templates/root/missing.html",
+                "memory://templates/root/missing.html",
+            ]
         );
     }
 

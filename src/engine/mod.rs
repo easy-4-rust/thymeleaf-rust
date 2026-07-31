@@ -70,6 +70,7 @@ mod template_flow_controller;
 mod template_handler_adapter_markup_handler;
 mod template_handler_adapter_raw_handler;
 mod template_handler_adapter_text_handler;
+mod template_handler_class;
 mod template_manager;
 mod template_model;
 mod template_model_controller;
@@ -90,6 +91,9 @@ mod xml_declaration;
 mod xml_declaration_structure_handler;
 mod xml_element_definition;
 mod xml_element_name;
+
+#[cfg(test)]
+mod non_element_structure_handler_tests;
 
 pub use abstract_element_tag::AbstractElementTag;
 pub use abstract_processable_element_tag::AbstractProcessableElementTag;
@@ -149,6 +153,9 @@ pub use template_end::TemplateEnd;
 pub use template_handler_adapter_markup_handler::TemplateHandlerAdapterMarkupHandler;
 pub use template_handler_adapter_raw_handler::TemplateHandlerAdapterRawHandler;
 pub use template_handler_adapter_text_handler::TemplateHandlerAdapterTextHandler;
+pub use template_handler_class::{
+    TemplateHandlerClass, TemplateHandlerConstructor, TemplateHandlerConstructorError,
+};
 pub use template_manager::TemplateManager;
 pub use template_model::TemplateModel;
 pub(crate) use template_model_controller::{SkipBody, TemplateModelController};

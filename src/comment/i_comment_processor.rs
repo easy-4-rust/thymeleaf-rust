@@ -10,6 +10,9 @@ use super::ICommentStructureHandler;
 /// 对应 Java: `org.thymeleaf.processor.comment.ICommentProcessor`。
 pub trait ICommentProcessor: IProcessor {
     /// 处理注释事件。
+    ///
+    /// 对应 Java: `ICommentProcessor#process(ITemplateContext, IComment,
+    /// ICommentStructureHandler)`。事件不可变，结构变更通过 handler 声明。
     fn process(
         &self,
         context: &dyn ITemplateContext,

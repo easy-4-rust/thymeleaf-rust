@@ -31,7 +31,7 @@ pub use abstract_engine_context::AbstractEngineContext;
 pub use abstract_expression_context::AbstractExpressionContext;
 pub use context::Context;
 pub use context_variable_entries::{ContextVariableEntries, ContextVariableEntry};
-pub use contexts::Contexts;
+pub use contexts::{Contexts, ContextsError};
 pub use engine_context::EngineContext;
 pub use expression_context::ExpressionContext;
 pub use i_context::{IContext, IContextVariableNames};

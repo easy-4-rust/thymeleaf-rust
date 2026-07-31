@@ -228,8 +228,8 @@ impl IContext for EngineContext {
             .is_some_and(|variable| !matches!(variable, ScopedVariable::Removed))
     }
 
-    fn get_variable_names(&self) -> Box<dyn IContextVariableNames + '_> {
-        Box::new(EngineContextVariableNames { context: self })
+    fn get_variable_names(&self) -> Arc<dyn IContextVariableNames + '_> {
+        Arc::new(EngineContextVariableNames { context: self })
     }
 
     fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
@@ -322,13 +322,10 @@ impl ITemplateContext for EngineContext {
             .entries
             .iter()
             .rev()
-            .find_map(|entry| {
-                entry
-                    .selection_target
-                    .as_ref()
-                    .map(|target| target.value.clone())
-            })
-            .flatten()
+            // `SelectionTarget` 包装器区分“未设置”与“显式设置为 null”。一旦找到
+            // 最近包装器，即使其值为 null 也必须停止向父层回退。
+            .find_map(|entry| entry.selection_target.as_ref())
+            .and_then(|target| target.value.clone())
     }
 
     fn get_inliner(&self) -> Option<Arc<dyn IInliner>> {

@@ -8,7 +8,9 @@ use crate::{
     TemplateModeParseError,
 };
 
-use super::{AbstractTemplateResolver, ITemplateResolver, TemplateResolution};
+use super::{
+    AbstractTemplateResolver, ITemplateResolver, TemplateResolution, TemplateResolverError,
+};
 
 /// 无论输入模板名为何都返回同一段配置文本的解析器。
 ///
@@ -24,6 +26,8 @@ impl DefaultTemplateResolver {
     pub const DEFAULT_TEMPLATE_MODE: TemplateMode = TemplateMode::HTML;
 
     /// 创建正文为空字符串的默认解析器。
+    ///
+    /// 对应 Java: `DefaultTemplateResolver#DefaultTemplateResolver()`。
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -46,22 +50,54 @@ impl DefaultTemplateResolver {
         self.template_mode = template_mode;
     }
 
+    /// 使用可空枚举设置模板模式。
+    ///
+    /// 对应 Java: `DefaultTemplateResolver#setTemplateMode(TemplateMode)`。
+    ///
+    /// # 错误
+    /// `template_mode` 缺失时返回 Java setter 的精确参数错误。
+    pub fn set_template_mode_nullable(
+        &mut self,
+        template_mode: Option<TemplateMode>,
+    ) -> Result<(), TemplateResolverError> {
+        self.template_mode = template_mode.ok_or_else(|| {
+            TemplateResolverError::InvalidArgument(
+                "Cannot set a null template mode value".to_owned(),
+            )
+        })?;
+        Ok(())
+    }
+
     /// 使用文本设置模板模式。
+    ///
+    /// 对应 Java: `DefaultTemplateResolver#setTemplateMode(String)`。
     pub fn set_template_mode_name(
         &mut self,
         template_mode: Option<&str>,
-    ) -> Result<(), TemplateModeParseError> {
-        self.template_mode = TemplateMode::parse(template_mode)?;
+    ) -> Result<(), TemplateResolverError> {
+        let template_mode = template_mode.ok_or_else(|| {
+            TemplateResolverError::InvalidArgument(
+                "Cannot set a null template mode value".to_owned(),
+            )
+        })?;
+        self.template_mode =
+            TemplateMode::parse(Some(template_mode)).map_err(|error: TemplateModeParseError| {
+                TemplateResolverError::InvalidArgument(error.to_string())
+            })?;
         Ok(())
     }
 
     /// 返回固定模板正文；`None` 保留 Java setter 接受 null 的行为。
+    ///
+    /// 对应 Java: `DefaultTemplateResolver#getTemplate()`。
     #[must_use]
     pub fn get_template(&self) -> Option<&JavaString> {
         self.template.as_ref()
     }
 
     /// 设置固定模板正文。
+    ///
+    /// 对应 Java: `DefaultTemplateResolver#setTemplate(String)`。
     pub fn set_template(&mut self, template: Option<JavaString>) {
         self.template = template;
     }
@@ -99,14 +135,14 @@ impl ITemplateResolver for DefaultTemplateResolver {
         _owner_template: Option<&JavaString>,
         template: &JavaString,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-    ) -> Option<TemplateResolution> {
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolve_template(
             template,
             || {
                 let text = self.template.as_ref().map(JavaString::to_string_lossy);
                 StringTemplateResource::new(text.as_deref())
-                    .ok()
-                    .map(|resource| Arc::new(resource) as Arc<dyn ITemplateResource>)
+                    .map(|resource| Some(Arc::new(resource) as Arc<dyn ITemplateResource>))
+                    .map_err(TemplateResolverError::from)
             },
             || self.template_mode,
             || Arc::new(AlwaysValidCacheEntryValidity::new()) as Arc<dyn ICacheEntryValidity>,

@@ -17,6 +17,10 @@ pub struct AbstractXMLDeclarationProcessor<F> {
 
 impl<F> AbstractXMLDeclarationProcessor<F> {
     /// 创建以闭包表达 Java 抽象 `doProcess` 方法的 Processor。
+    ///
+    /// 对应 Java:
+    /// `AbstractXMLDeclarationProcessor#AbstractXMLDeclarationProcessor(TemplateMode, int)`。
+    /// 构造时校验模板模式；回调异常按 Java `process` 规则保留或包装。
     pub fn new(
         template_mode: Option<TemplateMode>,
         precedence: i32,
@@ -65,6 +69,7 @@ where
         xml_declaration: &dyn IXMLDeclaration,
         structure_handler: &mut dyn IXMLDeclarationStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
+        // 对应 Java AbstractXMLDeclarationProcessor#process。
         self.adapter.execute(xml_declaration, |callback| {
             callback(context, xml_declaration, structure_handler)
         })

@@ -1,0 +1,41 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+text.new=false,false,false
+text.sequence=true,false,false,identity=true
+text.null=java.lang.IllegalArgumentException:Text cannot be null
+text.null.state=false,false,false
+text.model.null=java.lang.IllegalArgumentException:Model cannot be null
+text.model.null.state=false,false,false
+cdata.null=java.lang.IllegalArgumentException:Content cannot be null
+cdata.null.state=false,false,false
+cdata.model.null=java.lang.IllegalArgumentException:Model cannot be null
+cdata.model.null.state=false,false,false
+comment.null=java.lang.IllegalArgumentException:Content cannot be null
+comment.null.state=false,false,false
+comment.model.null=java.lang.IllegalArgumentException:Model cannot be null
+comment.model.null.state=false,false,false
+doctype.keyword.null=java.lang.IllegalArgumentException:Keyword cannot be null
+doctype.keyword.null.state=false,false,false
+doctype.element.null=java.lang.IllegalArgumentException:Element name cannot be null
+doctype.element.null.state=false,false,false
+doctype.optional.null=true,false,false,keyword=DOCTYPE,element=html,public=null,system=null,subset=null
+pi.target.null=java.lang.IllegalArgumentException:Target cannot be null
+pi.target.null.state=false,false,false
+pi.content.null=java.lang.IllegalArgumentException:Content cannot be null
+pi.content.null.state=false,false,false
+pi.valid=true,false,false,target=xml,content=content
+xml.keyword.null=java.lang.IllegalArgumentException:Keyword cannot be null
+xml.keyword.null.state=false,false,false
+xml.optional.null=true,false,false,keyword=xml,version=null,encoding=null,standalone=null
+boundary.null.context=text=false,model=false,set=true,setSize=1,setNull=true,remove=true,removeSize=1,removeNull=true,selection=true,selectionNull=true,inliner=true,inlinerNull=true
+boundary.apply.order=[setVariables, removeVariable:null, setSelectionTarget:null, setInliner:null]
+boundary.text=text=true,model=false,set=true,setSize=1,setNull=true,remove=true,removeSize=1,removeNull=true,selection=true,selectionNull=true,inliner=true,inlinerNull=true,text=before,processable=true
+boundary.text.null=java.lang.IllegalArgumentException:Text cannot be null
+boundary.text.null.state=text=false,model=false,set=true,setSize=1,setNull=true,remove=true,removeSize=1,removeNull=true,selection=true,selectionNull=true,inliner=true,inlinerNull=true
+boundary.model=text=false,model=true,set=true,setSize=1,setNull=true,remove=true,removeSize=1,removeNull=true,selection=true,selectionNull=true,inliner=true,inlinerNull=true,identity=true,processable=false
+boundary.model.null=java.lang.IllegalArgumentException:Model cannot be null
+boundary.model.null.state=text=false,model=false,set=true,setSize=1,setNull=true,remove=true,removeSize=1,removeNull=true,selection=true,selectionNull=true,inliner=true,inlinerNull=true
+boundary.reset=text=false,model=false,set=false,setSize=0,setNull=false,remove=false,removeSize=0,removeNull=false,selection=false,selectionNull=true,inliner=false,inlinerNull=true
+processor.tpe.noLocation=message=plain,template=null,line=null,col=null,identity=true
+processor.tpe.enrich=message=enrich (template: "page.html" - line 7, col 11),template=page.html,line=7,col=11,identity=true
+processor.tpe.preserve=message=preserve (template: "own.html" - line 3, col 4),template=own.html,line=3,col=4,identity=true
+processor.wrap=message=Error during execution of processor 'org.thymeleaf.engine.NonElementStructureHandlerGolden$ThrowingTextProcessor' (template: "page.html" - line 7, col 11),template=page.html,line=7,col=11,cause=java.lang.IllegalStateException:boom

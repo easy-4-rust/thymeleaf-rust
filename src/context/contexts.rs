@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
 use crate::web::IWebExchange;
 
 use super::{IContext, IEngineContext, IWebContext};
@@ -9,6 +12,42 @@ use super::{IContext, IEngineContext, IWebContext};
 ///
 /// 对应 Java: `org.thymeleaf.context.Contexts`。
 pub struct Contexts;
+
+/// Context capability 强制转换失败。
+///
+/// 对应 Java: `java.lang.ClassCastException`。Rust 引用不能表示 Java `null`，而不兼容
+/// capability 的强制转换仍按 Java unchecked runtime failure 抛出本错误。
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ContextsError {
+    /// 当前 Context 不实现目标 engine/Web capability。
+    ContextCast {
+        /// 目标 Java 接口的简单名称。
+        target: &'static str,
+    },
+    /// 当前 Web exchange 不具备 Servlet capability。
+    ServletExchangeCast,
+}
+
+impl ContextsError {
+    /// 返回 Java 对应异常全限定名。
+    #[must_use]
+    pub const fn java_class_name(&self) -> &'static str {
+        "java.lang.ClassCastException"
+    }
+}
+
+impl Display for ContextsError {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ContextCast { target } => write!(formatter, "Context cannot be cast to {target}"),
+            Self::ServletExchangeCast => {
+                formatter.write_str("Web exchange cannot be cast to IServletWebExchange")
+            }
+        }
+    }
+}
+
+impl Error for ContextsError {}
 
 impl Contexts {
     /// 判断上下文是否为引擎内部上下文。
@@ -24,9 +63,11 @@ impl Contexts {
     /// 对应 Java: `Contexts#asEngineContext(IContext)`。
     #[must_use]
     pub fn as_engine_context(context: &dyn IContext) -> &dyn IEngineContext {
-        context
-            .as_engine_context()
-            .expect("context does not implement IEngineContext")
+        context.as_engine_context().unwrap_or_else(|| {
+            std::panic::panic_any(ContextsError::ContextCast {
+                target: "IEngineContext",
+            })
+        })
     }
 
     /// 判断上下文是否具有 Web capability。
@@ -42,9 +83,11 @@ impl Contexts {
     /// 对应 Java: `Contexts#asWebContext(IContext)`。
     #[must_use]
     pub fn as_web_context(context: &dyn IContext) -> &dyn IWebContext {
-        context
-            .as_web_context()
-            .expect("context does not implement IWebContext")
+        context.as_web_context().unwrap_or_else(|| {
+            std::panic::panic_any(ContextsError::ContextCast {
+                target: "IWebContext",
+            })
+        })
     }
 
     /// 返回 Web exchange；非 Web 上下文时失败。
@@ -61,7 +104,12 @@ impl Contexts {
     /// 映射为中立 `IWebExchange`，实际宿主类型留在 `thymeleaf-{framework}`。
     #[must_use]
     pub fn is_servlet_web_context(context: &dyn IContext) -> bool {
-        Self::is_web_context(context)
+        context.as_web_context().is_some_and(|web_context| {
+            web_context
+                .get_exchange()
+                .as_servlet_web_exchange()
+                .is_some()
+        })
     }
 
     /// 返回中立宿主 exchange；类型不匹配时失败。
@@ -70,5 +118,7 @@ impl Contexts {
     #[must_use]
     pub fn get_servlet_web_exchange(context: &dyn IContext) -> &dyn IWebExchange {
         Self::get_web_exchange(context)
+            .as_servlet_web_exchange()
+            .unwrap_or_else(|| std::panic::panic_any(ContextsError::ServletExchangeCast))
     }
 }

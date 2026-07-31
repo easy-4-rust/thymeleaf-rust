@@ -1,11 +1,11 @@
 {
   "java_root": "/Users/wandl/workspaces/workspace-github/thymeleaf",
-  "rust_root": ".",
+  "rust_root": "/Users/wandl/workspaces/workspace-github-easy-4-rust/thymeleaf-rust",
   "summary": {
     "java_tests": 875,
-    "rust_tests": 293,
+    "rust_tests": 638,
     "java_case_expansion_candidates": 147,
-    "rust_review_candidates": 25
+    "rust_review_candidates": 47
   },
   "java_tests": [
     {
@@ -7306,6 +7306,248 @@
   "rust_tests": [
     {
       "language": "rust",
+      "file": "integrations/thymeleaf-actix-web/tests/adapter_contract.rs",
+      "line": 11,
+      "name": "full_body_preserves_exact_length_payload_and_completion",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-actix-web/tests/adapter_contract.rs",
+      "line": 31,
+      "name": "responder_preserves_status_headers_and_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-axum/tests/adapter_contract.rs",
+      "line": 9,
+      "name": "response_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-axum/tests/adapter_contract.rs",
+      "line": 29,
+      "name": "error_response_is_generic_while_cause_remains_diagnostic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-gotham/tests/adapter_contract.rs",
+      "line": 10,
+      "name": "response_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/adapter_contract.rs",
+      "line": 6,
+      "name": "response_preserves_status_headers_and_exact_body_size",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 26,
+      "name": "request_preserves_uri_header_parameter_and_cookie_semantics",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 119,
+      "name": "request_uses_scheme_default_port_and_root_application_path",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 144,
+      "name": "session_is_created_lazily_and_preserves_attribute_order_and_identity",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 193,
+      "name": "application_preserves_attributes_and_reads_resources_from_ordered_roots",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 230,
+      "name": "request_rejects_null_lookup_names_like_servlet_validate",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 240,
+      "name": "session_rejects_null_attribute_names_like_servlet_validate",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 246,
+      "name": "application_rejects_null_resource_paths_like_servlet_validate",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 252,
+      "name": "exchange_rejects_null_attribute_names_like_servlet_validate",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "line": 266,
+      "name": "exchange_preserves_scope_identity_metadata_attributes_and_url_transform",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-ntex/tests/adapter_contract.rs",
+      "line": 10,
+      "name": "full_body_preserves_exact_length_payload_and_completion",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-ntex/tests/adapter_contract.rs",
+      "line": 30,
+      "name": "responder_preserves_status_headers_and_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-poem/tests/adapter_contract.rs",
+      "line": 8,
+      "name": "response_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-rocket/tests/adapter_contract.rs",
+      "line": 20,
+      "name": "response_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-salvo/tests/adapter_contract.rs",
+      "line": 9,
+      "name": "scribe_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-tide/tests/adapter_contract.rs",
+      "line": 8,
+      "name": "response_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-tide/tests/adapter_contract.rs",
+      "line": 28,
+      "name": "response_streams_data_frames_without_precollecting",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-tonic/tests/adapter_contract.rs",
+      "line": 11,
+      "name": "interceptor_injects_same_renderer_and_extension_reports_missing_state",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-topcoat/tests/adapter_contract.rs",
+      "line": 10,
+      "name": "response_preserves_status_headers_and_full_payload",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-tower/tests/adapter_contract.rs",
+      "line": 13,
+      "name": "layer_injects_the_same_renderer_arc_into_each_request",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-vernal/tests/adapter_contract.rs",
+      "line": 10,
+      "name": "response_preserves_status_headers_data_and_trailers",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-warp/tests/adapter_contract.rs",
+      "line": 9,
+      "name": "full_reply_preserves_status_and_headers",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "integrations/thymeleaf-warp/tests/adapter_contract.rs",
+      "line": 27,
+      "name": "streaming_reply_is_rejected_instead_of_being_silently_collected",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/cache/abstract_cache_manager.rs",
+      "line": 127,
+      "name": "initializes_once_under_concurrency_and_clears_once_per_request",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/cache/abstract_cache_manager.rs",
+      "line": 159,
+      "name": "remembers_disabled_cache_without_retrying_initializer",
+      "kind": "test",
+      "signals": [
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
       "file": "src/cache/always_valid_cache_entry_validity.rs",
       "line": 74,
       "name": "singleton_and_public_constructor_have_java_behavior",
@@ -7504,6 +7746,14 @@
       "file": "src/cache/standard_cache.rs",
       "line": 807,
       "name": "assertion_helper_rejects_an_unexpected_success",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/cache/standard_parsed_template_entry_validator.rs",
+      "line": 135,
+      "name": "matches_java_delegation_ignored_arguments_and_failure_contracts",
       "kind": "test",
       "signals": []
     },
@@ -7738,7 +7988,7 @@
     {
       "language": "rust",
       "file": "src/exceptions/template_input_exception.rs",
-      "line": 187,
+      "line": 191,
       "name": "maps_every_java_constructor_and_inherited_operation",
       "kind": "test",
       "signals": []
@@ -7934,6 +8184,40 @@
       "name": "preserves_java_trim_unicode_case_and_error_messages",
       "kind": "test",
       "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/messageresolver/abstract_message_resolver.rs",
+      "line": 89,
+      "name": "preserves_java_name_and_order_state",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/messageresolver/standard_message_resolution_utils.rs",
+      "line": 1111,
+      "name": "origin_messages_use_specific_class_before_registered_parent",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/messageresolver/standard_message_resolution_utils.rs",
+      "line": 1155,
+      "name": "origin_parent_registration_is_idempotent_and_rejects_impossible_hierarchies",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/messageresolver/standard_message_resolver.rs",
+      "line": 540,
+      "name": "default_messages_are_live_merged_validated_and_cleared",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name"
+      ]
     },
     {
       "language": "rust",
@@ -8148,7 +8432,7 @@
     {
       "language": "rust",
       "file": "src/templateresolver/template_resolution.rs",
-      "line": 193,
+      "line": 185,
       "name": "validates_required_objects_in_java_order_with_exact_messages",
       "kind": "test",
       "signals": []
@@ -8156,7 +8440,7 @@
     {
       "language": "rust",
       "file": "src/templateresolver/template_resolution.rs",
-      "line": 218,
+      "line": 210,
       "name": "three_argument_constructor_preserves_identity_and_default_flags",
       "kind": "test",
       "signals": []
@@ -8164,7 +8448,7 @@
     {
       "language": "rust",
       "file": "src/templateresolver/template_resolution.rs",
-      "line": 242,
+      "line": 234,
       "name": "full_constructor_preserves_independent_flags_and_dynamic_contracts",
       "kind": "test",
       "signals": []
@@ -8268,7 +8552,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/i_template_resource.rs",
-      "line": 161,
+      "line": 120,
       "name": "supports_dynamic_resources_without_forcing_thread_safety",
       "kind": "test",
       "signals": []
@@ -8276,7 +8560,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/i_template_resource.rs",
-      "line": 177,
+      "line": 136,
       "name": "preserves_resource_error_categories_messages_and_sources",
       "kind": "test",
       "signals": []
@@ -8342,7 +8626,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 328,
+      "line": 333,
       "name": "rejects_unconvertible_file_urls_and_protocols_without_a_rust_handler",
       "kind": "test",
       "signals": []
@@ -8350,7 +8634,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 351,
+      "line": 356,
       "name": "preserves_url_parse_sources_and_maps_transport_error_kinds",
       "kind": "test",
       "signals": []
@@ -8358,7 +8642,15 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 376,
+      "line": 381,
+      "name": "custom_protocol_handler_is_used_and_inherited_by_relative_resources",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "src/templateresource/url_template_resource.rs",
+      "line": 453,
       "name": "extracts_java_url_paths_without_whatwg_normalization",
       "kind": "test",
       "signals": []
@@ -8366,7 +8658,7 @@
     {
       "language": "rust",
       "file": "src/templateresource/url_template_resource.rs",
-      "line": 390,
+      "line": 467,
       "name": "exercises_file_http_validation_and_relative_public_contracts",
       "kind": "test",
       "signals": [
@@ -9190,7 +9482,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 1991,
+      "line": 1994,
       "name": "exposes_every_error_and_dynamic_sequence_adapter_path",
       "kind": "test",
       "signals": []
@@ -9198,7 +9490,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2037,
+      "line": 2040,
       "name": "covers_fast_paths_identity_length_and_search_mismatch_branches",
       "kind": "test",
       "signals": []
@@ -9206,7 +9498,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2221,
+      "line": 2224,
       "name": "covers_compare_and_all_binary_search_directions_and_failures",
       "kind": "test",
       "signals": []
@@ -9214,7 +9506,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2394,
+      "line": 2397,
       "name": "covers_non_string_hash_paths_short_circuits_and_argument_order",
       "kind": "test",
       "signals": []
@@ -9222,7 +9514,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2414,
+      "line": 2417,
       "name": "covers_every_public_delegating_success_path_in_the_unit_build",
       "kind": "test",
       "signals": []
@@ -9230,7 +9522,7 @@
     {
       "language": "rust",
       "file": "src/util/text_utils.rs",
-      "line": 2566,
+      "line": 2569,
       "name": "exhausts_validation_and_dynamic_failure_residuals",
       "kind": "test",
       "signals": []
@@ -9445,6 +9737,860 @@
     },
     {
       "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 61,
+      "name": "variable_string_value",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 68,
+      "name": "variable_null_renders_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 76,
+      "name": "variable_boolean_true",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 87,
+      "name": "variable_boolean_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 98,
+      "name": "variable_number_integer",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 105,
+      "name": "variable_number_negative",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 112,
+      "name": "variable_number_zero",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 123,
+      "name": "string_literal_single_quotes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 130,
+      "name": "string_literal_double_quotes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 137,
+      "name": "numeric_literal",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 144,
+      "name": "boolean_literal_true",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 151,
+      "name": "boolean_literal_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 158,
+      "name": "null_literal_renders_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 170,
+      "name": "string_concat_two_literals",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 184,
+      "name": "string_concat_variable_and_literal",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 198,
+      "name": "string_concat_two_variables",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 221,
+      "name": "arithmetic_addition",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 228,
+      "name": "arithmetic_subtraction",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 235,
+      "name": "arithmetic_multiplication",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 242,
+      "name": "arithmetic_division",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 249,
+      "name": "arithmetic_modulo",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 256,
+      "name": "arithmetic_with_variables",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 267,
+      "name": "comparison_equals",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 274,
+      "name": "comparison_not_equals",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 281,
+      "name": "comparison_less_than",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 288,
+      "name": "comparison_greater_than",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 295,
+      "name": "comparison_less_equal",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 302,
+      "name": "comparison_greater_equal",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 313,
+      "name": "logical_and",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 328,
+      "name": "logical_or",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 343,
+      "name": "logical_not",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 354,
+      "name": "logical_and_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 373,
+      "name": "ternary_true_branch",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 387,
+      "name": "ternary_false_branch",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 405,
+      "name": "elvis_with_null_uses_default",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 419,
+      "name": "elvis_with_value_uses_value",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 430,
+      "name": "th_if_with_true_renders",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 446,
+      "name": "th_if_with_false_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 463,
+      "name": "th_if_with_null_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 476,
+      "name": "th_unless_with_false_renders",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 492,
+      "name": "th_unless_with_true_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 513,
+      "name": "th_each_list_items",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 535,
+      "name": "th_each_empty_list",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 555,
+      "name": "th_with_literal_value",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 567,
+      "name": "th_with_expression_value",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 583,
+      "name": "th_switch_matching_case",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 600,
+      "name": "th_switch_default_case",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 621,
+      "name": "th_block_removed_from_output",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 634,
+      "name": "th_remove_all",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 647,
+      "name": "th_remove_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 664,
+      "name": "th_attr_sets_attribute",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 672,
+      "name": "th_attr_multiple_attributes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 701,
+      "name": "th_attrappend",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 714,
+      "name": "th_attrprepend",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 730,
+      "name": "th_inline_none_preserves_expressions",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 746,
+      "name": "multiple_th_on_same_element",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 773,
+      "name": "unicode_in_template",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 781,
+      "name": "unicode_in_variable",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 792,
+      "name": "large_template_100_elements",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 810,
+      "name": "xml_mode_preserves_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 823,
+      "name": "text_mode_preserves_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 836,
+      "name": "raw_mode_preserves_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 853,
+      "name": "repeated_render_same_template",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 862,
+      "name": "different_templates_independent",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 874,
+      "name": "config_rejected_after_init",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)",
+        "only checks `is_err()`"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 889,
+      "name": "template_spec_with_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 904,
+      "name": "template_mode_markup_flags",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 914,
+      "name": "template_mode_text_flags",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 924,
+      "name": "template_mode_case_sensitivity",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 931,
+      "name": "template_mode_display",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 941,
+      "name": "template_mode_parse_known",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 960,
+      "name": "template_mode_parse_unknown_defaults_html",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 972,
+      "name": "template_mode_parse_empty_errors",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 983,
+      "name": "resolution_attributes_equality",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1000,
+      "name": "resolution_attributes_inequality",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1021,
+      "name": "timer_logger_name",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1029,
+      "name": "engine_starts_uninitialized",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1035,
+      "name": "engine_initializes_on_first_process",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1043,
+      "name": "default_dialect_is_standard",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1051,
+      "name": "clear_dialects_before_init",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1058,
+      "name": "set_dialects_deduplicates",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1068,
+      "name": "default_message_resolver",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1074,
+      "name": "default_link_builder",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1080,
+      "name": "default_cache_manager",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name",
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1086,
+      "name": "set_template_resolvers_deduplicates",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1096,
+      "name": "add_template_resolver",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_context_java_parity.rs",
+      "line": 1108,
+      "name": "mixed_static_dynamic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 35,
+      "name": "strings_is_empty_with_empty_string",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 48,
+      "name": "strings_is_empty_with_non_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 61,
+      "name": "strings_contains",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 77,
+      "name": "strings_starts_with",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 93,
+      "name": "strings_ends_with",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 113,
+      "name": "bools_is_true",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 124,
+      "name": "bools_is_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 139,
+      "name": "arrays_length",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 159,
+      "name": "lists_size",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 174,
+      "name": "lists_contains",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 199,
+      "name": "sets_size",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 219,
+      "name": "maps_size",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 244,
+      "name": "aggregates_sum",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 270,
+      "name": "th_if_with_strings_is_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 286,
+      "name": "th_if_with_strings_is_not_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 306,
+      "name": "th_each_with_lists",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 331,
+      "name": "complex_expression_with_ternary_and_strings",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/expression_objects_java_parity.rs",
+      "line": 348,
+      "name": "complex_expression_with_elvis_and_strings",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "tests/fast_string_writer_java_parity.rs",
       "line": 12,
       "name": "fast_string_writer_matches_java_golden",
@@ -9456,6 +10602,54 @@
       "file": "tests/foundation_java_parity.rs",
       "line": 15,
       "name": "foundation_objects_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/host_template_resource_java_parity.rs",
+      "line": 18,
+      "name": "host_template_resources_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/inline_java_parity.rs",
+      "line": 25,
+      "name": "inline_contract_and_no_op_singleton_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/inline_java_parity.rs",
+      "line": 136,
+      "name": "no_op_shared_arc_preserves_the_java_singleton_identity",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/link_builder_java_parity.rs",
+      "line": 23,
+      "name": "standard_link_builder_matches_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/link_builder_java_parity.rs",
+      "line": 41,
+      "name": "abstract_link_builder_preserves_subclass_state_and_nullable_contract",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/link_builder_java_parity.rs",
+      "line": 91,
+      "name": "link_builder_is_safely_shared_by_concurrent_render_threads",
       "kind": "test",
       "signals": []
     },
@@ -9501,9 +10695,57 @@
     },
     {
       "language": "rust",
+      "file": "tests/message_resolver_java_parity.rs",
+      "line": 21,
+      "name": "message_format_selected_contracts_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/message_resolver_java_parity.rs",
+      "line": 377,
+      "name": "template_properties_merge_order_unicode_and_errors_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/message_resolver_java_parity.rs",
+      "line": 557,
+      "name": "standard_resolver_defaults_absent_and_validation_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/message_resolver_java_parity.rs",
+      "line": 657,
+      "name": "standard_resolver_composition_hooks_match_java_subclass_extension_points",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "tests/pattern_java_parity.rs",
       "line": 11,
       "name": "pattern_utils_and_spec_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/pre_post_processor_java_parity.rs",
+      "line": 26,
+      "name": "pre_and_post_processor_contracts_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/pre_post_processor_java_parity.rs",
+      "line": 299,
+      "name": "handler_type_token_and_processor_configs_are_send_sync_and_thread_shareable",
       "kind": "test",
       "signals": []
     },
@@ -9525,9 +10767,551 @@
     },
     {
       "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 78,
+      "name": "th_text_replaces_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 85,
+      "name": "th_text_escapes_html",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 93,
+      "name": "th_utext_no_escape",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 104,
+      "name": "th_if_true_renders",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 113,
+      "name": "th_if_false_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 123,
+      "name": "th_if_null_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 129,
+      "name": "th_if_zero_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 135,
+      "name": "th_unless_false_renders",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 144,
+      "name": "th_unless_true_removes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 157,
+      "name": "th_each_list",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 166,
+      "name": "th_each_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 175,
+      "name": "th_each_single",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 188,
+      "name": "th_with_literal",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 197,
+      "name": "th_with_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 210,
+      "name": "th_switch_match",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 219,
+      "name": "th_switch_default",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 232,
+      "name": "th_remove_all",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 241,
+      "name": "th_remove_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 250,
+      "name": "th_remove_tag",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 259,
+      "name": "th_remove_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 269,
+      "name": "th_block_removed",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 275,
+      "name": "th_block_conditional",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 284,
+      "name": "th_block_conditional_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 297,
+      "name": "th_attr_sets",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 306,
+      "name": "th_attr_multiple",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 325,
+      "name": "th_attrappend",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 334,
+      "name": "th_attrprepend",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 347,
+      "name": "multiple_th_attrs",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 368,
+      "name": "th_inline_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 379,
+      "name": "xml_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 395,
+      "name": "text_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 411,
+      "name": "raw_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 431,
+      "name": "unicode_template",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 437,
+      "name": "unicode_variable",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 447,
+      "name": "large_template",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 462,
+      "name": "cache_hit",
+      "kind": "test",
+      "signals": [
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 481,
+      "name": "strings_is_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 487,
+      "name": "strings_contains",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 493,
+      "name": "bools_is_true",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 499,
+      "name": "lists_size",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 505,
+      "name": "maps_size",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 523,
+      "name": "arithmetic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 530,
+      "name": "comparison",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 537,
+      "name": "logical",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 553,
+      "name": "ternary",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/processor_handler_java_parity.rs",
+      "line": 559,
+      "name": "elvis",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/rendered_template_contract.rs",
+      "line": 26,
+      "name": "full_body_reports_exact_size_and_emits_bytes_once",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/rendered_template_contract.rs",
+      "line": 44,
+      "name": "stream_body_preserves_data_and_trailer_frames_in_order",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/rendered_template_contract.rs",
+      "line": 70,
+      "name": "http_response_conversion_preserves_status_headers_and_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 28,
+      "name": "th_fragment_defines_named_fragment",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 39,
+      "name": "th_remove_all",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 50,
+      "name": "th_remove_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 61,
+      "name": "th_remove_tag",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 72,
+      "name": "th_block_removed",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 80,
+      "name": "th_block_conditional",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 94,
+      "name": "cache_hit_same_template",
+      "kind": "test",
+      "signals": [
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 109,
+      "name": "cache_miss_different_templates",
+      "kind": "test",
+      "signals": [
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 125,
+      "name": "xml_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 144,
+      "name": "text_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 163,
+      "name": "raw_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 182,
+      "name": "empty_template",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 192,
+      "name": "unicode_preserved",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 199,
+      "name": "unicode_variable",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 211,
+      "name": "large_template_200_elements",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 224,
+      "name": "mixed_static_dynamic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/selector_processing_java_parity.rs",
+      "line": 248,
+      "name": "template_spec_with_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "tests/set_utils_java_parity.rs",
       "line": 13,
       "name": "set_utils_and_expression_facade_match_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/source_parity_inventory.rs",
+      "line": 19,
+      "name": "every_java_source_test_and_runtime_case_has_live_rust_disposition",
       "kind": "test",
       "signals": []
     },
@@ -9540,6 +11324,14 @@
       "signals": [
         "explicitly dropped result; verify intent"
       ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/standard_cache_manager_java_parity.rs",
+      "line": 14,
+      "name": "standard_cache_manager_matches_java_golden",
+      "kind": "test",
+      "signals": []
     },
     {
       "language": "rust",
@@ -9559,6 +11351,978 @@
     },
     {
       "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 9,
+      "name": "equals_both_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 14,
+      "name": "equals_first_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 19,
+      "name": "equals_same",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 24,
+      "name": "equals_different",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 29,
+      "name": "equals_ignore_case_same",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 37,
+      "name": "equals_ignore_case_different",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 45,
+      "name": "contains_found",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 50,
+      "name": "contains_not_found",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 55,
+      "name": "contains_none_target_errors",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 60,
+      "name": "starts_with_match",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 65,
+      "name": "starts_with_no_match",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 70,
+      "name": "ends_with_match",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 75,
+      "name": "ends_with_no_match",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 80,
+      "name": "is_empty_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 85,
+      "name": "is_empty_empty_string",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 90,
+      "name": "is_empty_non_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 95,
+      "name": "is_empty_or_whitespace_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 100,
+      "name": "is_empty_or_whitespace_spaces",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 105,
+      "name": "is_empty_or_whitespace_non_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 110,
+      "name": "to_string_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 115,
+      "name": "to_string_some",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 121,
+      "name": "trim_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 127,
+      "name": "trim_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 132,
+      "name": "repeat_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 138,
+      "name": "repeat_zero",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 144,
+      "name": "repeat_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 149,
+      "name": "concat_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 156,
+      "name": "concat_with_nulls",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 163,
+      "name": "concat_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 170,
+      "name": "length_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 175,
+      "name": "length_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 180,
+      "name": "length_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 185,
+      "name": "capitalize_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 191,
+      "name": "un_capitalize_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 197,
+      "name": "escape_xml_basic",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 203,
+      "name": "escape_xml_ampersand",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 209,
+      "name": "random_alphanumeric_length",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 215,
+      "name": "random_alphanumeric_zero",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 221,
+      "name": "pack_removes_whitespace_and_lowercases",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/string_utils_java_parity.rs",
+      "line": 227,
+      "name": "pack_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 80,
+      "name": "engine_starts_uninitialized",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 86,
+      "name": "engine_initializes_on_first_process",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 94,
+      "name": "engine_rejects_config_after_initialization",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)",
+        "only checks `is_err()`"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 106,
+      "name": "engine_default_dialect_is_standard",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 114,
+      "name": "engine_default_prefix_is_none",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 125,
+      "name": "engine_clear_dialects_before_init",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 132,
+      "name": "engine_set_dialects_deduplicates_by_identity",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 142,
+      "name": "engine_add_dialect_with_prefix",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 153,
+      "name": "engine_set_additional_dialects",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 168,
+      "name": "empty_template_produces_empty_output",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 176,
+      "name": "plain_text_passthrough",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 186,
+      "name": "whitespace_only_template_preserved",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 199,
+      "name": "html_doctype_preserved",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 208,
+      "name": "html_self_closing_tags_preserved",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 217,
+      "name": "html_comments_preserved",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 230,
+      "name": "th_text_with_variable_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 240,
+      "name": "th_text_escapes_html_entities",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 253,
+      "name": "th_utext_does_not_escape",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 262,
+      "name": "th_text_with_literal_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 277,
+      "name": "th_if_renders_when_true",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 286,
+      "name": "th_if_removes_when_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 297,
+      "name": "th_unless_renders_when_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 308,
+      "name": "th_unless_removes_when_true",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 325,
+      "name": "th_each_over_list",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 337,
+      "name": "th_each_empty_list_produces_no_iterations",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 351,
+      "name": "th_with_sets_local_variable",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 364,
+      "name": "th_attr_sets_dynamic_attribute",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 377,
+      "name": "th_block_is_removed_from_output",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 392,
+      "name": "process_with_template_spec",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 401,
+      "name": "process_with_template_spec_and_mode",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 415,
+      "name": "empty_template_spec_accepted",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 429,
+      "name": "xml_template_mode_preserves_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 438,
+      "name": "text_template_mode_preserves_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 447,
+      "name": "raw_template_mode_preserves_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 461,
+      "name": "repeated_process_same_template_succeeds",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 472,
+      "name": "different_templates_render_independently",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 491,
+      "name": "nested_variable_access",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 512,
+      "name": "null_variable_renders_empty",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 528,
+      "name": "unicode_content_preserved",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 537,
+      "name": "unicode_in_variable_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 550,
+      "name": "template_resolution_attributes_equality",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 566,
+      "name": "template_resolution_attributes_different_values",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 586,
+      "name": "template_mode_is_markup_flags",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 596,
+      "name": "template_mode_is_text_flags",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 606,
+      "name": "template_mode_case_sensitivity",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 613,
+      "name": "template_mode_parse_valid",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 626,
+      "name": "template_mode_parse_invalid",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 638,
+      "name": "template_mode_display",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 652,
+      "name": "timer_logger_name",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 664,
+      "name": "string_concatenation_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 685,
+      "name": "numeric_literal_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 694,
+      "name": "boolean_literal_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 703,
+      "name": "null_literal_expression",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 718,
+      "name": "th_remove_all_removes_element_and_body",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 733,
+      "name": "th_switch_case_rendering",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 753,
+      "name": "th_with_sets_selection_target",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 768,
+      "name": "multiple_th_attributes_on_same_element",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 791,
+      "name": "nested_th_elements_with_different_attributes",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 819,
+      "name": "large_template_with_many_elements",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 842,
+      "name": "mixed_static_and_dynamic_content",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 872,
+      "name": "th_inline_none_disables_expression_processing",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 887,
+      "name": "th_attrappend_adds_to_existing_attribute",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 898,
+      "name": "th_attrprepend_prepends_to_attribute",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 914,
+      "name": "engine_configuration_accessible_after_init",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 929,
+      "name": "template_spec_with_selector",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 953,
+      "name": "clear_template_cache_succeeds_after_init",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)",
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 963,
+      "name": "clear_template_cache_for_specific_template",
+      "kind": "test",
+      "signals": [
+        "discarded result (`let _ = ...`)",
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 977,
+      "name": "set_template_resolvers_deduplicates",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 987,
+      "name": "add_template_resolver",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 999,
+      "name": "default_message_resolver_exists",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1010,
+      "name": "default_link_builder_exists",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1021,
+      "name": "default_cache_manager_exists",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name",
+        "cache-named test has no obvious cache observation"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1032,
+      "name": "default_engine_context_factory_exists",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name",
+        "no obvious observable assertion"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1043,
+      "name": "default_decoupled_template_logic_resolver_exists",
+      "kind": "test",
+      "signals": [
+        "trait/type/compile smoke-test name",
+        "no obvious observable assertion"
+      ]
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1054,
+      "name": "th_text_with_number_variable",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1073,
+      "name": "th_text_with_boolean_variable",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1086,
+      "name": "th_if_with_null_is_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_engine_java_parity.rs",
+      "line": 1102,
+      "name": "th_if_with_zero_number_is_false",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "tests/template_engine_smoke.rs",
       "line": 9,
       "name": "parsing001_runs_through_the_complete_html_engine_chain",
@@ -9570,6 +12334,22 @@
       "file": "tests/template_resolution_java_parity.rs",
       "line": 58,
       "name": "template_resolution_matches_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_resolver_java_parity.rs",
+      "line": 28,
+      "name": "template_resolver_batch_matches_java_golden",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/template_resolver_java_parity.rs",
+      "line": 44,
+      "name": "url_resolver_passes_custom_protocol_handler_to_resources",
       "kind": "test",
       "signals": []
     },
@@ -9624,8 +12404,16 @@
     {
       "language": "rust",
       "file": "tests/thtest_upstream_plain_batch.rs",
-      "line": 18,
-      "name": "upstream_plain_parsing_cases_run_as_one_batch",
+      "line": 67,
+      "name": "semantic_inventory_is_fully_disposed",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/thtest_upstream_plain_batch.rs",
+      "line": 115,
+      "name": "upstream_plain_output_cases_run_as_one_batch",
       "kind": "test",
       "signals": []
     },
@@ -9671,6 +12459,30 @@
     },
     {
       "language": "rust",
+      "file": "tests/web_renderer_source_parity.rs",
+      "line": 47,
+      "name": "neutral_throttled_processor_reaches_completion_and_preserves_output",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/web_renderer_source_parity.rs",
+      "line": 78,
+      "name": "neutral_full_view_preserves_body_content_type_and_length",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
+      "file": "tests/web_renderer_source_parity.rs",
+      "line": 110,
+      "name": "neutral_reactive_view_preserves_chunked_output_and_reports_charset_errors",
+      "kind": "test",
+      "signals": []
+    },
+    {
+      "language": "rust",
       "file": "xtask/src/main.rs",
       "line": 1108,
       "name": "parses_cli_and_rejects_invalid_shapes",
@@ -9702,6 +12514,24 @@
       "signals": []
     }
   ],
+  "object_ledger": {
+    "path": "docs/migration/对象级对照表.md",
+    "current_fact_only": true,
+    "rows_scanned": 6,
+    "state_counts": {
+      "MISSING": 0,
+      "MISPLACED": 0,
+      "STUB": 0,
+      "PARTIAL": 0,
+      "UNVERIFIED": 0,
+      "IMPLEMENTED": 0,
+      "DEPENDENCY_REUSED": 0,
+      "PLATFORM_NA": 0,
+      "RUST_EXTENSION": 6
+    },
+    "incomplete_count": 0,
+    "migration_completion_blocked": false
+  },
   "limitations": [
     "static inventory only",
     "does not map tests by name",

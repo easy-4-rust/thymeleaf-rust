@@ -15,8 +15,8 @@
     "runtime_cases": 2156,
     "missing": 0,
     "dispositions": {
-      "MAPPED": 45,
-      "MERGED": 93,
+      "MAPPED": 47,
+      "MERGED": 91,
       "NOT_APPLICABLE": 1,
       "POLICY_DIFFERENCE": 462,
       "SPLIT": 274
@@ -45,8 +45,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -66,8 +66,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -87,8 +87,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -108,8 +108,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -129,8 +129,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -150,8 +150,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -171,8 +171,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -192,8 +192,8 @@
       "evidence": [
         {
           "kind": "RUST_TEST",
-          "path": "tests/dialect_configuration_java_parity.rs",
-          "marker": "dialect_objects_match_java_golden"
+          "path": "tests/dialect_set_configuration_java_parity.rs",
+          "marker": "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -3035,20 +3035,15 @@
       "runtime_cases": [
         "testLinkBuilder01"
       ],
-      "disposition": "MERGED",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "UPSTREAM_THTEST",
-          "path": "tests/thtest_upstream_plain_batch.rs",
-          "marker": "upstream_plain_output_cases_run_as_one_batch"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "tests/link_builder_java_parity.rs",
+          "marker": "standard_link_builder_matches_java_golden"
         }
       ],
-      "rationale": "Java TestExecutor 外壳合并到 Rust 数据驱动运行器；输入、期望输出和异常直接读取固定上游资源。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.linkbuilder.LinkBuilderTest#testLinkBuilderWithECFactory01",
@@ -3061,20 +3056,15 @@
       "runtime_cases": [
         "testLinkBuilderWithECFactory01"
       ],
-      "disposition": "MERGED",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "UPSTREAM_THTEST",
-          "path": "tests/thtest_upstream_plain_batch.rs",
-          "marker": "upstream_plain_output_cases_run_as_one_batch"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "tests/link_builder_java_parity.rs",
+          "marker": "standard_link_builder_matches_java_golden"
         }
       ],
-      "rationale": "Java TestExecutor 外壳合并到 Rust 数据驱动运行器；输入、期望输出和异常直接读取固定上游资源。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.offline.OfflineTest#testOffline01",
@@ -9988,9 +9978,14 @@
           "kind": "RUST_TEST",
           "path": "tests/template_resource_java_parity.rs",
           "marker": "template_resource_objects_match_java_golden"
+        },
+        {
+          "kind": "RUST_TEST",
+          "path": "tests/host_template_resource_java_parity.rs",
+          "marker": "host_template_resources_match_java_golden"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
+      "rationale": "Java 测试由同一语义域的多个 Rust 合同测试和固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.templateresource.TemplateResourceTest#testServletContextResource",
@@ -10009,9 +10004,14 @@
           "kind": "RUST_TEST",
           "path": "tests/template_resource_java_parity.rs",
           "marker": "template_resource_objects_match_java_golden"
+        },
+        {
+          "kind": "RUST_TEST",
+          "path": "tests/host_template_resource_java_parity.rs",
+          "marker": "host_template_resources_match_java_golden"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
+      "rationale": "Java 测试由同一语义域的多个 Rust 合同测试和固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.templateresource.TemplateResourceTest#testClassLoaderResource",
@@ -10030,9 +10030,14 @@
           "kind": "RUST_TEST",
           "path": "tests/template_resource_java_parity.rs",
           "marker": "template_resource_objects_match_java_golden"
+        },
+        {
+          "kind": "RUST_TEST",
+          "path": "tests/host_template_resource_java_parity.rs",
+          "marker": "host_template_resources_match_java_golden"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
+      "rationale": "Java 测试由同一语义域的多个 Rust 合同测试和固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.templateresource.TemplateResourceTest#testFileResource",
@@ -10051,9 +10056,14 @@
           "kind": "RUST_TEST",
           "path": "tests/template_resource_java_parity.rs",
           "marker": "template_resource_objects_match_java_golden"
+        },
+        {
+          "kind": "RUST_TEST",
+          "path": "tests/host_template_resource_java_parity.rs",
+          "marker": "host_template_resources_match_java_golden"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
+      "rationale": "Java 测试由同一语义域的多个 Rust 合同测试和固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.templateresource.TemplateResourceTest#testURLResource",
@@ -10072,9 +10082,14 @@
           "kind": "RUST_TEST",
           "path": "tests/template_resource_java_parity.rs",
           "marker": "template_resource_objects_match_java_golden"
+        },
+        {
+          "kind": "RUST_TEST",
+          "path": "tests/host_template_resource_java_parity.rs",
+          "marker": "host_template_resources_match_java_golden"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
+      "rationale": "Java 测试由同一语义域的多个 Rust 合同测试和固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.AggregateCharSequenceTest#testAggregateString",

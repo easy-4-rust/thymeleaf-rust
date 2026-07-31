@@ -34,7 +34,7 @@ impl StandardInlineHTMLTagProcessor {
                 JavaString::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 |context, inline_mode| match inline_mode {
-                    StandardInlineMode::NONE => Ok(Arc::new(NoOpInliner) as Arc<dyn IInliner>),
+                    StandardInlineMode::NONE => Ok(NoOpInliner::shared()),
                     StandardInlineMode::HTML => Ok(Arc::new(StandardHTMLInliner::new(
                         context.get_configuration(),
                     ))),

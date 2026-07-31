@@ -4,7 +4,10 @@ use crate::TemplateResolutionAttributes;
 use crate::util::JavaString;
 use crate::{FileTemplateResource, IEngineConfiguration, ITemplateResource};
 
-use super::{AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution};
+use super::{
+    AbstractConfigurableTemplateResolver, ITemplateResolver, TemplateResolution,
+    TemplateResolverError,
+};
 
 /// 从文件系统解析模板资源的可配置解析器。
 ///
@@ -15,6 +18,8 @@ pub struct FileTemplateResolver {
 
 impl FileTemplateResolver {
     /// 创建使用标准可配置解析器默认值的文件解析器。
+    ///
+    /// 对应 Java: `FileTemplateResolver#FileTemplateResolver()`。
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -59,7 +64,7 @@ impl ITemplateResolver for FileTemplateResolver {
         _owner_template: Option<&JavaString>,
         template: &JavaString,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-    ) -> Option<TemplateResolution> {
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
             template,
             || {
@@ -71,8 +76,8 @@ impl ITemplateResolver for FileTemplateResolver {
                         .map(JavaString::to_string_lossy)
                         .as_deref(),
                 )
-                .ok()
-                .map(|resource| Arc::new(resource) as Arc<dyn ITemplateResource>)
+                .map(|resource| Some(Arc::new(resource) as Arc<dyn ITemplateResource>))
+                .map_err(TemplateResolverError::from)
             },
             || self.resolver.compute_template_mode(template),
             || self.resolver.compute_validity(template),

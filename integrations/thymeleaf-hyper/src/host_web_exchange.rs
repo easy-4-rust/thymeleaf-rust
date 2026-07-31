@@ -23,7 +23,18 @@ pub struct HostWebExchange {
 }
 
 impl HostWebExchange {
-    /// 组合一次 Hyper 请求的全部 Thymeleaf Web 作用域。
+    /// 组合一次 Hyper 请求的全部 Thymeleaf Web 作用域。对应 Java:
+    /// `JakartaServletWebExchange#JakartaServletWebExchange`。
+    ///
+    /// # 参数
+    /// - `request`：稳定的请求快照。
+    /// - `session`：可选且可惰性建立的会话作用域。
+    /// - `application`：应用全局作用域。
+    /// - `principal`：宿主身份对象。
+    /// - `locale`：响应 Locale。
+    ///
+    /// # 返回
+    /// 聚合上述作用域的新 exchange。
     #[must_use]
     pub fn new(
         request: Arc<HostWebRequest>,
@@ -44,12 +55,20 @@ impl HostWebExchange {
         }
     }
 
-    /// 设置渲染响应的内容类型。
+    /// 设置渲染响应的内容类型。对应 Java:
+    /// `JakartaServletWebExchange#getContentType` 所读取的响应状态。
+    ///
+    /// # 参数
+    /// - `content_type`：MIME 文本；`None` 对应尚未设置。
     pub fn set_content_type(&self, content_type: Option<JavaString>) {
         *write_lock(&self.content_type) = content_type;
     }
 
-    /// 设置渲染响应的字符编码。
+    /// 设置渲染响应的字符编码。对应 Java:
+    /// `JakartaServletWebExchange#getCharacterEncoding` 所读取的响应状态。
+    ///
+    /// # 参数
+    /// - `character_encoding`：字符集名称；`None` 对应尚未设置。
     pub fn set_character_encoding(&self, character_encoding: Option<JavaString>) {
         *write_lock(&self.character_encoding) = character_encoding;
     }
@@ -87,6 +106,7 @@ impl IWebExchange for HostWebExchange {
     }
 
     fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+        require_name(name);
         read_lock(&self.attributes).contains_key(&name.cloned())
     }
 
@@ -103,6 +123,7 @@ impl IWebExchange for HostWebExchange {
     }
 
     fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+        require_name(name);
         read_lock(&self.attributes)
             .get(&name.cloned())
             .cloned()
@@ -110,6 +131,7 @@ impl IWebExchange for HostWebExchange {
     }
 
     fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+        require_owned_name(&name);
         if value.is_some() {
             write_lock(&self.attributes).insert(name, value);
         } else {
@@ -118,6 +140,7 @@ impl IWebExchange for HostWebExchange {
     }
 
     fn remove_attribute(&self, name: Option<&JavaString>) {
+        require_name(name);
         write_lock(&self.attributes).shift_remove(&name.cloned());
     }
 
@@ -134,4 +157,16 @@ fn read_lock<T>(lock: &RwLock<T>) -> std::sync::RwLockReadGuard<'_, T> {
 fn write_lock<T>(lock: &RwLock<T>) -> std::sync::RwLockWriteGuard<'_, T> {
     lock.write()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+fn require_name(name: Option<&JavaString>) {
+    if name.is_none() {
+        panic!("Name cannot be null");
+    }
+}
+
+fn require_owned_name(name: &Option<JavaString>) {
+    if name.is_none() {
+        panic!("Name cannot be null");
+    }
 }

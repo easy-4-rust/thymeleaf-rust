@@ -11,6 +11,7 @@ pub mod decoupled;
 pub mod dialect;
 mod dialect_configuration;
 mod dialect_set_configuration;
+mod dialect_set_configuration_error;
 pub mod doctype;
 pub mod element;
 pub mod engine;
@@ -63,6 +64,7 @@ pub use dialect::{
 };
 pub use dialect_configuration::{DialectConfiguration, DialectConfigurationError};
 pub use dialect_set_configuration::DialectSetConfiguration;
+pub use dialect_set_configuration_error::DialectSetConfigurationError;
 pub use element::{
     ElementProcessorSet, IElementProcessor, MatchingAttributeName, MatchingAttributeNameError,
     MatchingElementName, MatchingElementNameError, UnmodifiableElementProcessorSet,
@@ -97,7 +99,9 @@ pub use expression::{
 };
 pub use i_engine_configuration::IEngineConfiguration;
 pub use i_template_engine::{ITemplateEngine, TemplateEngineResult};
-pub use i_throttled_template_processor::{IThrottledTemplateProcessor, ThrottledTemplateResult};
+pub use i_throttled_template_processor::{
+    IThrottledTemplateProcessor, ThrottledTemplateResult, ThrottledTemplateStatus,
+};
 pub use model::{
     AbstractModelVisitor, IAttribute, ICDATASection, ICloseElementTag, IComment, IDocType,
     IElementTag, IModelVisitor, IOpenElementTag, IProcessableElementTag, IProcessingInstruction,
@@ -118,14 +122,15 @@ pub use template_spec::{
 pub use templatemode::{TemplateMode, TemplateModeParseError};
 pub use templateparser::{ITemplateParser, TemplateParserError};
 pub use templateresolver::{
-    AbstractConfigurableTemplateResolver, AbstractTemplateResolver, DefaultTemplateResolver,
-    EmbeddedTemplateResolver, FileTemplateResolver, ITemplateResolver, StringTemplateResolver,
-    TemplateResolution, TemplateResolutionError, UrlTemplateResolver,
-    WebApplicationTemplateResolver,
+    AbstractConfigurableTemplateResolver, AbstractTemplateResolver, ClassLoaderTemplateResolver,
+    DefaultTemplateResolver, EmbeddedTemplateResolver, FileTemplateResolver, ITemplateResolver,
+    StringTemplateResolver, TemplateResolution, TemplateResolutionError, TemplateResolverError,
+    UrlTemplateResolver, WebApplicationTemplateResolver,
 };
 pub use templateresource::{
-    EmbeddedTemplateResource, FileTemplateResource, ITemplateResource, StringTemplateResource,
-    TemplateResourceError, UrlTemplateResource, WebApplicationTemplateResource,
+    ClassLoaderTemplateResource, EmbeddedTemplateResource, FileTemplateResource, ITemplateResource,
+    StringTemplateResource, TemplateResourceError, UrlResourceConnectionHandler,
+    UrlTemplateResource, WebApplicationTemplateResource,
 };
 pub use thymeleaf::Thymeleaf;
 pub use util::{

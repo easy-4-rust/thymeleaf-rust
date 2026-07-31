@@ -2,9 +2,7 @@ use std::sync::Arc;
 
 use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
-use crate::inline::{
-    IInliner, NoOpInliner, StandardInlineMode, StandardTextInliner, StandardXMLInliner,
-};
+use crate::inline::{NoOpInliner, StandardInlineMode, StandardTextInliner, StandardXMLInliner};
 use crate::util::JavaString;
 
 use super::{
@@ -33,7 +31,7 @@ impl StandardInlineXMLTagProcessor {
                 JavaString::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 |context, inline_mode| match inline_mode {
-                    StandardInlineMode::NONE => Ok(Arc::new(NoOpInliner) as Arc<dyn IInliner>),
+                    StandardInlineMode::NONE => Ok(NoOpInliner::shared()),
                     StandardInlineMode::XML => Ok(Arc::new(StandardXMLInliner::new(
                         context.get_configuration(),
                     ))),

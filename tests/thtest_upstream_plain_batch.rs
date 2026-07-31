@@ -25,7 +25,9 @@ use thymeleaf::expression::{
     ClassNotFoundException, IStandardExpression, NativeVariableExpressionEvaluator,
     NoSuchMethodException, OgnlException, TemplateValue, VariableExpression,
 };
-use thymeleaf::templateresolver::{StringTemplateResolver, TemplateResolution};
+use thymeleaf::templateresolver::{
+    StringTemplateResolver, TemplateResolution, TemplateResolverError,
+};
 use thymeleaf::text::TextParserReaderError;
 use thymeleaf::util::{JavaLocale, JavaString};
 use thymeleaf::web::IWebExchange;
@@ -1213,7 +1215,7 @@ fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Contex
         let expression = VariableExpression::new(Some(JavaString::from_rust_str(&expression)))
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         let value = expression
-            .execute(&expression_context)
+            .execute(expression_context.as_ref())
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         if name.eq_ignore_ascii_case("locale") {
             if let Some(locale) = value
@@ -1274,7 +1276,7 @@ fn build_web_context(engine: &TemplateEngine, source: Option<&str>) -> Result<We
         let expression = VariableExpression::new(Some(JavaString::from_rust_str(&expression)))
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         let value = expression
-            .execute(&expression_context)
+            .execute(expression_context.as_ref())
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         if let Some(name) = target.strip_prefix("session.") {
             let name = Some(JavaString::from_rust_str(name.trim()));
@@ -1690,7 +1692,7 @@ impl ITemplateResolver for CorpusStringTemplateResolver {
         owner_template: Option<&JavaString>,
         template: &JavaString,
         attributes: Option<&TemplateResolutionAttributes>,
-    ) -> Option<TemplateResolution> {
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         if template == &self.root_template_name {
             return self.delegate.resolve_template(
                 configuration,
@@ -1713,7 +1715,7 @@ impl ITemplateResolver for CorpusStringTemplateResolver {
             return resolver.resolve_template(configuration, owner_template, content, attributes);
         }
         if owner_template.is_some_and(|owner| owner != template) {
-            return None;
+            return Ok(None);
         }
         self.delegate
             .resolve_template(configuration, owner_template, template, attributes)

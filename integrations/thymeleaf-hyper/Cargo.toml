@@ -13,6 +13,10 @@ indexmap = "2.13.0"
 thymeleaf = { path = "../.." }
 url = "2.5.7"
 
+[dev-dependencies]
+http-body = "1.0"
+tempfile = "3.23"
+
 [lints.rust]
 missing_docs = "deny"
 unsafe_code = "forbid"

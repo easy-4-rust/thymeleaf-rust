@@ -14,6 +14,10 @@ thiserror = "2.0"
 thymeleaf = { path = "../.." }
 warp = { version = "=0.4.3", default-features = false }
 
+[dev-dependencies]
+futures-util = "0.3.31"
+http-body = "1.0"
+
 [lints.rust]
 missing_docs = "deny"
 unsafe_code = "forbid"

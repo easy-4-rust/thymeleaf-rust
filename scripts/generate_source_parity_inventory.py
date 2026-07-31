@@ -26,8 +26,12 @@ ALLOWED_DISPOSITIONS = {
 # 端到端语料归因。
 DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
     "org.thymeleaf.DialectSetConfigurationTest": (
-        "tests/dialect_configuration_java_parity.rs",
-        "dialect_objects_match_java_golden",
+        "tests/dialect_set_configuration_java_parity.rs",
+        "upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering",
+    ),
+    "org.thymeleaf.linkbuilder.LinkBuilderTest": (
+        "tests/link_builder_java_parity.rs",
+        "standard_link_builder_matches_java_golden",
     ),
     "org.thymeleaf.TemplateEngineTest": (
         "tests/template_engine_smoke.rs",
@@ -80,6 +84,19 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
     "org.thymeleaf.templateparser.reader.PrototypeOnlyCommentTextReaderTest": (
         "src/reader/block_aware_reader.rs",
         "java_golden_matches_text_comment_reader_streaming_contract",
+    ),
+}
+
+DIRECT_MULTI_EVIDENCE: dict[str, tuple[tuple[str, str], ...]] = {
+    "org.thymeleaf.templateresource.TemplateResourceTest": (
+        (
+            "tests/template_resource_java_parity.rs",
+            "template_resource_objects_match_java_golden",
+        ),
+        (
+            "tests/host_template_resource_java_parity.rs",
+            "host_template_resources_match_java_golden",
+        ),
     ),
 }
 
@@ -180,6 +197,17 @@ def read_runtime_cases(
 def core_evidence(
     class_name: str, object_targets: dict[str, tuple[str, str]]
 ) -> tuple[str, list[dict[str, str]], str]:
+    direct_multi = DIRECT_MULTI_EVIDENCE.get(class_name)
+    if direct_multi is not None:
+        return (
+            "MAPPED",
+            [
+                {"kind": "RUST_TEST", "path": path, "marker": marker}
+                for path, marker in direct_multi
+            ],
+            "Java 测试由同一语义域的多个 Rust 合同测试和固定 Java Golden 逐记录验证。",
+        )
+
     direct = DIRECT_EVIDENCE.get(class_name)
     if direct is not None:
         path, marker = direct

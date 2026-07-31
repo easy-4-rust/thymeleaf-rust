@@ -13,6 +13,9 @@ http = "1.3"
 http-body-util = "0.1.3"
 thymeleaf = { path = "../.." }
 
+[dev-dependencies]
+futures-executor = "0.3.31"
+
 [lints.rust]
 missing_docs = "deny"
 unsafe_code = "forbid"

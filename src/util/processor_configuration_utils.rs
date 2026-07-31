@@ -719,7 +719,7 @@ impl IPreProcessor for PreProcessorWrapper {
             .set_element_definitions(element_definitions);
     }
 
-    fn get_template_mode(&self) -> TemplateMode {
+    fn get_template_mode(&self) -> Option<TemplateMode> {
         self.pre_processor.get_template_mode()
     }
 
@@ -727,12 +727,12 @@ impl IPreProcessor for PreProcessorWrapper {
         self.pre_processor.get_precedence()
     }
 
-    fn get_handler_factory(&self) -> crate::preprocessor::PreProcessorHandlerFactory {
-        self.pre_processor.get_handler_factory()
+    fn get_handler_class(&self) -> Option<&crate::engine::TemplateHandlerClass> {
+        self.pre_processor.get_handler_class()
     }
 
-    fn get_handler_class_name(&self) -> &'static str {
-        self.pre_processor.get_handler_class_name()
+    fn java_class_name(&self) -> &'static str {
+        self.pre_processor.java_class_name()
     }
 }
 
@@ -783,7 +783,7 @@ impl IPostProcessor for PostProcessorWrapper {
             .set_element_definitions(element_definitions);
     }
 
-    fn get_template_mode(&self) -> TemplateMode {
+    fn get_template_mode(&self) -> Option<TemplateMode> {
         self.post_processor.get_template_mode()
     }
 
@@ -791,12 +791,12 @@ impl IPostProcessor for PostProcessorWrapper {
         self.post_processor.get_precedence()
     }
 
-    fn get_handler_factory(&self) -> crate::postprocessor::PostProcessorHandlerFactory {
-        self.post_processor.get_handler_factory()
+    fn get_handler_class(&self) -> Option<&crate::engine::TemplateHandlerClass> {
+        self.post_processor.get_handler_class()
     }
 
-    fn get_handler_class_name(&self) -> &'static str {
-        self.post_processor.get_handler_class_name()
+    fn java_class_name(&self) -> &'static str {
+        self.post_processor.java_class_name()
     }
 }
 

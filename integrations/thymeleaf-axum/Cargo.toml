@@ -11,6 +11,10 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
 thymeleaf = { path = "../.." }
 
+[dev-dependencies]
+futures-executor = "0.3.31"
+http-body-util = "0.1.3"
+
 [lints.rust]
 missing_docs = "deny"
 unsafe_code = "forbid"

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::doctype::IDocTypeStructureHandler;
 use crate::model::IModel;
-use crate::util::JavaString;
+use crate::util::{JavaString, Validate, ValidateError};
 
 /// 引擎内部 DocType 结构动作状态机。
 ///
@@ -23,7 +23,7 @@ pub(crate) struct DocTypeStructureHandler {
 impl DocTypeStructureHandler {
     /// 创建无待执行动作的处理器。
     pub(crate) fn new() -> Self {
-        Self {
+        let mut handler = Self {
             set_doc_type: false,
             set_doc_type_keyword: None,
             set_doc_type_element_name: None,
@@ -34,7 +34,49 @@ impl DocTypeStructureHandler {
             replace_with_model_value: None,
             replace_with_model_processable: false,
             remove_doc_type: false,
-        }
+        };
+        handler.reset();
+        handler
+    }
+
+    /// 设置 DOCTYPE 的全部组成部分。
+    ///
+    /// 对应 Java: `DocTypeStructureHandler#setDocType(String, String, String,
+    /// String, String)`。方法先重置，再依次校验 `keyword`、`element_name`；
+    /// `public_id`、`system_id` 与 `internal_subset` 均允许为空。
+    pub(crate) fn set_doc_type_nullable(
+        &mut self,
+        keyword: Option<JavaString>,
+        element_name: Option<JavaString>,
+        public_id: Option<JavaString>,
+        system_id: Option<JavaString>,
+        internal_subset: Option<JavaString>,
+    ) -> Result<(), ValidateError> {
+        self.reset();
+        Validate::not_null(keyword.as_ref(), Some("Keyword cannot be null"))?;
+        Validate::not_null(element_name.as_ref(), Some("Element name cannot be null"))?;
+        self.set_doc_type = true;
+        self.set_doc_type_keyword = keyword;
+        self.set_doc_type_element_name = element_name;
+        self.set_doc_type_public_id = public_id;
+        self.set_doc_type_system_id = system_id;
+        self.set_doc_type_internal_subset = internal_subset;
+        Ok(())
+    }
+
+    /// 使用模型替换 DOCTYPE。对应 Java:
+    /// `DocTypeStructureHandler#replaceWith(IModel, boolean)`。
+    pub(crate) fn replace_with_nullable(
+        &mut self,
+        model: Option<Arc<dyn IModel>>,
+        processable: bool,
+    ) -> Result<(), ValidateError> {
+        self.reset();
+        Validate::not_null(model.as_deref(), Some("Model cannot be null"))?;
+        self.replace_with_model = true;
+        self.replace_with_model_value = model;
+        self.replace_with_model_processable = processable;
+        Ok(())
     }
 }
 
@@ -60,20 +102,19 @@ impl IDocTypeStructureHandler for DocTypeStructureHandler {
         system_id: Option<JavaString>,
         internal_subset: Option<JavaString>,
     ) {
-        self.reset();
-        self.set_doc_type = true;
-        self.set_doc_type_keyword = Some(keyword);
-        self.set_doc_type_element_name = Some(element_name);
-        self.set_doc_type_public_id = public_id;
-        self.set_doc_type_system_id = system_id;
-        self.set_doc_type_internal_subset = internal_subset;
+        self.set_doc_type_nullable(
+            Some(keyword),
+            Some(element_name),
+            public_id,
+            system_id,
+            internal_subset,
+        )
+        .expect("Rust non-null DOCTYPE boundary must satisfy Java validation");
     }
 
     fn replace_with(&mut self, model: Arc<dyn IModel>, processable: bool) {
-        self.reset();
-        self.replace_with_model = true;
-        self.replace_with_model_value = Some(model);
-        self.replace_with_model_processable = processable;
+        self.replace_with_nullable(Some(model), processable)
+            .expect("Rust non-null model boundary must satisfy Java validation");
     }
 
     fn remove_doc_type(&mut self) {

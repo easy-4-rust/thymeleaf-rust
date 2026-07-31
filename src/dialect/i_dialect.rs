@@ -9,6 +9,14 @@
 ///
 /// `Send + Sync` 是 Rust 并发渲染所需的宿主安全约束，不改变名称的可观察语义。
 pub trait IDialect: std::any::Any + Send + Sync {
+    /// 返回用于复现 Java `getClass().getName()` 的稳定实现类名。
+    ///
+    /// 这是 Rust 动态类型适配入口，不增加 Java 接口方法；配置错误消息通过它保留
+    /// 方言实现类身份，而不是误用面向用户的 [`IDialect::get_name`]。
+    fn java_class_name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
+
     /// 返回具体方言的 Rust 运行时类型标识。
     fn dialect_type_id(&self) -> std::any::TypeId {
         std::any::Any::type_id(self)

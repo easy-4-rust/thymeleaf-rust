@@ -9,19 +9,39 @@ use crate::web::IWebExchange;
 ///
 /// Java `Map#keySet()` 是由原 Map 支撑的实时视图，移除名称也会删除变量。该
 /// Rust 合同保留实时查询与删除能力，同时用快照方法支持安全迭代。
-pub trait IContextVariableNames {
+pub trait IContextVariableNames: Send + Sync {
     /// 返回当前变量名数量。
+    ///
+    /// # 返回值
+    ///
+    /// 返回调用瞬间支撑 Context 中的变量数量。
     fn len(&self) -> usize;
 
     /// 判断当前名称集合是否为空。
+    ///
+    /// # 返回值
+    ///
+    /// 当前没有变量时返回 `true`。
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// 判断集合是否包含可空名称。
+    ///
+    /// # 参数
+    ///
+    /// - `name`：待查询的可空 Java 变量名。
+    ///
+    /// # 返回值
+    ///
+    /// 支撑 Context 包含该名称时返回 `true`，包括显式 null 名称。
     fn contains(&self, name: Option<&JavaString>) -> bool;
 
     /// 返回当前迭代顺序的独立名称快照。
+    ///
+    /// # 返回值
+    ///
+    /// 返回保留 Java Set 迭代顺序的独立快照；后续 Context 修改不会改变该 Vec。
     fn snapshot(&self) -> Vec<Option<JavaString>>;
 
     /// 从支撑 Context 删除名称及其变量。
@@ -30,6 +50,54 @@ pub trait IContextVariableNames {
     ///
     /// 名称原先存在时返回 `true`。
     fn remove(&self, name: Option<&JavaString>) -> bool;
+
+    /// 判断视图是否包含给定全部名称。
+    ///
+    /// 对应 Java `Set#containsAll(Collection)`；空输入返回 `true`。
+    fn contains_all(&self, names: &[Option<JavaString>]) -> bool {
+        names.iter().all(|name| self.contains(name.as_ref()))
+    }
+
+    /// 从支撑 Context 删除给定全部名称。
+    ///
+    /// 对应 Java `Map#keySet().removeAll(Collection)`。
+    ///
+    /// # 返回值
+    ///
+    /// 至少删除一个变量时返回 `true`。
+    fn remove_all(&self, names: &[Option<JavaString>]) -> bool {
+        let mut changed = false;
+        for name in names {
+            changed |= self.remove(name.as_ref());
+        }
+        changed
+    }
+
+    /// 只保留给定名称并删除其余变量。
+    ///
+    /// 对应 Java `Map#keySet().retainAll(Collection)`。
+    ///
+    /// # 返回值
+    ///
+    /// 变量集合发生变化时返回 `true`。
+    fn retain_all(&self, names: &[Option<JavaString>]) -> bool {
+        let mut changed = false;
+        for current in self.snapshot() {
+            if !names.contains(&current) {
+                changed |= self.remove(current.as_ref());
+            }
+        }
+        changed
+    }
+
+    /// 清空支撑 Context 的全部变量。
+    ///
+    /// 对应 Java `Map#keySet().clear()`。
+    fn clear(&self) {
+        for name in self.snapshot() {
+            self.remove(name.as_ref());
+        }
+    }
 }
 
 /// 模板执行所需 Locale 与变量的基础上下文合同。
@@ -43,18 +111,43 @@ pub trait IContext: Any + Send + Sync {
     fn as_any(&self) -> &dyn Any;
 
     /// 返回模板处理使用的 Locale 快照。
+    ///
+    /// # 返回值
+    ///
+    /// 返回当前 Context Locale；调用方获得独立值，不得借此修改 Context。
     fn get_locale(&self) -> JavaLocale;
 
     /// 判断指定可空变量名是否已存在。
+    ///
+    /// # 参数
+    ///
+    /// - `name`：待查询的可空 Java 变量名。
+    ///
+    /// # 返回值
+    ///
+    /// 变量 Map 包含该键时返回 `true`；即使对应值是显式 Java null 也返回 `true`。
     fn contains_variable(&self, name: Option<&JavaString>) -> bool;
 
     /// 返回由 Context 变量 Map 支撑的实时名称视图。
-    fn get_variable_names(&self) -> Box<dyn IContextVariableNames + '_>;
+    ///
+    /// # 返回值
+    ///
+    /// 返回共享实时视图。`AbstractContext` 与 Java `HashMap#keySet()` 一样在多次调用
+    /// 间保持同一视图身份；主动构造名称集合的 EngineContext 实现可返回新视图。
+    fn get_variable_names(&self) -> Arc<dyn IContextVariableNames + '_>;
 
     /// 返回指定变量的可空值。
     ///
     /// `None` 表示变量不存在；显式 Java null 返回
     /// `Some(TemplateValue::Null)`，最终 Java API 边界可重新折叠两者。
+    ///
+    /// # 参数
+    ///
+    /// - `name`：待读取的可空 Java 变量名。
+    ///
+    /// # 返回值
+    ///
+    /// 返回共享变量值；键不存在时返回 `None`。
     fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
 
     /// 返回可选 Web exchange capability。

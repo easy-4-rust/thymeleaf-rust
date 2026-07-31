@@ -133,13 +133,23 @@ impl TemplateManager {
         // Markup selectors intentionally never reach resolvers: selection belongs to parsers.
         let configuration = self.configuration();
         for resolver in configuration.get_template_resolvers() {
-            if let Some(resolution) = resolver.resolve_template(
+            match resolver.resolve_template(
                 configuration.as_ref(),
                 owner_template,
                 template,
                 template_resolution_attributes,
             ) {
-                return Ok(Some(resolution));
+                Ok(Some(resolution)) => return Ok(Some(resolution)),
+                Ok(None) => {}
+                Err(error) => {
+                    // Java 允许 Resolver 的运行时异常直接越过解析器链。模板管理器的
+                    // Rust 公共合同统一返回 TemplateInputException，因此把具体的
+                    // Resolver 错误保留为 cause，而不是误判为“未解析”并继续下一个。
+                    return Err(TemplateInputException::with_cause(
+                        Some(error.to_string()),
+                        error,
+                    ));
+                }
             }
         }
         if !fail_if_not_exists {
@@ -240,13 +250,22 @@ impl TemplateManager {
             context,
         );
         let builder = ModelBuilderTemplateHandler::new(configuration, Arc::new(template_data));
-        let mut chain = self.create_handler_chain(
+        let mut chain = match self.create_handler_chain(
             Arc::clone(&engine_context),
             true,
             false,
             Box::new(builder.clone()),
             None,
-        );
+        ) {
+            Ok(chain) => chain,
+            Err(error) => {
+                EngineContextManager::dispose_engine_context(engine_context.as_ref());
+                return Err(TemplateInputException::with_cause(
+                    Some("An error happened during template preprocessing".to_owned()),
+                    error,
+                ));
+            }
+        };
         let result = template_model.process(chain.as_mut());
         EngineContextManager::dispose_engine_context(engine_context.as_ref());
         result.map_err(engine_input_error)?;
@@ -265,27 +284,31 @@ impl TemplateManager {
         set_post_processors: bool,
         central_handler: Box<dyn ITemplateHandler>,
         writer: Option<Box<dyn JavaWriter>>,
-    ) -> Box<dyn ITemplateHandler> {
+    ) -> Result<Box<dyn ITemplateHandler>, TemplateProcessingException> {
         let mode = context.get_template_mode();
         let template_context: Arc<dyn ITemplateContext> = context;
         let configuration = self.configuration();
         let mut handlers: Vec<Box<dyn ITemplateHandler>> = Vec::new();
         if set_pre_processors {
-            handlers.extend(
-                configuration
-                    .get_pre_processors(mode)
-                    .into_iter()
-                    .map(|processor| (processor.get_handler_factory())()),
-            );
+            for processor in configuration.get_pre_processors(mode) {
+                let handler = processor
+                    .get_handler_class()
+                    .expect("DialectSetConfiguration rejects null pre-processor Handler classes")
+                    .new_instance()
+                    .map_err(pre_processor_instantiation_error)?;
+                handlers.push(handler);
+            }
         }
         handlers.push(central_handler);
         if set_post_processors {
-            handlers.extend(
-                configuration
-                    .get_post_processors(mode)
-                    .into_iter()
-                    .map(|processor| (processor.get_handler_factory())()),
-            );
+            for processor in configuration.get_post_processors(mode) {
+                let handler = processor
+                    .get_handler_class()
+                    .expect("DialectSetConfiguration rejects null post-processor Handler classes")
+                    .new_instance()
+                    .map_err(post_processor_instantiation_error)?;
+                handlers.push(handler);
+            }
         }
         if let Some(writer) = writer {
             handlers.push(Box::new(OutputTemplateHandler::new(writer)));
@@ -297,9 +320,9 @@ impl TemplateManager {
             handler.set_next(next);
             next = Some(Rc::new(RefCell::new(handler)));
         }
-        Box::new(SharedTemplateHandler {
+        Ok(Box::new(SharedTemplateHandler {
             delegate: next.expect("the central handler always makes the chain non-empty"),
-        })
+        }))
     }
 
     #[expect(
@@ -322,13 +345,19 @@ impl TemplateManager {
             attributes,
             context,
         );
-        let mut chain = self.create_handler_chain(
+        let mut chain = match self.create_handler_chain(
             Arc::clone(&engine_context),
             pre_processors,
             post_processors,
             Box::new(ProcessorTemplateHandler::new()),
             Some(writer),
-        );
+        ) {
+            Ok(chain) => chain,
+            Err(error) => {
+                EngineContextManager::dispose_engine_context(engine_context.as_ref());
+                return Err(error);
+            }
+        };
         let result = process_model_events(model, chain.as_mut());
         EngineContextManager::dispose_engine_context(engine_context.as_ref());
         result.map_err(engine_processing_error)
@@ -727,7 +756,7 @@ impl ITemplateManager for TemplateManager {
         );
         let processor_handler = ProcessorTemplateHandler::new();
         processor_handler.set_flow_controller(Some(Arc::clone(&flow_controller)));
-        let chain = self.create_handler_chain(
+        let chain = match self.create_handler_chain(
             Arc::clone(&engine_context),
             true,
             true,
@@ -735,7 +764,13 @@ impl ITemplateManager for TemplateManager {
             Some(ThrottledTemplateProcessor::writer_proxy(Arc::clone(
                 &throttled_writer,
             ))),
-        );
+        ) {
+            Ok(chain) => chain,
+            Err(error) => {
+                EngineContextManager::dispose_engine_context(engine_context.as_ref());
+                return Err(error);
+            }
+        };
         Ok(Box::new(ThrottledTemplateProcessor::new(
             template_spec.clone(),
             engine_context,
@@ -769,6 +804,58 @@ fn engine_processing_error(error: Box<dyn TemplateEngineException>) -> TemplateP
         Some("An error happened during template rendering".to_owned()),
         EngineExceptionCause(error),
     )
+}
+
+fn pre_processor_instantiation_error(
+    error: crate::engine::TemplateHandlerConstructorError,
+) -> TemplateProcessingException {
+    // 上游对 Class 对象调用 getClass().getName()，因此稳定文本是 java.lang.Class，
+    // 而不是 Handler 的具体类名。
+    TemplateProcessingException::with_cause(
+        Some(
+            "An exception happened during the creation of a new instance of pre-processor \
+             java.lang.Class"
+                .to_owned(),
+        ),
+        HandlerInstantiationCause(error),
+    )
+}
+
+fn post_processor_instantiation_error(
+    error: crate::engine::TemplateHandlerConstructorError,
+) -> TemplateProcessingException {
+    // 与上游 PostProcessor 分支保持相同的 Class 元对象消息语义。
+    TemplateProcessingException::with_cause(
+        Some(
+            "An exception happened during the creation of a new instance of post-processor \
+             java.lang.Class"
+                .to_owned(),
+        ),
+        HandlerInstantiationCause(error),
+    )
+}
+
+struct HandlerInstantiationCause(crate::engine::TemplateHandlerConstructorError);
+
+impl Display for HandlerInstantiationCause {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(self.0.as_ref(), formatter)
+    }
+}
+
+impl std::fmt::Debug for HandlerInstantiationCause {
+    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_tuple("HandlerInstantiationCause")
+            .field(&self.0.to_string())
+            .finish()
+    }
+}
+
+impl std::error::Error for HandlerInstantiationCause {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self.0.as_ref())
+    }
 }
 
 struct EngineExceptionCause(Box<dyn TemplateEngineException>);

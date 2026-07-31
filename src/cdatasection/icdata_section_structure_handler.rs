@@ -7,14 +7,19 @@ use crate::util::{JavaCharSequence, JavaString};
 ///
 /// 对应 Java: `org.thymeleaf.processor.cdatasection.ICDATASectionStructureHandler`。
 pub trait ICDATASectionStructureHandler {
-    /// 清除已指定动作。
+    /// 清除已指定动作。对应 Java: `ICDATASectionStructureHandler#reset()`。
     fn reset(&mut self);
-    /// 设置不含 CDATA 边界的新内容。
+    /// 设置不含 CDATA 边界的新内容。对应 Java:
+    /// `ICDATASectionStructureHandler#setContent(CharSequence)`。
     fn set_content(&mut self, content: JavaString);
-    /// 使用任意 Java CharSequence 设置内容，保留延迟 Writer 输出能力。
+    /// 使用任意 Java `CharSequence` 设置内容，保留对象身份和延迟 Writer 输出能力。
+    ///
+    /// 对应 Java: `ICDATASectionStructureHandler#setContent(CharSequence)`。
     fn set_content_sequence(&mut self, content: Arc<dyn JavaCharSequence>);
-    /// 使用模型替换当前事件。
+    /// 使用模型替换当前事件。对应 Java:
+    /// `ICDATASectionStructureHandler#replaceWith(IModel, boolean)`。
     fn replace_with(&mut self, model: Arc<dyn IModel>, processable: bool);
-    /// 删除当前 CDATA。
+    /// 删除当前 CDATA。对应 Java:
+    /// `ICDATASectionStructureHandler#removeCDATASection()`。
     fn remove_cdata_section(&mut self);
 }

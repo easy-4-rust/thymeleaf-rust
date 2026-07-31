@@ -199,3 +199,183 @@ impl ISSEThrottledTemplateWriterControl for SSEThrottledTemplateWriter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io::{self, Write};
+    use std::sync::{Arc, Mutex};
+
+    use super::super::i_throttled_template_writer_control::IThrottledTemplateWriterControl;
+    use super::super::isse_throttled_template_writer_control::ISSEThrottledTemplateWriterControl;
+    use super::super::template_flow_controller::TemplateFlowController;
+    use super::SSEThrottledTemplateWriter;
+    use crate::util::Charset;
+    use crate::util::JavaWriter;
+
+    #[test]
+    fn framing_and_invalid_event_token_match_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let mut writer = SSEThrottledTemplateWriter::new("template".to_owned(), controller);
+        writer
+            .set_output_writer(Box::new(RecordingWriter(Arc::clone(&output))))
+            .expect("SSE output initialization");
+        writer.allow(i32::MAX).expect("allow SSE output");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut writer;
+            control.start_event(Some(&utf16("id")), Some(&utf16("event")));
+        }
+        writer.write_utf16(&utf16("a\nb")).expect("write SSE body");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut writer;
+            control.end_event().expect("finish SSE event");
+        }
+        let actual = String::from_utf16(&output.lock().expect("output lock"))
+            .expect("test output must be valid UTF-16")
+            .replace('\n', "\\n");
+        assert_golden("sse", &actual);
+
+        let invalid_controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let mut invalid =
+            SSEThrottledTemplateWriter::new("template".to_owned(), invalid_controller);
+        invalid
+            .set_output_writer(Box::new(RecordingWriter(Arc::new(Mutex::new(Vec::new())))))
+            .expect("SSE output initialization");
+        invalid.allow(i32::MAX).expect("allow SSE output");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut invalid;
+            control.start_event(None, Some(&utf16("bad\nname")));
+        }
+        let error = invalid
+            .write_utf16(&utf16("x"))
+            .expect_err("newlines are invalid in SSE event names");
+        assert_golden("sseInvalid", &format!("IllegalArgumentException:{error}"));
+
+        let invalid_id_controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let mut invalid_id =
+            SSEThrottledTemplateWriter::new("template".to_owned(), invalid_id_controller);
+        invalid_id
+            .set_output_writer(Box::new(RecordingWriter(Arc::new(Mutex::new(Vec::new())))))
+            .expect("SSE output initialization");
+        invalid_id.allow(i32::MAX).expect("allow SSE output");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut invalid_id;
+            control.start_event(Some(&utf16("bad\nid")), None);
+        }
+        let error = invalid_id
+            .write_utf16(&utf16("x"))
+            .expect_err("newlines are invalid in SSE IDs");
+        assert_golden("sseInvalidId", &format!("IllegalArgumentException:{error}"));
+
+        let empty_controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let empty_output = Arc::new(Mutex::new(Vec::new()));
+        let mut empty = SSEThrottledTemplateWriter::new("template".to_owned(), empty_controller);
+        empty
+            .set_output_writer(Box::new(RecordingWriter(Arc::clone(&empty_output))))
+            .expect("SSE output initialization");
+        empty.allow(i32::MAX).expect("allow SSE output");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut empty;
+            control.start_event(Some(&utf16("id")), Some(&utf16("event")));
+        }
+        empty
+            .write_utf16(&[])
+            .expect("empty SSE write must reach underlying writer");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut empty;
+            control.end_event().expect("empty SSE event must close");
+        }
+        let output = String::from_utf16(&empty_output.lock().expect("output lock"))
+            .expect("test output must be valid UTF-16")
+            .replace('\n', "\\n");
+        assert_golden(
+            "sseEmpty",
+            &format!(
+                "{output},{},{}",
+                empty.is_overflown().expect("empty SSE overflow"),
+                empty.is_stopped().expect("empty SSE stop")
+            ),
+        );
+    }
+
+    #[test]
+    fn byte_output_and_parent_control_dispatch_match_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let mut writer = SSEThrottledTemplateWriter::new("template".to_owned(), controller);
+        let charset = Charset::for_name("UTF-8").expect("UTF-8 charset");
+        writer
+            .set_output_stream(
+                Box::new(RecordingOutputStream(Arc::clone(&output))),
+                &charset,
+                i32::MAX,
+            )
+            .expect("SSE byte output initialization");
+        writer.allow(i32::MAX).expect("allow SSE byte output");
+
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut writer;
+            control.start_event(Some(&utf16("id")), Some(&utf16("event")));
+        }
+        writer
+            .write_utf16(&utf16("x"))
+            .expect("write SSE byte body");
+        {
+            let control: &mut dyn ISSEThrottledTemplateWriterControl = &mut writer;
+            control.end_event().expect("finish SSE byte event");
+        }
+        writer.flush().expect("flush SSE byte event");
+
+        assert_golden("sseBytes", &hex_output(&output));
+    }
+
+    struct RecordingWriter(Arc<Mutex<Vec<u16>>>);
+
+    impl JavaWriter for RecordingWriter {
+        fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
+            self.0
+                .lock()
+                .expect("recording writer lock")
+                .extend_from_slice(characters);
+            Ok(())
+        }
+    }
+
+    /// 在 SSE 字节输出测试中记录 OutputStream 写入结果。
+    struct RecordingOutputStream(Arc<Mutex<Vec<u8>>>);
+
+    impl Write for RecordingOutputStream {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.0
+                .lock()
+                .expect("recording output stream lock")
+                .extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
+    fn assert_golden(key: &str, actual: &str) {
+        let expected = include_str!("../../tests/fixtures/throttled_template_writer_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{key}=")))
+            .expect("Java Golden record");
+        assert_eq!(actual, expected, "Java Golden key {key}");
+    }
+
+    fn utf16(value: &str) -> Vec<u16> {
+        value.encode_utf16().collect()
+    }
+
+    fn hex_output(output: &Arc<Mutex<Vec<u8>>>) -> String {
+        output
+            .lock()
+            .expect("recording output stream lock")
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect()
+    }
+}

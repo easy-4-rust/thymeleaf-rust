@@ -49,6 +49,12 @@ pub struct IdentifierSequences {
 
 impl IdentifierSequences {
     /// 创建空序列集合。
+    ///
+    /// 对应 Java: `IdentifierSequences#IdentifierSequences()`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回每个 ID 首次读取均为 `1` 的独立序列容器。
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -57,6 +63,20 @@ impl IdentifierSequences {
     }
 
     /// 返回当前计数，并以 Java `int` 回绕语义递增保存值。
+    ///
+    /// 对应 Java: `IdentifierSequences#getAndIncrementIDSeq(String)`。
+    ///
+    /// # 参数
+    ///
+    /// - `id`：非空 ID；`None` 对应 Java `null`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回本次可使用的计数，首次为 `1`；保存的下一值按 Java `i32` 回绕。
+    ///
+    /// # 错误
+    ///
+    /// `id` 为空时返回 Java `IllegalArgumentException` 等价错误。
     pub fn get_and_increment_id_seq(
         &self,
         id: Option<&JavaString>,
@@ -69,6 +89,16 @@ impl IdentifierSequences {
     }
 
     /// 返回下一次会使用的计数，但不改变状态。
+    ///
+    /// 对应 Java: `IdentifierSequences#getNextIDSeq(String)`。
+    ///
+    /// # 参数
+    ///
+    /// - `id`：非空 ID；`None` 对应 Java `null`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回当前保存的下一计数，未见 ID 返回 `1`。
     pub fn get_next_id_seq(
         &self,
         id: Option<&JavaString>,
@@ -81,6 +111,20 @@ impl IdentifierSequences {
     }
 
     /// 返回最近一次分配的计数。
+    ///
+    /// 对应 Java: `IdentifierSequences#getPreviousIDSeq(String)`。
+    ///
+    /// # 参数
+    ///
+    /// - `id`：非空 ID；`None` 对应 Java `null`。
+    ///
+    /// # 返回值
+    ///
+    /// 返回最近一次分配值，不改变状态。
+    ///
+    /// # 错误
+    ///
+    /// 未分配过该 ID 时返回 Java `TemplateProcessingException` 等价错误。
     pub fn get_previous_id_seq(
         &self,
         id: Option<&JavaString>,
@@ -104,4 +148,33 @@ fn lock_recovering_poison<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{IdentifierSequences, IdentifierSequencesError, lock_recovering_poison};
+    use crate::util::JavaString;
+
+    #[test]
+    fn preserves_java_int_wrap_and_exact_error_categories() {
+        let sequences = IdentifierSequences::new();
+        let maximum = JavaString::from_rust_str("max");
+        let missing = JavaString::from_rust_str("missing");
+        lock_recovering_poison(&sequences.id_counts).insert(maximum.clone(), i32::MAX);
+
+        assert_eq!(
+            sequences.get_and_increment_id_seq(Some(&maximum)),
+            Ok(i32::MAX)
+        );
+        assert_eq!(sequences.get_next_id_seq(Some(&maximum)), Ok(i32::MIN));
+        assert_eq!(sequences.get_previous_id_seq(Some(&maximum)), Ok(i32::MAX));
+        assert_eq!(
+            sequences.get_previous_id_seq(Some(&missing)),
+            Err(IdentifierSequencesError::MissingPrevious(missing))
+        );
+        assert_eq!(
+            sequences.get_next_id_seq(None),
+            Err(IdentifierSequencesError::NullId)
+        );
+    }
 }

@@ -784,7 +784,11 @@ fn append_pattern_field(
             date_time.and_utc().timestamp_subsec_millis(),
             width = count
         )),
-        'z' => output.push_str(zone_display_name),
+        'z' => output.push_str(localized_zone_display_name(
+            zone_display_name,
+            locale,
+            count >= 4,
+        )),
         'Z' => output.push_str(&iso_offset(offset_seconds, 2)),
         'X' if count <= 3 => output.push_str(&iso_offset(offset_seconds, count)),
         'X' => {
@@ -910,8 +914,48 @@ fn localized_month_name(month: u32, locale: &JavaLocale, short: bool) -> &'stati
     const ES_SHORT: [&str; 12] = [
         "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic",
     ];
+    const DE_LONG: [&str; 12] = [
+        "Januar",
+        "Februar",
+        "März",
+        "April",
+        "Mai",
+        "Juni",
+        "Juli",
+        "August",
+        "September",
+        "Oktober",
+        "November",
+        "Dezember",
+    ];
+    const DE_SHORT: [&str; 12] = [
+        "Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sept.", "Okt.", "Nov.",
+        "Dez.",
+    ];
+    const FR_LONG: [&str; 12] = [
+        "janvier",
+        "février",
+        "mars",
+        "avril",
+        "mai",
+        "juin",
+        "juillet",
+        "août",
+        "septembre",
+        "octobre",
+        "novembre",
+        "décembre",
+    ];
+    const FR_SHORT: [&str; 12] = [
+        "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.",
+        "déc.",
+    ];
     match (locale.get_language().to_string_lossy().as_str(), short) {
-        ("zh", _) => ZH[month as usize],
+        ("zh" | "ja", _) => ZH[month as usize],
+        ("de", true) => DE_SHORT[month as usize],
+        ("de", false) => DE_LONG[month as usize],
+        ("fr", true) => FR_SHORT[month as usize],
+        ("fr", false) => FR_LONG[month as usize],
         ("es", true) => ES_SHORT[month as usize],
         ("es", false) => ES_LONG[month as usize],
         (_, true) => EN_SHORT[month as usize],
@@ -931,7 +975,7 @@ fn weekday_name(weekday: Weekday, locale: &JavaLocale, short: bool) -> &'static 
         "Saturday",
     ];
     const EN_SHORT: [&str; 7] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const ZH: [&str; 7] = [
+    const ZH_LONG: [&str; 7] = [
         "星期日",
         "星期一",
         "星期二",
@@ -940,12 +984,46 @@ fn weekday_name(weekday: Weekday, locale: &JavaLocale, short: bool) -> &'static 
         "星期五",
         "星期六",
     ];
-    if locale.get_language().to_string_lossy() == "zh" {
-        ZH[index]
-    } else if short {
-        EN_SHORT[index]
-    } else {
-        EN_LONG[index]
+    const ZH_SHORT: [&str; 7] = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+    const DE_LONG: [&str; 7] = [
+        "Sonntag",
+        "Montag",
+        "Dienstag",
+        "Mittwoch",
+        "Donnerstag",
+        "Freitag",
+        "Samstag",
+    ];
+    const DE_SHORT: [&str; 7] = ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."];
+    const FR_LONG: [&str; 7] = [
+        "dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi",
+    ];
+    const FR_SHORT: [&str; 7] = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+    match (locale.get_language().to_string_lossy().as_str(), short) {
+        ("zh" | "ja", true) => ZH_SHORT[index],
+        ("zh" | "ja", false) => ZH_LONG[index],
+        ("de", true) => DE_SHORT[index],
+        ("de", false) => DE_LONG[index],
+        ("fr", true) => FR_SHORT[index],
+        ("fr", false) => FR_LONG[index],
+        (_, true) => EN_SHORT[index],
+        (_, false) => EN_LONG[index],
+    }
+}
+
+fn localized_zone_display_name<'a>(
+    zone_display_name: &'a str,
+    locale: &JavaLocale,
+    long: bool,
+) -> &'a str {
+    if !long || !matches!(zone_display_name, "UTC" | "GMT") {
+        return zone_display_name;
+    }
+    match locale.get_language().to_string_lossy().as_str() {
+        "de" => "Koordinierte Weltzeit",
+        "fr" => "temps universel coordonné",
+        "ja" => "協定世界時",
+        _ => "Coordinated Universal Time",
     }
 }
 

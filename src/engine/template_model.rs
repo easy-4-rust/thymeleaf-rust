@@ -194,3 +194,67 @@ impl Display for TemplateModel {
         formatter.write_str(&writer.to_string().to_string_lossy())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::TemplateModel;
+    use crate::engine::{TemplateData, TemplateEnd, TemplateStart};
+    use crate::model::{IModel, IModelError, ITemplateEvent};
+    use crate::{ITemplateEngine, TemplateEngine, TemplateMode};
+
+    fn golden(key: &str) -> &str {
+        include_str!("../../tests/fixtures/model_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{key}=")))
+            .expect("Java Golden record")
+    }
+
+    fn template_model() -> TemplateModel {
+        let engine = TemplateEngine::new();
+        let configuration = engine.get_configuration().expect("configuration");
+        let template_data = Arc::new(TemplateData::new(
+            Some(crate::util::JavaString::from_rust_str("template")),
+            None,
+            None,
+            Some(TemplateMode::HTML),
+            None,
+        ));
+        let queue: Vec<Arc<dyn ITemplateEvent>> =
+            vec![TemplateStart::instance(), TemplateEnd::instance()];
+        TemplateModel::new(configuration, template_data, queue).expect("bounded template model")
+    }
+
+    #[test]
+    fn immutable_contract_and_mutable_clone_match_java_golden() {
+        let mut model = template_model();
+        assert_eq!(
+            format!(
+                "{},{},{},{}",
+                model.size(),
+                model.get_template_mode(),
+                [
+                    model.add(None),
+                    model.insert(0, None),
+                    model.replace(0, None),
+                    model.add_model(None),
+                    model.insert_model(0, None),
+                    model.remove(0),
+                    model.reset(),
+                ]
+                .iter()
+                .all(|result| matches!(result, Err(IModelError::ImmutableModel))),
+                model.clone_model().size(),
+            ),
+            golden("templateModel")
+        );
+        assert_eq!(
+            format!(
+                "UnsupportedOperationException:{}",
+                IModelError::ImmutableModel
+            ),
+            golden("immutable")
+        );
+    }
+}

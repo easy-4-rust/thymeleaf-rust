@@ -10,6 +10,10 @@ use super::ITextStructureHandler;
 /// 对应 Java: `org.thymeleaf.processor.text.ITextProcessor`。
 pub trait ITextProcessor: IProcessor {
     /// 处理文本并通过结构处理器声明变更。
+    ///
+    /// 对应 Java: `ITextProcessor#process(ITemplateContext, IText,
+    /// ITextStructureHandler)`。事件不可变，所有输出变更必须写入
+    /// `structure_handler`；失败返回 Java 模板引擎异常的 Rust 对应值。
     fn process(
         &self,
         context: &dyn ITemplateContext,

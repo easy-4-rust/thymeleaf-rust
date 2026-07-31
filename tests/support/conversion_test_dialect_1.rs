@@ -79,7 +79,7 @@ impl IExecutionAttributeDialect for ConversionTestDialect1 {
 }
 
 impl IExpressionObjectDialect for ConversionTestDialect1 {
-    fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory> {
+    fn get_expression_object_factory(&self) -> Option<Arc<dyn IExpressionObjectFactory>> {
         self.standard_dialect.get_expression_object_factory()
     }
 }

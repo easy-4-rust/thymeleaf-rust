@@ -1,8 +1,3 @@
-#![expect(
-    dead_code,
-    reason = "状态由后续迁移的 ProcessorTemplateHandler 统一消费"
-)]
-
 use std::sync::Arc;
 
 use indexmap::{IndexMap, IndexSet};
@@ -12,7 +7,7 @@ use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::IModel;
 use crate::templateboundaries::ITemplateBoundariesStructureHandler;
-use crate::util::JavaString;
+use crate::util::{JavaString, Validate, ValidateError};
 
 /// 模板开始与模板结束处理器共用的结构变更状态机。
 ///
@@ -31,7 +26,7 @@ pub(crate) struct TemplateBoundariesStructureHandler {
     pub(crate) added_local_variables: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
 
     pub(crate) remove_local_variable: bool,
-    pub(crate) removed_local_variable_names: IndexSet<JavaString>,
+    pub(crate) removed_local_variable_names: IndexSet<Option<JavaString>>,
 
     pub(crate) set_selection_target: bool,
     pub(crate) selection_target_object: Option<Arc<TemplateValue>>,
@@ -79,23 +74,73 @@ impl TemplateBoundariesStructureHandler {
     /// 对应 Java:
     /// `TemplateBoundariesStructureHandler#applyContextModifications`。
     pub(crate) fn apply_context_modifications(&self, engine_context: &dyn IEngineContext) {
+        self.apply_context_modifications_with(
+            |variables| engine_context.set_variables(variables),
+            |variable_name| engine_context.remove_variable(variable_name),
+            |selection_target| engine_context.set_selection_target(selection_target),
+            |inliner| engine_context.set_inliner(inliner),
+        );
+    }
+
+    /// 以可观察回调执行 Java 固定的上下文提交顺序。
+    pub(super) fn apply_context_modifications_with(
+        &self,
+        mut set_variables: impl FnMut(&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>),
+        mut remove_variable: impl FnMut(Option<&JavaString>),
+        mut set_selection_target: impl FnMut(Option<Arc<TemplateValue>>),
+        mut set_inliner: impl FnMut(Option<Arc<dyn IInliner>>),
+    ) {
+        // 对应 Java 的固定提交顺序：批量设置、逐项删除、selection target、inliner。
         if self.set_local_variable {
-            engine_context.set_variables(&self.added_local_variables);
+            set_variables(&self.added_local_variables);
         }
 
         if self.remove_local_variable {
             for variable_name in &self.removed_local_variable_names {
-                engine_context.remove_variable(Some(variable_name));
+                remove_variable(variable_name.as_ref());
             }
         }
 
         if self.set_selection_target {
-            engine_context.set_selection_target(self.selection_target_object.clone());
+            set_selection_target(self.selection_target_object.clone());
         }
 
         if self.set_inliner {
-            engine_context.set_inliner(self.set_inliner_value.clone());
+            set_inliner(self.set_inliner_value.clone());
         }
+    }
+
+    /// 插入文本，并保留 Java 的空值错误与清理顺序。
+    ///
+    /// 对应 Java: `TemplateBoundariesStructureHandler#insert(String, boolean)`。
+    /// 仅清除互斥插入动作，保留已收集的上下文变更；随后校验文本非空。
+    pub(crate) fn insert_text_nullable(
+        &mut self,
+        text: Option<JavaString>,
+        processable: bool,
+    ) -> Result<(), ValidateError> {
+        self.reset_all_but_local_variables();
+        Validate::not_null(text.as_ref(), Some("Text cannot be null"))?;
+        self.insert_text = true;
+        self.insert_text_value = text;
+        self.insert_text_processable = processable;
+        Ok(())
+    }
+
+    /// 插入模型，并保留 Java 的空值错误与清理顺序。
+    ///
+    /// 对应 Java: `TemplateBoundariesStructureHandler#insert(IModel, boolean)`。
+    pub(crate) fn insert_model_nullable(
+        &mut self,
+        model: Option<Arc<dyn IModel>>,
+        processable: bool,
+    ) -> Result<(), ValidateError> {
+        self.reset_all_but_local_variables();
+        Validate::not_null(model.as_deref(), Some("Model cannot be null"))?;
+        self.insert_model = true;
+        self.insert_model_value = model;
+        self.insert_model_processable = processable;
+        Ok(())
     }
 }
 
@@ -116,38 +161,38 @@ impl ITemplateBoundariesStructureHandler for TemplateBoundariesStructureHandler 
         self.set_inliner_value = None;
     }
 
-    fn set_local_variable(&mut self, name: JavaString, value: Option<Arc<TemplateValue>>) {
+    fn set_local_variable(&mut self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+        // 可与其他动作组合，无需清除已收集状态。
         // Java Map 的 put 语义：同名变量以后一次设置为准。
         self.set_local_variable = true;
-        self.added_local_variables.insert(Some(name), value);
+        self.added_local_variables.insert(name, value);
     }
 
-    fn remove_local_variable(&mut self, name: JavaString) {
+    fn remove_local_variable(&mut self, name: Option<JavaString>) {
+        // 可与其他动作组合，无需清除已收集状态。
         self.remove_local_variable = true;
         self.removed_local_variable_names.insert(name);
     }
 
     fn set_selection_target(&mut self, selection_target: Option<Arc<TemplateValue>>) {
+        // 可与其他动作组合，无需清除已收集状态。
         self.set_selection_target = true;
         self.selection_target_object = selection_target;
     }
 
     fn set_inliner(&mut self, inliner: Option<Arc<dyn IInliner>>) {
+        // 可与其他动作组合，无需清除已收集状态。
         self.set_inliner = true;
         self.set_inliner_value = inliner;
     }
 
     fn insert_text(&mut self, text: JavaString, processable: bool) {
-        self.reset_all_but_local_variables();
-        self.insert_text = true;
-        self.insert_text_value = Some(text);
-        self.insert_text_processable = processable;
+        self.insert_text_nullable(Some(text), processable)
+            .expect("Rust non-null text boundary must satisfy Java validation");
     }
 
     fn insert_model(&mut self, model: Arc<dyn IModel>, processable: bool) {
-        self.reset_all_but_local_variables();
-        self.insert_model = true;
-        self.insert_model_value = Some(model);
-        self.insert_model_processable = processable;
+        self.insert_model_nullable(Some(model), processable)
+            .expect("Rust non-null model boundary must satisfy Java validation");
     }
 }

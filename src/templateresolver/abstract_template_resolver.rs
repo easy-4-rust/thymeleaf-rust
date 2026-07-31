@@ -6,7 +6,7 @@ use crate::cache::ICacheEntryValidity;
 use crate::util::{JavaString, PatternSpec, PatternSpecError};
 use crate::{ITemplateResource, TemplateMode};
 
-use super::TemplateResolution;
+use super::{TemplateResolution, TemplateResolverError};
 
 /// 所有模板解析器共用的名称、顺序、模式过滤和解析流程。
 ///
@@ -26,6 +26,14 @@ impl AbstractTemplateResolver {
     pub const DEFAULT_USE_DECOUPLED_LOGIC: bool = false;
 
     /// 使用具体 Java 类名创建抽象解析器状态。
+    ///
+    /// 对应 Java: `AbstractTemplateResolver#AbstractTemplateResolver()`。
+    ///
+    /// # 参数
+    /// - `java_class_name`：具体 Resolver 的 Java 完全限定类名，用作默认名称。
+    ///
+    /// # 返回值
+    /// 名称已初始化、顺序为空、存在性检查和解耦逻辑均关闭的公共状态。
     #[must_use]
     pub fn new(java_class_name: &str) -> Self {
         Self {
@@ -37,13 +45,15 @@ impl AbstractTemplateResolver {
         }
     }
 
-    /// 返回解析器名称。
+    /// 返回解析器名称。对应 Java: `AbstractTemplateResolver#getName()`。
     #[must_use]
     pub fn get_name(&self) -> Option<&JavaString> {
         self.name.as_ref()
     }
 
     /// 设置解析器名称；`None` 保留 Java 可设置 null 的行为。
+    ///
+    /// 对应 Java: `AbstractTemplateResolver#setName(String)`。
     pub fn set_name(&mut self, name: Option<JavaString>) {
         self.name = name;
     }
@@ -75,6 +85,8 @@ impl AbstractTemplateResolver {
     }
 
     /// 替换可解析模板模式。
+    ///
+    /// 对应 Java: `AbstractTemplateResolver#setResolvablePatterns(Set)`。
     pub fn set_resolvable_patterns(
         &mut self,
         patterns: Option<&[Option<&str>]>,
@@ -107,25 +119,40 @@ impl AbstractTemplateResolver {
     /// 执行抽象解析器的固定算法。
     ///
     /// 闭包依次对应 Java `computeTemplateResource`、`computeTemplateMode` 和
-    /// `computeValidity`。模式不匹配、资源构造失败或存在性检查失败时返回 `None`。
+    /// `computeValidity`。模式不匹配、具体 Resolver 不适用或存在性检查失败时返回
+    /// `Ok(None)`；资源构造失败必须保留为错误。
+    ///
+    /// # 参数
+    /// - `template`：非空的模板名。
+    /// - `compute_template_resource`：构造模板资源，允许明确返回“不适用”。
+    /// - `compute_template_mode`：在资源成功后计算模板模式。
+    /// - `compute_validity`：在资源成功后计算缓存有效性。
+    ///
+    /// # 返回值
+    /// 返回完整解析结果、当前 Resolver 不适用，或资源不存在。
+    ///
+    /// # 错误
+    /// 资源及解析结果构造错误原样传播。
     pub fn resolve_template<R, M, V>(
         &self,
         template: &JavaString,
         compute_template_resource: R,
         compute_template_mode: M,
         compute_validity: V,
-    ) -> Option<TemplateResolution>
+    ) -> Result<Option<TemplateResolution>, TemplateResolverError>
     where
-        R: FnOnce() -> Option<Arc<dyn ITemplateResource>>,
+        R: FnOnce() -> Result<Option<Arc<dyn ITemplateResource>>, TemplateResolverError>,
         M: FnOnce() -> TemplateMode,
         V: FnOnce() -> Arc<dyn ICacheEntryValidity>,
     {
         if !self.compute_resolvable(template) {
-            return None;
+            return Ok(None);
         }
-        let template_resource = compute_template_resource()?;
+        let Some(template_resource) = compute_template_resource()? else {
+            return Ok(None);
+        };
         if self.check_existence && !template_resource.exists() {
-            return None;
+            return Ok(None);
         }
         TemplateResolution::with_options(
             Some(template_resource),
@@ -134,10 +161,13 @@ impl AbstractTemplateResolver {
             self.use_decoupled_logic,
             Some(compute_validity()),
         )
-        .ok()
+        .map(Some)
+        .map_err(TemplateResolverError::from)
     }
 
     /// 应用可解析模式判断模板名。
+    ///
+    /// 对应 Java: `AbstractTemplateResolver#computeResolvable(String)`。
     #[must_use]
     pub fn compute_resolvable(&self, template: &JavaString) -> bool {
         self.resolvable_pattern_spec.is_empty()

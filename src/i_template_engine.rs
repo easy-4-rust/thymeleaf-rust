@@ -61,6 +61,39 @@ pub trait ITemplateEngine: Send + Sync {
         self.process(&template_spec(template, Some(template_selectors))?, context)
     }
 
+    /// 使用模板名称把完整输出写入调用方 Writer，并在执行结束时刷新 Writer。
+    ///
+    /// `template` 是模板名或模板正文，具体含义由 Resolver 决定；`context` 提供表达式变量；
+    /// `writer` 接收渲染结果。成功返回 `()`，解析、处理或输出失败时保留具体引擎错误类型。
+    /// 对应 Java: `ITemplateEngine#process(String, IContext, Writer)`。
+    fn process_template_to_writer(
+        &self,
+        template: &str,
+        context: &dyn IContext,
+        writer: Box<dyn JavaWriter>,
+    ) -> TemplateEngineResult<()> {
+        self.process_to_writer(&template_spec(template, None)?, context, writer)
+    }
+
+    /// 使用模板名称和片段选择器把输出写入调用方 Writer，并在执行结束时刷新 Writer。
+    ///
+    /// `template_selectors` 仅在支持选择器的模板模式中生效。成功返回 `()`；解析、处理
+    /// 或输出失败时保留具体引擎错误类型。
+    /// 对应 Java: `ITemplateEngine#process(String, Set<String>, IContext, Writer)`。
+    fn process_template_with_selectors_to_writer(
+        &self,
+        template: &str,
+        template_selectors: &crate::TemplateSelectorSet,
+        context: &dyn IContext,
+        writer: Box<dyn JavaWriter>,
+    ) -> TemplateEngineResult<()> {
+        self.process_to_writer(
+            &template_spec(template, Some(template_selectors))?,
+            context,
+            writer,
+        )
+    }
+
     /// 使用模板名称创建节流处理器。
     ///
     /// 对应 Java: `ITemplateEngine#processThrottled(String, IContext)`。
@@ -70,6 +103,18 @@ pub trait ITemplateEngine: Send + Sync {
         context: &dyn IContext,
     ) -> TemplateEngineResult<Box<dyn IThrottledTemplateProcessor>> {
         self.process_throttled(&template_spec(template, None)?, context)
+    }
+
+    /// 使用模板名称和片段选择器创建由调用方按背压节奏驱动的处理器。
+    ///
+    /// 对应 Java: `ITemplateEngine#processThrottled(String, Set<String>, IContext)`。
+    fn process_throttled_template_with_selectors(
+        &self,
+        template: &str,
+        template_selectors: &crate::TemplateSelectorSet,
+        context: &dyn IContext,
+    ) -> TemplateEngineResult<Box<dyn IThrottledTemplateProcessor>> {
+        self.process_throttled(&template_spec(template, Some(template_selectors))?, context)
     }
 }
 

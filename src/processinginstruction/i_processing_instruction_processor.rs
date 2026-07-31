@@ -11,6 +11,11 @@ use super::IProcessingInstructionStructureHandler;
 /// `org.thymeleaf.processor.processinginstruction.IProcessingInstructionProcessor`。
 pub trait IProcessingInstructionProcessor: IProcessor {
     /// 处理 processing instruction。
+    ///
+    /// 对应 Java:
+    /// `IProcessingInstructionProcessor#process(ITemplateContext,
+    /// IProcessingInstruction, IProcessingInstructionStructureHandler)`。
+    /// 事件不可变，结构变更通过 handler 声明。
     fn process(
         &self,
         context: &dyn ITemplateContext,

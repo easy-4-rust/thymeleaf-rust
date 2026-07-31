@@ -14,6 +14,6 @@ pub use abstract_processor_dialect::AbstractProcessorDialect;
 pub use i_dialect::IDialect;
 pub use i_execution_attribute_dialect::{ExecutionAttributeMap, IExecutionAttributeDialect};
 pub use i_expression_object_dialect::IExpressionObjectDialect;
-pub use i_post_processor_dialect::IPostProcessorDialect;
-pub use i_pre_processor_dialect::IPreProcessorDialect;
+pub use i_post_processor_dialect::{IPostProcessorDialect, PostProcessorSet};
+pub use i_pre_processor_dialect::{IPreProcessorDialect, PreProcessorSet};
 pub use i_processor_dialect::IProcessorDialect;

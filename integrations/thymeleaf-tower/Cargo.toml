@@ -12,6 +12,9 @@ http = "1.4.0"
 thymeleaf = { path = "../.." }
 tower = { version = "0.5.3", features = ["util"] }
 
+[dev-dependencies]
+futures-executor = "0.3.31"
+
 [lints.rust]
 missing_docs = "deny"
 unsafe_code = "forbid"

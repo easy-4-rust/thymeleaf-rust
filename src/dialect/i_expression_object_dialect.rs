@@ -9,5 +9,11 @@ use super::IDialect;
 /// 对应 Java: `org.thymeleaf.dialect.IExpressionObjectDialect`。
 pub trait IExpressionObjectDialect: IDialect {
     /// 返回该方言唯一、可共享的表达式对象工厂。
-    fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory>;
+    ///
+    /// 对应 Java: `IExpressionObjectDialect#getExpressionObjectFactory()`。
+    ///
+    /// # 返回
+    ///
+    /// `None` 对应第三方 Java 方言返回 `null`；配置聚合阶段会忽略该贡献。
+    fn get_expression_object_factory(&self) -> Option<Arc<dyn IExpressionObjectFactory>>;
 }

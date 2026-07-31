@@ -203,3 +203,133 @@ impl ThrottledTemplateWriterWriterAdapter {
             .ok_or_else(|| io::Error::other("Throttled writer output has not been initialized"))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io;
+    use std::sync::{Arc, Mutex};
+
+    use crate::util::JavaWriter;
+
+    use super::super::template_flow_controller::TemplateFlowController;
+    use super::ThrottledTemplateWriterWriterAdapter;
+
+    /// 在适配器测试中收集 UTF-16 输出的最小 Java Writer 实现。
+    struct RecordingWriter {
+        output: Arc<Mutex<Vec<u16>>>,
+    }
+
+    impl JavaWriter for RecordingWriter {
+        fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
+            self.output
+                .lock()
+                .expect("recording writer lock poisoned")
+                .extend_from_slice(characters);
+            Ok(())
+        }
+    }
+
+    fn utf16(value: &str) -> Vec<u16> {
+        value.encode_utf16().collect()
+    }
+
+    fn output_string(output: &Arc<Mutex<Vec<u16>>>) -> String {
+        String::from_utf16_lossy(
+            output
+                .lock()
+                .expect("recording writer lock poisoned")
+                .as_slice(),
+        )
+    }
+
+    #[test]
+    fn direct_writer_adapter_state_machine_matches_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let output = Arc::new(Mutex::new(Vec::new()));
+        let mut adapter = ThrottledTemplateWriterWriterAdapter::new(
+            "template".to_owned(),
+            Arc::clone(&controller),
+        );
+        adapter.set_writer(Box::new(RecordingWriter {
+            output: Arc::clone(&output),
+        }));
+
+        adapter.allow(2).expect("Java Golden allow(2) must succeed");
+        adapter
+            .write_utf16(&utf16("abcd"))
+            .expect("Java Golden adapter write must succeed");
+        assert_eq!(output_string(&output), "ab");
+        assert_eq!(adapter.get_written_count(), 2);
+        assert!(adapter.is_overflown());
+        assert!(adapter.is_stopped());
+        assert!(
+            controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing
+        );
+        assert_eq!(adapter.get_max_overflow_size(), 2);
+        assert_eq!(adapter.get_overflow_grow_count(), 0);
+
+        adapter
+            .allow(i32::MAX)
+            .expect("Java Golden unlimited allow must drain overflow");
+        assert_eq!(output_string(&output), "abcd");
+        assert_eq!(adapter.get_written_count(), 4);
+        assert!(!adapter.is_overflown());
+        assert!(!adapter.is_stopped());
+        assert!(
+            !controller
+                .lock()
+                .expect("template flow controller lock poisoned")
+                .stop_processing
+        );
+        assert_eq!(adapter.get_max_overflow_size(), 2);
+        assert_eq!(adapter.get_overflow_grow_count(), 0);
+    }
+
+    #[test]
+    fn overflow_drain_io_failure_matches_java_golden() {
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
+        let mut adapter =
+            ThrottledTemplateWriterWriterAdapter::new("template".to_owned(), controller);
+        adapter.set_writer(Box::new(FailOnSecondWriteWriter { writes: 0 }));
+        adapter
+            .allow(1)
+            .expect("initial Java Golden allow must succeed");
+        adapter
+            .write_utf16(&utf16("ab"))
+            .expect("first direct write must buffer its overflow");
+
+        let error = adapter
+            .allow(i32::MAX)
+            .expect_err("Java Golden overflow drain must wrap I/O failure");
+        assert_golden(
+            "adapterOverflowIo",
+            &format!("TemplateOutputException:{error}"),
+        );
+    }
+
+    /// 第一次写入成功、第二次写入失败的 Java Writer。
+    struct FailOnSecondWriteWriter {
+        writes: usize,
+    }
+
+    impl JavaWriter for FailOnSecondWriteWriter {
+        fn write_utf16(&mut self, _characters: &[u16]) -> io::Result<()> {
+            self.writes += 1;
+            if self.writes > 1 {
+                return Err(io::Error::other("overflow sink failure"));
+            }
+            Ok(())
+        }
+    }
+
+    fn assert_golden(key: &str, actual: &str) {
+        let expected = include_str!("../../tests/fixtures/throttled_template_writer_golden.txt")
+            .lines()
+            .find_map(|line| line.strip_prefix(&format!("{key}=")))
+            .expect("Java Golden record");
+        assert_eq!(actual, expected, "Java Golden key {key}");
+    }
+}

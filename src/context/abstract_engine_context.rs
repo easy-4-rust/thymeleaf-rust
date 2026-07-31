@@ -1,5 +1,5 @@
 use std::any::TypeId;
-use std::sync::{Arc, Weak};
+use std::sync::{Arc, OnceLock, Weak};
 
 use indexmap::IndexMap;
 
@@ -21,8 +21,9 @@ pub struct AbstractEngineContext {
     configuration: Arc<dyn IEngineConfiguration>,
     template_resolution_attributes: Option<TemplateResolutionAttributes>,
     locale: JavaLocale,
-    expression_objects: ExpressionObjects,
-    identifier_sequences: IdentifierSequences,
+    expression_context: Weak<dyn IExpressionContext>,
+    expression_objects: OnceLock<ExpressionObjects>,
+    identifier_sequences: OnceLock<IdentifierSequences>,
 }
 
 impl AbstractEngineContext {
@@ -42,19 +43,15 @@ impl AbstractEngineContext {
         locale: JavaLocale,
         context: Weak<dyn IExpressionContext>,
     ) -> Result<Self, ValidateError> {
-        let expression_object_factory = configuration.get_expression_object_factory();
-        let expression_objects =
-            ExpressionObjects::new(Some(context), Some(expression_object_factory)).map_err(
-                |error| ValidateError::IllegalArgument {
-                    message: Some(error.to_string()),
-                },
-            )?;
         Ok(Self {
             configuration,
             template_resolution_attributes: template_resolution_attributes.cloned(),
             locale,
-            expression_objects,
-            identifier_sequences: IdentifierSequences::new(),
+            // Java 在首次调用 getExpressionObjects() 时才读取 factory 并构造对象，
+            // 因此必须保留最终上下文的弱引用，而不能在构造期提前初始化。
+            expression_context: context,
+            expression_objects: OnceLock::new(),
+            identifier_sequences: OnceLock::new(),
         })
     }
 
@@ -92,8 +89,15 @@ impl AbstractEngineContext {
     ///
     /// 对应 Java: `AbstractEngineContext#getExpressionObjects()`。
     #[must_use]
-    pub const fn get_expression_objects(&self) -> &dyn IExpressionObjects {
-        &self.expression_objects
+    pub fn get_expression_objects(&self) -> &dyn IExpressionObjects {
+        self.expression_objects.get_or_init(|| {
+            let expression_object_factory = self.configuration.get_expression_object_factory();
+            ExpressionObjects::new(
+                Some(self.expression_context.clone()),
+                Some(expression_object_factory),
+            )
+            .expect("engine configuration supplies a valid expression object factory")
+        })
     }
 
     /// 返回指定模板模式的稳定模型工厂。
@@ -170,8 +174,9 @@ impl AbstractEngineContext {
     ///
     /// 对应 Java: `AbstractEngineContext#getIdentifierSequences()`。
     #[must_use]
-    pub const fn get_identifier_sequences(&self) -> &IdentifierSequences {
-        &self.identifier_sequences
+    pub fn get_identifier_sequences(&self) -> &IdentifierSequences {
+        self.identifier_sequences
+            .get_or_init(IdentifierSequences::new)
     }
 }
 

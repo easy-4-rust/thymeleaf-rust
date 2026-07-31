@@ -20,11 +20,36 @@ pub struct WebContext {
 
 impl WebContext {
     /// 使用默认 Locale 和空变量创建 Web Context。
+    ///
+    /// 对应 Java: `WebContext#WebContext(IWebExchange)`。
+    ///
+    /// # 参数
+    ///
+    /// - `web_exchange`：当前模板执行使用的非空 Web exchange。
+    ///
+    /// # 返回值
+    ///
+    /// 返回在构造瞬间冻结默认 Locale 的空变量 Web Context。
+    ///
+    /// # 错误
+    ///
+    /// exchange 为空时返回 `Web exchange cannot be null in web context`。
     pub fn new(web_exchange: Option<Arc<dyn IWebExchange>>) -> Result<Self, ValidateError> {
         Self::with_locale_and_variables(web_exchange, None, None)
     }
 
     /// 使用指定 Locale 和空变量创建 Web Context。
+    ///
+    /// 对应 Java: `WebContext#WebContext(IWebExchange, Locale)`。
+    ///
+    /// # 参数
+    ///
+    /// - `web_exchange`：当前模板执行使用的非空 Web exchange。
+    /// - `locale`：可空 Locale；为空时在基础 Context 构造阶段读取进程默认值。
+    ///
+    /// # 返回值
+    ///
+    /// 返回保留同一 exchange 身份的 Web Context。
     pub fn with_locale(
         web_exchange: Option<Arc<dyn IWebExchange>>,
         locale: Option<JavaLocale>,
@@ -33,37 +58,77 @@ impl WebContext {
     }
 
     /// 使用 exchange、Locale 与变量快照创建 Web Context。
+    ///
+    /// 对应 Java: `WebContext#WebContext(IWebExchange, Locale, Map)`。
+    ///
+    /// Java 先执行 `super(locale, variables)`，再校验 exchange；因此本实现也先完成
+    /// Locale 快照和变量浅复制，保持构造阶段的求值与失败顺序。
+    ///
+    /// # 参数
+    ///
+    /// - `web_exchange`：当前模板执行使用的非空 Web exchange。
+    /// - `locale`：可空 Locale。
+    /// - `variables`：可空、有序变量 Map 快照。
+    ///
+    /// # 返回值
+    ///
+    /// 返回共享变量值身份、但与输入条目容器独立的 Web Context。
+    ///
+    /// # 错误
+    ///
+    /// exchange 为空时返回 Java `IllegalArgumentException` 等价错误。
     pub fn with_locale_and_variables(
         web_exchange: Option<Arc<dyn IWebExchange>>,
         locale: Option<JavaLocale>,
         variables: ContextVariableEntries<'_>,
     ) -> Result<Self, ValidateError> {
+        let base = AbstractContext::new(locale, variables);
         let web_exchange = web_exchange.ok_or_else(|| ValidateError::IllegalArgument {
             message: Some("Web exchange cannot be null in web context".to_owned()),
         })?;
-        Ok(Self {
-            base: AbstractContext::new(locale, variables),
-            web_exchange,
-        })
+        Ok(Self { base, web_exchange })
     }
 
     /// 修改模板处理 Locale。
+    ///
+    /// # 参数
+    ///
+    /// - `locale`：新的非空 Locale。
+    ///
+    /// # 错误
+    ///
+    /// Locale 为空时返回 `Locale cannot be null`。
     pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
         self.base.set_locale(locale)
     }
     /// 新增或替换单个变量。
+    ///
+    /// # 参数
+    ///
+    /// - `name`：可空变量名。
+    /// - `value`：可空变量值；空值保存为显式 Java null。
     pub fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
         self.base.set_variable(name, value);
     }
     /// 按输入迭代顺序批量新增或替换变量。
+    ///
+    /// # 参数
+    ///
+    /// - `variables`：可空变量 Map；为空时无副作用。
     pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         self.base.set_variables(variables);
     }
     /// 删除指定变量。
+    ///
+    /// # 参数
+    ///
+    /// - `name`：待删除的可空变量名。
     pub fn remove_variable(&self, name: Option<&JavaString>) {
         self.base.remove_variable(name);
     }
     /// 删除全部变量。
+    ///
+    /// 已取得的变量名实时视图立即观察到清空结果。
     pub fn clear_variables(&self) {
         self.base.clear_variables();
     }
@@ -79,7 +144,7 @@ impl IContext for WebContext {
     fn contains_variable(&self, name: Option<&JavaString>) -> bool {
         self.base.contains_variable(name)
     }
-    fn get_variable_names(&self) -> Box<dyn IContextVariableNames + '_> {
+    fn get_variable_names(&self) -> Arc<dyn IContextVariableNames + '_> {
         self.base.get_variable_names()
     }
     fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
@@ -97,7 +162,13 @@ impl IContext for WebContext {
 }
 
 impl IWebContext for WebContext {
+    /// 返回构造时传入的同一 Web exchange。
     fn get_exchange(&self) -> &dyn IWebExchange {
         self.web_exchange.as_ref()
+    }
+
+    /// 返回与 `get_exchange()` 指向同一分配的共享 exchange。
+    fn get_exchange_arc(&self) -> Arc<dyn IWebExchange> {
+        Arc::clone(&self.web_exchange)
     }
 }

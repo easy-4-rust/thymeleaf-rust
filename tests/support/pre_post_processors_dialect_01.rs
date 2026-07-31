@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use thymeleaf::TemplateMode;
 use thymeleaf::dialect::{AbstractDialect, IDialect, IPostProcessorDialect, IPreProcessorDialect};
-use thymeleaf::engine::ITemplateHandler;
+use thymeleaf::engine::{ITemplateHandler, TemplateHandlerClass, TemplateHandlerConstructorError};
 use thymeleaf::postprocessor::{IPostProcessor, PostProcessor};
 use thymeleaf::preprocessor::{IPreProcessor, PreProcessor};
 
@@ -58,18 +58,24 @@ impl IPreProcessorDialect for PrePostProcessorsDialect01 {
         100
     }
 
-    fn get_pre_processors(&self) -> Vec<Arc<dyn IPreProcessor>> {
-        TEMPLATE_MODES
-            .into_iter()
-            .map(|template_mode| {
-                Arc::new(PreProcessor::new(
-                    template_mode,
-                    new_pre_processor,
-                    "org.thymeleaf.templateengine.prepostprocessors.dialect.Dialect01PreProcessor",
+    fn get_pre_processors(&self) -> Option<Vec<Option<Arc<dyn IPreProcessor>>>> {
+        Some(
+            TEMPLATE_MODES
+                .into_iter()
+                .map(|template_mode| {
+                    Some(Arc::new(PreProcessor::new(
+                    Some(template_mode),
+                    Some(TemplateHandlerClass::new(
+                        "org.thymeleaf.templateengine.prepostprocessors.dialect.Dialect01PreProcessor",
+                        new_pre_processor,
+                    )),
                     1000,
-                )) as Arc<dyn IPreProcessor>
-            })
-            .collect()
+                )
+                .expect("fixed PreProcessor configuration is valid"))
+                        as Arc<dyn IPreProcessor>)
+                })
+                .collect(),
+        )
     }
 }
 
@@ -78,25 +84,31 @@ impl IPostProcessorDialect for PrePostProcessorsDialect01 {
         100
     }
 
-    fn get_post_processors(&self) -> Vec<Arc<dyn IPostProcessor>> {
-        TEMPLATE_MODES
-            .into_iter()
-            .map(|template_mode| {
-                Arc::new(PostProcessor::new(
-                    template_mode,
-                    new_post_processor,
-                    "org.thymeleaf.templateengine.prepostprocessors.dialect.Dialect01PostProcessor",
+    fn get_post_processors(&self) -> Option<Vec<Option<Arc<dyn IPostProcessor>>>> {
+        Some(
+            TEMPLATE_MODES
+                .into_iter()
+                .map(|template_mode| {
+                    Some(Arc::new(PostProcessor::new(
+                    Some(template_mode),
+                    Some(TemplateHandlerClass::new(
+                        "org.thymeleaf.templateengine.prepostprocessors.dialect.Dialect01PostProcessor",
+                        new_post_processor,
+                    )),
                     1000,
-                )) as Arc<dyn IPostProcessor>
-            })
-            .collect()
+                )
+                .expect("fixed PostProcessor configuration is valid"))
+                        as Arc<dyn IPostProcessor>)
+                })
+                .collect(),
+        )
     }
 }
 
-fn new_pre_processor() -> Box<dyn ITemplateHandler> {
-    Box::new(Dialect01PreProcessor::new())
+fn new_pre_processor() -> Result<Box<dyn ITemplateHandler>, TemplateHandlerConstructorError> {
+    Ok(Box::new(Dialect01PreProcessor::new()))
 }
 
-fn new_post_processor() -> Box<dyn ITemplateHandler> {
-    Box::new(Dialect01PostProcessor::new())
+fn new_post_processor() -> Result<Box<dyn ITemplateHandler>, TemplateHandlerConstructorError> {
+    Ok(Box::new(Dialect01PostProcessor::new()))
 }

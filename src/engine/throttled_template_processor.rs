@@ -1,12 +1,14 @@
 use std::io::{self, Write};
-use std::sync::atomic::{AtomicI64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use crate::context::IEngineContext;
 use crate::exceptions::{TemplateEngineException, TemplateOutputException};
 use crate::model::IModel;
 use crate::util::{Charset, JavaString, JavaWriter};
-use crate::{IThrottledTemplateProcessor, TemplateSpec, ThrottledTemplateResult};
+use crate::{
+    IThrottledTemplateProcessor, TemplateSpec, ThrottledTemplateResult, ThrottledTemplateStatus,
+};
 
 use super::engine_context_manager::EngineContextManager;
 use super::i_throttled_template_writer_control::IThrottledTemplateWriterControl;
@@ -32,7 +34,7 @@ pub struct ThrottledTemplateProcessor {
     writer: Arc<Mutex<ThrottledWriter>>,
     offset: usize,
     event_processing_finished: bool,
-    all_processing_finished: bool,
+    all_processing_finished: Arc<AtomicBool>,
 }
 
 impl ThrottledTemplateProcessor {
@@ -59,7 +61,7 @@ impl ThrottledTemplateProcessor {
             writer,
             offset: 0,
             event_processing_finished: false,
-            all_processing_finished: false,
+            all_processing_finished: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -85,52 +87,43 @@ impl ThrottledTemplateProcessor {
     }
 
     fn compute_finish(&mut self) -> Result<bool, TemplateOutputException> {
-        if self.all_processing_finished {
+        if self.all_processing_finished.load(Ordering::Acquire) {
             return Ok(true);
         }
-        let pending = self
-            .flow_controller
-            .lock()
-            .expect("template flow controller lock poisoned")
-            .processor_template_handler_pending;
-        let overflown = self
-            .writer
-            .lock()
-            .expect("throttled writer lock poisoned")
+        let pending = lock(&self.flow_controller).processor_template_handler_pending;
+        let overflown = lock(&self.writer)
             .is_overflown()
             .map_err(|error| self.output_error("An error happened while checking output", error))?;
         let finished = self.event_processing_finished && !pending && !overflown;
         if finished {
-            self.all_processing_finished = true;
+            self.all_processing_finished.store(true, Ordering::Release);
         }
         Ok(finished)
     }
 
     fn process_internal(&mut self, max_output: i32) -> ThrottledTemplateResult<i32> {
-        if self.all_processing_finished || max_output == 0 {
+        if self.all_processing_finished.load(Ordering::Acquire) || max_output == 0 {
             return Ok(0);
         }
-        let initial_written_count = self
-            .writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .get_written_count();
-        let allow_result = {
-            self.writer
-                .lock()
-                .expect("throttled writer lock poisoned")
-                .allow(max_output)
-        };
+        let initial_written_count = lock(&self.writer).get_written_count();
+        let allow_result = { lock(&self.writer).allow(max_output) };
         if let Err(error) = allow_result {
             return self.fail(error);
         }
         if !self.compute_finish().map_err(box_engine_error)?
-            && !self
-                .writer
-                .lock()
-                .expect("throttled writer lock poisoned")
-                .is_stopped()
-                .map_err(|error| {
+            && !lock(&self.writer).is_stopped().map_err(|error| {
+                box_engine_error(
+                    self.output_error("An error happened while checking throttled output", error),
+                )
+            })?
+        {
+            if lock(&self.flow_controller).processor_template_handler_pending {
+                if let Err(error) = self.processor_template_handler.handle_pending() {
+                    return self.fail_boxed(error);
+                }
+            }
+            if !self.compute_finish().map_err(box_engine_error)?
+                && !lock(&self.writer).is_stopped().map_err(|error| {
                     box_engine_error(
                         self.output_error(
                             "An error happened while checking throttled output",
@@ -138,29 +131,6 @@ impl ThrottledTemplateProcessor {
                         ),
                     )
                 })?
-        {
-            if self
-                .flow_controller
-                .lock()
-                .expect("template flow controller lock poisoned")
-                .processor_template_handler_pending
-            {
-                if let Err(error) = self.processor_template_handler.handle_pending() {
-                    return self.fail_boxed(error);
-                }
-            }
-            if !self.compute_finish().map_err(box_engine_error)?
-                && !self
-                    .writer
-                    .lock()
-                    .expect("throttled writer lock poisoned")
-                    .is_stopped()
-                    .map_err(|error| {
-                        box_engine_error(self.output_error(
-                            "An error happened while checking throttled output",
-                            error,
-                        ))
-                    })?
             {
                 let processed_result = self.template_model.process_throttled(
                     self.template_handler.as_mut(),
@@ -179,20 +149,12 @@ impl ThrottledTemplateProcessor {
                 }
             }
         }
-        let flush_result = {
-            self.writer
-                .lock()
-                .expect("throttled writer lock poisoned")
-                .flush()
-        };
+        let flush_result = { lock(&self.writer).flush() };
         if let Err(error) = flush_result {
             return self
                 .fail(self.output_error("An error happened while flushing output writer", error));
         }
-        Ok(self
-            .writer
-            .lock()
-            .expect("throttled writer lock poisoned")
+        Ok(lock(&self.writer)
             .get_written_count()
             .wrapping_sub(initial_written_count))
     }
@@ -212,7 +174,7 @@ impl ThrottledTemplateProcessor {
         E: TemplateEngineException,
     {
         self.event_processing_finished = true;
-        self.all_processing_finished = true;
+        self.all_processing_finished.store(true, Ordering::Release);
         Err(Box::new(error))
     }
 
@@ -221,7 +183,7 @@ impl ThrottledTemplateProcessor {
         error: Box<dyn TemplateEngineException>,
     ) -> ThrottledTemplateResult<i32> {
         self.event_processing_finished = true;
-        self.all_processing_finished = true;
+        self.all_processing_finished.store(true, Ordering::Release);
         Err(Box::new(ThrottledEngineCause(error)))
     }
 }
@@ -244,13 +206,17 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
     }
 
     fn is_finished(&self) -> bool {
-        self.all_processing_finished
+        // Java 明确允许该观察与非并发的 process 调用来自不同线程；Acquire/Release
+        // 保证完成标志及此前模板处理写入对观察线程可见。
+        self.all_processing_finished.load(Ordering::Acquire)
+    }
+
+    fn get_completion_status(&self) -> ThrottledTemplateStatus {
+        ThrottledTemplateStatus::new(Arc::clone(&self.all_processing_finished))
     }
 
     fn process_all_writer(&mut self, writer: Box<dyn JavaWriter>) -> ThrottledTemplateResult<i32> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
+        lock(&self.writer)
             .set_output_writer(writer)
             .map_err(box_engine_error)?;
         self.process_internal(i32::MAX)
@@ -261,9 +227,7 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         output_stream: Box<dyn Write + Send>,
         charset: &Charset,
     ) -> ThrottledTemplateResult<i32> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
+        lock(&self.writer)
             .set_output_stream(output_stream, charset, i32::MAX)
             .map_err(box_engine_error)?;
         self.process_internal(i32::MAX)
@@ -274,9 +238,7 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         max_output_in_chars: i32,
         writer: Box<dyn JavaWriter>,
     ) -> ThrottledTemplateResult<i32> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
+        lock(&self.writer)
             .set_output_writer(writer)
             .map_err(box_engine_error)?;
         self.process_internal(max_output_in_chars)
@@ -288,9 +250,7 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         output_stream: Box<dyn Write + Send>,
         charset: &Charset,
     ) -> ThrottledTemplateResult<i32> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
+        lock(&self.writer)
             .set_output_stream(output_stream, charset, max_output_in_bytes)
             .map_err(box_engine_error)?;
         self.process_internal(max_output_in_bytes)
@@ -411,60 +371,40 @@ struct SharedThrottledWriterControl {
 
 impl IThrottledTemplateWriterControl for SharedThrottledWriterControl {
     fn as_sse_control(&mut self) -> Option<&mut dyn ISSEThrottledTemplateWriterControl> {
-        let is_sse = matches!(
-            *self.writer.lock().expect("throttled writer lock poisoned"),
-            ThrottledWriter::Sse(_)
-        );
+        let is_sse = matches!(*lock(&self.writer), ThrottledWriter::Sse(_));
         is_sse.then_some(self)
     }
 
     fn is_overflown(&mut self) -> io::Result<bool> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .is_overflown()
+        lock(&self.writer).is_overflown()
     }
 
     fn is_stopped(&mut self) -> io::Result<bool> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .is_stopped()
+        lock(&self.writer).is_stopped()
     }
 
     fn get_written_count(&self) -> i32 {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .get_written_count()
+        lock(&self.writer).get_written_count()
     }
 
     fn get_max_overflow_size(&self) -> i32 {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .get_max_overflow_size()
+        lock(&self.writer).get_max_overflow_size()
     }
 
     fn get_overflow_grow_count(&self) -> i32 {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .get_overflow_grow_count()
+        lock(&self.writer).get_overflow_grow_count()
     }
 }
 
 impl ISSEThrottledTemplateWriterControl for SharedThrottledWriterControl {
     fn start_event(&mut self, id: Option<&[u16]>, event: Option<&[u16]>) {
-        if let ThrottledWriter::Sse(writer) =
-            &mut *self.writer.lock().expect("throttled writer lock poisoned")
-        {
+        if let ThrottledWriter::Sse(writer) = &mut *lock(&self.writer) {
             writer.start_event(id, event);
         }
     }
 
     fn end_event(&mut self) -> io::Result<()> {
-        match &mut *self.writer.lock().expect("throttled writer lock poisoned") {
+        match &mut *lock(&self.writer) {
             ThrottledWriter::Sse(writer) => writer.end_event(),
             ThrottledWriter::Standard(_) => Ok(()),
         }
@@ -473,24 +413,15 @@ impl ISSEThrottledTemplateWriterControl for SharedThrottledWriterControl {
 
 impl JavaWriter for SharedThrottledWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .write_utf16(characters)
+        lock(&self.writer).write_utf16(characters)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .flush()
+        lock(&self.writer).flush()
     }
 
     fn close(&mut self) -> io::Result<()> {
-        self.writer
-            .lock()
-            .expect("throttled writer lock poisoned")
-            .close()
+        lock(&self.writer).close()
     }
 }
 
@@ -524,4 +455,33 @@ where
     E: TemplateEngineException,
 {
     Box::new(error)
+}
+
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use super::lock;
+
+    #[test]
+    fn internal_lock_recovers_after_a_rust_panic() {
+        let state = Arc::new(Mutex::new(1_i32));
+        let panicking_state = Arc::clone(&state);
+        let _ = std::thread::spawn(move || {
+            let _guard = panicking_state
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            panic!("poison throttled processor test state");
+        })
+        .join();
+
+        *lock(&state) = 2;
+        assert_eq!(*lock(&state), 2);
+    }
 }

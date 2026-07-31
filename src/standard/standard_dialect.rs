@@ -173,6 +173,10 @@ impl Default for StandardDialect {
 }
 
 impl IDialect for StandardDialect {
+    fn java_class_name(&self) -> &'static str {
+        "org.thymeleaf.standard.StandardDialect"
+    }
+
     fn is_standard_dialect(&self) -> bool {
         true
     }
@@ -213,18 +217,13 @@ impl IProcessorDialect for StandardDialect {
 
 impl IExecutionAttributeDialect for StandardDialect {
     fn get_execution_attributes(&self) -> Option<ExecutionAttributeMap> {
+        // Java 使用容量 5、负载因子 1.0 的 HashMap；这些固定 String key 的公开遍历
+        // 顺序由最终 bucket 顺序决定，而不是 put 调用顺序。按该顺序贡献条目，使配置
+        // 聚合及诊断日志与固定 JDK 上游保持一致。
         Some(vec![
-            execution_attribute(
-                StandardExpressions::STANDARD_VARIABLE_EXPRESSION_EVALUATOR_ATTRIBUTE_NAME,
-                self.get_variable_expression_evaluator(),
-            ),
             execution_attribute(
                 StandardExpressions::STANDARD_EXPRESSION_PARSER_ATTRIBUTE_NAME,
                 self.get_expression_parser(),
-            ),
-            execution_attribute(
-                StandardExpressions::STANDARD_CONVERSION_SERVICE_ATTRIBUTE_NAME,
-                self.get_conversion_service(),
             ),
             execution_attribute(
                 StandardSerializers::STANDARD_JAVASCRIPT_SERIALIZER_ATTRIBUTE_NAME,
@@ -234,15 +233,23 @@ impl IExecutionAttributeDialect for StandardDialect {
                 StandardSerializers::STANDARD_CSS_SERIALIZER_ATTRIBUTE_NAME,
                 self.get_css_serializer(),
             ),
+            execution_attribute(
+                StandardExpressions::STANDARD_VARIABLE_EXPRESSION_EVALUATOR_ATTRIBUTE_NAME,
+                self.get_variable_expression_evaluator(),
+            ),
+            execution_attribute(
+                StandardExpressions::STANDARD_CONVERSION_SERVICE_ATTRIBUTE_NAME,
+                self.get_conversion_service(),
+            ),
         ])
     }
 }
 
 impl IExpressionObjectDialect for StandardDialect {
-    fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory> {
-        get_or_initialize(&self.expression_object_factory, || {
+    fn get_expression_object_factory(&self) -> Option<Arc<dyn IExpressionObjectFactory>> {
+        Some(get_or_initialize(&self.expression_object_factory, || {
             Arc::new(StandardExpressionObjectFactory::new())
-        })
+        }))
     }
 }
 

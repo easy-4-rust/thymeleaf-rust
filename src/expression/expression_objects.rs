@@ -1,25 +1,27 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard, Weak};
 
-use indexmap::{IndexMap, IndexSet};
+use indexmap::IndexMap;
 use thiserror::Error;
 
 use crate::context::IExpressionContext;
 use crate::util::JavaString;
 
 use super::{
-    IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult, TemplateValue,
+    ExpressionObjectNames, IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult,
+    TemplateValue,
 };
 
 /// 表达式工具对象容器。
 ///
 /// 对应 Java: `org.thymeleaf.expression.ExpressionObjects`。
 ///
-/// 容器保存工厂在构造时声明的完整名称集合。对象仅在第一次读取时创建；可缓存对象
-/// 连同 Java `null` 结果一起缓存，非缓存对象每次读取都重新调用工厂。
+/// 容器保存工厂在构造时返回的同一共享名称集合。对象仅在第一次读取时创建；可缓存
+/// 对象连同 Java `null` 结果一起缓存，非缓存对象每次读取都重新调用工厂。容器按
+/// 模板执行创建，默认预留三个缓存项。
 pub struct ExpressionObjects {
     context: Weak<dyn IExpressionContext>,
     expression_object_factory: Arc<dyn IExpressionObjectFactory>,
-    expression_object_names: IndexSet<Option<JavaString>>,
+    expression_object_names: ExpressionObjectNames,
     objects: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
 }
 
@@ -35,17 +37,18 @@ pub enum ExpressionObjectsError {
 }
 
 impl ExpressionObjects {
-    /// 创建表达式对象容器。
+    /// 使用表达式上下文和工厂创建请求级对象容器。
     ///
     /// 对应 Java: `ExpressionObjects#ExpressionObjects(IExpressionContext,
     /// IExpressionObjectFactory)`。
     ///
     /// # 参数
-    /// - `context`：当前表达式上下文的弱引用，避免上下文和懒加载容器形成强引用环。
+    /// - `context`：当前表达式上下文的弱引用；Rust 借用关系保证容器不会脱离其所属
+    ///   Context 使用，同时避免 Java 垃圾收集可处理而 `Arc` 无法自动回收的引用环。
     /// - `expression_object_factory`：声明并创建表达式对象的工厂。
     ///
     /// # 错误
-    /// 任一参数为 `None` 时返回与 Java 参数校验同类的错误。
+    /// 任一参数为 `None` 时按 Java 校验顺序返回对应参数错误。
     pub fn new(
         context: Option<Weak<dyn IExpressionContext>>,
         expression_object_factory: Option<Arc<dyn IExpressionObjectFactory>>,
@@ -57,10 +60,9 @@ impl ExpressionObjects {
             expression_object_factory.ok_or(ExpressionObjectsError::IllegalArgument {
                 message: "Expression Object Factory cannot be null",
             })?;
-        let expression_object_names = expression_object_factory
+        let expression_object_names: ExpressionObjectNames = expression_object_factory
             .get_all_expression_object_names()
-            .into_iter()
-            .collect();
+            .unwrap_or_else(|| Arc::from([]));
 
         Ok(Self {
             context,
@@ -77,11 +79,13 @@ impl IExpressionObjects for ExpressionObjects {
     }
 
     fn contains_object(&self, name: Option<&JavaString>) -> bool {
-        self.expression_object_names.contains(&name.cloned())
+        self.expression_object_names
+            .iter()
+            .any(|candidate| candidate.as_ref() == name)
     }
 
-    fn get_object_names(&self) -> Vec<Option<JavaString>> {
-        self.expression_object_names.iter().cloned().collect()
+    fn get_object_names(&self) -> ExpressionObjectNames {
+        Arc::clone(&self.expression_object_names)
     }
 
     fn get_object(
@@ -94,7 +98,11 @@ impl IExpressionObjects for ExpressionObjects {
         if let Some(object) = read_recovering_poison(&self.objects).get(&key) {
             return Ok(object.clone());
         }
-        if !self.expression_object_names.contains(&key) {
+        if !self
+            .expression_object_names
+            .iter()
+            .any(|candidate| candidate == &key)
+        {
             return Ok(None);
         }
 
@@ -106,6 +114,7 @@ impl IExpressionObjects for ExpressionObjects {
             return Ok(object);
         }
 
+        // Java 在并发竞争时允许多个线程同时构建；最后写入缓存的结果供后续调用复用。
         write_recovering_poison(&self.objects).insert(key, object.clone());
         Ok(object)
     }

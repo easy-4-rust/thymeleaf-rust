@@ -1,0 +1,13 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+constructor.class=org.thymeleaf.cache.StandardParsedTemplateEntryValidator
+constructor.serializable=true
+valid.first=true
+valid.second=true
+valid.calls=2
+valid.cacheableCalls=0
+invalid.result=false
+invalid.calls=1
+invalid.cacheableCalls=0
+throwing.validity=java.lang.IllegalStateException:boom
+null.validity=java.lang.NullPointerException:Cannot invoke "org.thymeleaf.cache.ICacheEntryValidity.isCacheStillValid()" because the return value of "org.thymeleaf.engine.TemplateData.getValidity()" is null
+null.model=java.lang.NullPointerException:Cannot invoke "org.thymeleaf.engine.TemplateModel.getTemplateData()" because "value" is null

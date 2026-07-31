@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::cdatasection::ICDATASectionStructureHandler;
 use crate::model::IModel;
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, JavaString, Validate, ValidateError};
 
 /// 引擎内部 CDATASection 结构动作状态机。
 ///
@@ -19,14 +19,46 @@ pub(crate) struct CDATASectionStructureHandler {
 impl CDATASectionStructureHandler {
     /// 创建无待执行动作的处理器。
     pub(crate) fn new() -> Self {
-        Self {
+        let mut handler = Self {
             set_content: false,
             set_content_value: None,
             replace_with_model: false,
             replace_with_model_value: None,
             replace_with_model_processable: false,
             remove_cdata_section: false,
-        }
+        };
+        handler.reset();
+        handler
+    }
+
+    /// 设置不含 CDATA 边界的内容。对应 Java:
+    /// `CDATASectionStructureHandler#setContent(CharSequence)`。
+    ///
+    /// 方法先重置，再校验非空；失败消息精确为 `"Content cannot be null"`。
+    pub(crate) fn set_content_nullable(
+        &mut self,
+        content: Option<Arc<dyn JavaCharSequence>>,
+    ) -> Result<(), ValidateError> {
+        self.reset();
+        Validate::not_null(content.as_deref(), Some("Content cannot be null"))?;
+        self.set_content = true;
+        self.set_content_value = content;
+        Ok(())
+    }
+
+    /// 使用模型替换 CDATA。对应 Java:
+    /// `CDATASectionStructureHandler#replaceWith(IModel, boolean)`。
+    pub(crate) fn replace_with_nullable(
+        &mut self,
+        model: Option<Arc<dyn IModel>>,
+        processable: bool,
+    ) -> Result<(), ValidateError> {
+        self.reset();
+        Validate::not_null(model.as_deref(), Some("Model cannot be null"))?;
+        self.replace_with_model = true;
+        self.replace_with_model_value = model;
+        self.replace_with_model_processable = processable;
+        Ok(())
     }
 }
 
@@ -41,22 +73,18 @@ impl ICDATASectionStructureHandler for CDATASectionStructureHandler {
     }
 
     fn set_content(&mut self, content: JavaString) {
-        self.reset();
-        self.set_content = true;
-        self.set_content_value = Some(Arc::new(content));
+        self.set_content_nullable(Some(Arc::new(content)))
+            .expect("Rust non-null content boundary must satisfy Java validation");
     }
 
     fn set_content_sequence(&mut self, content: Arc<dyn JavaCharSequence>) {
-        self.reset();
-        self.set_content = true;
-        self.set_content_value = Some(content);
+        self.set_content_nullable(Some(content))
+            .expect("Rust non-null content boundary must satisfy Java validation");
     }
 
     fn replace_with(&mut self, model: Arc<dyn IModel>, processable: bool) {
-        self.reset();
-        self.replace_with_model = true;
-        self.replace_with_model_value = Some(model);
-        self.replace_with_model_processable = processable;
+        self.replace_with_nullable(Some(model), processable)
+            .expect("Rust non-null model boundary must satisfy Java validation");
     }
 
     fn remove_cdata_section(&mut self) {
