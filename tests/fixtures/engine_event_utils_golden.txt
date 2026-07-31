@@ -1,0 +1,14 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+shape=private <init>()|private static boolean computeInlineable(java.lang.CharSequence)|private static boolean computeWhitespace(java.lang.CharSequence)|private static org.thymeleaf.standard.expression.IStandardExpression parseAttributeExpression(org.thymeleaf.context.ITemplateContext,java.lang.String)|public static boolean isInlineable(org.thymeleaf.model.ICDATASection)|public static boolean isInlineable(org.thymeleaf.model.IComment)|public static boolean isInlineable(org.thymeleaf.model.IText)|public static boolean isWhitespace(org.thymeleaf.model.ICDATASection)|public static boolean isWhitespace(org.thymeleaf.model.IComment)|public static boolean isWhitespace(org.thymeleaf.model.IText)|public static org.thymeleaf.standard.expression.IStandardExpression computeAttributeExpression(org.thymeleaf.context.ITemplateContext,org.thymeleaf.model.IProcessableElementTag,org.thymeleaf.engine.AttributeName,java.lang.String)
+text.null.whitespace=false
+text.empty.whitespace=false
+text.space.whitespace=true
+text.figure-space.whitespace=false
+text.word.whitespace=false
+text.bracket.inlineable=true
+text.paren.inlineable=true
+text.malformed.inlineable=false
+cdata.space.whitespace=true
+cdata.inlineable=true
+comment.space.whitespace=true
+comment.inlineable=true

@@ -1,0 +1,5 @@
+unknown=0,1,false,null,null,false,true,true,last=java.lang.NullPointerException:Cannot invoke "java.lang.Integer.intValue()" because "this.size" is null,text={index = 0, count = 1, size = null, current = null}
+known0=0,1,true,3,value,false,true,true,last=false,text={index = 0, count = 1, size = 3, current = value}
+known1=1,2,true,3,value,true,false,false,last=false,text={index = 1, count = 2, size = 3, current = value}
+known2=2,3,true,3,null,false,true,false,last=true,text={index = 2, count = 3, size = 3, current = null}
+overflow=2147483647,-2147483648,true,-2147483648,null,true,false,false,last=true,text={index = 2147483647, count = -2147483648, size = -2147483648, current = null}

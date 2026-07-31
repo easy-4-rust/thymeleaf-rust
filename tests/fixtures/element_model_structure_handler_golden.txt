@@ -1,0 +1,4 @@
+initial=false,0,false,0,false,false,false
+combined=true,3,true,1,true,true,true
+apply=setVariables:3,removeVariable:old,setSelectionTarget:null,setInliner:null,setTemplateData:null
+reset=false,0,false,0,false,false,false

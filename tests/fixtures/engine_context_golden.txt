@@ -1,0 +1,41 @@
+baseline=10f9dd2eb8cbd98515ce14b149d115e0287d0add
+shape.abstract=protected <init>(org.thymeleaf.IEngineConfiguration,java.util.Map,java.util.Locale)|public final java.lang.String buildLink(java.lang.String,java.util.Map)|public final java.lang.String getMessage(java.lang.Class,java.lang.String,java.lang.Object[],boolean)|public final java.util.Locale getLocale()|public final java.util.Map getTemplateResolutionAttributes()|public final org.thymeleaf.IEngineConfiguration getConfiguration()|public final org.thymeleaf.context.IdentifierSequences getIdentifierSequences()|public final org.thymeleaf.expression.IExpressionObjects getExpressionObjects()|public final org.thymeleaf.model.IModelFactory getModelFactory()|public final org.thymeleaf.templatemode.TemplateMode getTemplateMode()
+shape.engine=private static java.lang.Object resolveLazy(java.lang.Object)|private void ensureLevelInitialized(int)|public <init>(org.thymeleaf.IEngineConfiguration,org.thymeleaf.engine.TemplateData,java.util.Map,java.util.Locale,java.util.Map)|public boolean containsVariable(java.lang.String)|public boolean hasSelectionTarget()|public boolean isVariableLocal(java.lang.String)|public int level()|public java.lang.Object getSelectionTarget()|public java.lang.Object getVariable(java.lang.String)|public java.lang.String getStringRepresentationByLevel()|public java.lang.String toString()|public java.util.List getElementStack()|public java.util.List getElementStackAbove(int)|public java.util.List getTemplateStack()|public java.util.Set getVariableNames()|public org.thymeleaf.engine.TemplateData getTemplateData()|public org.thymeleaf.inline.IInliner getInliner()|public void decreaseLevel()|public void increaseLevel()|public void removeVariable(java.lang.String)|public void setElementTag(org.thymeleaf.model.IProcessableElementTag)|public void setInliner(org.thymeleaf.inline.IInliner)|public void setSelectionTarget(java.lang.Object)|public void setTemplateData(org.thymeleaf.engine.TemplateData)|public void setVariable(java.lang.String,java.lang.Object)|public void setVariables(java.util.Map)
+shape.web=public <init>(org.thymeleaf.IEngineConfiguration,org.thymeleaf.engine.TemplateData,java.util.Map,org.thymeleaf.web.IWebExchange,java.util.Locale,java.util.Map)|public boolean containsVariable(java.lang.String)|public boolean hasSelectionTarget()|public boolean isVariableLocal(java.lang.String)|public int level()|public java.lang.Object getSelectionTarget()|public java.lang.Object getVariable(java.lang.String)|public java.lang.String getStringRepresentationByLevel()|public java.lang.String toString()|public java.util.List getElementStack()|public java.util.List getElementStackAbove(int)|public java.util.List getTemplateStack()|public java.util.Set getVariableNames()|public org.thymeleaf.engine.TemplateData getTemplateData()|public org.thymeleaf.inline.IInliner getInliner()|public org.thymeleaf.web.IWebExchange getExchange()|public void decreaseLevel()|public void increaseLevel()|public void removeVariable(java.lang.String)|public void setElementTag(org.thymeleaf.model.IProcessableElementTag)|public void setInliner(org.thymeleaf.inline.IInliner)|public void setSelectionTarget(java.lang.Object)|public void setTemplateData(org.thymeleaf.engine.TemplateData)|public void setVariable(java.lang.String,java.lang.Object)|public void setVariables(java.util.Map)|static java.lang.Object resolveLazy(java.lang.Object)
+shape.template.interface=public abstract boolean hasSelectionTarget()|public abstract java.lang.Object getSelectionTarget()|public abstract java.lang.String buildLink(java.lang.String,java.util.Map)|public abstract java.lang.String getMessage(java.lang.Class,java.lang.String,java.lang.Object[],boolean)|public abstract java.util.List getElementStack()|public abstract java.util.List getTemplateStack()|public abstract java.util.Map getTemplateResolutionAttributes()|public abstract org.thymeleaf.context.IdentifierSequences getIdentifierSequences()|public abstract org.thymeleaf.engine.TemplateData getTemplateData()|public abstract org.thymeleaf.inline.IInliner getInliner()|public abstract org.thymeleaf.model.IModelFactory getModelFactory()|public abstract org.thymeleaf.templatemode.TemplateMode getTemplateMode()
+shape.engine.interface=public abstract boolean isVariableLocal(java.lang.String)|public abstract int level()|public abstract java.util.List getElementStackAbove(int)|public abstract void decreaseLevel()|public abstract void increaseLevel()|public abstract void removeVariable(java.lang.String)|public abstract void setElementTag(org.thymeleaf.model.IProcessableElementTag)|public abstract void setInliner(org.thymeleaf.inline.IInliner)|public abstract void setSelectionTarget(java.lang.Object)|public abstract void setTemplateData(org.thymeleaf.engine.TemplateData)|public abstract void setVariable(java.lang.String,java.lang.Object)|public abstract void setVariables(java.util.Map)
+plain.root.names=[nullable, root]
+plain.root.value=one
+plain.root.nullable=null
+plain.root.stack=root-template
+plain.root.selection.present=false
+plain.nested.level=1
+plain.nested.root=local
+plain.nested.local=yes
+plain.nested.root.local=true
+plain.nested.selection.present=true
+plain.nested.selection=null
+plain.nested.stack=root-template,nested-template
+plain.nested.representation={1:{local=yes, root=local}<null>(nested-template),0:{nullable=null, root=one}<root-target>(root-template)}[1]
+plain.restored.level=0
+plain.restored.root=one
+plain.restored.local=null
+plain.restored.selection=root-target
+plain.restored.stack=root-template
+plain.lazy.first=lazy-1
+plain.lazy.second=lazy-1
+plain.lazy.loads=1
+web.nested.value=local
+web.nested.local=yes
+web.nested.value.local=true
+web.nested.selection.present=true
+web.nested.selection=null
+web.nested.representation={1:{value=local, local=yes}<null>,0:{value=root}<root-target>(web-root)}[1]
+web.restored.value=root
+web.restored.local=null
+web.restored.selection=root-target
+web.restored.attributes={value=root}
+expression.factory.before=0
+expression.factory.after.first=1
+expression.factory.same=true
+expression.factory.after.second=1

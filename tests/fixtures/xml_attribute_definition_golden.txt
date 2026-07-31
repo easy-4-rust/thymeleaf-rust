@@ -1,0 +1,9 @@
+name={p:code}
+hasProcessors=false
+processorCount=0
+string={p:code}
+equalsSelf=true
+equalsSame=true
+equalsDifferent=false
+hashSame=true
+hashDifferent=false

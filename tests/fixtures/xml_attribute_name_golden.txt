@@ -1,0 +1,5 @@
+prefixed=Code,true,p,[p:Code],{p:Code},p:Code
+bare=Code,false,null,[Code],{Code},Code
+equalsSame=true
+equalsDifferentCase=false
+hashSame=true
