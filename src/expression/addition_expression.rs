@@ -47,12 +47,12 @@ impl AdditionExpression {
         let (left, right) = execute_raw_operands(&self.operation, context, execution_context)?;
         let left = normalized_null_value(left);
         let right = normalized_null_value(right);
-        if let Some(left_number) = evaluate_as_number(Some(&left))? {
-            if let Some(right_number) = evaluate_as_number(Some(&right))? {
-                return Ok(Some(Arc::new(TemplateValue::Number(
-                    JavaNumber::BigDecimal(left_number.add_java(&right_number)),
-                ))));
-            }
+        if let Some(left_number) = evaluate_as_number(Some(&left))?
+            && let Some(right_number) = evaluate_as_number(Some(&right))?
+        {
+            return Ok(Some(Arc::new(TemplateValue::Number(
+                JavaNumber::BigDecimal(left_number.add_java(&right_number)),
+            ))));
         }
         let left = literal_unwrapped_string(left.as_ref())
             .ok_or_else(|| Box::new(TokenError::NullPointer) as StandardExpressionError)?;

@@ -483,13 +483,12 @@ where
         if self.container.remove(key).is_none() {
             return false;
         }
-        if let Some(fifo) = self.fifo.as_mut() {
-            if let Some(position) = fifo
+        if let Some(fifo) = self.fifo.as_mut()
+            && let Some(position) = fifo
                 .iter()
                 .position(|candidate| candidate.as_ref() == Some(key))
-            {
-                fifo[position] = None;
-            }
+        {
+            fifo[position] = None;
         }
         true
     }

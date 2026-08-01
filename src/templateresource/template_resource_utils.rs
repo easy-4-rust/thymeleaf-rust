@@ -108,10 +108,10 @@ impl TemplateResourceUtils {
 
         let base_path = path.strip_suffix('/').unwrap_or(path);
         if let Some(slash_pos) = base_path.rfind('/') {
-            if let Some(dot_pos) = base_path.rfind('.') {
-                if dot_pos > slash_pos + 1 {
-                    return Some(base_path[slash_pos + 1..dot_pos].to_owned());
-                }
+            if let Some(dot_pos) = base_path.rfind('.')
+                && dot_pos > slash_pos + 1
+            {
+                return Some(base_path[slash_pos + 1..dot_pos].to_owned());
             }
             return Some(base_path[slash_pos + 1..].to_owned());
         }

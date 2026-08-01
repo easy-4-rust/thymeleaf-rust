@@ -294,18 +294,18 @@ fn compose_inherited_message(
     message: Option<&JavaString>,
     cause: Option<&RawParseCause>,
 ) -> Option<JavaString> {
-    if let Some(cause) = cause {
-        if let Some((line, col, cause_message)) = cause.raw_parse_location.as_ref() {
-            let mut result = message_prefix(*line, *col).as_utf16().to_vec();
-            match message {
-                Some(message) => {
-                    result.push(u16::from(b' '));
-                    result.extend_from_slice(message.as_utf16());
-                }
-                None => result.extend_from_slice(cause_message.as_utf16()),
+    if let Some(cause) = cause
+        && let Some((line, col, cause_message)) = cause.raw_parse_location.as_ref()
+    {
+        let mut result = message_prefix(*line, *col).as_utf16().to_vec();
+        match message {
+            Some(message) => {
+                result.push(u16::from(b' '));
+                result.extend_from_slice(message.as_utf16());
             }
-            return Some(JavaString::from_utf16(result));
+            None => result.extend_from_slice(cause_message.as_utf16()),
         }
+        return Some(JavaString::from_utf16(result));
     }
     if let Some(message) = message {
         return Some(message.clone());

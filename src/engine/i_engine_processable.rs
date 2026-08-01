@@ -31,7 +31,7 @@ mod tests {
     impl IEngineProcessable for AlternatingProcessable {
         fn process(&mut self) -> super::EngineProcessableResult {
             self.calls += 1;
-            Ok(self.calls % 2 == 0)
+            Ok(self.calls.is_multiple_of(2))
         }
     }
 

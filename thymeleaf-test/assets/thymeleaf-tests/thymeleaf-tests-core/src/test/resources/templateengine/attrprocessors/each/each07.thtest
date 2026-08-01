@@ -1,0 +1,17 @@
+%TEMPLATE_MODE HTML
+# ------------------------------------------------------------
+%INPUT
+<table>
+  <tr th:each="product : 'oneproduct'">
+    <td th:text="${product}">name</td>
+  </tr>
+</table>
+# ------------------------------------------------------------
+%OUTPUT
+<table>
+  <tr>
+    <td>oneproduct</td>
+  </tr>
+</table>
+
+

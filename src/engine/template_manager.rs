@@ -418,14 +418,12 @@ impl ITemplateManager for TemplateManager {
             )
             .expect("template is non-null")
         });
-        if let Some(key) = cache_key.as_ref() {
-            if let Some(cached) =
+        if let Some(key) = cache_key.as_ref()
+            && let Some(cached) =
                 self.with_template_cache(|cache| cache.and_then(|cache| cache.get(key)))
-            {
-                let model =
-                    self.apply_pre_processors_if_needed(context, cached.as_ref().clone())?;
-                return Ok(Some(Box::new(model)));
-            }
+        {
+            let model = self.apply_pre_processors_if_needed(context, cached.as_ref().clone())?;
+            return Ok(Some(Box::new(model)));
         }
 
         let Some(resolution) =
@@ -453,14 +451,14 @@ impl ITemplateManager for TemplateManager {
             &resolution,
             template_data,
         )?;
-        if let Some(key) = cache_key {
-            if resolution.get_validity().is_cacheable() {
-                self.with_template_cache(|cache| {
-                    if let Some(cache) = cache {
-                        cache.put(key, Arc::new(model.clone()));
-                    }
-                });
-            }
+        if let Some(key) = cache_key
+            && resolution.get_validity().is_cacheable()
+        {
+            self.with_template_cache(|cache| {
+                if let Some(cache) = cache {
+                    cache.put(key, Arc::new(model.clone()));
+                }
+            });
         }
         self.apply_pre_processors_if_needed(context, model)
             .map(|model| Some(Box::new(model) as Box<dyn IModel>))
@@ -493,12 +491,11 @@ impl ITemplateManager for TemplateManager {
             )
             .expect("template is non-null")
         });
-        if let Some(key) = cache_key.as_ref() {
-            if let Some(cached) =
+        if let Some(key) = cache_key.as_ref()
+            && let Some(cached) =
                 self.with_template_cache(|cache| cache.and_then(|cache| cache.get(key)))
-            {
-                return Ok(Box::new(cached.as_ref().clone()));
-            }
+        {
+            return Ok(Box::new(cached.as_ref().clone()));
         }
         let validity: Arc<dyn crate::cache::ICacheEntryValidity> = if use_cache
             && owner_template_data
@@ -541,14 +538,14 @@ impl ITemplateManager for TemplateManager {
                 error,
             )
         })?;
-        if let Some(key) = cache_key {
-            if validity.is_cacheable() {
-                self.with_template_cache(|cache| {
-                    if let Some(cache) = cache {
-                        cache.put(key, Arc::new(model.clone()));
-                    }
-                });
-            }
+        if let Some(key) = cache_key
+            && validity.is_cacheable()
+        {
+            self.with_template_cache(|cache| {
+                if let Some(cache) = cache {
+                    cache.put(key, Arc::new(model.clone()));
+                }
+            });
         }
         Ok(Box::new(model))
     }

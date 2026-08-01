@@ -151,100 +151,99 @@ impl DialectSetConfiguration {
                 }
             }
 
-            if let Some(attribute_dialect) = dialect.as_execution_attribute_dialect() {
-                if let Some(attributes) = attribute_dialect.get_execution_attributes() {
-                    for (name, value) in attributes {
-                        let key = name.as_deref().map(JavaString::from_rust_str);
-                        if execution_attributes.contains_key(&key) {
-                            return Err(configuration_error(format!(
-                                "Conflicting execution attribute. Two or more dialects specify an execution attribute with the same name \"{}\".",
-                                key.as_ref()
-                                    .map(JavaString::to_string_lossy)
-                                    .unwrap_or_else(|| "null".to_owned())
-                            ))
-                            .into());
-                        }
-                        execution_attributes.insert(key, value);
+            if let Some(attribute_dialect) = dialect.as_execution_attribute_dialect()
+                && let Some(attributes) = attribute_dialect.get_execution_attributes()
+            {
+                for (name, value) in attributes {
+                    let key = name.as_deref().map(JavaString::from_rust_str);
+                    if execution_attributes.contains_key(&key) {
+                        return Err(configuration_error(format!(
+                            "Conflicting execution attribute. Two or more dialects specify an execution attribute with the same name \"{}\".",
+                            key.as_ref()
+                                .map(JavaString::to_string_lossy)
+                                .unwrap_or_else(|| "null".to_owned())
+                        ))
+                        .into());
                     }
+                    execution_attributes.insert(key, value);
                 }
             }
 
-            if let Some(expression_dialect) = dialect.as_expression_object_dialect() {
-                if let Some(factory) = expression_dialect.get_expression_object_factory() {
-                    expression_factories.push(factory);
+            if let Some(expression_dialect) = dialect.as_expression_object_dialect()
+                && let Some(factory) = expression_dialect.get_expression_object_factory()
+            {
+                expression_factories.push(factory);
+            }
+
+            if let Some(pre_processor_dialect) = dialect.as_pre_processor_dialect()
+                && let Some(dialect_pre_processors) = pre_processor_dialect.get_pre_processors()
+            {
+                for processor in dialect_pre_processors {
+                    let processor = processor.ok_or_else(|| {
+                        configuration_error(format!(
+                            "Pre-Processor list for dialect {} includes a null entry, which is forbidden.",
+                            dialect.java_class_name()
+                        ))
+                    })?;
+                    let template_mode = processor.get_template_mode().ok_or_else(|| {
+                        configuration_error(format!(
+                            "Template mode cannot be null (pre-processor: {}, dialect{})",
+                            processor.java_class_name(),
+                            dialect.java_class_name()
+                        ))
+                    })?;
+                    let handler_class = processor.get_handler_class().ok_or_else(|| {
+                        configuration_error(format!(
+                            "Pre-Processor {} for dialect {} returns a null handler class, which is forbidden.",
+                            processor.java_class_name(),
+                            processor.java_class_name()
+                        ))
+                    })?;
+                    validate_pre_processor_handler(
+                        handler_class,
+                        processor.as_ref(),
+                        dialect.as_ref(),
+                    )?;
+                    pre_processors
+                        .entry(template_mode)
+                        .or_default()
+                        .push(processor);
                 }
             }
 
-            if let Some(pre_processor_dialect) = dialect.as_pre_processor_dialect() {
-                if let Some(dialect_pre_processors) = pre_processor_dialect.get_pre_processors() {
-                    for processor in dialect_pre_processors {
-                        let processor = processor.ok_or_else(|| {
-                            configuration_error(format!(
-                                "Pre-Processor list for dialect {} includes a null entry, which is forbidden.",
-                                dialect.java_class_name()
-                            ))
-                        })?;
-                        let template_mode = processor.get_template_mode().ok_or_else(|| {
-                            configuration_error(format!(
-                                "Template mode cannot be null (pre-processor: {}, dialect{})",
-                                processor.java_class_name(),
-                                dialect.java_class_name()
-                            ))
-                        })?;
-                        let handler_class = processor.get_handler_class().ok_or_else(|| {
-                            configuration_error(format!(
-                                "Pre-Processor {} for dialect {} returns a null handler class, which is forbidden.",
-                                processor.java_class_name(),
-                                processor.java_class_name()
-                            ))
-                        })?;
-                        validate_pre_processor_handler(
-                            handler_class,
-                            processor.as_ref(),
-                            dialect.as_ref(),
-                        )?;
-                        pre_processors
-                            .entry(template_mode)
-                            .or_default()
-                            .push(processor);
-                    }
-                }
-            }
-
-            if let Some(post_processor_dialect) = dialect.as_post_processor_dialect() {
-                if let Some(dialect_post_processors) = post_processor_dialect.get_post_processors()
-                {
-                    for processor in dialect_post_processors {
-                        let processor = processor.ok_or_else(|| {
-                            configuration_error(format!(
-                                "Post-Processor list for dialect {} includes a null entry, which is forbidden.",
-                                dialect.java_class_name()
-                            ))
-                        })?;
-                        let template_mode = processor.get_template_mode().ok_or_else(|| {
-                            configuration_error(format!(
-                                "Template mode cannot be null (post-processor: {}, dialect{})",
-                                processor.java_class_name(),
-                                dialect.java_class_name()
-                            ))
-                        })?;
-                        let handler_class = processor.get_handler_class().ok_or_else(|| {
-                            configuration_error(format!(
-                                "Post-Processor {} for dialect {} returns a null handler class, which is forbidden.",
-                                processor.java_class_name(),
-                                processor.java_class_name()
-                            ))
-                        })?;
-                        validate_post_processor_handler(
-                            handler_class,
-                            processor.as_ref(),
-                            dialect.as_ref(),
-                        )?;
-                        post_processors
-                            .entry(template_mode)
-                            .or_default()
-                            .push(processor);
-                    }
+            if let Some(post_processor_dialect) = dialect.as_post_processor_dialect()
+                && let Some(dialect_post_processors) = post_processor_dialect.get_post_processors()
+            {
+                for processor in dialect_post_processors {
+                    let processor = processor.ok_or_else(|| {
+                        configuration_error(format!(
+                            "Post-Processor list for dialect {} includes a null entry, which is forbidden.",
+                            dialect.java_class_name()
+                        ))
+                    })?;
+                    let template_mode = processor.get_template_mode().ok_or_else(|| {
+                        configuration_error(format!(
+                            "Template mode cannot be null (post-processor: {}, dialect{})",
+                            processor.java_class_name(),
+                            dialect.java_class_name()
+                        ))
+                    })?;
+                    let handler_class = processor.get_handler_class().ok_or_else(|| {
+                        configuration_error(format!(
+                            "Post-Processor {} for dialect {} returns a null handler class, which is forbidden.",
+                            processor.java_class_name(),
+                            processor.java_class_name()
+                        ))
+                    })?;
+                    validate_post_processor_handler(
+                        handler_class,
+                        processor.as_ref(),
+                        dialect.as_ref(),
+                    )?;
+                    post_processors
+                        .entry(template_mode)
+                        .or_default()
+                        .push(processor);
                 }
             }
         }

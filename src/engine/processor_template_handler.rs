@@ -1161,10 +1161,10 @@ fn handle_standalone_element_state(
         )
     };
 
-    if current_gathering_model.is_some() {
-        if let Some(engine_context) = &engine_context {
-            engine_context.set_element_tag(None);
-        }
+    if current_gathering_model.is_some()
+        && let Some(engine_context) = &engine_context
+    {
+        engine_context.set_element_tag(None);
     }
 
     let mut tag = normalize_standalone_tag(event, configuration.as_ref())?;
@@ -1783,10 +1783,10 @@ fn handle_open_element_state(
         )
     };
 
-    if current_gathering_model.is_some() {
-        if let Some(engine_context) = &engine_context {
-            engine_context.set_element_tag(None);
-        }
+    if current_gathering_model.is_some()
+        && let Some(engine_context) = &engine_context
+    {
+        engine_context.set_element_tag(None);
     }
 
     let mut tag = normalize_open_tag(event, configuration.as_ref())?;

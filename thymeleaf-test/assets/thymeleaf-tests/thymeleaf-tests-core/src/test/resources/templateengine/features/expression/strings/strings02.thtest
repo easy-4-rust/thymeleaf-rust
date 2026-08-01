@@ -1,0 +1,17 @@
+%EXTENDS strings.common
+# ------------------------------------------------------------
+%CONTEXT
+anotherOne = 'one'
+anotherOne2 = 'oneone'
+anotherTwo = 'TWO'
+# ------------------------------------------------------------
+%INPUT
+<p th:text="${#strings.concat(one, anotherOne)}">...</p>
+<p th:text="${#strings.concat(one, anotherOne2)}">...</p>
+<p th:text="${#strings.concat(two, anotherTwo)}">...</p>
+# ------------------------------------------------------------
+%OUTPUT
+<p>oneone</p>
+<p>oneoneone</p>
+<p>twoTWO</p>
+

@@ -362,11 +362,9 @@ impl TemplateModelController {
             self.skip(SkipBody::SkipElements, false);
             process = true;
         }
-        if process {
-            if let Some(context) = &self.context {
-                context.increase_level();
-                context.set_element_tag(Some(tag));
-            }
+        if process && let Some(context) = &self.context {
+            context.increase_level();
+            context.set_element_tag(Some(tag));
         }
         Ok(process)
     }

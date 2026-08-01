@@ -286,10 +286,10 @@ impl TextUtils {
     ) -> Result<bool, TextUtilsError> {
         let text1 = require_sequence(text1, FIRST_TEXT_NULL)?;
         let text2 = require_sequence(text2, SECOND_TEXT_NULL)?;
-        if case_sensitive {
-            if let (Some(left), Some(right)) = (text1.as_java_string(), text2.as_java_string()) {
-                return Ok(left.as_utf16() == right.as_utf16());
-            }
+        if case_sensitive
+            && let (Some(left), Some(right)) = (text1.as_java_string(), text2.as_java_string())
+        {
+            return Ok(left.as_utf16() == right.as_utf16());
         }
         let text1_len = text1.java_length()?;
         let text2_len = text2.java_length()?;
@@ -456,10 +456,10 @@ impl TextUtils {
     ) -> Result<bool, TextUtilsError> {
         let text = require_sequence(text, TEXT_NULL)?;
         let prefix = require_sequence(prefix, PREFIX_NULL)?;
-        if case_sensitive {
-            if let (Some(text), Some(prefix)) = (text.as_java_string(), prefix.as_java_string()) {
-                return Ok(text.as_utf16().starts_with(prefix.as_utf16()));
-            }
+        if case_sensitive
+            && let (Some(text), Some(prefix)) = (text.as_java_string(), prefix.as_java_string())
+        {
+            return Ok(text.as_utf16().starts_with(prefix.as_utf16()));
         }
         let text_len = text.java_length()?;
         let prefix_len = prefix.java_length()?;
@@ -637,10 +637,10 @@ impl TextUtils {
     ) -> Result<bool, TextUtilsError> {
         let text = require_sequence(text, TEXT_NULL)?;
         let suffix = require_sequence(suffix, SUFFIX_NULL)?;
-        if case_sensitive {
-            if let (Some(text), Some(suffix)) = (text.as_java_string(), suffix.as_java_string()) {
-                return Ok(text.as_utf16().ends_with(suffix.as_utf16()));
-            }
+        if case_sensitive
+            && let (Some(text), Some(suffix)) = (text.as_java_string(), suffix.as_java_string())
+        {
+            return Ok(text.as_utf16().ends_with(suffix.as_utf16()));
         }
         let text_len = text.java_length()?;
         let suffix_len = suffix.java_length()?;
@@ -816,11 +816,10 @@ impl TextUtils {
     ) -> Result<bool, TextUtilsError> {
         let text = require_sequence(text, TEXT_NULL)?;
         let fragment = require_sequence(fragment, FRAGMENT_NULL)?;
-        if case_sensitive {
-            if let (Some(text), Some(fragment)) = (text.as_java_string(), fragment.as_java_string())
-            {
-                return Ok(slice_contains(text.as_utf16(), fragment.as_utf16()));
-            }
+        if case_sensitive
+            && let (Some(text), Some(fragment)) = (text.as_java_string(), fragment.as_java_string())
+        {
+            return Ok(slice_contains(text.as_utf16(), fragment.as_utf16()));
         }
         let text_len = text.java_length()?;
         let fragment_len = fragment.java_length()?;
@@ -1831,14 +1830,14 @@ fn hash_part_range(
     // Java 的 && 短路决定 null 是否在 String 快路径中提前触发 length()。
     if hash == 0 && begin_index == 0 {
         let sequence = text.ok_or(TextUtilsError::NullPointer)?;
-        if end_index == sequence.java_length()? {
-            if let Some(string) = sequence.as_java_string() {
-                let mut string_hash = 0_i32;
-                for &unit in string.as_utf16() {
-                    string_hash = string_hash.wrapping_mul(31).wrapping_add(i32::from(unit));
-                }
-                return Ok(string_hash);
+        if end_index == sequence.java_length()?
+            && let Some(string) = sequence.as_java_string()
+        {
+            let mut string_hash = 0_i32;
+            for &unit in string.as_utf16() {
+                string_hash = string_hash.wrapping_mul(31).wrapping_add(i32::from(unit));
             }
+            return Ok(string_hash);
         }
     }
     let mut index = begin_index;

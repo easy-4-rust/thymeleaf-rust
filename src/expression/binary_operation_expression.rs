@@ -125,10 +125,10 @@ pub(crate) fn java_values_equal(
     }
     let left = character_as_string(left);
     let right = character_as_string(right);
-    if left.java_class_name() == right.java_class_name() {
-        if let Some(comparison) = left.java_compare_to(right.as_ref()) {
-            return Ok(comparison? == Ordering::Equal);
-        }
+    if left.java_class_name() == right.java_class_name()
+        && let Some(comparison) = left.java_compare_to(right.as_ref())
+    {
+        return Ok(comparison? == Ordering::Equal);
     }
     Ok(left.java_equals(right.as_ref()))
 }

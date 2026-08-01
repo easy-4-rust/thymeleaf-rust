@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "integrations/*"]
+members = [".", "thymeleaf-test", "integrations/*"]
 exclude = ["xtask"]
 resolver = "3"
 
@@ -7,7 +7,7 @@ resolver = "3"
 name = "thymeleaf"
 version = "0.1.0-alpha.1"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 description = "A framework-neutral Thymeleaf-compatible dynamic template engine for Rust"
 license = "MIT"
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"

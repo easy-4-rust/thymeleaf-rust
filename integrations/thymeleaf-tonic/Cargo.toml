@@ -2,7 +2,7 @@
 name = "thymeleaf-tonic"
 version = "0.1.0-alpha.1"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 description = "Tonic integration for the framework-neutral thymeleaf template engine"
 license = "MIT"
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"

@@ -1,0 +1,12 @@
+[package]
+name = "thymeleaf-test"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Whole-project source-suite replay and differential acceptance for thymeleaf-rust"
+
+[dependencies]
+thymeleaf = { path = ".." }
+serde_json = "1.0"
+
+[dev-dependencies]

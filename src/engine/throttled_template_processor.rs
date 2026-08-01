@@ -117,10 +117,10 @@ impl ThrottledTemplateProcessor {
                 )
             })?
         {
-            if lock(&self.flow_controller).processor_template_handler_pending {
-                if let Err(error) = self.processor_template_handler.handle_pending() {
-                    return self.fail_boxed(error);
-                }
+            if lock(&self.flow_controller).processor_template_handler_pending
+                && let Err(error) = self.processor_template_handler.handle_pending()
+            {
+                return self.fail_boxed(error);
             }
             if !self.compute_finish().map_err(box_engine_error)?
                 && !lock(&self.writer).is_stopped().map_err(|error| {

@@ -1,0 +1,12 @@
+%TEMPLATE_MODE HTML
+# ------------------------------------------------------------
+%CONTEXT
+foo = #{ 'clazz' : 'fooCLASS' }
+# ------------------------------------------------------------
+%INPUT
+<div th:object="${foo}" th:remove="tag">
+    <span th:text="*{clazz}">...</span>
+</div>
+# ------------------------------------------------------------
+%OUTPUT
+<span>fooCLASS</span>

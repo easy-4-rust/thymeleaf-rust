@@ -56,7 +56,7 @@ struct AlternatingProcessable {
 impl IEngineProcessable for AlternatingProcessable {
     fn process(&mut self) -> Result<bool, Box<dyn thymeleaf::exceptions::TemplateEngineException>> {
         self.calls += 1;
-        Ok(self.calls % 2 == 0)
+        Ok(self.calls.is_multiple_of(2))
     }
 }
 
