@@ -27,8 +27,8 @@ use thymeleaf::expression::{
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
 use thymeleaf::templateresolver::{ITemplateResolver, TemplateResolution, TemplateResolverError};
 use thymeleaf::templateresource::{ITemplateResource, StringTemplateResource};
-use thymeleaf::{TemplateEngine, TemplateMode};
 use thymeleaf::util::{JavaDate, JavaLocale, JavaNumber, JavaString};
+use thymeleaf::{TemplateEngine, TemplateMode};
 
 const TEMPLATE: &str =
     "<!DOCTYPE html><html><body><span th:text=\"{%%}\">PLACEHOLDER</span></body></html>";
