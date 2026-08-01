@@ -16,7 +16,7 @@ use super::{
     DefaultExpression, DivisionExpression, EqualsExpression, GreaterOrEqualToExpression,
     GreaterThanExpression, IStandardExpression, IStandardVariableExpression,
     IStandardVariableExpressionEvaluator, JavaConversionResult, JavaConversionValue,
-    JavaTargetClass, LessOrEqualToExpression, LessThanExpression, MinusExpression,
+    JavaTargetClass, LessOrEqualToExpression, LessThanExpression, LiteralValue, MinusExpression,
     MultiplicationExpression, NativeExpressionObjectsWrapper, NativeShortcutExpression,
     NegationExpression, NoOpOgnlRuntime, NoSuchMethodException, NotEqualsExpression, OgnlException,
     OgnlRuntime, OrExpression, RemainderExpression, StandardExpressionExecutionContext,
@@ -428,6 +428,27 @@ impl IStandardExpression for OgnlLeafExpression {
             self.use_selection_as_root,
             expression_context,
         )
+    }
+
+    fn execute_raw(
+        &self,
+        context: &dyn IExpressionContext,
+        expression_context: &'static StandardExpressionExecutionContext,
+    ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
+        // 对应 Java `Expression.execute` 的 LiteralValue 不解包语义：
+        // 字面量叶子按原始字面量返回（Java OGNL/Thymeleaf 的加法对
+        // String 字面量拼接而非数值相加），其他计算表达式与公开执行一致。
+        match self.expression.as_ref() {
+            ComputedExpression::Literal(OgnlLiteral::String(value)) => Ok(Some(Arc::new(
+                TemplateValue::Literal(Arc::new(LiteralValue::new(Some(value.clone())))),
+            ))),
+            ComputedExpression::Literal(OgnlLiteral::Character(value)) => {
+                Ok(Some(Arc::new(TemplateValue::Literal(Arc::new(
+                    LiteralValue::new(Some(JavaString::from_utf16(vec![*value]))),
+                )))))
+            }
+            _ => self.execute_with_context(context, expression_context),
+        }
     }
 }
 
@@ -1554,12 +1575,9 @@ fn evaluate_navigation_steps(
                         .find(|(key, _)| key.java_equals(index.as_ref()))
                         .map(|(_, value)| Arc::clone(value)),
                     TemplateValue::List(values) => {
-                        let index = index
-                            .to_java_string()
-                            .and_then(|value| value.to_string_lossy().parse::<usize>().ok())
-                            .ok_or_else(|| {
-                                processing_error("list index is not an integer".to_owned())
-                            })?;
+                        let index = ognl_list_index(&index).ok_or_else(|| {
+                            processing_error("list index is not an integer".to_owned())
+                        })?;
                         Some(values.get(index).cloned().ok_or_else(|| {
                             processing_error(format!("index {index} is out of bounds"))
                         })?)
@@ -2034,6 +2052,34 @@ fn builtin_instance_of(value: &TemplateValue, type_name: &str) -> bool {
         ),
         TemplateValue::Object(value) => value.java_class_name() == type_name,
         TemplateValue::Literal(_) | TemplateValue::NoOp | TemplateValue::Null => false,
+    }
+}
+
+/// 将动态索引转换为列表下标，对应 Java OGNL `OgnlOps.getIntValue`
+/// （Double/BigDecimal 截断为 int；字符串按数字解析）。
+fn ognl_list_index(value: &TemplateValue) -> Option<usize> {
+    match value {
+        TemplateValue::Number(number) => Some(truncated_i64(number)? as usize),
+        other => other
+            .to_java_string()
+            .and_then(|value| value.to_string_lossy().parse::<usize>().ok()),
+    }
+}
+
+fn truncated_i64(number: &JavaNumber) -> Option<i64> {
+    match number {
+        JavaNumber::Byte(value) => Some(i64::from(*value)),
+        JavaNumber::Short(value) => Some(i64::from(*value)),
+        JavaNumber::Integer(value) => Some(i64::from(*value)),
+        JavaNumber::Long(value) => Some(*value),
+        JavaNumber::Float(value) => Some(*value as i64),
+        JavaNumber::Double(value) => Some(*value as i64),
+        JavaNumber::BigDecimal(value) => {
+            let divisor = BigInt::from(10_u32).pow(u32::try_from(value.scale()).unwrap_or(0));
+            (value.unscaled_value() / divisor).to_string().parse().ok()
+        }
+        JavaNumber::BigInteger(value) => value.to_string().parse().ok(),
+        JavaNumber::Other { double_value, .. } => Some(*double_value as i64),
     }
 }
 
