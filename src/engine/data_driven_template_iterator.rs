@@ -36,7 +36,6 @@ pub struct DataDrivenTemplateIterator<T> {
     values: VecDeque<T>,
     writer_control: Option<Box<dyn IThrottledTemplateWriterControl + Send>>,
     sse_events_prefix: Option<Vec<u16>>,
-    sse_events_composed_message_event_name: Vec<u16>,
     sse_events_id: i64,
     in_step: bool,
     feeding_complete: bool,
@@ -52,7 +51,6 @@ impl<T> DataDrivenTemplateIterator<T> {
             values: VecDeque::with_capacity(10),
             writer_control: None,
             sse_events_prefix: None,
-            sse_events_composed_message_event_name: SSE_MESSAGE_EVENT_NAME.to_vec(),
             sse_events_id: 0,
             in_step: false,
             feeding_complete: false,
@@ -74,7 +72,6 @@ impl<T> DataDrivenTemplateIterator<T> {
         self.sse_events_prefix = sse_events_prefix
             .filter(|prefix| !prefix.is_empty())
             .map(|prefix| prefix.as_utf16().to_vec());
-        self.sse_events_composed_message_event_name = self.compose_token(SSE_MESSAGE_EVENT_NAME);
     }
 
     /// 设置首个 SSE 事件 ID。
@@ -109,9 +106,12 @@ impl<T> DataDrivenTemplateIterator<T> {
     }
 
     /// 开始一次 message 数据迭代。
+    ///
+    /// Java `startIteration` 使用 `setSseEventsPrefix` 预组合的缓存事件名；
+    /// 这里以原始名交给 `start_step` 组合一次（`start_step` 内部对 id 与
+    /// 事件名各组合一次），结果与 Java 一致。
     pub fn start_iteration(&mut self) {
-        let event = self.sse_events_composed_message_event_name.clone();
-        self.start_step(&event);
+        self.start_step(SSE_MESSAGE_EVENT_NAME);
     }
 
     /// 完成当前 message 数据迭代。
@@ -219,7 +219,8 @@ impl<T> DataDrivenTemplateIterator<T> {
         };
         let mut result = Vec::with_capacity(prefix.len() + 1 + token.len());
         result.extend_from_slice(prefix);
-        result.push(95);
+        // Java: `composedToken[prefix.length] = '-'`（45），非下划线
+        result.push(45);
         result.extend_from_slice(token);
         result
     }
