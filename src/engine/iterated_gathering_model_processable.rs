@@ -166,15 +166,10 @@ impl IteratedGatheringModelProcessable {
         let flow = self.base.flow_controller();
         let mut handler = self.base.reentrant_processor_template_handler();
         let processed = {
-            let flow_borrow = flow.as_ref().map(|controller| {
-                controller
-                    .lock()
-                    .expect("template flow controller lock poisoned")
-            });
             self.iter_model
                 .as_ref()
                 .expect("iteration model must be selected before processing")
-                .process_throttled(handler.as_mut(), self.iter_offset, flow_borrow.as_deref())?
+                .process_throttled(handler.as_mut(), self.iter_offset, flow.as_ref())?
         };
         self.iter_offset += processed;
 

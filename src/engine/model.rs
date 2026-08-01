@@ -5,7 +5,7 @@
 
 use std::fmt::{Display, Formatter};
 use std::io;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateEngineException;
 use crate::model::{IModel, IModelError, IModelVisitor, ITemplateEvent};
@@ -60,11 +60,16 @@ impl Model {
     }
 
     /// 从偏移量开始处理，遇到流控停止标志时暂停并返回本次处理数量。
+    ///
+    /// 控制器由调用方以 `Arc<Mutex<...>>` 共享，与 `TemplateModel` 的节流入口
+    /// 保持同一语义：Java 的 `TemplateFlowController` 是无锁普通共享对象，Rust
+    /// 只在读取停止标志的瞬间持锁，避免处理器链在事件写出（Throttled writer
+    /// 会设置 stop_processing）时对同一控制器发生不可重入 Mutex 自锁。
     pub(crate) fn process_throttled(
         &self,
         handler: &mut dyn ITemplateHandler,
         offset: usize,
-        controller: Option<&TemplateFlowController>,
+        controller: Option<&Arc<Mutex<TemplateFlowController>>>,
     ) -> Result<usize, Box<dyn TemplateEngineException>> {
         if controller.is_none() {
             self.process(handler)?;
@@ -76,7 +81,14 @@ impl Model {
 
         let controller = controller.expect("controller was checked");
         let mut index = offset;
-        while index < self.queue.len() && !controller.stop_processing {
+        while index < self.queue.len() {
+            let stop = controller
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .stop_processing;
+            if stop {
+                break;
+            }
             Arc::clone(&self.queue[index]).be_handled(handler)?;
             index += 1;
         }
@@ -242,7 +254,7 @@ impl Display for Model {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
 
     use super::Model;
     use crate::engine::template_flow_controller::TemplateFlowController;
@@ -585,7 +597,7 @@ mod tests {
         model.process(&mut handler).expect("full processing");
         assert_eq!(handler.0.concat(), golden("dispatch"));
         handler.0.clear();
-        let controller = TemplateFlowController::new();
+        let controller = Arc::new(Mutex::new(TemplateFlowController::new()));
         assert_eq!(
             model
                 .process_throttled(&mut handler, 1, Some(&controller))
@@ -596,8 +608,11 @@ mod tests {
             handler.0.concat(),
             golden("throttled").split_once(',').expect("count/text").1
         );
-        let mut stopped = TemplateFlowController::new();
-        stopped.stop_processing = true;
+        let stopped = Arc::new(Mutex::new(TemplateFlowController::new()));
+        stopped
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .stop_processing = true;
         assert_eq!(
             model
                 .process_throttled(&mut handler, 0, Some(&stopped))

@@ -58,12 +58,7 @@ impl IEngineProcessable for TemplateEndModelProcessable {
         let processed = self.model.process_throttled(
             self.model_handler.borrow_mut().as_mut(),
             self.offset,
-            Some(
-                &self
-                    .flow_controller
-                    .lock()
-                    .expect("template flow controller lock poisoned"),
-            ),
+            Some(&self.flow_controller),
         )?;
         self.offset += processed;
         if self.offset < self.model.queue.len()

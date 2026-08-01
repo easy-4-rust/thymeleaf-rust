@@ -62,14 +62,10 @@ impl IEngineProcessable for SimpleModelProcessable {
             return Ok(false);
         }
         let processed = {
-            let flow_controller = self
-                .flow_controller
-                .lock()
-                .expect("template flow controller lock poisoned");
             self.model.borrow().process_throttled(
                 self.model_handler.borrow_mut().as_mut(),
                 self.offset,
-                Some(&flow_controller),
+                Some(&self.flow_controller),
             )?
         };
         self.offset += processed;

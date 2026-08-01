@@ -66,12 +66,7 @@ impl IEngineProcessable for OpenElementTagModelProcessable {
                 let processed = model_before.process_throttled(
                     self.next_template_handler.borrow_mut().as_mut(),
                     self.offset,
-                    Some(
-                        &self
-                            .flow_controller
-                            .lock()
-                            .expect("template flow controller lock poisoned"),
-                    ),
+                    Some(&self.flow_controller),
                 )?;
                 self.offset += processed;
                 if self.offset < model_before.queue.len()
@@ -114,12 +109,7 @@ impl IEngineProcessable for OpenElementTagModelProcessable {
                 let processed = model_after.process_throttled(
                     handler.borrow_mut().as_mut(),
                     self.offset,
-                    Some(
-                        &self
-                            .flow_controller
-                            .lock()
-                            .expect("template flow controller lock poisoned"),
-                    ),
+                    Some(&self.flow_controller),
                 )?;
                 self.offset += processed;
                 if self.offset < model_after.queue.len()

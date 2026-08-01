@@ -71,15 +71,10 @@ impl IEngineProcessable for GatheringModelProcessable {
         }
         let mut handler = self.base.reentrant_processor_template_handler();
         let processed = {
-            let flow_borrow = flow.as_ref().map(|controller| {
-                controller
-                    .lock()
-                    .expect("template flow controller lock poisoned")
-            });
             self.base.inner_model().process_throttled(
                 handler.as_mut(),
                 self.offset,
-                flow_borrow.as_deref(),
+                flow.as_ref(),
             )?
         };
         self.offset += processed;

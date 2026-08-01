@@ -117,7 +117,12 @@ impl ThrottledTemplateProcessor {
                 )
             })?
         {
-            if lock(&self.flow_controller).processor_template_handler_pending
+            // 先读取 pending 标志并立即释放 flow controller 锁：若把临时
+            // MutexGuard 留在 if 条件的短路链里，guard 会存活到整个 if
+            // 表达式结束，handle_pending 处理事件链时会通过
+            // ThrottledTemplateWriterWriterAdapter 重入同一 Mutex 而死锁。
+            let handler_pending = lock(&self.flow_controller).processor_template_handler_pending;
+            if handler_pending
                 && let Err(error) = self.processor_template_handler.handle_pending()
             {
                 return self.fail_boxed(error);
