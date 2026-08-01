@@ -47,6 +47,9 @@ impl TemporalObjects {
             JavaTemporalKind::LocalDate => {
                 if language == "zh" {
                     "%Y年%m月%d日"
+                } else if language == "de" {
+                    // Java: DateTimeFormatter.ofLocalizedDate(LONG).withLocale(GERMANY)
+                    "%-d. %B %Y"
                 } else {
                     "%B %-d, %Y"
                 }
@@ -54,6 +57,9 @@ impl TemporalObjects {
             JavaTemporalKind::LocalDateTime | JavaTemporalKind::ZonedDateTime => {
                 if language == "zh" {
                     "%Y年%m月%d日 %H:%M:%S"
+                } else if language == "de" {
+                    // Java: ofLocalizedDateTime(LONG).withLocale(GERMANY)
+                    "%-d. %B %Y, %H:%M:%S"
                 } else {
                     "%B %-d, %Y, %-I:%M:%S %p"
                 }

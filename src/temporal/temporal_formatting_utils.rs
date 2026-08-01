@@ -85,11 +85,26 @@ impl TemporalFormattingUtils {
             JavaTemporal::ZonedDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            _ => TemporalObjects::zoned_time(target, zone_id.unwrap_or(self.default_zone_id))?
-                .format(&pattern)
-                .to_string(),
+            // Java: `DateTimeFormatter.ofPattern(pattern).withZone(zoneId)`
+            // 对 `zonedTime(target, defaultZoneId)` 按同一瞬时重定区；
+            // 显式 zone 时先以默认区建立带区时间，再保持瞬时换算。
+            _ => {
+                let zoned = TemporalObjects::zoned_time(target, self.default_zone_id)?;
+                let converted = match zone_id {
+                    Some(zone) => zoned.with_timezone(&zone),
+                    None => zoned,
+                };
+                converted.format(&pattern).to_string()
+            }
         };
         let formatted = replace_java_fraction_markers(formatted, target)?;
+        // Java CLDR 按 locale 本地化月份/星期名；chrono 只输出英文，德语
+        // locale 下替换为 Java `Locale.GERMANY` 的名称。
+        let formatted = if locale.get_language().to_string_lossy() == "de" {
+            localize_german_names(formatted)
+        } else {
+            formatted
+        };
         Ok(Some(JavaString::from_rust_str(&formatted)))
     }
 
@@ -295,19 +310,67 @@ fn localized_pattern(target: &JavaTemporal, locale: &JavaLocale, style: &str) ->
         target,
         JavaTemporal::LocalTime(_) | JavaTemporal::OffsetTime(_, _)
     );
-    let zh = locale.get_language().to_string_lossy() == "zh";
-    match (date_only, time_only, zh, style) {
-        (true, _, true, "FULL") => "%Y年%m月%d日 %A".to_owned(),
-        (true, _, true, _) => "%Y年%m月%d日".to_owned(),
-        (true, _, false, "SHORT") => "%-m/%-d/%y".to_owned(),
-        (true, _, false, "FULL") => "%A, %B %-d, %Y".to_owned(),
-        (true, _, false, _) => "%B %-d, %Y".to_owned(),
-        (_, true, _, "SHORT") => "%-I:%M %p".to_owned(),
-        (_, true, _, _) => "%-I:%M:%S %p".to_owned(),
-        (_, _, true, _) => "%Y年%m月%d日 %H:%M:%S".to_owned(),
-        (_, _, false, "SHORT") => "%-m/%-d/%y, %-I:%M %p".to_owned(),
+    let language = locale.get_language().to_string_lossy();
+    let zh = language == "zh";
+    // Java CLDR（DateTimeFormatter.ofLocalizedDate/ofLocalizedDateTime）：
+    // 德语日期样式为 `dd.MM.yy` / `dd.MM.y` / `d. MMMM y` /
+    // `EEEE, d. MMMM y`（chrono 等价 %d.%m.%y 等）。
+    let de = language == "de";
+    match (date_only, time_only, zh, de, style) {
+        (true, _, true, _, "FULL") => "%Y年%m月%d日 %A".to_owned(),
+        (true, _, true, _, _) => "%Y年%m月%d日".to_owned(),
+        (true, _, false, true, "SHORT") => "%d.%m.%y".to_owned(),
+        (true, _, false, true, "MEDIUM") => "%d.%m.%Y".to_owned(),
+        (true, _, false, true, "FULL") => "%A, %-d. %B %Y".to_owned(),
+        (true, _, false, true, _) => "%-d. %B %Y".to_owned(),
+        (true, _, false, false, "SHORT") => "%-m/%-d/%y".to_owned(),
+        (true, _, false, false, "MEDIUM") => "%b %-d, %Y".to_owned(),
+        (true, _, false, false, "FULL") => "%A, %B %-d, %Y".to_owned(),
+        (true, _, false, false, _) => "%B %-d, %Y".to_owned(),
+        (_, true, _, _, "SHORT") => "%-I:%M %p".to_owned(),
+        (_, true, _, _, _) => "%-I:%M:%S %p".to_owned(),
+        (_, _, true, _, _) => "%Y年%m月%d日 %H:%M:%S".to_owned(),
+        (_, _, false, true, "SHORT") => "%d.%m.%y, %H:%M".to_owned(),
+        (_, _, false, true, "MEDIUM") => "%d.%m.%Y, %H:%M:%S".to_owned(),
+        (_, _, false, true, _) => "%-d. %B %Y, %H:%M:%S".to_owned(),
+        (_, _, false, false, "SHORT") => "%-m/%-d/%y, %-I:%M %p".to_owned(),
         _ => "%B %-d, %Y, %-I:%M:%S %p".to_owned(),
     }
+}
+
+/// 把英文月份/星期名替换为德语名（Java CLDR `Locale.GERMANY`）。
+fn localize_german_names(formatted: String) -> String {
+    const MONTHS: [(&str, &str); 12] = [
+        ("January", "Januar"),
+        ("February", "Februar"),
+        ("March", "März"),
+        ("April", "April"),
+        ("May", "Mai"),
+        ("June", "Juni"),
+        ("July", "Juli"),
+        ("August", "August"),
+        ("September", "September"),
+        ("October", "Oktober"),
+        ("November", "November"),
+        ("December", "Dezember"),
+    ];
+    const DAYS: [(&str, &str); 7] = [
+        ("Monday", "Montag"),
+        ("Tuesday", "Dienstag"),
+        ("Wednesday", "Mittwoch"),
+        ("Thursday", "Donnerstag"),
+        ("Friday", "Freitag"),
+        ("Saturday", "Samstag"),
+        ("Sunday", "Sonntag"),
+    ];
+    let mut out = formatted;
+    for (english, german) in MONTHS {
+        out = out.replace(english, german);
+    }
+    for (english, german) in DAYS {
+        out = out.replace(english, german);
+    }
+    out
 }
 
 fn format_year(year: i32, pattern: &str) -> String {

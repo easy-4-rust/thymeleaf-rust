@@ -175,7 +175,9 @@ pub(crate) fn java_pattern(pattern: &str) -> String {
             'M' if count >= 4 => "%B",
             'M' if count == 3 => "%b",
             'M' => "%m",
-            'd' => "%d",
+            // Java: "d" 不补零、"dd" 补零
+            'd' if count == 2 => "%d",
+            'd' => "%-d",
             'E' if count >= 4 => "%A",
             'E' => "%a",
             'H' => "%H",
