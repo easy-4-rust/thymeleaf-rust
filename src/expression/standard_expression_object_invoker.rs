@@ -91,31 +91,35 @@ fn invoke_execution_info(
     if !arguments.is_empty() {
         return Err(method_error("#execInfo", method, arguments));
     }
-    Ok(match method {
-        "getTemplateName" => execution_info
+    // Java 侧 OGNL 以 bean 属性规则解析 `#execInfo.templateName` ->
+    // `getTemplateName()`；Rust invoker 同时接受 getter 名与属性名。
+    let property = method.strip_prefix("get").map(str::to_owned);
+    let getter = property.as_deref().unwrap_or(method);
+    Ok(match getter {
+        "TemplateName" => execution_info
             .get_template_name()
             .map(|value| Arc::new(TemplateValue::string(value))),
-        "getTemplateMode" => mode_value(execution_info.get_template_mode()),
-        "getProcessedTemplateName" => execution_info
+        "TemplateMode" => mode_value(execution_info.get_template_mode()),
+        "ProcessedTemplateName" => execution_info
             .get_processed_template_name()
             .map(|value| Arc::new(TemplateValue::string(value))),
-        "getProcessedTemplateMode" => mode_value(execution_info.get_processed_template_mode()),
-        "getTemplateNames" => list_value(
+        "ProcessedTemplateMode" => mode_value(execution_info.get_processed_template_mode()),
+        "TemplateNames" => list_value(
             execution_info
                 .get_template_names()
                 .into_iter()
                 .map(string_or_null)
                 .collect(),
         ),
-        "getTemplateModes" => list_value(
+        "TemplateModes" => list_value(
             execution_info
                 .get_template_modes()
                 .into_iter()
                 .map(|value| mode_value(value).unwrap_or_else(|| Arc::new(TemplateValue::Null)))
                 .collect(),
         ),
-        "getTemplateStack" => Some(template_stack_value(execution_info)),
-        "getNow" => Some(crate::util::DateUtils::into_template_value(
+        "TemplateStack" => Some(template_stack_value(execution_info)),
+        "Now" => Some(crate::util::DateUtils::into_template_value(
             execution_info.get_now().clone(),
         )),
         _ => return Err(method_error("#execInfo", method, arguments)),
@@ -188,9 +192,11 @@ fn invoke_ids(
     }
     let target = arguments[0].as_deref();
     let value = match method {
+        // Java `Ids` 公开方法名为 seq/nextSeq/prevSeq；Rust 方法为
+        // seq/next/prev，invoker 按 Java 名称注册并把别名一并接受。
         "seq" => ids.seq(target),
-        "next" => ids.next(target),
-        "prev" => ids.prev(target),
+        "next" | "nextSeq" => ids.next(target),
+        "prev" | "prevSeq" => ids.prev(target),
         _ => return Err(method_error("#ids", method, arguments)),
     }
     .map_err(|error| invocation_error(error.to_string()))?;
