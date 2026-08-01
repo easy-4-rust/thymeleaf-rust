@@ -165,4 +165,5 @@ pub use test_engine_message_resolver::TestEngineMessageResolver;
 pub use test_link_builder::TestLinkBuilder;
 pub use test_standard_conversion_service_1::TestStandardConversionService1;
 pub use test_standard_conversion_service_4::TestStandardConversionService4;
+pub mod thtest_harness;
 pub use write_var_attribute_tag_processor::WriteVarAttributeTagProcessor;
