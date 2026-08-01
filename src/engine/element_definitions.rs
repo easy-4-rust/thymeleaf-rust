@@ -312,10 +312,14 @@ impl ElementDefinitions {
         name: ElementNameValue,
         element_type: HTMLElementType,
     ) -> Result<ElementDefinitionValue, ElementDefinitionsError> {
-        let key = name
-            .as_element_name()
-            .to_java_string()
-            .map_err(ElementDefinitionError::ElementName)?;
+        // 仓储键取第一个完整元素名（与下方别名插入的原始名称一致），
+        // 不能用 `{...}` 包裹的 toString 形式，否则查找永远 miss、
+        // 每次调用都新建定义，破坏 Java assertSame 的对象身份合同。
+        let name_arc = name.as_element_name().get_complete_element_names();
+        let complete_names = read_lock(&name_arc);
+        let key = complete_names.first().and_then(Clone::clone).ok_or(
+            ElementDefinitionError::ElementName(super::ElementNameError::EmptyCompleteElementNames),
+        )?;
         let repository = self.repository(mode);
         if let Some(value) = read_lock(repository).get(&key) {
             return Ok(value.clone());
