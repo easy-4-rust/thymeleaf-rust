@@ -266,6 +266,56 @@ fn allowed_super_member(class_name: &str, member_name: &str) -> bool {
     if class_name == "java.util.Map$Entry" {
         return matches!(member_name, "getKey" | "getValue" | "key" | "value");
     }
+    // Java 版通过 Class#isAssignableFrom 允许接口自身声明的方法（含接口名
+    // 本身）。Rust 侧以稳定 Java 类型名显式表达 Collection/Map 接口声明的方法。
+    if class_name == "java.util.Collection" {
+        return matches!(
+            member_name,
+            "size"
+                | "isEmpty"
+                | "contains"
+                | "iterator"
+                | "toArray"
+                | "add"
+                | "remove"
+                | "containsAll"
+                | "addAll"
+                | "removeAll"
+                | "retainAll"
+                | "clear"
+                | "spliterator"
+                | "stream"
+                | "parallelStream"
+                | "removeIf"
+                | "forEach"
+        );
+    }
+    if class_name == "java.util.Map" {
+        return matches!(
+            member_name,
+            "size"
+                | "isEmpty"
+                | "containsKey"
+                | "containsValue"
+                | "get"
+                | "put"
+                | "remove"
+                | "putAll"
+                | "clear"
+                | "keySet"
+                | "values"
+                | "entrySet"
+                | "getOrDefault"
+                | "forEach"
+                | "replaceAll"
+                | "putIfAbsent"
+                | "replace"
+                | "computeIfAbsent"
+                | "computeIfPresent"
+                | "compute"
+                | "merge"
+        );
+    }
     // Java 版通过 Class#isAssignableFrom 允许 Calendar 父类声明的方法。
     // Rust 侧以稳定 Java 类型名显式表达 GregorianCalendar → Calendar 的关系。
     if class_name == "java.util.GregorianCalendar" {
