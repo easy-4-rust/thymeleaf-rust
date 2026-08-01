@@ -123,7 +123,12 @@ fn compute_whitespace(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsErro
     Ok(true)
 }
 
-fn compute_inlineable(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+/// 判断内容是否包含 `[[...]]` 或 `[(...)]` 内联标记对。
+///
+/// 逐行对应 Java `AbstractTextualTemplateEvent#computeInlineable()`
+/// （事件版本：右向左扫描，后遇到的闭包覆盖前者，仅在 `n > 0` 时
+/// 识别闭包并跳过其前一个字符）。
+pub(crate) fn compute_inlineable(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
     let mut remaining = text.java_length()?;
     if remaining == 0 {
         return Ok(false);
@@ -133,16 +138,21 @@ fn compute_inlineable(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsErro
     while remaining != 0 {
         remaining -= 1;
         let current = text.java_char_at(remaining)?;
-        if current == u16::from(b']') && previous == u16::from(b']') {
+        if remaining > 0 && current == u16::from(b']') && previous == u16::from(b']') {
             inline = 1;
-        } else if current == u16::from(b')') && previous == u16::from(b']') {
+            remaining -= 1;
+            previous = text.java_char_at(remaining)?;
+        } else if remaining > 0 && current == u16::from(b')') && previous == u16::from(b']') {
             inline = 2;
+            remaining -= 1;
+            previous = text.java_char_at(remaining)?;
         } else if (inline == 1 && current == u16::from(b'[') && previous == u16::from(b'['))
             || (inline == 2 && current == u16::from(b'[') && previous == u16::from(b'('))
         {
             return Ok(true);
+        } else {
+            previous = current;
         }
-        previous = current;
     }
     Ok(false)
 }

@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::util::{JavaCharSequence, JavaString, JavaWriter, TextUtilsError};
 
-use super::AbstractTemplateEvent;
+use super::{AbstractTemplateEvent, engine_event_utils::compute_inlineable};
 
 /// 文本型模板事件共享的延迟字符串、长度和内容分类逻辑。
 ///
@@ -135,7 +135,10 @@ impl AbstractTextualTemplateEvent {
         Ok(result)
     }
 
-    /// 判断内容是否包含 `[[...]]` 或 `[(...)]` 内联起始/结束标记组合。
+    /// 判断内容是否包含 `[[...]]` 或 `[(...)]` 内联标记对。
+    ///
+    /// 对应 Java `AbstractTextualTemplateEvent#isInlineable()`，算法与
+    /// `EngineEventUtils::compute_inlineable` 一致（右向左闭包支配扫描）。
     pub fn is_inlineable(&self) -> Result<bool, TextUtilsError> {
         if let Some(value) = *read_lock(&self.computed_inlineable) {
             return Ok(value);
@@ -143,9 +146,7 @@ impl AbstractTextualTemplateEvent {
         let text = self
             .get_content_text()?
             .unwrap_or_else(|| JavaString::from_utf16(Vec::new()));
-        let units = text.as_utf16();
-        let result = contains_ordered_pair(units, b"[[", b"]]")
-            || contains_ordered_pair(units, b"[(", b")]");
+        let result = compute_inlineable(&text)?;
         *write_lock(&self.computed_inlineable) = Some(result);
         Ok(result)
     }
@@ -171,17 +172,6 @@ impl AbstractTextualTemplateEvent {
         }
         Ok(())
     }
-}
-
-fn contains_ordered_pair(units: &[u16], opening: &[u8; 2], closing: &[u8; 2]) -> bool {
-    let opening = opening.map(u16::from);
-    let closing = closing.map(u16::from);
-    let Some(opening_index) = units.windows(2).position(|pair| pair == opening) else {
-        return false;
-    };
-    units[opening_index + 2..]
-        .windows(2)
-        .any(|pair| pair == closing)
 }
 
 fn sequence(event: &AbstractTextualTemplateEvent) -> Result<&dyn JavaCharSequence, TextUtilsError> {
