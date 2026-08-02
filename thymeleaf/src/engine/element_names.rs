@@ -300,11 +300,17 @@ fn repository_get_or_store(
     let value = builder()?;
     let names = value.as_element_name().get_complete_element_names();
     let names = read_recovering_poison(&names).clone();
+    let mut keys = Vec::with_capacity(names.len());
     for name in names.into_iter().flatten() {
         let alias = repository_key(mode, &name);
-        if repository.values.contains_key(&alias) {
-            return Err(ElementNamesError::RepositoryAliasCollision);
+        // 对应 Java `ElementNamesRepository` 的首注册者胜语义：任何 complete name 键
+        // 已被不同对象占用时，返回既有绑定（Java 读路径 short-circuit），keep-first。
+        if let Some(existing) = repository.values.get(&alias) {
+            return Ok(existing.clone());
         }
+        keys.push(alias);
+    }
+    for alias in keys {
         repository.values.insert(alias, value.clone());
     }
     Ok(value)

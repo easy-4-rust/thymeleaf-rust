@@ -291,11 +291,18 @@ fn repository_get_or_store(
     let value = builder()?;
     let names = value.as_attribute_name().get_complete_attribute_names();
     let names = read_recovering_poison(&names).clone();
+    let mut keys = Vec::with_capacity(names.len());
     for name in names.into_iter().flatten() {
         let alias = repository_key(mode, &name);
-        if repository.values.contains_key(&alias) {
-            return Err(AttributeNamesError::RepositoryAliasCollision);
+        // 对应 Java `AttributeNamesRepository` 的首注册者胜语义：任何 complete name
+        // 键已被不同对象占用时，返回既有绑定（Java 读路径的 short-circuit），不报错
+        // 也不覆盖——Rust 侧以 keep-first 代替 Java 的重复键崩溃。
+        if let Some(existing) = repository.values.get(&alias) {
+            return Ok(existing.clone());
         }
+        keys.push(alias);
+    }
+    for alias in keys {
         repository.values.insert(alias, value.clone());
     }
     Ok(value)

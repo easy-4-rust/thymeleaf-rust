@@ -10,6 +10,7 @@
 
 use std::sync::Arc;
 
+use serial_test::serial;
 use thymeleaf::engine::{
     AttributeNameValue, AttributeNames, ElementNameValue, ElementNames, TextAttributeName,
     TextElementName,
@@ -65,6 +66,7 @@ fn element_to_string(value: &ElementNameValue) -> String {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_html_buffer() {
     let name = AttributeNames::for_name_buffer(
         Some(thymeleaf::TemplateMode::HTML),
@@ -223,6 +225,7 @@ fn attribute_names_html_buffer() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_html_buffer_cache_identity() {
     let html = thymeleaf::TemplateMode::HTML;
     let first = AttributeNames::for_html_name(Some(&js("data-something"))).expect("name");
@@ -247,6 +250,7 @@ fn attribute_names_html_buffer_cache_identity() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_html_buffer_errors() {
     let html = Some(thymeleaf::TemplateMode::HTML);
     // Java: forHTMLName(null, 0, 0) → IllegalArgumentException
@@ -271,6 +275,7 @@ fn attribute_names_html_buffer_errors() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_html_string() {
     let name = AttributeNames::for_html_name(Some(&js("data-something"))).expect("name");
     assert_eq!(
@@ -360,6 +365,7 @@ fn attribute_names_html_string() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_html_cache_aliases() {
     // Java assertSame 系列：data-th-something 与 th:something 同一实例
     let th = AttributeNames::for_html_name(Some(&js("th:something"))).expect("name");
@@ -397,13 +403,21 @@ fn attribute_names_html_cache_aliases() {
         "blank prefix aliases no prefix"
     );
 
+    // 对应 Java testHTMLString 方法内顺序：先注册 direct {xmlns:th}，withPrefix
+    // 经仓库读短路返回同一对象——避免 2 名形式 {xmlns:th,data-xmlns-th} 抢占键。
+    let _canonical = AttributeNames::for_html_name(Some(&js("xmlns:th"))).expect("name");
     let th = AttributeNames::for_html_name_with_prefix(Some(&js("xmlns")), Some(&js("th")))
         .expect("name");
     let ns = AttributeNames::for_html_name(Some(&js("XMLNS:TH"))).expect("name");
     assert!(Arc::ptr_eq(&th, &ns), "XMLNS:TH aliases xmlns:th");
+    assert!(
+        Arc::ptr_eq(&_canonical, &th),
+        "withPrefix 读短路返回 direct 对象"
+    );
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_html_string_errors() {
     // Java: forHTMLName(null)/("")/("t","")/(" ")/("t"," ") → IllegalArgumentException
     assert!(
@@ -433,6 +447,7 @@ fn attribute_names_html_string_errors() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_xml_buffer_and_string() {
     let xml = Some(thymeleaf::TemplateMode::XML);
     let name = AttributeNames::for_name_buffer(
@@ -611,6 +626,7 @@ fn attribute_names_xml_buffer_and_string() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_xml_errors() {
     let xml = Some(thymeleaf::TemplateMode::XML);
     assert!(
@@ -632,6 +648,7 @@ fn attribute_names_xml_errors() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_html_buffer_and_string() {
     let html = Some(thymeleaf::TemplateMode::HTML);
     let name = ElementNames::for_name_buffer(
@@ -776,6 +793,7 @@ fn element_names_html_buffer_and_string() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_html_cache_aliases() {
     let first = ElementNames::for_html_name(Some(&js("data-something"))).expect("name");
     let second = ElementNames::for_html_name(Some(&js("data-something"))).expect("name");
@@ -835,6 +853,7 @@ fn element_names_html_cache_aliases() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_html_errors() {
     let html = Some(thymeleaf::TemplateMode::HTML);
     assert!(
@@ -856,6 +875,7 @@ fn element_names_html_errors() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_xml_buffer_and_string() {
     let xml = Some(thymeleaf::TemplateMode::XML);
     let name = ElementNames::for_name_buffer(
@@ -937,6 +957,7 @@ fn element_names_xml_buffer_and_string() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_xml_errors() {
     let xml = Some(thymeleaf::TemplateMode::XML);
     assert!(
@@ -958,6 +979,7 @@ fn element_names_xml_errors() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_text_buffer() {
     let text = Some(thymeleaf::TemplateMode::TEXT);
     let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("th:something")), 0, 12)
@@ -1060,6 +1082,7 @@ fn attribute_names_text_buffer() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_text_string() {
     let name = AttributeNames::for_text_name(Some(&js("th:something"))).expect("text attr");
     assert_eq!(text_attribute_to_string(&name), "{th:something}");
@@ -1092,6 +1115,7 @@ fn attribute_names_text_string() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_text_buffer() {
     let text = Some(thymeleaf::TemplateMode::TEXT);
     let name = ElementNames::for_name_buffer(text, Some(&as_utf16("th:something")), 0, 12)
@@ -1140,6 +1164,7 @@ fn element_names_text_buffer() {
 }
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_text_string() {
     let name = ElementNames::for_text_name(Some(&js("th:something"))).expect("text element");
     assert_eq!(text_element_to_string(&name), "{th:something}");
@@ -1171,6 +1196,7 @@ fn element_names_text_string() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn attribute_names_xml_string_full_java_parity() {
     // Java: forHTMLName(null, "data-something") -> {data-something}, prefix null
     let name = AttributeNames::for_html_name(Some(&js("data-something"))).expect("name");
@@ -1372,6 +1398,7 @@ fn attribute_names_xml_string_full_java_parity() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_xml_string_full_java_parity() {
     // Java: forXMLName(null, "th:something") -> {th:something}
     let name = ElementNames::for_xml_name(Some(&js("th:something"))).expect("name");
@@ -1574,6 +1601,7 @@ fn element_names_xml_string_full_java_parity() {
 // ===========================================================================
 
 #[test]
+#[serial(attribute_element_name)]
 fn element_names_html_string_extra_aliases() {
     // Java: forHTMLName("th","something") -> {th:something,th-something}
     let name = ElementNames::for_html_name_with_prefix(Some(&js("th")), Some(&js("something")))
@@ -1607,11 +1635,18 @@ fn element_names_html_string_extra_aliases() {
         "TH-SOMETHING aliases th:something"
     );
 
+    // 对应 Java 方法内顺序：先注册 direct {xmlns:th}，withPrefix 读短路返回同一对象，
+    // 避免 2 名形式 {xmlns:th,xmlns-th} 抢占元素 HTML 仓库键。
+    let _canonical = ElementNames::for_html_name(Some(&js("xmlns:th"))).expect("name");
     let xmlns =
         ElementNames::for_html_name_with_prefix(Some(&js("xmlns")), Some(&js("th"))).expect("name");
     let upper =
         ElementNames::for_html_name_with_prefix(Some(&js("XMLNS")), Some(&js("TH"))).expect("name");
     assert!(Arc::ptr_eq(&xmlns, &upper), "XMLNS/TH aliases xmlns/th");
+    assert!(
+        Arc::ptr_eq(&_canonical, &xmlns),
+        "withPrefix 读短路返回 direct 对象"
+    );
 
     let th = ElementNames::for_html_name(Some(&js("th:something"))).expect("name");
     let hyphen = ElementNames::for_html_name(Some(&js("th-something"))).expect("name");
