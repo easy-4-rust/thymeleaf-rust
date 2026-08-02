@@ -165,7 +165,7 @@ Golden harness 必须：
 | 可比较模板行为 | 2,595 / 2,595 Rust 输出/异常与固定 Java `.thtest` 期望一致 |
 | 策略差异 | 13 / 13 有上游禁用或安全边界证据，禁止伪装为执行成功 |
 | Java SOURCE_PARITY | 875 / 875 源码入口、五模块 2,156 / 2,156 运行时 case 均有处置，`MISSING=0` |
-| Java Oracle | 固定 JDK 21、`en_US` 下五模块 2,156 / 2,156 通过；Core 为 1,154 / 1,154 |
+| Java Oracle | 固定 JDK 21、`en_US` 下 Core 1,154 / 1,154 通过（Spring 5/6 与 Spring Security 5/6 共 1,002 case 已移除，POLICY_DIFFERENCE） |
 | 固定 Golden | Java 生成记录与 Rust 消费结果逐记录一致 |
 
 ```bash

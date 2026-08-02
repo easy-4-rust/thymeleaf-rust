@@ -105,7 +105,7 @@
 
 ## 测试脚本镜像与测试逻辑 1:1
 
-- **测试脚本**：上游 `tests/` 五模块的 **.thtest 语料（3493 文件）** 1:1 字节镜像到
+- **测试脚本**：上游 `tests/` 的 **.thtest 语料（当前 Core 2,609 文件，Spring 已移除）** 1:1 字节镜像到
   `thymeleaf-test/assets/thymeleaf-tests/`（`diff -r` 验证），由
   `tests/acceptance.rs` 按 SHA-256 逐文件固定；`source-test-parity.json`
   的 `test_case`（2608 可执行 .thtest）与 `test_asset`（3570 条目）双门禁。
