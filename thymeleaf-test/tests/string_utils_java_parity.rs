@@ -228,3 +228,176 @@ fn pack_removes_whitespace_and_lowercases() {
 fn pack_none() {
     assert!(StringUtils::pack(None).is_none());
 }
+
+// ===========================================================================
+// Java StringUtilsTest 逐方法 1:1 复刻（capitalize/unCapitalize/
+// capitalizeWords/substring/pack 边界与 null/空串/空白变体）
+// ===========================================================================
+
+/// 把 Option<JavaString> 压成可比较文本（None -> "<null>"）。
+fn text(value: Option<JavaString>) -> String {
+    value
+        .map(|value| value.to_string_lossy())
+        .unwrap_or_else(|| "<null>".to_owned())
+}
+
+#[test]
+fn capitalize_all_java_variants_match() {
+    // testCapitalize1-6：首字符 title-case；首字符为空白时不变；空串不变；null -> null
+    assert_eq!(text(StringUtils::capitalize(Some(&js("abc")))), "Abc");
+    assert_eq!(
+        text(StringUtils::capitalize(Some(&js("          abc")))),
+        "          abc"
+    );
+    assert_eq!(text(StringUtils::capitalize(Some(&js("")))), "");
+    assert_eq!(text(StringUtils::capitalize(None)), "<null>");
+    assert_eq!(
+        text(StringUtils::capitalize(Some(&js("          Abc")))),
+        "          Abc"
+    );
+    assert_eq!(
+        text(StringUtils::capitalize(Some(&js("abc def")))),
+        "Abc def"
+    );
+}
+
+#[test]
+fn un_capitalize_all_java_variants_match() {
+    // testUnCapitalize1-6
+    assert_eq!(text(StringUtils::un_capitalize(Some(&js("ABC")))), "aBC");
+    assert_eq!(
+        text(StringUtils::un_capitalize(Some(&js("          ABC")))),
+        "          ABC"
+    );
+    assert_eq!(text(StringUtils::un_capitalize(Some(&js("")))), "");
+    assert_eq!(text(StringUtils::un_capitalize(None)), "<null>");
+    assert_eq!(
+        text(StringUtils::un_capitalize(Some(&js("          Abc")))),
+        "          Abc"
+    );
+    assert_eq!(
+        text(StringUtils::un_capitalize(Some(&js("Abc Def")))),
+        "abc Def"
+    );
+}
+
+#[test]
+fn capitalize_words_all_java_variants_match() {
+    // testCapitalizeWords1-13：默认 whitespace 分隔 + 自定义分隔符 + 空串/null
+    assert_eq!(text(StringUtils::capitalize_words(Some(&js("")), None)), "");
+    assert_eq!(
+        text(StringUtils::capitalize_words(Some(&js("   ")), None)),
+        "   "
+    );
+    assert_eq!(
+        text(StringUtils::capitalize_words(Some(&js("a")), None)),
+        "A"
+    );
+    assert_eq!(
+        text(StringUtils::capitalize_words(Some(&js("A")), None)),
+        "A"
+    );
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("aaa bbb ccc")),
+            None
+        )),
+        "Aaa Bbb Ccc"
+    );
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("aaa   bbb   ccc")),
+            None
+        )),
+        "Aaa   Bbb   Ccc"
+    );
+    // testCapitalizeWords7：自定义分隔符 " "
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("a.ze tyu iop")),
+            Some(&js(" "))
+        )),
+        "A.ze Tyu Iop"
+    );
+    // testCapitalizeWords8/9/10：自定义分隔符 " ."
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("a....ze       tyu     iop")),
+            Some(&js(" ."))
+        )),
+        "A....Ze       Tyu     Iop"
+    );
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("     aaaaa....zzzzz       ttttt     nnnnn")),
+            Some(&js(" ."))
+        )),
+        "     Aaaaa....Zzzzz       Ttttt     Nnnnn"
+    );
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("     aaaaa....zzzzz       ttttt     nnnnn   ")),
+            Some(&js(" ."))
+        )),
+        "     Aaaaa....Zzzzz       Ttttt     Nnnnn   "
+    );
+    // testCapitalizeWords11-13：空串与 null
+    assert_eq!(
+        text(StringUtils::capitalize_words(
+            Some(&js("")),
+            Some(&js(" ."))
+        )),
+        ""
+    );
+    assert_eq!(text(StringUtils::capitalize_words(None, None)), "<null>");
+    assert_eq!(
+        text(StringUtils::capitalize_words(None, Some(&js(" .")))),
+        "<null>"
+    );
+}
+
+#[test]
+fn substring_java_variants_match() {
+    // testSubstring1-5：2 参 substring（Java StringUtils.substring(target, begin)）
+    assert_eq!(
+        text(StringUtils::substring_from(Some(&js("abcdef")), 0).unwrap()),
+        "abcdef"
+    );
+    assert_eq!(
+        text(StringUtils::substring_from(Some(&js("abcdef")), 2).unwrap()),
+        "cdef"
+    );
+    assert!(StringUtils::substring_from(None, 2).unwrap().is_none());
+    // 负索引与越界 -> Java IllegalArgumentException（Rust 错误路径）
+    assert!(StringUtils::substring_from(Some(&js("abcdef")), -2).is_err());
+    assert!(StringUtils::substring_from(Some(&js("abcdef")), 7).is_err());
+}
+
+#[test]
+fn pack_all_java_variants_match() {
+    // Java testPack 全部 13 条断言（不含 Java 独有的 assertSame 实例复用语义）
+    assert_eq!(text(StringUtils::pack(None)), "<null>");
+    assert_eq!(text(StringUtils::pack(Some(&js("")))), "");
+    assert_eq!(text(StringUtils::pack(Some(&js(" ")))), "");
+    assert_eq!(text(StringUtils::pack(Some(&js("  ")))), "");
+    assert_eq!(text(StringUtils::pack(Some(&js("    \n ")))), "");
+    assert_eq!(text(StringUtils::pack(Some(&js("   abc  ")))), "abc");
+    assert_eq!(text(StringUtils::pack(Some(&js("   AbC  ")))), "abc");
+    assert_eq!(text(StringUtils::pack(Some(&js("   a   b   c  ")))), "abc");
+    assert_eq!(
+        text(StringUtils::pack(Some(&js("   a   b   \nc\n  ")))),
+        "abc"
+    );
+    assert_eq!(
+        text(StringUtils::pack(Some(&js(
+            "   a23   b   (\n%\t& __\nc\n  "
+        )))),
+        "a23b(%&__c"
+    );
+    assert_eq!(
+        text(StringUtils::pack(Some(&js(
+            "   A23   B   (\n%\t& __\nC\n  "
+        )))),
+        "a23b(%&__c"
+    );
+}

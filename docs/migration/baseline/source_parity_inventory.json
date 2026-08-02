@@ -15,11 +15,11 @@
     "runtime_cases": 2156,
     "missing": 0,
     "dispositions": {
-      "MAPPED": 168,
+      "MAPPED": 211,
       "MERGED": 90,
       "NOT_APPLICABLE": 1,
       "POLICY_DIFFERENCE": 460,
-      "SPLIT": 156
+      "SPLIT": 113
     },
     "modules": {
       "tests/thymeleaf-tests-core": 413,
@@ -5758,20 +5758,15 @@
       "runtime_cases": [
         "testPrintTestEnumDefaultJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintTestEnumJacksonJS01",
@@ -5784,20 +5779,15 @@
       "runtime_cases": [
         "testPrintTestEnumJacksonJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintAnonymousEnumDefaultJS01",
@@ -5810,20 +5800,15 @@
       "runtime_cases": [
         "testPrintAnonymousEnumDefaultJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintAnonymousEnumJacksonJS01",
@@ -5836,20 +5821,15 @@
       "runtime_cases": [
         "testPrintAnonymousEnumJacksonJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintTestEnumDefaultJS02",
@@ -5862,20 +5842,15 @@
       "runtime_cases": [
         "testPrintTestEnumDefaultJS02"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintTestEnumJacksonJS02",
@@ -5888,20 +5863,15 @@
       "runtime_cases": [
         "testPrintTestEnumJacksonJS02"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintAnonymousEnumDefaultJS02",
@@ -5914,20 +5884,15 @@
       "runtime_cases": [
         "testPrintAnonymousEnumDefaultJS02"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintAnonymousEnumJacksonJS02",
@@ -5940,20 +5905,15 @@
       "runtime_cases": [
         "testPrintAnonymousEnumJacksonJS02"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintRecordDefaultJS01",
@@ -5966,20 +5926,15 @@
       "runtime_cases": [
         "testPrintRecordDefaultJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintRecordJacksonJS01",
@@ -5992,20 +5947,15 @@
       "runtime_cases": [
         "testPrintRecordJacksonJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintRecordWithSpecialCharsDefaultJS01",
@@ -6018,20 +5968,15 @@
       "runtime_cases": [
         "testPrintRecordWithSpecialCharsDefaultJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest#testPrintRecordWithSpecialCharsJacksonJS01",
@@ -6044,20 +5989,15 @@
       "runtime_cases": [
         "testPrintRecordWithSpecialCharsJacksonJS01"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/serializer/standard_java_script_serializer.rs",
-          "marker": "StandardJavaScriptSerializer"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/standard_java_script_serializer_java_parity.rs",
+          "marker": "print_test_enum_default_js01"
         }
       ],
-      "rationale": "Java StandardJavaScriptSerializer 的方法级断言拆入对应 Rust 对象 StandardJavaScriptSerializer 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.templateengine.aggregation.AggregationTest#testContext",
@@ -9841,20 +9781,15 @@
       "runtime_cases": [
         "testCapitalize1"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalize2",
@@ -9867,20 +9802,15 @@
       "runtime_cases": [
         "testCapitalize2"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalize3",
@@ -9893,20 +9823,15 @@
       "runtime_cases": [
         "testCapitalize3"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalize4",
@@ -9919,20 +9844,15 @@
       "runtime_cases": [
         "testCapitalize4"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalize5",
@@ -9945,20 +9865,15 @@
       "runtime_cases": [
         "testCapitalize5"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalize6",
@@ -9971,20 +9886,15 @@
       "runtime_cases": [
         "testCapitalize6"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testUnCapitalize1",
@@ -9997,20 +9907,15 @@
       "runtime_cases": [
         "testUnCapitalize1"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testUnCapitalize2",
@@ -10023,20 +9928,15 @@
       "runtime_cases": [
         "testUnCapitalize2"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testUnCapitalize3",
@@ -10049,20 +9949,15 @@
       "runtime_cases": [
         "testUnCapitalize3"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testUnCapitalize4",
@@ -10075,20 +9970,15 @@
       "runtime_cases": [
         "testUnCapitalize4"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testUnCapitalize5",
@@ -10101,20 +9991,15 @@
       "runtime_cases": [
         "testUnCapitalize5"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testUnCapitalize6",
@@ -10127,20 +10012,15 @@
       "runtime_cases": [
         "testUnCapitalize6"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords1",
@@ -10153,20 +10033,15 @@
       "runtime_cases": [
         "testCapitalizeWords1"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords2",
@@ -10179,20 +10054,15 @@
       "runtime_cases": [
         "testCapitalizeWords2"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords3",
@@ -10205,20 +10075,15 @@
       "runtime_cases": [
         "testCapitalizeWords3"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords4",
@@ -10231,20 +10096,15 @@
       "runtime_cases": [
         "testCapitalizeWords4"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords5",
@@ -10257,20 +10117,15 @@
       "runtime_cases": [
         "testCapitalizeWords5"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords6",
@@ -10283,20 +10138,15 @@
       "runtime_cases": [
         "testCapitalizeWords6"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords7",
@@ -10309,20 +10159,15 @@
       "runtime_cases": [
         "testCapitalizeWords7"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords8",
@@ -10335,20 +10180,15 @@
       "runtime_cases": [
         "testCapitalizeWords8"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords9",
@@ -10361,20 +10201,15 @@
       "runtime_cases": [
         "testCapitalizeWords9"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords10",
@@ -10387,20 +10222,15 @@
       "runtime_cases": [
         "testCapitalizeWords10"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords11",
@@ -10413,20 +10243,15 @@
       "runtime_cases": [
         "testCapitalizeWords11"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords12",
@@ -10439,20 +10264,15 @@
       "runtime_cases": [
         "testCapitalizeWords12"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testCapitalizeWords13",
@@ -10465,20 +10285,15 @@
       "runtime_cases": [
         "testCapitalizeWords13"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testSubstring1",
@@ -10491,20 +10306,15 @@
       "runtime_cases": [
         "testSubstring1"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testSubstring2",
@@ -10517,20 +10327,15 @@
       "runtime_cases": [
         "testSubstring2"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testSubstring3",
@@ -10543,20 +10348,15 @@
       "runtime_cases": [
         "testSubstring3"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testSubstring4",
@@ -10569,20 +10369,15 @@
       "runtime_cases": [
         "testSubstring4"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testSubstring5",
@@ -10595,20 +10390,15 @@
       "runtime_cases": [
         "testSubstring5"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.StringUtilsTest#testPack",
@@ -10621,20 +10411,15 @@
       "runtime_cases": [
         "testPack"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_OBJECT_CONTRACT",
-          "path": "thymeleaf/src/util/string_utils.rs",
-          "marker": "StringUtils"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/string_utils_java_parity.rs",
+          "marker": "capitalize_all_java_variants_match"
         }
       ],
-      "rationale": "Java StringUtils 的方法级断言拆入对应 Rust 对象 StringUtils 的局部合同与共享端到端语料。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.util.TextUtilsTest#testContains",

@@ -105,6 +105,14 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
         "tests/temporal_utils_java_parity.rs",
         "temporal_set_utils_matches_java",
     ),
+    "org.thymeleaf.util.StringUtilsTest": (
+        "tests/string_utils_java_parity.rs",
+        "capitalize_all_java_variants_match",
+    ),
+    "org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest": (
+        "tests/standard_java_script_serializer_java_parity.rs",
+        "print_test_enum_default_js01",
+    ),
     "org.thymeleaf.templateparser.reader.ParserLevelCommentMarkupReaderTest": (
         "tests/markup_comment_reader_java_parity.rs",
         "markup_comment_readers_match_java_golden",

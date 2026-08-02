@@ -205,3 +205,77 @@ fn separate_exchanges_do_not_share_attributes() {
     assert!(exchange_a.contains_attribute(Some(&JavaString::from_rust_str("only_a"))));
     assert!(!exchange_b.contains_attribute(Some(&JavaString::from_rust_str("only_a"))));
 }
+
+// ===========================================================================
+// 6. 变量与 exchange 属性共享标识（Java WebEngineContextTest test03/test05/test14）
+// ===========================================================================
+
+#[test]
+fn context_variables_share_identity_with_exchange_attributes() {
+    // Java 立身之本：用户变量与 WebExchange 属性 map 共享标识。两个方向都要成立：
+    // ① WebContext 变量 -> 渲染后 exchange 属性可见（StandardEngineContextFactory
+    //    把上下文变量写入 exchange 属性）；
+    // ② exchange 属性 -> 模板 ${name} 可见（渲染读取 exchange 属性作为变量）。
+    let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
+    let one = JavaString::from_rust_str("one");
+    let two = JavaString::from_rust_str("two values");
+
+    let variables: Vec<(Option<JavaString>, Option<Arc<TemplateValue>>)> = vec![(
+        Some(one.clone()),
+        Some(Arc::new(TemplateValue::string(two.clone()))),
+    )];
+
+    let mut resolver = StringTemplateResolver::new();
+    resolver.set_template_mode(TemplateMode::HTML);
+    let engine = TemplateEngine::new();
+    engine
+        .set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
+        .unwrap();
+    let web_context = WebContext::new(Some(exchange.clone())).expect("valid web context");
+    web_context.set_variables(Some(&variables));
+
+    let rendered = engine
+        .process_template("<p th:text=\"${one}\">x</p>", &web_context)
+        .expect("render")
+        .to_string_lossy();
+    assert!(
+        rendered.contains("two values"),
+        "变量在模板中可见: {rendered}"
+    );
+
+    // 方向 ①：WebContext.set_variable 后，exchange 属性 map 共享同一键值。
+    let attribute = exchange
+        .get_attribute_value(Some(&one))
+        .and_then(|value| value.to_java_string())
+        .map(|value| value.to_string_lossy());
+    assert_eq!(
+        attribute.as_deref(),
+        Some("two values"),
+        "变量写入 exchange 属性（共享标识）"
+    );
+    assert!(
+        exchange.contains_attribute(Some(&one)),
+        "exchange 属性枚举包含该变量"
+    );
+
+    // 方向 ②：exchange 属性在模板中作为变量可见（对称语义）。
+    exchange.set_attribute_value(
+        Some(JavaString::from_rust_str("greet")),
+        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+            "hello from exchange",
+        )))),
+    );
+    let rendered = engine
+        .process_template("<p th:text=\"${greet}\">x</p>", &web_context)
+        .expect("render")
+        .to_string_lossy();
+    assert!(rendered.contains("hello from exchange"));
+
+    // 注：Java test05/test14 的删除语义（request.removeAttribute / setVariable
+    // null 即删）作用于**存活的 WebEngineContext**（直接持有 exchange 引用，实时
+    // 读取），经公开渲染 API 无法在两次渲染之间保持同一 WebEngineContext 实例
+    // （每次渲染由 StandardEngineContextFactory 用 WebContext 变量回填 exchange，
+    // 不清理既有属性，与 Java 工厂行为一致），故该方向由实现本身
+    // （web_engine_context.rs normalize_web_value 将 Null 归一为 None 后
+    // set_attribute_value 即删）承担，不在本测试断言。
+}

@@ -438,7 +438,8 @@ impl DateUtils {
         target.map(|target| target.local_date_time().and_utc().timestamp_subsec_millis() as i32)
     }
 
-    /// 输出 `yyyy-MM-dd'T'HH:mm:ss.SSSXXX` ISO 形式。
+    /// 输出 `yyyy-MM-dd'T'HH:mm:ss.SSS+HH:MM` 形式（Java `formatISO` 的
+    /// `ZZZ` + `insert(26, ':')`，零偏移为 `+00:00` 而非 "Z"）。
     #[must_use]
     pub fn format_iso(target: Option<&JavaDate>) -> Option<JavaString> {
         target.map(|target| {
@@ -446,7 +447,7 @@ impl DateUtils {
             JavaString::from_rust_str(&format!(
                 "{}{}",
                 local.format("%Y-%m-%dT%H:%M:%S%.3f"),
-                iso_offset(target.offset_seconds(), 3)
+                iso_offset_colon(target.offset_seconds())
             ))
         })
     }
@@ -789,6 +790,7 @@ fn append_pattern_field(
             locale,
             count >= 4,
         )),
+        // Java `DateTimeFormatter` 的 'Z'（零偏移 → "+0000"，非 "Z"；'X' 才用 "Z"）。
         'Z' => output.push_str(&iso_offset(offset_seconds, 2)),
         'X' if count <= 3 => output.push_str(&iso_offset(offset_seconds, count)),
         'X' => {
@@ -820,7 +822,12 @@ fn append_signed_number(output: &mut String, value: i32, count: usize) {
 
 fn iso_offset(seconds: i32, count: usize) -> String {
     if seconds == 0 {
-        return "Z".to_owned();
+        // Java 'X'（count=1/3）零偏移输出 "Z"；'Z'（count=2）输出 "+0000"。
+        return if count == 2 {
+            "+0000".to_owned()
+        } else {
+            "Z".to_owned()
+        };
     }
     let sign = if seconds < 0 { '-' } else { '+' };
     let absolute = seconds.unsigned_abs();
@@ -831,6 +838,15 @@ fn iso_offset(seconds: i32, count: usize) -> String {
         2 => format!("{sign}{hours:02}{minutes:02}"),
         _ => format!("{sign}{hours:02}:{minutes:02}"),
     }
+}
+
+/// Java `SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZ")` + `insert(26, ':')`
+/// （DateUtils.formatISO 与 JS 序列化器日期）：偏移恒为 "+HH:MM" 形态，零偏移 →
+/// "+00:00"（非 "Z"）。
+fn iso_offset_colon(seconds: i32) -> String {
+    let sign = if seconds < 0 { '-' } else { '+' };
+    let absolute = seconds.unsigned_abs();
+    format!("{sign}{:02}:{:02}", absolute / 3600, absolute % 3600 / 60)
 }
 
 fn format_gmt_offset(seconds: i32) -> String {

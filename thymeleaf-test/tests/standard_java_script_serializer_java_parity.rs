@@ -3,7 +3,7 @@
 //! 转写上游 `thymeleaf-tests-core`：
 //!
 //! 1. `org.thymeleaf.standard.serializer.StandardJavaScriptSerializerTest`
-//!    —— 全部 10 个用例：enum/字符串/record × `StandardJavaScriptSerializer(false|true)`
+//!    —— 全部 12 个用例：enum/字符串/record × `StandardJavaScriptSerializer(false|true)`
 //!    （Rust 无 JVM 反射，Java enum 以 `TemplateValue::String` 呈现、record 以
 //!    `TemplateValue::Map` 呈现，可观察输出与 Java 一致）；
 //! 2. `org.thymeleaf.inline.ScriptInlineTest` —— 引擎级
