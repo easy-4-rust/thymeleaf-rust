@@ -10651,7 +10651,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -10677,7 +10677,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -10787,7 +10787,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -10813,7 +10813,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -14838,7 +14838,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -14864,7 +14864,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -14890,7 +14890,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -14916,7 +14916,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15500,7 +15500,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15532,7 +15532,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15564,7 +15564,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15596,7 +15596,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15628,7 +15628,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15660,7 +15660,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15692,7 +15692,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15724,7 +15724,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15756,7 +15756,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15788,7 +15788,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15820,7 +15820,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15852,7 +15852,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15884,7 +15884,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15916,7 +15916,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15948,7 +15948,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -15980,7 +15980,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16012,7 +16012,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16044,7 +16044,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16076,7 +16076,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16108,7 +16108,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16140,7 +16140,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16172,7 +16172,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16204,7 +16204,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16236,7 +16236,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16268,7 +16268,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16300,7 +16300,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16332,7 +16332,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16364,7 +16364,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16390,7 +16390,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16416,7 +16416,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16685,7 +16685,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16711,7 +16711,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16821,7 +16821,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -16847,7 +16847,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -20872,7 +20872,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -20898,7 +20898,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -20924,7 +20924,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -20950,7 +20950,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21534,7 +21534,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21566,7 +21566,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21598,7 +21598,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21630,7 +21630,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21662,7 +21662,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21694,7 +21694,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21726,7 +21726,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21758,7 +21758,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21790,7 +21790,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21822,7 +21822,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21854,7 +21854,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21886,7 +21886,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21918,7 +21918,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21950,7 +21950,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -21982,7 +21982,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22014,7 +22014,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22046,7 +22046,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22078,7 +22078,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22110,7 +22110,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22142,7 +22142,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22174,7 +22174,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22206,7 +22206,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22238,7 +22238,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22270,7 +22270,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22302,7 +22302,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22334,7 +22334,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22366,7 +22366,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22398,7 +22398,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22424,7 +22424,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],
@@ -22450,7 +22450,7 @@
         },
         {
           "kind": "FRAMEWORK_ADAPTERS",
-          "path": "integrations",
+          "path": "thymeleaf-support",
           "marker": "thymeleaf-"
         }
       ],

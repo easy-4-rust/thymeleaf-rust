@@ -392,7 +392,7 @@ def integration_evidence(module: str, class_name: str) -> tuple[str, list[dict[s
                 },
                 {
                     "kind": "FRAMEWORK_ADAPTERS",
-                    "path": "integrations",
+                    "path": "thymeleaf-support",
                     "marker": "thymeleaf-",
                 },
             ],
