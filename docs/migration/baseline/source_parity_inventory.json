@@ -15,11 +15,11 @@
     "runtime_cases": 2156,
     "missing": 0,
     "dispositions": {
-      "MAPPED": 51,
+      "MAPPED": 168,
       "MERGED": 90,
       "NOT_APPLICABLE": 1,
       "POLICY_DIFFERENCE": 460,
-      "SPLIT": 273
+      "SPLIT": 156
     },
     "modules": {
       "tests/thymeleaf-tests-core": 413,
@@ -3275,20 +3275,15 @@
       "runtime_cases": [
         "testArrayFormat"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayFormatWithLocale",
@@ -3301,20 +3296,15 @@
       "runtime_cases": [
         "testArrayFormatWithLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayFormatWithPattern",
@@ -3327,20 +3317,15 @@
       "runtime_cases": [
         "testArrayFormatWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayFormatWithPatternAndLocale",
@@ -3353,20 +3338,15 @@
       "runtime_cases": [
         "testArrayFormatWithPatternAndLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayDay",
@@ -3379,20 +3359,15 @@
       "runtime_cases": [
         "testArrayDay"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayMonth",
@@ -3405,20 +3380,15 @@
       "runtime_cases": [
         "testArrayMonth"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayMonthName",
@@ -3431,20 +3401,15 @@
       "runtime_cases": [
         "testArrayMonthName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayMonthNameShort",
@@ -3457,20 +3422,15 @@
       "runtime_cases": [
         "testArrayMonthNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayYear",
@@ -3483,20 +3443,15 @@
       "runtime_cases": [
         "testArrayYear"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayDayOfWeek",
@@ -3509,20 +3464,15 @@
       "runtime_cases": [
         "testArrayDayOfWeek"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayDayOfWeekName",
@@ -3535,20 +3485,15 @@
       "runtime_cases": [
         "testArrayDayOfWeekName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayDayOfWeekNameShort",
@@ -3561,20 +3506,15 @@
       "runtime_cases": [
         "testArrayDayOfWeekNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayHour",
@@ -3587,20 +3527,15 @@
       "runtime_cases": [
         "testArrayHour"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayMinute",
@@ -3613,20 +3548,15 @@
       "runtime_cases": [
         "testArrayMinute"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArraySecond",
@@ -3639,20 +3569,15 @@
       "runtime_cases": [
         "testArraySecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testArrayNanosecond",
@@ -3665,20 +3590,15 @@
       "runtime_cases": [
         "testArrayNanosecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsArrayTest#testFormatISO",
@@ -3691,20 +3611,15 @@
       "runtime_cases": [
         "testFormatISO"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_array_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#localDate",
@@ -3717,20 +3632,15 @@
       "runtime_cases": [
         "localDate"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#localDateTime",
@@ -3743,20 +3653,15 @@
       "runtime_cases": [
         "localDateTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#zonedDateTime",
@@ -3769,20 +3674,15 @@
       "runtime_cases": [
         "zonedDateTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#instant",
@@ -3795,20 +3695,15 @@
       "runtime_cases": [
         "instant"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#localTime",
@@ -3821,20 +3716,15 @@
       "runtime_cases": [
         "localTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#offsetTime",
@@ -3847,20 +3737,15 @@
       "runtime_cases": [
         "offsetTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#offsetDateTime",
@@ -3873,20 +3758,15 @@
       "runtime_cases": [
         "offsetDateTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#year",
@@ -3899,20 +3779,15 @@
       "runtime_cases": [
         "year"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#yearMonth",
@@ -3925,20 +3800,15 @@
       "runtime_cases": [
         "yearMonth"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsClassesFormattingTest#yearMonthForYMDLocales",
@@ -3951,20 +3821,15 @@
       "runtime_cases": [
         "yearMonthForYMDLocales"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_classes_no_pattern_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateLocalDate",
@@ -3977,20 +3842,15 @@
       "runtime_cases": [
         "testCreateLocalDate"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateLocalDateTime",
@@ -4003,20 +3863,15 @@
       "runtime_cases": [
         "testCreateLocalDateTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateLocalDateTimeWithSeconds",
@@ -4029,20 +3884,15 @@
       "runtime_cases": [
         "testCreateLocalDateTimeWithSeconds"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateLocalDateTimeWithMilliseconds",
@@ -4055,20 +3905,15 @@
       "runtime_cases": [
         "testCreateLocalDateTimeWithMilliseconds"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateNow",
@@ -4081,20 +3926,15 @@
       "runtime_cases": [
         "testCreateNow"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateNowForTimeZone",
@@ -4107,20 +3947,15 @@
       "runtime_cases": [
         "testCreateNowForTimeZone"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateToday",
@@ -4133,20 +3968,15 @@
       "runtime_cases": [
         "testCreateToday"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateTodayForTimeZone",
@@ -4159,20 +3989,15 @@
       "runtime_cases": [
         "testCreateTodayForTimeZone"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateDate",
@@ -4185,20 +4010,15 @@
       "runtime_cases": [
         "testCreateDate"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateDateTime",
@@ -4211,20 +4031,15 @@
       "runtime_cases": [
         "testCreateDateTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateDateWithPattern",
@@ -4237,20 +4052,15 @@
       "runtime_cases": [
         "testCreateDateWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsCreationTest#testCreateDateTimeWithPattern",
@@ -4263,20 +4073,15 @@
       "runtime_cases": [
         "testCreateDateTimeWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_creation_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormat",
@@ -4289,20 +4094,15 @@
       "runtime_cases": [
         "testFormat"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithNullTemporal",
@@ -4315,20 +4115,15 @@
       "runtime_cases": [
         "testFormatWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithLocale",
@@ -4341,20 +4136,15 @@
       "runtime_cases": [
         "testFormatWithLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithLocaleAndNullTemporal",
@@ -4367,20 +4157,15 @@
       "runtime_cases": [
         "testFormatWithLocaleAndNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithPattern",
@@ -4393,20 +4178,15 @@
       "runtime_cases": [
         "testFormatWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithPatternAndZone",
@@ -4419,20 +4199,15 @@
       "runtime_cases": [
         "testFormatWithPatternAndZone"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatStandardPatternDateTime",
@@ -4445,20 +4220,15 @@
       "runtime_cases": [
         "testFormatStandardPatternDateTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatStandardPatternDate",
@@ -4471,20 +4241,15 @@
       "runtime_cases": [
         "testFormatStandardPatternDate"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatStandardPatternTime",
@@ -4497,20 +4262,15 @@
       "runtime_cases": [
         "testFormatStandardPatternTime"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithPatternAndNullTemporal",
@@ -4523,20 +4283,15 @@
       "runtime_cases": [
         "testFormatWithPatternAndNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithPatternAndLocale",
@@ -4549,20 +4304,15 @@
       "runtime_cases": [
         "testFormatWithPatternAndLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatWithPatternAndLocaleAndNullTemporal",
@@ -4575,20 +4325,15 @@
       "runtime_cases": [
         "testFormatWithPatternAndLocaleAndNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#localTimeWithPattern",
@@ -4601,20 +4346,15 @@
       "runtime_cases": [
         "localTimeWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#offsetDateTimeWithPattern",
@@ -4627,20 +4367,15 @@
       "runtime_cases": [
         "offsetDateTimeWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#offsetTimeWithPattern",
@@ -4653,20 +4388,15 @@
       "runtime_cases": [
         "offsetTimeWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#yearWithPattern",
@@ -4679,20 +4409,15 @@
       "runtime_cases": [
         "yearWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#yearMonthWithPattern",
@@ -4705,20 +4430,15 @@
       "runtime_cases": [
         "yearMonthWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDay",
@@ -4731,20 +4451,15 @@
       "runtime_cases": [
         "testDay"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayWithNullTemporal",
@@ -4757,20 +4472,15 @@
       "runtime_cases": [
         "testDayWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMonth",
@@ -4783,20 +4493,15 @@
       "runtime_cases": [
         "testMonth"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMonthWithNullTemporal",
@@ -4809,20 +4514,15 @@
       "runtime_cases": [
         "testMonthWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMonthName",
@@ -4835,20 +4535,15 @@
       "runtime_cases": [
         "testMonthName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMonthNameWithNullTemporal",
@@ -4861,20 +4556,15 @@
       "runtime_cases": [
         "testMonthNameWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMonthNameShort",
@@ -4887,20 +4577,15 @@
       "runtime_cases": [
         "testMonthNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMonthNameShortWithNullTemporal",
@@ -4913,20 +4598,15 @@
       "runtime_cases": [
         "testMonthNameShortWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testYear",
@@ -4939,20 +4619,15 @@
       "runtime_cases": [
         "testYear"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testYearWithNullTemporal",
@@ -4965,20 +4640,15 @@
       "runtime_cases": [
         "testYearWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayOfWeek",
@@ -4991,20 +4661,15 @@
       "runtime_cases": [
         "testDayOfWeek"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayOfWeekWithNullTemporal",
@@ -5017,20 +4682,15 @@
       "runtime_cases": [
         "testDayOfWeekWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayOfWeekName",
@@ -5043,20 +4703,15 @@
       "runtime_cases": [
         "testDayOfWeekName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayOfWeekNameWithNullTemporal",
@@ -5069,20 +4724,15 @@
       "runtime_cases": [
         "testDayOfWeekNameWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayOfWeekNameShort",
@@ -5095,20 +4745,15 @@
       "runtime_cases": [
         "testDayOfWeekNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testDayOfWeekNameShortWithNullTemporal",
@@ -5121,20 +4766,15 @@
       "runtime_cases": [
         "testDayOfWeekNameShortWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testHour",
@@ -5147,20 +4787,15 @@
       "runtime_cases": [
         "testHour"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testHourWithNullTemporal",
@@ -5173,20 +4808,15 @@
       "runtime_cases": [
         "testHourWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMinute",
@@ -5199,20 +4829,15 @@
       "runtime_cases": [
         "testMinute"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testMinuteWithNullTemporal",
@@ -5225,20 +4850,15 @@
       "runtime_cases": [
         "testMinuteWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testSecond",
@@ -5251,20 +4871,15 @@
       "runtime_cases": [
         "testSecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testSecondWithNullTemporal",
@@ -5277,20 +4892,15 @@
       "runtime_cases": [
         "testSecondWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testNanosecond",
@@ -5303,20 +4913,15 @@
       "runtime_cases": [
         "testNanosecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testNanosecondWithNullTemporal",
@@ -5329,20 +4934,15 @@
       "runtime_cases": [
         "testNanosecondWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatISO",
@@ -5355,20 +4955,15 @@
       "runtime_cases": [
         "testFormatISO"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testFormatISOWithNullTemporal",
@@ -5381,20 +4976,15 @@
       "runtime_cases": [
         "testFormatISOWithNullTemporal"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsFormattingTest#testIssue17",
@@ -5407,20 +4997,15 @@
       "runtime_cases": [
         "testIssue17"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_objects_java_parity.rs",
+          "marker": "temporals_format_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListFormat",
@@ -5433,20 +5018,15 @@
       "runtime_cases": [
         "testListFormat"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListFormatWithLocale",
@@ -5459,20 +5039,15 @@
       "runtime_cases": [
         "testListFormatWithLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListFormatWithPattern",
@@ -5485,20 +5060,15 @@
       "runtime_cases": [
         "testListFormatWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListFormatWithPatternAndLocale",
@@ -5511,20 +5081,15 @@
       "runtime_cases": [
         "testListFormatWithPatternAndLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListDay",
@@ -5537,20 +5102,15 @@
       "runtime_cases": [
         "testListDay"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListMonth",
@@ -5563,20 +5123,15 @@
       "runtime_cases": [
         "testListMonth"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListMonthName",
@@ -5589,20 +5144,15 @@
       "runtime_cases": [
         "testListMonthName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListMonthNameShort",
@@ -5615,20 +5165,15 @@
       "runtime_cases": [
         "testListMonthNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListYear",
@@ -5641,20 +5186,15 @@
       "runtime_cases": [
         "testListYear"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListDayOfWeek",
@@ -5667,20 +5207,15 @@
       "runtime_cases": [
         "testListDayOfWeek"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListDayOfWeekName",
@@ -5693,20 +5228,15 @@
       "runtime_cases": [
         "testListDayOfWeekName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListDayOfWeekNameShort",
@@ -5719,20 +5249,15 @@
       "runtime_cases": [
         "testListDayOfWeekNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListHour",
@@ -5745,20 +5270,15 @@
       "runtime_cases": [
         "testListHour"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListMinute",
@@ -5771,20 +5291,15 @@
       "runtime_cases": [
         "testListMinute"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListSecond",
@@ -5797,20 +5312,15 @@
       "runtime_cases": [
         "testListSecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListNanosecond",
@@ -5823,20 +5333,15 @@
       "runtime_cases": [
         "testListNanosecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsListTest#testListFormatISO",
@@ -5849,20 +5354,15 @@
       "runtime_cases": [
         "testListFormatISO"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_list_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetFormat",
@@ -5875,20 +5375,15 @@
       "runtime_cases": [
         "testSetFormat"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetFormatWithLocale",
@@ -5901,20 +5396,15 @@
       "runtime_cases": [
         "testSetFormatWithLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetFormatWithPattern",
@@ -5927,20 +5417,15 @@
       "runtime_cases": [
         "testSetFormatWithPattern"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetFormatWithPatternAndLocale",
@@ -5953,20 +5438,15 @@
       "runtime_cases": [
         "testSetFormatWithPatternAndLocale"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetDay",
@@ -5979,20 +5459,15 @@
       "runtime_cases": [
         "testSetDay"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetMonth",
@@ -6005,20 +5480,15 @@
       "runtime_cases": [
         "testSetMonth"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetMonthName",
@@ -6031,20 +5501,15 @@
       "runtime_cases": [
         "testSetMonthName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetMonthNameShort",
@@ -6057,20 +5522,15 @@
       "runtime_cases": [
         "testSetMonthNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetYear",
@@ -6083,20 +5543,15 @@
       "runtime_cases": [
         "testSetYear"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetDayOfWeek",
@@ -6109,20 +5564,15 @@
       "runtime_cases": [
         "testSetDayOfWeek"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetDayOfWeekName",
@@ -6135,20 +5585,15 @@
       "runtime_cases": [
         "testSetDayOfWeekName"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetDayOfWeekNameShort",
@@ -6161,20 +5606,15 @@
       "runtime_cases": [
         "testSetDayOfWeekNameShort"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetHour",
@@ -6187,20 +5627,15 @@
       "runtime_cases": [
         "testSetHour"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetMinute",
@@ -6213,20 +5648,15 @@
       "runtime_cases": [
         "testSetMinute"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetSecond",
@@ -6239,20 +5669,15 @@
       "runtime_cases": [
         "testSetSecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetNanosecond",
@@ -6265,20 +5690,15 @@
       "runtime_cases": [
         "testSetNanosecond"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.expression.TemporalsSetTest#testSetFormatISO",
@@ -6291,20 +5711,15 @@
       "runtime_cases": [
         "testSetFormatISO"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/temporal_utils_java_parity.rs",
+          "marker": "temporal_set_utils_matches_java"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.standard.processor.FragmentInsertionExpressionTest#testFragmentExpressionSelection",

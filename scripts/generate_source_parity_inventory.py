@@ -81,6 +81,30 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
         "tests/offline_java_parity.rs",
         "offline01_matches_java",
     ),
+    "org.thymeleaf.standard.expression.TemporalsFormattingTest": (
+        "tests/temporal_objects_java_parity.rs",
+        "temporals_format_matches_java",
+    ),
+    "org.thymeleaf.standard.expression.TemporalsClassesFormattingTest": (
+        "tests/temporal_objects_java_parity.rs",
+        "temporals_classes_no_pattern_matches_java",
+    ),
+    "org.thymeleaf.standard.expression.TemporalsCreationTest": (
+        "tests/temporal_utils_java_parity.rs",
+        "temporal_creation_utils_matches_java",
+    ),
+    "org.thymeleaf.standard.expression.TemporalsArrayTest": (
+        "tests/temporal_utils_java_parity.rs",
+        "temporal_array_utils_matches_java",
+    ),
+    "org.thymeleaf.standard.expression.TemporalsListTest": (
+        "tests/temporal_utils_java_parity.rs",
+        "temporal_list_utils_matches_java",
+    ),
+    "org.thymeleaf.standard.expression.TemporalsSetTest": (
+        "tests/temporal_utils_java_parity.rs",
+        "temporal_set_utils_matches_java",
+    ),
     "org.thymeleaf.templateparser.reader.ParserLevelCommentMarkupReaderTest": (
         "tests/markup_comment_reader_java_parity.rs",
         "markup_comment_readers_match_java_golden",

@@ -44,12 +44,12 @@
 | `FragmentExpressionTest` | SPLIT | 1 | 1 | src/expression/fragment_expression.rs；语料运行器 |
 | `FragmentSignatureTest` | SPLIT | 1 | 1 | src/expression/fragment_signature.rs；语料运行器 |
 | `LiteralSubstitutionUtilTest` | SPLIT | 1 | 1 | src/expression/literal_substitution_util.rs；语料运行器 |
-| `TemporalsArrayTest` | SPLIT | 17 | 17 | src；语料运行器 |
-| `TemporalsClassesFormattingTest` | SPLIT | 10 | 10 | src；语料运行器 |
-| `TemporalsCreationTest` | SPLIT | 12 | 12 | src；语料运行器 |
-| `TemporalsFormattingTest` | SPLIT | 44 | 44 | src；语料运行器 |
-| `TemporalsListTest` | SPLIT | 17 | 17 | src；语料运行器 |
-| `TemporalsSetTest` | SPLIT | 17 | 17 | src；语料运行器 |
+| `TemporalsArrayTest` | MAPPED | 17 | 17 | temporal_utils_java_parity.rs |
+| `TemporalsClassesFormattingTest` | MAPPED | 10 | 10 | temporal_objects_java_parity.rs |
+| `TemporalsCreationTest` | MAPPED | 12 | 12 | temporal_utils_java_parity.rs |
+| `TemporalsFormattingTest` | MAPPED | 44 | 44 | temporal_objects_java_parity.rs |
+| `TemporalsListTest` | MAPPED | 17 | 17 | temporal_utils_java_parity.rs |
+| `TemporalsSetTest` | MAPPED | 17 | 17 | temporal_utils_java_parity.rs |
 | `FragmentInsertionExpressionTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `StandardJavaScriptSerializerTest` | SPLIT | 12 | 12 | src/serializer/standard_java_script_serializer.rs；语料运行器 |
 | `AggregationTest` | MERGED | 1 | 14 | 语料运行器 |
@@ -118,6 +118,12 @@
   - `OfflineTest`（offline01.html 渲染对比）→ `tests/offline_java_parity.rs`
   - `ElementProcessorIteratorTest` 05/10-14（迭代器动态 set/remove）→
     `thymeleaf/src/engine/element_processor_iterator.rs` 单测扩展
+  - `TemporalsFormattingTest`（44 方法）+ `TemporalsClassesFormattingTest`（10 方法，
+    无 pattern 逐类型 formatterFor）→ `tests/temporal_objects_java_parity.rs`
+    （期望值以 Java 21 实测：JDK 9+ CLDR en_US，LONG/FULL 无 "at"、UTC 时区名 "Z"、
+    Offset 类型 GMT 偏移段、OffsetTime 的 formatISO 走默认 ZoneId）
+  - `TemporalsArrayTest` / `TemporalsListTest` / `TemporalsSetTest` /
+    `TemporalsCreationTest` → `tests/temporal_utils_java_parity.rs`（utils 层 1:1）
 ## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）
 
 | 模块 | 测试类 | 方法 | 运行时 case | 处置 |

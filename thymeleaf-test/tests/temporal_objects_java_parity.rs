@@ -1,6 +1,7 @@
 //! `#temporals` 表达式对象差分 —— 1:1 移植 Java
 //! `TemporalsFormattingTest`（44 个方法：format 系列 / 标准 pattern / 字段方法
-//! / 名称方法 / formatISO / issue17，各含 null 变体）。
+//! / 名称方法 / formatISO / issue17，各含 null 变体）+ `TemporalsClassesFormattingTest`
+//! （10 个方法：无 pattern 逐类型 formatterFor 分派）。
 //!
 //! 与现有 `temporal_utils_java_parity.rs` 的区别：本文件直接断言
 //! `Temporals.java_invoke_method` 的**表达式对象分派路径**（参数校验、null
@@ -33,6 +34,13 @@ fn locale_de() -> JavaLocale {
     JavaLocale::new(
         JavaString::from_rust_str("de"),
         JavaString::from_rust_str("DE"),
+    )
+}
+
+fn locale_ca() -> JavaLocale {
+    JavaLocale::new(
+        JavaString::from_rust_str("en"),
+        JavaString::from_rust_str("CA"),
     )
 }
 
@@ -195,6 +203,31 @@ fn temporals_format_with_pattern_matches_java() {
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("Donnerstag, 31 Dezember, 2015"));
 
+    // testFormatWithPatternAndZone：ZonedDateTime 2015-12-31 23:59:00.001 UTC
+    // 按 "Etc/GMT+5"（UTC-5）换算 -> "2015-12-31 18:59:00"（Java 21 实测）
+    let zoned = JavaTemporal::ZonedDateTime(
+        chrono_tz::Tz::UTC.from_utc_datetime(
+            &NaiveDate::from_ymd_opt(2015, 12, 31)
+                .expect("date")
+                .and_hms_nano_opt(23, 59, 0, 1)
+                .expect("time"),
+        ),
+    );
+    let result = call(
+        &temporals,
+        "format",
+        &[
+            arg(zoned),
+            Some(Arc::new(TemplateValue::string(js("yyyy-MM-dd HH:mm:ss")))),
+            Some(Arc::new(TemplateValue::string(js("Etc/GMT+5")))),
+        ],
+    );
+    let actual = result
+        .as_deref()
+        .and_then(TemplateValue::to_java_string)
+        .map(|value| value.to_string_lossy());
+    assert_eq!(actual.as_deref(), Some("2015-12-31 18:59:00"));
+
     // null 变体
     assert_null(&temporals, "format");
     let result = call(
@@ -203,6 +236,105 @@ fn temporals_format_with_pattern_matches_java() {
         &[null_arg(), Some(Arc::new(TemplateValue::string(js("y"))))],
     );
     assert!(result.is_none(), "format(null, pattern) 应返回 null");
+}
+
+#[test]
+fn temporals_classes_no_pattern_matches_java() {
+    // Java TemporalsClassesFormattingTest（10 个方法）：无 pattern 的
+    // formatterFor 逐类型分派。期望值由 Java 21 实测。
+    let temporals = temporals();
+
+    // localDate：ofLocalizedDate(LONG) -> "December 31, 2015"
+    let day = JavaTemporal::LocalDate(NaiveDate::from_ymd_opt(2015, 12, 31).expect("date"));
+    assert_text(&temporals, "format", day, "December 31, 2015");
+
+    // localDateTime：ofLocalizedDateTime(LONG, MEDIUM) -> "December 31, 2015, 11:59:45 PM"
+    let moment = JavaTemporal::LocalDateTime(
+        NaiveDate::from_ymd_opt(2015, 12, 31)
+            .expect("date")
+            .and_hms_opt(23, 59, 45)
+            .expect("time"),
+    );
+    assert_text(
+        &temporals,
+        "format",
+        moment,
+        "December 31, 2015, 11:59:45 PM",
+    );
+
+    // zonedDateTime：ofLocalizedDateTime(LONG)（含 z，UTC -> "Z"）
+    let zoned = JavaTemporal::ZonedDateTime(
+        chrono_tz::Tz::UTC.from_utc_datetime(
+            &NaiveDate::from_ymd_opt(2015, 12, 31)
+                .expect("date")
+                .and_hms_opt(23, 59, 45)
+                .expect("time"),
+        ),
+    );
+    assert_text(
+        &temporals,
+        "format",
+        zoned,
+        "December 31, 2015, 11:59:45 PM Z",
+    );
+
+    // instant：appendInstant() -> "1970-01-01T00:00:01Z"
+    let instant = JavaTemporal::Instant(Utc.timestamp_opt(1, 0).single().expect("instant"));
+    assert_text(&temporals, "format", instant, "1970-01-01T00:00:01Z");
+
+    // localTime：ofLocalizedTime(MEDIUM) -> "11:59:45 PM"
+    let time = JavaTemporal::LocalTime(NaiveTime::from_hms_opt(23, 59, 45).expect("time"));
+    assert_text(&temporals, "format", time, "11:59:45 PM");
+
+    // offsetTime：HH:mm:ss + appendLocalizedOffset(FULL) -> "23:59:45GMT"
+    let offset_time = JavaTemporal::OffsetTime(
+        NaiveTime::from_hms_opt(23, 59, 45).expect("time"),
+        FixedOffset::east_opt(0).expect("offset"),
+    );
+    assert_text(&temporals, "format", offset_time, "23:59:45GMT");
+    let offset_time_18 = JavaTemporal::OffsetTime(
+        NaiveTime::from_hms_opt(23, 59, 45).expect("time"),
+        FixedOffset::east_opt(18 * 3600).expect("offset"),
+    );
+    assert_text(&temporals, "format", offset_time_18, "23:59:45GMT+18:00");
+
+    // offsetDateTime：appendLocalized(LONG, MEDIUM) + appendLocalizedOffset(FULL)
+    // （Java 把 "GMT" 直接接在时间文本后，无分隔符；normalized 后为 "PMGMT"）
+    let offset_date_time = JavaTemporal::OffsetDateTime(
+        NaiveDate::from_ymd_opt(2015, 12, 31)
+            .expect("date")
+            .and_hms_opt(23, 59, 45)
+            .expect("time")
+            .and_local_timezone(FixedOffset::east_opt(0).expect("offset"))
+            .single()
+            .expect("local time in UTC"),
+    );
+    assert_text(
+        &temporals,
+        "format",
+        offset_date_time,
+        "December 31, 2015, 11:59:45 PMGMT",
+    );
+
+    // year -> "2015"
+    assert_text(&temporals, "format", JavaTemporal::Year(2015), "2015");
+
+    // yearMonth US -> "December 2015"
+    assert_text(
+        &temporals,
+        "format",
+        JavaTemporal::YearMonth(2015, 12),
+        "December 2015",
+    );
+
+    // yearMonthForYMDLocales：Locale.CANADA 年份在前 -> "2015 December"
+    let temporals_ca = Temporals::with_default_zone_id(locale_ca(), Tz::UTC).expect("temporals ca");
+    assert_text(
+        &temporals_ca,
+        "format",
+        JavaTemporal::YearMonth(2015, 12),
+        "2015 December",
+    );
 }
 
 #[test]
