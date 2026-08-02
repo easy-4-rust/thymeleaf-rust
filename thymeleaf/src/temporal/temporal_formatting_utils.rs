@@ -5,6 +5,7 @@ use thiserror::Error;
 use crate::util::{JavaLocale, JavaString};
 
 use super::temporal_creation_utils::java_pattern;
+use super::temporal_objects::java_short_zone;
 use super::{JavaTemporal, TemporalObjects};
 
 /// Java 8 Time 对象格式化及字段读取工具。
@@ -42,10 +43,10 @@ impl TemporalFormattingUtils {
         let has_explicit_pattern = pattern.is_some();
         let pattern = match pattern {
             None => TemporalObjects::formatter_for(target, locale)?,
-            Some("SHORT") => localized_pattern(target, locale, "SHORT"),
-            Some("MEDIUM") => localized_pattern(target, locale, "MEDIUM"),
-            Some("LONG") => localized_pattern(target, locale, "LONG"),
-            Some("FULL") => localized_pattern(target, locale, "FULL"),
+            Some("SHORT") => localized_pattern(target, locale, "SHORT", &self.default_zone_id),
+            Some("MEDIUM") => localized_pattern(target, locale, "MEDIUM", &self.default_zone_id),
+            Some("LONG") => localized_pattern(target, locale, "LONG", &self.default_zone_id),
+            Some("FULL") => localized_pattern(target, locale, "FULL", &self.default_zone_id),
             Some(pattern) => java_pattern(pattern),
         };
 
@@ -63,15 +64,23 @@ impl TemporalFormattingUtils {
                 value.format(&pattern).to_string()
             }
             JavaTemporal::OffsetDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
-                value.format(&pattern).to_string()
+                // Java formatterFor(OffsetDateTime) = appendLocalized(LONG, MEDIUM)
+                // + appendLocalizedOffset(FULL)：偏移段为 "GMT"（零偏移）或
+                // "GMT+HH:MM"，由 format() 按目标自身偏移追加。
+                format!(
+                    "{}{}",
+                    value.format(&pattern),
+                    java_gmt_offset(value.offset().local_minus_utc())
+                )
             }
             JavaTemporal::OffsetTime(value, offset)
                 if !has_explicit_pattern && zone_id.is_none() =>
             {
-                format_offset(
-                    value.format(&pattern).to_string(),
-                    offset.local_minus_utc(),
-                    &pattern,
+                // Java formatterFor(OffsetTime) = `HH:mm:ss` + appendLocalizedOffset(FULL)。
+                format!(
+                    "{}{}",
+                    value.format(&pattern),
+                    java_gmt_offset(offset.local_minus_utc())
                 )
             }
             JavaTemporal::Year(value) if !has_explicit_pattern && zone_id.is_none() => {
@@ -227,6 +236,11 @@ impl TemporalFormattingUtils {
     }
 
     /// 按 Thymeleaf 固定 ISO pattern 格式化并补齐缺失字段。
+    ///
+    /// 对应 Java `TemporalFormattingUtils#formatISO`：
+    /// `DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZZ")` —— 偏移使用
+    /// `ZZZ` 的 `+HHmm` 无冒号形态；带偏移的类型（OffsetDateTime/OffsetTime/
+    /// ZonedDateTime）保留原始偏移，其余在默认 ZoneId 下组装。
     pub fn format_iso(
         &self,
         target: Option<&JavaTemporal>,
@@ -234,10 +248,21 @@ impl TemporalFormattingUtils {
         let Some(target) = target else {
             return Ok(None);
         };
-        let value = TemporalObjects::zoned_time(target, self.default_zone_id)?;
-        Ok(Some(JavaString::from_rust_str(
-            &value.format("%Y-%m-%dT%H:%M:%S%.3f%:z").to_string(),
-        )))
+        let formatted = match target {
+            JavaTemporal::OffsetDateTime(value) => {
+                value.format("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
+            }
+            // OffsetTime 与其余类型一致走 `zonedTime`：Java 在默认 ZoneId 下组装
+            // （`ZonedDateTime.of(LocalDate.now(), localTime, defaultZoneId)`），
+            // 偏移本身不参与。
+            JavaTemporal::ZonedDateTime(value) => {
+                value.format("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
+            }
+            _ => TemporalObjects::zoned_time(target, self.default_zone_id)?
+                .format("%Y-%m-%dT%H:%M:%S%.3f%z")
+                .to_string(),
+        };
+        Ok(Some(JavaString::from_rust_str(&formatted)))
     }
 
     fn time_field(
@@ -304,7 +329,12 @@ fn invalid(message: impl Into<String>) -> TemporalFormattingError {
     }
 }
 
-fn localized_pattern(target: &JavaTemporal, locale: &JavaLocale, style: &str) -> String {
+fn localized_pattern(
+    target: &JavaTemporal,
+    locale: &JavaLocale,
+    style: &str,
+    default_zone: &Tz,
+) -> String {
     let date_only = matches!(target, JavaTemporal::LocalDate(_));
     let time_only = matches!(
         target,
@@ -316,7 +346,11 @@ fn localized_pattern(target: &JavaTemporal, locale: &JavaLocale, style: &str) ->
     // 德语日期样式为 `dd.MM.yy` / `dd.MM.y` / `d. MMMM y` /
     // `EEEE, d. MMMM y`（chrono 等价 %d.%m.%y 等）。
     let de = language == "de";
+    // Java `z`（LONG/FULL 的通用时区名）：ZoneOffset.UTC → "Z"；固定偏移 →
+    // "+18:00"；命名时区 → 缩写（EST/PST 等）。
+    let zone = java_short_zone(target, default_zone);
     match (date_only, time_only, zh, de, style) {
+        // ---- 日期（Java DateTimeFormatter.ofLocalizedDate）----
         (true, _, true, _, "FULL") => "%Y年%m月%d日 %A".to_owned(),
         (true, _, true, _, _) => "%Y年%m月%d日".to_owned(),
         (true, _, false, true, "SHORT") => "%d.%m.%y".to_owned(),
@@ -327,13 +361,30 @@ fn localized_pattern(target: &JavaTemporal, locale: &JavaLocale, style: &str) ->
         (true, _, false, false, "MEDIUM") => "%b %-d, %Y".to_owned(),
         (true, _, false, false, "FULL") => "%A, %B %-d, %Y".to_owned(),
         (true, _, false, false, _) => "%B %-d, %Y".to_owned(),
-        (_, true, _, _, "SHORT") => "%-I:%M %p".to_owned(),
-        (_, true, _, _, _) => "%-I:%M:%S %p".to_owned(),
-        (_, _, true, _, _) => "%Y年%m月%d日 %H:%M:%S".to_owned(),
+        // ---- 时间（Java DateTimeFormatter.ofLocalizedTime）----
+        // zh/de 为 24 小时制；zh 的 LONG/FULL 时区名在时间之前（`z HH:mm:ss`）。
+        (_, true, true, _, "SHORT") | (_, true, true, _, "MEDIUM") => "%H:%M:%S".to_owned(),
+        (_, true, true, _, _) => format!("{zone} %H:%M:%S"),
+        (_, true, false, true, "SHORT") => "%H:%M".to_owned(),
+        (_, true, false, true, "MEDIUM") => "%H:%M:%S".to_owned(),
+        (_, true, false, true, _) => format!("%H:%M:%S {zone}"),
+        (_, true, false, false, "SHORT") => "%-I:%M %p".to_owned(),
+        (_, true, false, false, "MEDIUM") => "%-I:%M:%S %p".to_owned(),
+        (_, true, false, false, _) => format!("%-I:%M:%S %p {zone}"),
+        // ---- 日期时间（Java DateTimeFormatter.ofLocalizedDateTime）----
+        // zh SHORT 为斜杠分隔，LONG/FULL 时区名位于日期与时间之间。
+        (_, _, true, _, "SHORT") => "%Y/%m/%d %H:%M".to_owned(),
+        (_, _, true, _, "MEDIUM") => "%Y年%m月%d日 %H:%M:%S".to_owned(),
+        (_, _, true, _, _) => format!("%Y年%m月%d日 {zone} %H:%M:%S"),
         (_, _, false, true, "SHORT") => "%d.%m.%y, %H:%M".to_owned(),
         (_, _, false, true, "MEDIUM") => "%d.%m.%Y, %H:%M:%S".to_owned(),
-        (_, _, false, true, _) => "%-d. %B %Y, %H:%M:%S".to_owned(),
+        (_, _, false, true, "FULL") => format!("%A, %-d. %B %Y, %H:%M:%S {zone}"),
+        (_, _, false, true, _) => format!("%-d. %B %Y, %H:%M:%S {zone}"),
         (_, _, false, false, "SHORT") => "%-m/%-d/%y, %-I:%M %p".to_owned(),
+        (_, _, false, false, "MEDIUM") => "%b %-d, %Y, %-I:%M:%S %p".to_owned(),
+        // Java en_US CLDR（JDK 9+）LONG/FULL datetime：`MMMM d, y, h:mm:ss a z`。
+        (_, _, false, false, "LONG") => format!("%B %-d, %Y, %-I:%M:%S %p {zone}"),
+        (_, _, false, false, "FULL") => format!("%A, %B %-d, %Y, %-I:%M:%S %p {zone}"),
         _ => "%B %-d, %Y, %-I:%M:%S %p".to_owned(),
     }
 }
@@ -379,14 +430,13 @@ fn format_year(year: i32, pattern: &str) -> String {
         .replace("%y", &format!("{:02}", year.rem_euclid(100)))
 }
 
-fn format_offset(mut value: String, seconds: i32, pattern: &str) -> String {
-    if pattern.contains("%:z") {
+/// Java `appendLocalizedOffset(TextStyle.FULL)`：零偏移 → "GMT"，否则 "GMT+HH:MM"。
+fn java_gmt_offset(seconds: i32) -> String {
+    if seconds == 0 {
+        "GMT".to_owned()
+    } else {
         let sign = if seconds < 0 { '-' } else { '+' };
         let seconds = seconds.unsigned_abs();
-        value = value.replace(
-            "%:z",
-            &format!("{sign}{:02}:{:02}", seconds / 3600, seconds % 3600 / 60),
-        );
+        format!("GMT{sign}{:02}:{:02}", seconds / 3600, seconds % 3600 / 60)
     }
-    value
 }

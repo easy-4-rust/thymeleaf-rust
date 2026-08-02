@@ -14,6 +14,40 @@ use super::{JavaTemporal, JavaTemporalKind};
 /// 对应 Java: `org.thymeleaf.util.temporal.TemporalObjects`。
 pub struct TemporalObjects;
 
+/// Java `z` pattern 的通用时区名：带偏移类型保留偏移（UTC → "Z"、否则
+/// "+HH:MM"）；其余在默认 ZoneId 下取 UTC → "Z"、命名时区取缩写。
+pub(crate) fn java_short_zone(target: &JavaTemporal, default_zone: &Tz) -> String {
+    match target {
+        JavaTemporal::OffsetDateTime(value) => fixed_offset_zone(value.offset()),
+        JavaTemporal::OffsetTime(_, offset) => fixed_offset_zone(offset),
+        JavaTemporal::ZonedDateTime(value) => tz_zone(value.timezone()),
+        _ => tz_zone(*default_zone),
+    }
+}
+
+pub(crate) fn fixed_offset_zone(offset: &chrono::FixedOffset) -> String {
+    if offset.local_minus_utc() == 0 {
+        "Z".to_owned()
+    } else {
+        // FixedOffset 通过 TimeZone trait 构造参考时刻后按 `%:z` 渲染 "+HH:MM"。
+        chrono::Utc::now()
+            .with_timezone(offset)
+            .format("%:z")
+            .to_string()
+    }
+}
+
+pub(crate) fn tz_zone(zone: Tz) -> String {
+    if zone == Tz::UTC {
+        "Z".to_owned()
+    } else {
+        chrono::Utc::now()
+            .with_timezone(&zone)
+            .format("%Z")
+            .to_string()
+    }
+}
+
 impl TemporalObjects {
     /// 从模板动态值读取 Java `Temporal`。
     pub fn temporal(value: Option<&TemplateValue>) -> Result<Option<&JavaTemporal>, TemporalError> {
@@ -37,46 +71,56 @@ impl TemporalObjects {
     }
 
     /// 返回与 Java `formatterFor` 类型分派一致的默认 chrono pattern。
+    ///
+    /// Java（JDK 9+ CLDR）基准：LocalDateTime → `ofLocalizedDateTime(LONG, MEDIUM)`
+    /// （无时区名）；ZonedDateTime → `ofLocalizedDateTime(LONG)`（含 `z` 时区名，
+    /// UTC → "Z"）；OffsetDateTime → `appendLocalized(LONG, MEDIUM)` +
+    /// `appendLocalizedOffset(FULL)`（"GMT"/"GMT+HH:MM"，在 format 时追加）；
+    /// OffsetTime → `HH:mm:ss` + 同样的偏移段。
     pub fn formatter_for(
         target: &JavaTemporal,
         locale: &JavaLocale,
     ) -> Result<String, TemporalError> {
         let language = locale.get_language().to_string_lossy();
         Ok(match target.kind() {
-            JavaTemporalKind::Instant => "%Y-%m-%dT%H:%M:%S%.fZ",
-            JavaTemporalKind::LocalDate => {
+            JavaTemporalKind::Instant => "%Y-%m-%dT%H:%M:%S%.fZ".to_owned(),
+            JavaTemporalKind::LocalDate => localized_date_pattern(&language),
+            JavaTemporalKind::LocalDateTime => localized_datetime_pattern(&language),
+            JavaTemporalKind::ZonedDateTime => {
+                let zone = match target {
+                    JavaTemporal::ZonedDateTime(value) => tz_zone(value.timezone()),
+                    _ => unreachable!("ZonedDateTime kind implies ZonedDateTime value"),
+                };
                 if language == "zh" {
-                    "%Y年%m月%d日"
+                    // Java zh_CLDR LONG datetime：`y年M月d日 z HH:mm:ss`（时区名在日期与时间之间）。
+                    format!("%Y年%m月%d日 {zone} %H:%M:%S")
                 } else if language == "de" {
-                    // Java: DateTimeFormatter.ofLocalizedDate(LONG).withLocale(GERMANY)
-                    "%-d. %B %Y"
+                    // Java de_CLDR LONG datetime：`d. MMMM y, HH:mm:ss z`。
+                    format!("%-d. %B %Y, %H:%M:%S {zone}")
                 } else {
-                    "%B %-d, %Y"
+                    // Java en_US LONG datetime：`MMMM d, y, h:mm:ss a z`。
+                    format!("%B %-d, %Y, %-I:%M:%S %p {zone}")
                 }
             }
-            JavaTemporalKind::LocalDateTime | JavaTemporalKind::ZonedDateTime => {
-                if language == "zh" {
-                    "%Y年%m月%d日 %H:%M:%S"
-                } else if language == "de" {
-                    // Java: ofLocalizedDateTime(LONG).withLocale(GERMANY)
-                    "%-d. %B %Y, %H:%M:%S"
+            JavaTemporalKind::LocalTime => {
+                if language == "zh" || language == "de" {
+                    "%H:%M:%S".to_owned()
                 } else {
-                    "%B %-d, %Y, %-I:%M:%S %p"
+                    "%-I:%M:%S %p".to_owned()
                 }
             }
-            JavaTemporalKind::LocalTime => "%-I:%M:%S %p",
-            JavaTemporalKind::OffsetDateTime => "%B %-d, %Y, %-I:%M:%S %p %:z",
-            JavaTemporalKind::OffsetTime => "%-H:%M:%S%:z",
-            JavaTemporalKind::Year => "%Y",
+            // 偏移段（"GMT"/"GMT+HH:MM"）由 TemporalFormattingUtils::format 追加。
+            JavaTemporalKind::OffsetDateTime => localized_datetime_pattern(&language),
+            JavaTemporalKind::OffsetTime => "%H:%M:%S".to_owned(),
+            JavaTemporalKind::Year => "%Y".to_owned(),
             JavaTemporalKind::YearMonth => {
                 if Self::should_display_year_before_month(locale) {
-                    "%Y %B"
+                    "%Y %B".to_owned()
                 } else {
-                    "%B %Y"
+                    "%B %Y".to_owned()
                 }
             }
-        }
-        .to_owned())
+        })
     }
 
     /// 将缺失字段按 Java `zonedTime` 规则补齐并换算到可格式化时间。
@@ -109,7 +153,7 @@ impl TemporalObjects {
                 .ok_or_else(|| invalid("Invalid YearMonth"))?
                 .and_hms_opt(0, 0, 0)
                 .expect("midnight"),
-            JavaTemporal::ZonedDateTime(value) => return Ok(value.with_timezone(&default_zone_id)),
+            JavaTemporal::ZonedDateTime(value) => return Ok(*value),
         };
         match default_zone_id.from_local_datetime(&local) {
             LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => Ok(value),
@@ -170,6 +214,28 @@ impl TemporalObjects {
             locale.get_country().to_string_lossy().as_str(),
             "BT" | "CA" | "CN" | "KP" | "KR" | "TW" | "HU" | "IR" | "JP" | "LT" | "MN"
         )
+    }
+}
+
+/// Java `DateTimeFormatter.ofLocalizedDate(LONG)` 的 chrono 等价。
+fn localized_date_pattern(language: &str) -> String {
+    if language == "zh" {
+        "%Y年%m月%d日".to_owned()
+    } else if language == "de" {
+        "%-d. %B %Y".to_owned()
+    } else {
+        "%B %-d, %Y".to_owned()
+    }
+}
+
+/// Java `DateTimeFormatter.ofLocalizedDateTime(LONG, MEDIUM)` 的 chrono 等价（不含时区名）。
+fn localized_datetime_pattern(language: &str) -> String {
+    if language == "zh" {
+        "%Y年%m月%d日 %H:%M:%S".to_owned()
+    } else if language == "de" {
+        "%-d. %B %Y, %H:%M:%S".to_owned()
+    } else {
+        "%B %-d, %Y, %-I:%M:%S %p".to_owned()
     }
 }
 

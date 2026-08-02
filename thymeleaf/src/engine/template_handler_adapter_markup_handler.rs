@@ -540,9 +540,7 @@ impl TemplateHandlerAdapterMarkupHandler {
                 position = after_name_whitespace;
                 position += 1;
                 position = consume_whitespace(source, position, content_end);
-                operator = Some(JavaString::from_rust_str(
-                    &source[operator_start..position],
-                ));
+                operator = Some(JavaString::from_rust_str(&source[operator_start..position]));
                 if position < content_end {
                     let quote = source.as_bytes()[position];
                     if quote == b'\'' || quote == b'"' {
