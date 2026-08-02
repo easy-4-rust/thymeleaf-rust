@@ -146,8 +146,8 @@
 Spring MVC/WebFlux/SpEL/BeanFactory/ViewResolver 与 Spring Security 方言属于宿主
 集成，不迁入中立 crate。4 个 Spring 资产目录（共 884 个 `.thtest`）已于 2026-08
 移除（`source-test-parity.json` test_asset 分母 3,570 → 2,686），不再镜像。等价
-安全方言与 Web 上下文能力由 Rust 原生整合承接：`integrations/thymeleaf-sa-token`
+安全方言与 Web 上下文能力由 Rust 原生整合承接：`thymeleaf-support/thymeleaf-sa-token`
 （sec 方言 + `#authentication`/`#authorization` 表达式对象，基于 sa-token-rust）
-与 `integrations/thymeleaf-vernal`（VernalWebExchange，把 vernal 请求/主体注入
+与 `thymeleaf-support/thymeleaf-vernal`（VernalWebExchange，把 vernal 请求/主体注入
 thymeleaf Web 上下文）；中立 Web 合同测试（`web_renderer_source_parity.rs`）与
 共享语料继续承担其余等价证据（每类证据见 `source_parity_inventory.json` 对应条目）。

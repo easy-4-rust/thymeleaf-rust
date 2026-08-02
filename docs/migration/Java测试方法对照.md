@@ -35,8 +35,8 @@ Java 基线：`10f9dd2eb8cbd98515ce14b149d115e0287d0add`（thymeleaf/thymeleaf�
 | `tests/thymeleaf-tests-springsecurity6` | 2 | POLICY_DIFFERENCE（已移除） |
 
 Spring MVC/WebFlux/SpEL/BeanFactory/ViewResolver 与 Spring Security 方言属于宿主
-集成，不迁入中立 crate；等价能力由 `integrations/thymeleaf-sa-token`（sec 方言 +
-`#authentication`/`#authorization`）与 `integrations/thymeleaf-vernal`
+集成，不迁入中立 crate；等价能力由 `thymeleaf-support/thymeleaf-sa-token`（sec 方言 +
+`#authentication`/`#authorization`）与 `thymeleaf-support/thymeleaf-vernal`
 （VernalWebExchange）承接。
 
 ## 2. 方法级映射（按测试类）
