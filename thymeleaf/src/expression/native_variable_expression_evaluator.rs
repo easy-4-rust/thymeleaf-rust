@@ -3610,3 +3610,138 @@ fn ognl_processing_error(message: String, ognl_message: String) -> super::Standa
         OgnlException::new(ognl_message),
     ))
 }
+
+// ===========================================================================
+// 表达式动态分派器直接单测（不经过渲染管线）
+// ===========================================================================
+
+#[cfg(test)]
+#[cfg(test)]
+mod dispatcher_direct_tests {
+    use super::*;
+    use crate::expression::TemplateValue;
+    use crate::util::{JavaNumber, JavaString};
+    use std::sync::Arc;
+
+    fn js(value: &str) -> JavaString {
+        JavaString::from_rust_str(value)
+    }
+
+    fn text(value: &Arc<TemplateValue>) -> String {
+        value
+            .to_java_string()
+            .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
+    }
+
+    #[test]
+    fn invoke_java_string_method_dispatch_matches_java() {
+        let target = js("Hello World");
+        let result = invoke_java_string_method(&target, &js("length"), &[])
+            .expect("length ok")
+            .expect("non-null");
+        assert_eq!(text(&result), "11");
+        let result = invoke_java_string_method(&js(""), &js("isEmpty"), &[])
+            .expect("isEmpty ok")
+            .expect("non-null");
+        assert_eq!(text(&result), "true");
+        let result = invoke_java_string_method(&target, &js("toString"), &[])
+            .expect("toString ok")
+            .expect("non-null");
+        assert_eq!(text(&result), "Hello World");
+        let result = invoke_java_string_method(
+            &target,
+            &js("contains"),
+            &[Some(Arc::new(TemplateValue::string(js("World"))))],
+        )
+        .expect("contains ok")
+        .expect("non-null");
+        assert_eq!(text(&result), "true");
+        let result = invoke_java_string_method(
+            &target,
+            &js("contains"),
+            &[Some(Arc::new(TemplateValue::string(js("xyz"))))],
+        )
+        .expect("contains ok")
+        .expect("non-null");
+        assert_eq!(text(&result), "false");
+        let result = invoke_java_string_method(
+            &target,
+            &js("charAt"),
+            &[Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+                1,
+            ))))],
+        )
+        .expect("charAt ok")
+        .expect("non-null");
+        assert_eq!(text(&result), "e");
+        // 未知方法 -> 错误（Java String 方法分派拒绝）
+        assert!(invoke_java_string_method(&target, &js("noSuchMethod"), &[]).is_err());
+        // 参数个数不匹配 -> 错误
+        assert!(invoke_java_string_method(&target, &js("charAt"), &[]).is_err());
+    }
+
+    #[test]
+    fn invoke_static_method_dispatch_matches_java() {
+        let number = |value: i64| Some(Arc::new(TemplateValue::Number(JavaNumber::Long(value))));
+        // Java Math 静态方法返回 double：sqrt(16.0)=4.0、ceil(7.0)=7.0
+        let result = invoke_static_method("java.lang.Math", "sqrt", &[number(16)])
+            .expect("sqrt ok")
+            .expect("non-null");
+        assert_eq!(text(&result), "4.0");
+        let result = invoke_static_method("java.lang.Math", "ceil", &[number(7)])
+            .expect("ceil ok")
+            .expect("non-null");
+        assert_eq!(text(&result), "7.0");
+        // abs 用 double 输入（Java Math.abs(double) 返回 double）
+        let double = Some(Arc::new(TemplateValue::Number(JavaNumber::Double(-5.5))));
+        let result = invoke_static_method("java.lang.Math", "abs", &[double])
+            .expect("abs ok")
+            .expect("non-null");
+        assert_eq!(text(&result), "5.5");
+        // 未知静态成员 -> 错误
+        assert!(invoke_static_method("java.lang.Math", "noSuchMember", &[]).is_err());
+        // 空类名 -> 错误
+        assert!(invoke_static_method("", "abs", &[number(1)]).is_err());
+    }
+
+    #[test]
+    fn parse_ognl_range_sequence_and_assignment() {
+        // 集合字面量 {1,2,3} -> ListLiteral 3 项
+        let input: Vec<u16> = "{1,2,3}".encode_utf16().collect();
+        let parsed = parse_ognl_range(&input, true, false).expect("list literal parses");
+        match parsed {
+            ComputedExpression::ListLiteral(items) => {
+                assert_eq!(items.len(), 3, "list literal 为 3 项");
+            }
+            _ => panic!("expected ListLiteral for {{1,2,3}}"),
+        }
+
+        // 顶层逗号序列 1,2,3 -> Sequence 3 项
+        let input: Vec<u16> = "1,2,3".encode_utf16().collect();
+        let parsed = parse_ognl_range(&input, true, false).expect("sequence parses");
+        match parsed {
+            ComputedExpression::Sequence(items) => {
+                assert_eq!(items.len(), 3, "顶层序列为 3 项");
+            }
+            _ => panic!("expected Sequence for 1,2,3"),
+        }
+
+        // 赋值：`#x = 'y'`
+        let input: Vec<u16> = "#x = 'y'".encode_utf16().collect();
+        let parsed = parse_ognl_range(&input, true, false).expect("assignment parses");
+        match parsed {
+            ComputedExpression::Assignment { name, .. } => {
+                assert_eq!(name.to_string_lossy(), "x");
+            }
+            _ => panic!("expected Assignment"),
+        }
+
+        // 无效输入 -> None
+        assert!(parse_ognl_range(&[], true, false).is_none());
+        let bad: Vec<u16> = "..".encode_utf16().collect();
+        assert!(parse_ognl_range(&bad, true, false).is_none());
+        // 非 # 前缀的赋值目标 -> None
+        let bad: Vec<u16> = "x = 1".encode_utf16().collect();
+        assert!(parse_ognl_range(&bad, true, false).is_none());
+    }
+}

@@ -562,3 +562,110 @@ fn contains_java_value(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateVa
         .iter()
         .any(|value| value.to_java_string() == candidate)
 }
+
+// ===========================================================================
+// #strings 表达式对象分派器直接单测
+// ===========================================================================
+
+#[cfg(test)]
+mod invoke_direct_tests {
+    use super::*;
+    use crate::util::JavaLocale;
+    use std::sync::Arc;
+
+    fn strings() -> Strings {
+        Strings::new(JavaLocale::new(
+            JavaString::from_rust_str("en"),
+            JavaString::from_rust_str("US"),
+        ))
+    }
+
+    fn text_arg(value: &str) -> Option<Arc<TemplateValue>> {
+        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+            value,
+        ))))
+    }
+
+    fn result_text(result: Option<Arc<TemplateValue>>) -> String {
+        result
+            .as_deref()
+            .and_then(TemplateValue::to_java_string)
+            .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
+    }
+
+    #[test]
+    fn strings_invoke_scalar_methods_match_java() {
+        let strings = strings();
+        assert_eq!(
+            result_text(
+                strings
+                    .invoke("toUpperCase", &[text_arg("hello")])
+                    .expect("ok")
+            ),
+            "HELLO"
+        );
+        assert_eq!(
+            result_text(
+                strings
+                    .invoke("toLowerCase", &[text_arg("HELLO")])
+                    .expect("ok")
+            ),
+            "hello"
+        );
+        assert_eq!(
+            result_text(strings.invoke("length", &[text_arg("abcd")]).expect("ok")),
+            "4"
+        );
+        assert_eq!(
+            result_text(
+                strings
+                    .invoke(
+                        "substring",
+                        &[
+                            text_arg("abcdef"),
+                            Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(2))))
+                        ]
+                    )
+                    .expect("ok")
+            ),
+            "cdef"
+        );
+        assert_eq!(
+            result_text(
+                strings
+                    .invoke("contains", &[text_arg("hello"), text_arg("ell")])
+                    .expect("ok")
+            ),
+            "true"
+        );
+        // null 输入 -> null（Java null-safe）
+        assert_eq!(
+            result_text(strings.invoke("toUpperCase", &[None]).expect("ok")),
+            "null"
+        );
+        // 未知方法 -> 错误
+        assert!(strings.invoke("noSuchMethod", &[text_arg("x")]).is_err());
+        // 参数个数不匹配 -> 错误
+        assert!(strings.invoke("toUpperCase", &[]).is_err());
+    }
+
+    #[test]
+    fn strings_invoke_collection_methods_match_java() {
+        let strings = strings();
+        let list = Some(Arc::new(TemplateValue::List(Arc::new(vec![
+            Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
+            Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
+        ]))));
+        // arrayJoin 合并分隔符
+        assert_eq!(
+            result_text(
+                strings
+                    .invoke("arrayJoin", &[list.clone(), text_arg("|")])
+                    .expect("ok")
+            ),
+            "a|b"
+        );
+        // listSize/arrayLength 由 Lists 门面（list_utils_java_parity.rs）承担，不在 #strings 分派表
+        assert!(strings.invoke("listSize", &[list]).is_err());
+    }
+}
