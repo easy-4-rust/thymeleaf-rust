@@ -125,7 +125,12 @@ fn manifest_pins_baseline_and_full_denominator() {
     let assets = manifest["test_asset"]["entries"]
         .as_array()
         .expect("assets");
-    assert_eq!(assets.len(), 3_570, "TEST_ASSET: 3,493 thtest + 77 golden");
+    // 上游五模块测试树完整镜像：3,493 thtest + 495 java + 307 其他资源 + 77 golden
+    assert_eq!(
+        assets.len(),
+        4_372,
+        "TEST_ASSET: 3,493 thtest + 495 java + 307 其他资源 + 77 golden = 4,372"
+    );
 }
 
 #[test]
