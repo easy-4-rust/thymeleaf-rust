@@ -13,20 +13,20 @@
 | `BenchmarkTest` | NOT_APPLICABLE | 1 | 1 | template_engine_smoke.rs |
 | `StandardCacheTest` | MAPPED | 1 | 1 | standard_cache_java_parity.rs |
 | `ContextSequenceTest` | SPLIT | 1 | 1 | src；语料运行器 |
-| `LazyContextVariableTest` | SPLIT | 10 | 10 | src/context/lazy_context_variable.rs；语料运行器 |
+| `LazyContextVariableTest` | SPLIT | 10 | 10 | src/context/lazy_context_variable.rs（机制层：求值次数/缓存/并发）；context_utilities_java_parity.rs；语料运行器（模板驱动 10 方法待移植，如实登记） |
 | `DialectOrderingTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `DialectProcessWrappingTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `AttributeDefinitionsTest` | SPLIT | 4 | 4 | src/engine/attribute_definitions.rs；语料运行器 |
-| `AttributeNamesTest` | SPLIT | 6 | 6 | src/engine/attribute_names.rs；语料运行器 |
+| `AttributeNamesTest` | SPLIT | 6 | 6 | attribute_element_name_java_parity.rs（HTML 3 方法完整 + XMLBuffer 完整）；testXMLString 别名系列 + TEXT 模式 2 方法待补 |
 | `BareHtmlEngineTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `CDATASectionTest` | SPLIT | 3 | 3 | src/engine/cdata_section.rs；语料运行器 |
 | `CommentTest` | SPLIT | 3 | 3 | src/engine/comment.rs；语料运行器 |
 | `DocTypeTest` | SPLIT | 1 | 1 | src/engine/doc_type.rs；语料运行器 |
-| `ElementAttributesTest` | SPLIT | 4 | 4 | src；语料运行器 |
+| `ElementAttributesTest` | SPLIT | 4 | 4 | element_attributes_java_parity.rs（attr management 全序列 + ba 家族/XML 追加族已逐字移植）；AttrObtention 查询形态（hasAttribute/valueQuotes/length）待补 |
 | `ElementDefinitionsTest` | SPLIT | 4 | 4 | src/engine/element_definitions.rs；语料运行器 |
-| `ElementNamesTest` | SPLIT | 6 | 6 | src/engine/element_names.rs；语料运行器 |
+| `ElementNamesTest` | SPLIT | 6 | 6 | attribute_element_name_java_parity.rs（HTMLBuffer 完整）；HTMLString/XMLBuffer/XMLString 部分（assertSame 别名、data:/xml: 前缀）+ TEXT 模式 2 方法待补 |
 | `ElementProcessorIteratorTest` | SPLIT | 14 | 14 | src/engine/element_processor_iterator.rs；语料运行器 |
-| `EngineContextTest` | SPLIT | 10 | 10 | src/context/engine_context.rs；语料运行器 |
+| `EngineContextTest` | SPLIT | 10 | 10 | engine_context_java_parity.rs（Golden + (*removed*)/inliner 表示锁定）；test01/02/06/07 完整序列与 setVariable(null) 待补 |
 | `OpenElementTagTest` | SPLIT | 2 | 2 | src/engine/open_element_tag.rs；语料运行器 |
 | `ProcessingInstructionTest` | SPLIT | 1 | 1 | src/engine/processing_instruction.rs；语料运行器 |
 | `SSEThrottledTemplateWriterTest` | SPLIT | 1 | 1 | src/engine/sse_throttled_template_writer.rs；语料运行器 |
