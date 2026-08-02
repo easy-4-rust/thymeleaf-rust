@@ -123,3 +123,9 @@ jobs:
           --workspace
           --all-features
           --summary-only
+
+      - name: Check dependency licenses, sources, and duplicates
+        uses: EmbarkStudios/cargo-deny-action@v2
+
+      - name: Check dependency vulnerabilities (cargo-audit)
+        run: cargo audit

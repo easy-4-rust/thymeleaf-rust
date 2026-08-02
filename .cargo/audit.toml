@@ -1,0 +1,22 @@
+# cargo-audit 配置：登记已评审并接受的 RUSTSEC 豁免（运行：cargo audit）
+# 注意：ignore 仅接受 RUSTSEC ID 字符串；理由以注释记录。
+
+[advisories]
+ignore = [
+    # --- thymeleaf-tide 依赖链（tide 官方未维护，适配器 publish=false 不发布）---
+    "RUSTSEC-2026-0170",  # tide 未维护（无修复）；thymeleaf-tide 不发布，仅仓库内测试
+    "RUSTSEC-2020-0056",  # stdweb 未维护，tide 链传递依赖
+    "RUSTSEC-2025-0052",  # async-std 未维护，tide 链传递依赖
+    "RUSTSEC-2024-0384",  # instant 未维护，async-std 链传递依赖
+    "RUSTSEC-2026-0174",  # http-types notice，tide 链传递依赖
+
+    # --- sa-token-core 外部依赖链（jsonwebtoken -> rsa -> 旧 AES 系列）---
+    # sa-token-core 为已发布外部 crate，传递依赖不可由本仓库修复；均为 notice/unmaintained。
+    "RUSTSEC-2023-0071",  # rsa notice，经 sa-token-core 引入
+    "RUSTSEC-2021-0060",  # aes-soft 未维护，经 sa-token-core -> jsonwebtoken -> rsa 引入
+    "RUSTSEC-2021-0059",  # aesni 未维护，同上链
+    "RUSTSEC-2021-0064",  # cpuid-bool 未维护，sa-token-core crypto 链
+
+    # --- rand 0.7.3（actix-http/http-types/sa-token-core 引入旧版）---
+    "RUSTSEC-2026-0097",  # rand 0.7 unsound 需自定义 logger 才触发，非实机漏洞；升级链风险高，登记接受
+]

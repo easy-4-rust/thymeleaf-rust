@@ -1,10 +1,10 @@
 [package]
 name = "thymeleaf-gotham"
-version = "0.1.0-alpha.1"
-edition = "2024"
-rust-version = "1.88"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "Gotham integration for the framework-neutral thymeleaf template engine"
-license = "MIT"
+license.workspace = true
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
