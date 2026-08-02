@@ -330,3 +330,512 @@ fn engine_context_removed_marker_and_inliner_representation_match_java() {
     );
     assert_eq!(context.to_string(), "{one=two values}(test01)");
 }
+
+// ===========================================================================
+// EngineContextTest test01：多层嵌套遮蔽完整断言序列（Java 21 逐字）
+// ===========================================================================
+
+/// 断言 containsVariable + getVariable 与 Java 一致。
+fn assert_variable(context: &dyn IContext, name: &str, present: bool, expected: &str) {
+    let key = java_string(name);
+    assert_eq!(
+        context.contains_variable(Some(&key)),
+        present,
+        "containsVariable({name})"
+    );
+    assert_eq!(
+        &variable_text(context, name),
+        expected,
+        "getVariable({name})"
+    );
+}
+
+fn selection_text(context: &dyn ITemplateContext) -> String {
+    context
+        .get_selection_target()
+        .and_then(|value| value.to_java_string())
+        .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
+}
+
+#[test]
+fn engine_context_test01_multi_level_shadowing_matches_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let context = EngineContext::new(
+        configuration,
+        template_data("test01"),
+        None,
+        locale("en-US", "US"),
+        None,
+    );
+
+    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    assert_variable(context.as_ref(), "one", true, "a value");
+
+    context.set_variable(Some(java_string("one")), Some(value("two values")));
+    assert_variable(context.as_ref(), "one", true, "two values");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+
+    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "two values");
+    assert_variable(context.as_ref(), "two", false, "null");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("two")), Some(value("twellor")));
+    assert_variable(context.as_ref(), "one", true, "two values");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("three")), Some(value("twelloree")));
+    assert_variable(context.as_ref(), "one", true, "two values");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+
+    context.set_variable(Some(java_string("one")), Some(value("atwe")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+
+    context.increase_level();
+    context.increase_level();
+    context.increase_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+
+    context.set_variable(Some(java_string("four")), Some(value("lotwss")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", true, "lotwss");
+
+    context.set_variable(Some(java_string("two")), Some(value("itwiii")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "itwiii");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", true, "lotwss");
+    assert_variable(context.as_ref(), "five", false, "null");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "two values");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", false, "null");
+    assert_variable(context.as_ref(), "four", false, "null");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "two values");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", false, "null");
+    assert_variable(context.as_ref(), "four", false, "null");
+}
+
+// ===========================================================================
+// EngineContextTest test02：起始变量（starting Map）构造 + 遮蔽/恢复
+// ===========================================================================
+
+#[test]
+fn engine_context_test02_starting_variables_shadowing_matches_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let mut variables = IndexMap::new();
+    variables.insert(Some(java_string("one")), Some(value("ha")));
+    variables.insert(Some(java_string("ten")), Some(value("tieen")));
+    let context = EngineContext::new(
+        Arc::clone(&configuration),
+        template_data("test01"),
+        None,
+        locale("en-US", "US"),
+        Some(&variables),
+    );
+
+    assert_variable(context.as_ref(), "one", true, "ha");
+    assert_variable(context.as_ref(), "ten", true, "tieen");
+
+    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    assert_variable(context.as_ref(), "one", true, "a value");
+    assert_variable(context.as_ref(), "ten", true, "tieen");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "ten", true, "tieen");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "a value");
+    assert_variable(context.as_ref(), "ten", true, "tieen");
+}
+
+// ===========================================================================
+// EngineContextTest test06：单层七变量
+// ===========================================================================
+
+#[test]
+fn engine_context_test06_seven_variables_match_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let context = EngineContext::new(
+        configuration,
+        template_data("test01"),
+        None,
+        locale("en-US", "US"),
+        None,
+    );
+
+    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    assert_variable(context.as_ref(), "one", true, "a value");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+
+    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+
+    context.set_variable(Some(java_string("three")), Some(value("trwello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+    assert_variable(context.as_ref(), "three", true, "trwello");
+
+    context.set_variable(Some(java_string("four")), Some(value("fwello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+    assert_variable(context.as_ref(), "three", true, "trwello");
+    assert_variable(context.as_ref(), "four", true, "fwello");
+
+    context.set_variable(Some(java_string("five")), Some(value("vwello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+    assert_variable(context.as_ref(), "three", true, "trwello");
+    assert_variable(context.as_ref(), "four", true, "fwello");
+    assert_variable(context.as_ref(), "five", true, "vwello");
+
+    context.set_variable(Some(java_string("six")), Some(value("swello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+    assert_variable(context.as_ref(), "three", true, "trwello");
+    assert_variable(context.as_ref(), "four", true, "fwello");
+    assert_variable(context.as_ref(), "five", true, "vwello");
+    assert_variable(context.as_ref(), "six", true, "swello");
+
+    context.set_variable(Some(java_string("seven")), Some(value("svwello")));
+    assert_variable(context.as_ref(), "one", true, "hello");
+    assert_variable(context.as_ref(), "two", true, "twello");
+    assert_variable(context.as_ref(), "three", true, "trwello");
+    assert_variable(context.as_ref(), "four", true, "fwello");
+    assert_variable(context.as_ref(), "five", true, "vwello");
+    assert_variable(context.as_ref(), "six", true, "swello");
+    assert_variable(context.as_ref(), "seven", true, "svwello");
+}
+
+// ===========================================================================
+// EngineContextTest test07：selection target 多级设置/清除 + 精确表示串
+// ===========================================================================
+
+#[test]
+fn engine_context_test07_selection_targets_match_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let context = EngineContext::new(
+        Arc::clone(&configuration),
+        template_data("test01"),
+        None,
+        locale("en-US", "US"),
+        None,
+    );
+
+    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    assert!(!context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "null");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=a value}(test01)}[0]"
+    );
+    assert_eq!(context.to_string(), "{one=a value}(test01)");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.remove_variable(Some(&java_string("one")));
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.remove_variable(Some(&java_string("two")));
+    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    context.set_variable(Some(java_string("two")), Some(value("twellor")));
+    assert!(!context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "null");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=hello, two=twellor},0:{one=a value}(test01)}[1]"
+    );
+    assert_eq!(context.to_string(), "{one=hello, two=twellor}(test01)");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("three")), Some(value("twelloree")));
+    context.set_variable(Some(java_string("one")), Some(value("atwe")));
+    assert!(!context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "null");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{2:{one=atwe, three=twelloree},1:{one=hello, two=twellor},0:{one=a value}(test01)}[2]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, two=twellor, three=twelloree}(test01)"
+    );
+
+    context.set_selection_target(Some(value("BIGFORM")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "BIGFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[2]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, two=twellor, three=twelloree}<BIGFORM>(test01)"
+    );
+
+    context.increase_level();
+    context.remove_variable(Some(&java_string("two")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "BIGFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{3:{two=(*removed*)},2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[3]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, three=twelloree}<BIGFORM>(test01)"
+    );
+
+    context.increase_level();
+    context.remove_variable(Some(&java_string("two")));
+    context.set_selection_target(Some(value("SMALLFORM")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "SMALLFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{4:<SMALLFORM>,3:{two=(*removed*)},2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[4]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, three=twelloree}<SMALLFORM>(test01)"
+    );
+
+    context.increase_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "SMALLFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{4:<SMALLFORM>,3:{two=(*removed*)},2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[5]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, three=twelloree}<SMALLFORM>(test01)"
+    );
+
+    context.set_variable(Some(java_string("four")), Some(value("lotwss")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", true, "lotwss");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "SMALLFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{5:{four=lotwss},4:<SMALLFORM>,3:{two=(*removed*)},2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[5]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, three=twelloree, four=lotwss}<SMALLFORM>(test01)"
+    );
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "SMALLFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{4:<SMALLFORM>,3:{two=(*removed*)},2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[4]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, three=twelloree}<SMALLFORM>(test01)"
+    );
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "BIGFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{3:{two=(*removed*)},2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[3]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, three=twelloree}<BIGFORM>(test01)"
+    );
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "BIGFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{2:{one=atwe, three=twelloree}<BIGFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[2]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, two=twellor, three=twelloree}<BIGFORM>(test01)"
+    );
+
+    context.set_selection_target(Some(value("MEDIUMFORM")));
+    assert_variable(context.as_ref(), "one", true, "atwe");
+    assert_variable(context.as_ref(), "two", true, "twellor");
+    assert_variable(context.as_ref(), "three", true, "twelloree");
+    assert_variable(context.as_ref(), "four", false, "null");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "MEDIUMFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{2:{one=atwe, three=twelloree}<MEDIUMFORM>,1:{one=hello, two=twellor},0:{one=a value}(test01)}[2]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=atwe, two=twellor, three=twelloree}<MEDIUMFORM>(test01)"
+    );
+
+    context.decrease_level();
+    assert!(!context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "null");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=hello, two=twellor},0:{one=a value}(test01)}[1]"
+    );
+    assert_eq!(context.to_string(), "{one=hello, two=twellor}(test01)");
+
+    context.decrease_level();
+    assert!(!context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "null");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=a value}(test01)}[0]"
+    );
+    assert_eq!(context.to_string(), "{one=a value}(test01)");
+
+    context.set_selection_target(Some(value("TOTALFORM")));
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "TOTALFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=a value}<TOTALFORM>(test01)}[0]"
+    );
+    assert_eq!(context.to_string(), "{one=a value}<TOTALFORM>(test01)");
+
+    context.increase_level();
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "TOTALFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=a value}<TOTALFORM>(test01)}[1]"
+    );
+    assert_eq!(context.to_string(), "{one=a value}<TOTALFORM>(test01)");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "a value");
+    assert_variable(context.as_ref(), "two", false, "null");
+    assert_variable(context.as_ref(), "three", false, "null");
+    assert_variable(context.as_ref(), "four", false, "null");
+    assert!(context.has_selection_target());
+    assert_eq!(selection_text(context.as_ref()), "TOTALFORM");
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=a value}<TOTALFORM>(test01)}[0]"
+    );
+    assert_eq!(context.to_string(), "{one=a value}<TOTALFORM>(test01)");
+}
+
+// ===========================================================================
+// EngineContextTest test10：setVariable(name, null) 语义
+//   Java：containsVariable 仍为 true，getVariable 返回 null
+// ===========================================================================
+
+#[test]
+fn engine_context_test10_set_variable_null_semantics_match_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let context = EngineContext::new(
+        configuration,
+        template_data("test01"),
+        None,
+        locale("en-US", "US"),
+        None,
+    );
+
+    assert_variable(context.as_ref(), "one", false, "null");
+
+    context.set_variable(Some(java_string("one")), None);
+    assert_variable(context.as_ref(), "one", true, "null");
+
+    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    assert_variable(context.as_ref(), "one", true, "a value");
+
+    context.increase_level();
+    assert_variable(context.as_ref(), "one", true, "a value");
+
+    context.set_variable(Some(java_string("one")), None);
+    assert_variable(context.as_ref(), "one", true, "null");
+
+    context.decrease_level();
+    assert_variable(context.as_ref(), "one", true, "a value");
+}
