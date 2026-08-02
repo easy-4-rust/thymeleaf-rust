@@ -7306,7 +7306,7 @@
   "rust_tests": [
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-actix-web/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-actix-web/tests/adapter_contract.rs",
       "line": 11,
       "name": "full_body_preserves_exact_length_payload_and_completion",
       "kind": "test",
@@ -7314,7 +7314,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-actix-web/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-actix-web/tests/adapter_contract.rs",
       "line": 31,
       "name": "responder_preserves_status_headers_and_body",
       "kind": "test",
@@ -7322,7 +7322,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-axum/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-axum/tests/adapter_contract.rs",
       "line": 9,
       "name": "response_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7330,7 +7330,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-axum/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-axum/tests/adapter_contract.rs",
       "line": 29,
       "name": "error_response_is_generic_while_cause_remains_diagnostic",
       "kind": "test",
@@ -7338,7 +7338,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-gotham/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-gotham/tests/adapter_contract.rs",
       "line": 10,
       "name": "response_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7346,7 +7346,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/adapter_contract.rs",
       "line": 6,
       "name": "response_preserves_status_headers_and_exact_body_size",
       "kind": "test",
@@ -7354,7 +7354,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 26,
       "name": "request_preserves_uri_header_parameter_and_cookie_semantics",
       "kind": "test",
@@ -7362,7 +7362,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 119,
       "name": "request_uses_scheme_default_port_and_root_application_path",
       "kind": "test",
@@ -7370,7 +7370,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 144,
       "name": "session_is_created_lazily_and_preserves_attribute_order_and_identity",
       "kind": "test",
@@ -7378,7 +7378,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 193,
       "name": "application_preserves_attributes_and_reads_resources_from_ordered_roots",
       "kind": "test",
@@ -7386,7 +7386,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 230,
       "name": "request_rejects_null_lookup_names_like_servlet_validate",
       "kind": "test",
@@ -7394,7 +7394,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 240,
       "name": "session_rejects_null_attribute_names_like_servlet_validate",
       "kind": "test",
@@ -7402,7 +7402,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 246,
       "name": "application_rejects_null_resource_paths_like_servlet_validate",
       "kind": "test",
@@ -7410,7 +7410,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 252,
       "name": "exchange_rejects_null_attribute_names_like_servlet_validate",
       "kind": "test",
@@ -7418,7 +7418,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-hyper/tests/host_web_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-hyper/tests/host_web_contract.rs",
       "line": 266,
       "name": "exchange_preserves_scope_identity_metadata_attributes_and_url_transform",
       "kind": "test",
@@ -7426,7 +7426,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-ntex/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-ntex/tests/adapter_contract.rs",
       "line": 10,
       "name": "full_body_preserves_exact_length_payload_and_completion",
       "kind": "test",
@@ -7434,7 +7434,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-ntex/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-ntex/tests/adapter_contract.rs",
       "line": 30,
       "name": "responder_preserves_status_headers_and_body",
       "kind": "test",
@@ -7442,7 +7442,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-poem/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-poem/tests/adapter_contract.rs",
       "line": 8,
       "name": "response_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7450,7 +7450,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-rocket/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-rocket/tests/adapter_contract.rs",
       "line": 20,
       "name": "response_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7458,7 +7458,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-salvo/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-salvo/tests/adapter_contract.rs",
       "line": 9,
       "name": "scribe_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7466,7 +7466,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-tide/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-tide/tests/adapter_contract.rs",
       "line": 8,
       "name": "response_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7474,7 +7474,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-tide/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-tide/tests/adapter_contract.rs",
       "line": 28,
       "name": "response_streams_data_frames_without_precollecting",
       "kind": "test",
@@ -7482,7 +7482,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-tonic/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-tonic/tests/adapter_contract.rs",
       "line": 11,
       "name": "interceptor_injects_same_renderer_and_extension_reports_missing_state",
       "kind": "test",
@@ -7490,7 +7490,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-topcoat/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-topcoat/tests/adapter_contract.rs",
       "line": 10,
       "name": "response_preserves_status_headers_and_full_payload",
       "kind": "test",
@@ -7498,7 +7498,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-tower/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-tower/tests/adapter_contract.rs",
       "line": 13,
       "name": "layer_injects_the_same_renderer_arc_into_each_request",
       "kind": "test",
@@ -7506,7 +7506,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-vernal/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-vernal/tests/adapter_contract.rs",
       "line": 10,
       "name": "response_preserves_status_headers_data_and_trailers",
       "kind": "test",
@@ -7514,7 +7514,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-warp/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-warp/tests/adapter_contract.rs",
       "line": 9,
       "name": "full_reply_preserves_status_and_headers",
       "kind": "test",
@@ -7522,7 +7522,7 @@
     },
     {
       "language": "rust",
-      "file": "integrations/thymeleaf-warp/tests/adapter_contract.rs",
+      "file": "thymeleaf-support/thymeleaf-warp/tests/adapter_contract.rs",
       "line": 27,
       "name": "streaming_reply_is_rejected_instead_of_being_silently_collected",
       "kind": "test",

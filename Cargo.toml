@@ -1,5 +1,5 @@
 [workspace]
-members = ["thymeleaf", "thymeleaf-test", "thymeleaf-examples", "integrations/*"]
+members = ["thymeleaf", "thymeleaf-test", "thymeleaf-examples", "thymeleaf-support/*"]
 exclude = ["xtask"]
 default-members = ["thymeleaf"]
 resolver = "3"

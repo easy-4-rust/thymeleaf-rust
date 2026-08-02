@@ -495,7 +495,7 @@ fn live_source_for_row(
         return Ok(None);
     };
     let path = project_root
-        .join("integrations/thymeleaf-hyper/src")
+        .join("thymeleaf-support/thymeleaf-hyper/src")
         .join(file_name);
     path.is_file()
         .then(|| fs::read_to_string(path))
@@ -748,7 +748,7 @@ fn inspect_host_integration_object(
         return Ok(false);
     };
     let path = project_root
-        .join("integrations/thymeleaf-hyper/src")
+        .join("thymeleaf-support/thymeleaf-hyper/src")
         .join(file_name);
     if !path.is_file() {
         return Ok(false);

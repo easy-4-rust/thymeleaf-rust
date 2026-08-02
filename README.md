@@ -7,7 +7,7 @@ Thymeleaf 3.1.5.RELEASE（Java）的 Rust 移植，工作区采用多 crate 布�
 | [`thymeleaf/`](./thymeleaf/) | 主 crate：框架无关的 Thymeleaf 兼容模板引擎（README 见 `thymeleaf/README.md`） | ✅ |
 | [`thymeleaf-examples/`](./thymeleaf-examples/) | Java `examples/core`（GTVG）示例移植 | ❌ |
 | [`thymeleaf-test/`](./thymeleaf-test/) | Java `tests` + `lib/testing` 的差分验收：2608 例语料 + 对象级 parity + source-test 门禁 | ❌ |
-| [`integrations/`](./integrations/) | 15 个集成 crate（axum/actix/hyper/rocket/… web 适配 + **thymeleaf-sa-token** 安全方言 + **thymeleaf-vernal** Web 上下文） | ✅ |
+| [`thymeleaf-support/`](./thymeleaf-support/) | 15 个集成 crate（axum/actix/hyper/rocket/… web 适配 + **thymeleaf-sa-token** 安全方言 + **thymeleaf-vernal** Web 上下文） | ✅ |
 | [`docs/`](./docs/) | 迁移文档（可行性设计、对象级对照表、迁移测试对照表等） | — |
 | [`scripts/`](./scripts/) | 黄金文件再生成脚本与台账生成脚本 | — |
 | [`xtask/`](./xtask/) | `migration-check` 门禁工具（`cargo xtask migration-check`） | — |
