@@ -29,7 +29,7 @@ impl MarkupSelectorEngine {
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self { html, selectors })
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn matching_element_selectors(&self, path: &[SelectorNode]) -> Vec<JavaString> {
         self.selectors
@@ -38,7 +38,7 @@ impl MarkupSelectorEngine {
             .map(|selector| selector.original.clone())
             .collect()
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn matching_event_selectors(
         &self,
@@ -54,7 +54,7 @@ impl MarkupSelectorEngine {
             .map(|selector| selector.original.clone())
             .collect()
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn selects_content_of(&self, path: &[SelectorNode]) -> bool {
         let mut content_path = path.to_vec();
@@ -117,7 +117,7 @@ impl SelectorNode {
             preceding_siblings,
         }
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn from_tag(
         html: bool,
@@ -143,7 +143,7 @@ impl SelectorNode {
             preceding_siblings,
         }
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn event(
         node_type: SelectorNodeType,
@@ -156,7 +156,7 @@ impl SelectorNode {
             preceding_siblings,
         }
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn summary(&self) -> SelectorNodeSummary {
         SelectorNodeSummary {

@@ -34,6 +34,7 @@ impl TextParsingCommentError {
     }
 
     /// 返回 Java `Throwable#getMessage()` 的 UTF-16 表示。
+    /// 对应 Java 语义：`TextParsingCommentUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn java_message(&self) -> JavaString {
         match self {
             Self::TextParse(exception) => exception

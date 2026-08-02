@@ -44,6 +44,7 @@ impl ValidateError {
     /// # 返回
     /// `IllegalArgumentException` 的调用方消息；消息为 Java null 或属于隐式 JVM
     /// `NullPointerException` 时返回 `None`。
+    /// 对应 Java 语义：Java 接口/超类方法 `getMessage()` 的 Rust 移植（`Validate` 继承路径）。
     #[must_use]
     pub fn get_message(&self) -> Option<&str> {
         match self {

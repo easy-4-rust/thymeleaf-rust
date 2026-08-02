@@ -57,6 +57,7 @@ impl<'a> JavaBigDecimalResult<'a> {
     ///
     /// # 返回
     /// 借用或拥有分支中的十进制值。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `as_decimal` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_decimal(&self) -> &JavaBigDecimal {
         match self {
@@ -72,6 +73,7 @@ impl<'a> JavaBigDecimalResult<'a> {
     ///
     /// # 返回
     /// 结果直接借用该实例时返回 `true`。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `is_borrowed_from` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn is_borrowed_from(&self, source: &JavaBigDecimal) -> bool {
         matches!(self, Self::Borrowed(value) if ptr::eq(*value, source))
@@ -192,6 +194,7 @@ impl<T> JavaMapEntry<T> {
     ///
     /// # 返回
     /// 原 Map 条目实现类或 `EvaluationUtils$MapEntry`。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn java_class_name(&self) -> &str {
         &self.class_name
@@ -301,6 +304,7 @@ pub enum JavaEvaluationTarget<'a, T> {
 }
 
 /// `evaluateAsList` 返回的具体 Java 列表类别。
+/// 对应 Java 语义：`EvaluationUtils` 的 Rust 侧类型 `JavaEvaluationListType`。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum JavaEvaluationListType {
     /// null 输入返回的 `java.util.Collections$EmptyList`。
@@ -342,6 +346,7 @@ impl<T> JavaEvaluationList<T> {
     ///
     /// # 返回
     /// Java `List#size()` 等价值。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `len` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn len(&self) -> usize {
         self.elements.len()
@@ -351,6 +356,7 @@ impl<T> JavaEvaluationList<T> {
     ///
     /// # 返回
     /// `size() == 0` 时返回 `true`。
+    /// 对应 Java 语义：Java 接口/超类方法 `isEmpty()` 的 Rust 移植（`EvaluationUtils` 继承路径）。
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
@@ -376,6 +382,7 @@ impl<'a, T> JavaEvaluationArray<'a, T> {
     ///
     /// # 返回
     /// 借用分支指向该数组时返回 `true`。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `is_borrowed_from` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn is_borrowed_from(&self, source: &JavaObjectArray<T>) -> bool {
         matches!(self, Self::Borrowed(value) if ptr::eq(*value, source))
@@ -385,6 +392,7 @@ impl<'a, T> JavaEvaluationArray<'a, T> {
     ///
     /// # 返回
     /// 仅 Owned 分支中的数组引用。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `as_owned_array` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_owned_array(&self) -> Option<&JavaObjectArray<JavaEvaluationElement<T>>> {
         match self {
@@ -395,6 +403,7 @@ impl<'a, T> JavaEvaluationArray<'a, T> {
 }
 
 /// `EvaluationUtils` 可观察的 Java 异常。
+/// 对应 Java 语义：`EvaluationUtils` 的 Rust 侧类型 `EvaluationError`。
 #[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum EvaluationError {
     /// `Validate.notNull` 的参数错误。

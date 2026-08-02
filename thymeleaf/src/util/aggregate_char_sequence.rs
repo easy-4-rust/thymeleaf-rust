@@ -9,6 +9,7 @@ use super::{IWritableCharSequence, JavaCharSequence, JavaString, JavaWriter, Tex
 pub type AggregateComponent = Arc<dyn JavaCharSequence + Send + Sync>;
 
 /// 聚合字符序列构造错误。
+/// 对应 Java 语义：`AggregateCharSequence` 的 Rust 侧类型 `AggregateCharSequenceError`。
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AggregateCharSequenceError {
     /// 单组件重载收到 null。
@@ -76,6 +77,7 @@ pub struct AggregateCharSequence {
 
 impl AggregateCharSequence {
     /// 创建单组件聚合。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `from_one` 行为（Rust 侧辅助/私有路径）。
     pub fn from_one(
         component: Option<AggregateComponent>,
     ) -> Result<Self, AggregateCharSequenceError> {
@@ -85,6 +87,7 @@ impl AggregateCharSequence {
     }
 
     /// 创建双组件聚合。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `from_two` 行为（Rust 侧辅助/私有路径）。
     pub fn from_two(
         component0: Option<AggregateComponent>,
         component1: Option<AggregateComponent>,
@@ -96,6 +99,7 @@ impl AggregateCharSequence {
     }
 
     /// 创建三组件聚合。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `from_three` 行为（Rust 侧辅助/私有路径）。
     pub fn from_three(
         component0: Option<AggregateComponent>,
         component1: Option<AggregateComponent>,
@@ -111,6 +115,7 @@ impl AggregateCharSequence {
     }
 
     /// 创建四组件聚合。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `from_four` 行为（Rust 侧辅助/私有路径）。
     pub fn from_four(
         component0: Option<AggregateComponent>,
         component1: Option<AggregateComponent>,
@@ -137,6 +142,7 @@ impl AggregateCharSequence {
     /// 创建五组件聚合。
     ///
     /// 保留上游 3.1.5 的可观察缺陷：总长度使用第四组件长度而非第五组件。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `from_five` 行为（Rust 侧辅助/私有路径）。
     pub fn from_five(
         component0: Option<AggregateComponent>,
         component1: Option<AggregateComponent>,
@@ -168,6 +174,7 @@ impl AggregateCharSequence {
     }
 
     /// 从 Java 数组或 List 语义的组件集合创建聚合。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `from_components` 行为（Rust 侧辅助/私有路径）。
     pub fn from_components(
         components: Option<Vec<Option<AggregateComponent>>>,
     ) -> Result<Self, AggregateCharSequenceError> {
@@ -210,6 +217,7 @@ impl AggregateCharSequence {
     }
 
     /// 返回指定聚合 UTF-16 位置的代码单元。
+    /// 对应 Java: `AggregateCharSequence#charAt()`。
     pub fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         if index < 0 || index >= self.length {
             return Err(range_error(index, self.length));
@@ -229,6 +237,7 @@ impl AggregateCharSequence {
     }
 
     /// 返回指定范围的 Java String 子序列。
+    /// 对应 Java: `AggregateCharSequence#subSequence()`。
     pub fn sub_sequence(
         &self,
         begin_index: i32,
@@ -252,6 +261,7 @@ impl AggregateCharSequence {
     }
 
     /// 按聚合内容比较另一个同类对象。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `equals_java` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_java(&self, other: &Self) -> Result<bool, TextUtilsError> {
         if std::ptr::eq(self, other) {
             return Ok(true);
@@ -276,6 +286,7 @@ impl AggregateCharSequence {
     }
 
     /// 返回并缓存 Java hashCode。
+    /// 对应 Java: `AggregateCharSequence#hashCode()`。
     pub fn hash_code(&self) -> Result<i32, TextUtilsError> {
         let cached = *lock(&self.hash);
         if cached != 0 || self.length <= 0 {
@@ -300,6 +311,7 @@ impl AggregateCharSequence {
     }
 
     /// 按字符内容比较任意 Java CharSequence。
+    /// 对应 Java: `AggregateCharSequence#contentEquals()`。
     pub fn content_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
         if self.length != other.java_length()? {
             return Ok(false);
@@ -316,6 +328,7 @@ impl AggregateCharSequence {
     }
 
     /// 将所有组件的 `toString()` 结果串联。
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, TextUtilsError> {
         if self.length == 0 {
             return Ok(JavaString::from_utf16(Vec::new()));

@@ -14,6 +14,7 @@ impl ProcessorComparators {
     ///
     /// 配置包装器先比较方言 precedence，再比较 Processor precedence、Java 类名和
     /// 对象身份；同一对象是唯一返回 `Equal` 的场景。
+    /// 对应 Java 语义：`ProcessorComparators` 的 `compare_processors` 行为（Rust 侧辅助/私有路径）。
     pub fn compare_processors<T>(left: &T, right: &T) -> Ordering
     where
         T: IProcessor + ?Sized,

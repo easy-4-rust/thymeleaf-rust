@@ -30,6 +30,7 @@ impl TextParseCause {
     ///
     /// # 返回
     /// 不携带 TextParseException 行列继承标记的原因。
+    /// 对应 Java 语义：`TextParseException` 的 `with_java_metadata` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
@@ -51,6 +52,7 @@ impl TextParseCause {
     ///
     /// # 返回
     /// 保存原消息、行列和 Java 类名的原因；底层 Box 供 source 链使用。
+    /// 对应 Java 语义：`TextParseException` 的 `from_text_parse` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn from_text_parse(exception: TextParseException) -> Self {
         let java_message = exception.message.clone();
@@ -77,6 +79,7 @@ impl TextParseCause {
     ///
     /// # 返回
     /// 构造适配器时保存的 `Throwable#getClass().getName()`。
+    /// 对应 Java 语义：`TextParseException` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn java_class_name(&self) -> &str {
         &self.java_class_name

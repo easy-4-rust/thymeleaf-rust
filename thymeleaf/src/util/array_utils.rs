@@ -89,6 +89,7 @@ impl<T> JavaArrayType<T> {
     ///
     /// # 返回
     /// 可传给 [`ArrayUtils::copy_of_with_type`] 的类型描述。
+    /// 对应 Java 语义：`ArrayUtils` 的 `typed` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn typed(
         component_class_name: impl Into<String>,
@@ -104,6 +105,7 @@ impl<T> JavaArrayType<T> {
     ///
     /// # 返回
     /// 接受任意非 null 元素的数组类型。
+    /// 对应 Java 语义：`ArrayUtils` 的 `object` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn object() -> Self {
         Self::typed("java.lang.Object", |_| true)
@@ -113,6 +115,7 @@ impl<T> JavaArrayType<T> {
     ///
     /// # 返回
     /// `Class#getComponentType().getName()` 等价文本。
+    /// 对应 Java 语义：`ArrayUtils` 的 `component_class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn component_class_name(&self) -> &str {
         &self.component_class_name
@@ -154,6 +157,7 @@ pub enum ArrayTarget<'a, T> {
 /// `ArrayUtils#toArray` 的借用或新建数组结果。
 ///
 /// Java 在兼容引用数组输入时原样返回同一实例；`Iterable` 输入则反射创建新数组。
+/// 对应 Java 语义：`ArrayUtils` 的 Rust 侧类型 `JavaArray`。
 #[derive(Debug)]
 pub enum JavaArray<'a, T> {
     /// 原数组的同一引用。
@@ -167,6 +171,7 @@ impl<'a, T> JavaArray<'a, T> {
     ///
     /// # 返回
     /// 借用输入或持有新数组的统一只读引用。
+    /// 对应 Java 语义：`ArrayUtils` 的 `as_array` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_array(&self) -> &JavaObjectArray<T> {
         match self {
@@ -182,6 +187,7 @@ impl<'a, T> JavaArray<'a, T> {
     ///
     /// # 返回
     /// 结果借用该数组同一实例时返回 `true`。
+    /// 对应 Java 语义：`ArrayUtils` 的 `is_same_reference` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn is_same_reference(&self, target: &JavaObjectArray<T>) -> bool {
         matches!(self, Self::Borrowed(array) if std::ptr::eq(*array, target))
@@ -191,6 +197,7 @@ impl<'a, T> JavaArray<'a, T> {
     ///
     /// # 返回
     /// 与当前结果等值且独立的引用数组。
+    /// 对应 Java 语义：`ArrayUtils` 的 `into_owned` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn into_owned(self) -> JavaObjectArray<T>
     where

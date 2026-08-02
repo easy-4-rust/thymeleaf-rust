@@ -36,6 +36,7 @@ impl JavaListType {
     ///
     /// # 返回
     /// 保存反射构造信息的列表类型。
+    /// 对应 Java 语义：`ListUtils` 的 `custom` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn custom(class_name: impl Into<String>, public_no_arg_constructor: bool) -> Self {
         Self::Custom {
@@ -48,6 +49,7 @@ impl JavaListType {
     ///
     /// # 返回
     /// 与 `Class#getName()` 对应的类名。
+    /// 对应 Java 语义：`ListUtils` 的 `class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn class_name(&self) -> &str {
         match self {
@@ -128,6 +130,7 @@ impl ListUtilsError {
     ///
     /// # 返回
     /// 可在稳定排序过程中传播的类型化错误。
+    /// 对应 Java 语义：`ListUtils` 的 `runtime` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn runtime(class_name: impl Into<String>, message: impl Into<String>) -> Self {
         Self::Runtime {
@@ -401,6 +404,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// 当前列表长度。
+    /// 对应 Java 语义：`ListUtils` 的 `len` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn len(&self) -> usize {
         match &self.storage {
@@ -413,6 +417,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// 长度为零时返回 `true`。
+    /// 对应 Java: `ListUtils#isEmpty()`。
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -425,6 +430,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// 位置存在时返回借用元素。
+    /// 对应 Java 语义：Java 接口/超类方法 `get()` 的 Rust 移植（`ListUtils` 继承路径）。
     #[must_use]
     pub fn get(&self, index: usize) -> Option<&T> {
         match &self.storage {
@@ -437,6 +443,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// 借用元素的只读迭代器。
+    /// 对应 Java 语义：`ListUtils` 的 `iter` 行为（Rust 侧辅助/私有路径）。
     pub fn iter(&self) -> Box<dyn Iterator<Item = &T> + '_> {
         match &self.storage {
             JavaListStorage::Borrowed(target) => target.iter(),
@@ -451,6 +458,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// 任一元素按 Java `equals` 对应值相等时返回 `true`。
+    /// 对应 Java: `ListUtils#contains()`。
     #[must_use]
     pub fn contains(&self, element: &T) -> bool
     where
@@ -463,6 +471,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// Java 类型描述。
+    /// 对应 Java 语义：`ListUtils` 的 `list_type` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn list_type(&self) -> JavaListType {
         match &self.storage {
@@ -478,6 +487,7 @@ impl<'a, T> JavaList<'a, T> {
     ///
     /// # 返回
     /// `toList` 直接返回该列表时返回 `true`。
+    /// 对应 Java 语义：`ListUtils` 的 `is_borrowed_from` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn is_borrowed_from(&self, target: &dyn ListView<T>) -> bool {
         match self.storage {
@@ -738,6 +748,7 @@ impl ListUtils {
     ///
     /// # 错误
     /// null 列表、列表快照或 Comparator 失败时返回对应错误。
+    /// 对应 Java 语义：`ListUtils` 的 `sort_with_required_comparator` 行为（Rust 侧辅助/私有路径）。
     pub fn sort_with_required_comparator<T>(
         list: Option<&dyn ListView<T>>,
         comparator: &mut dyn JavaComparator<T>,

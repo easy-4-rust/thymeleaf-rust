@@ -139,6 +139,7 @@ impl TextParserRuntimeError {
     /// # 参数
     /// - `java_class_name`：Java 异常全限定名；
     /// - `java_message`：可空 Java UTF-16 消息。
+    /// 对应 Java 语义：`TextParser` 的 `with_java_metadata` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn with_java_metadata(
         java_class_name: &'static str,
@@ -157,6 +158,7 @@ impl TextParserRuntimeError {
     }
 
     /// 返回 Java `Throwable#getMessage()`。
+    /// 对应 Java 语义：`TextParser` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn java_message(&self) -> Option<JavaString> {
         self.java_message.clone()
@@ -188,6 +190,7 @@ pub struct TextParserReaderError {
 
 impl TextParserReaderError {
     /// 创建带 Java 元数据的 Reader 失败。
+    /// 对应 Java 语义：`TextParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn new(java_class_name: &str, java_message: Option<JavaString>) -> Self {
         Self {
@@ -197,6 +200,7 @@ impl TextParserReaderError {
     }
 
     /// 创建 `java.io.IOException`。
+    /// 对应 Java 语义：`TextParser` 的 `io` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn io(message: &str) -> Self {
         Self::new(
@@ -206,12 +210,14 @@ impl TextParserReaderError {
     }
 
     /// 返回 Java 异常全限定名。
+    /// 对应 Java 语义：`TextParser` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn java_class_name(&self) -> &str {
         &self.java_class_name
     }
 
     /// 返回可空 Java 消息。
+    /// 对应 Java 语义：`TextParser` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn java_message(&self) -> Option<JavaString> {
         self.java_message.clone()

@@ -7,6 +7,7 @@ pub struct ExpressionUtils;
 
 impl ExpressionUtils {
     /// 统一控制字符及 Unicode 空白；可选执行与 Java `toLowerCase` 等价的大小写归一化。
+    /// 对应 Java: `ExpressionUtils#normalize()`。
     #[must_use]
     pub fn normalize(expression: Option<&str>, normalize_case: bool) -> Option<String> {
         expression.map(|expression| {
@@ -34,6 +35,7 @@ impl ExpressionUtils {
     }
 
     /// 判断静态类型引用是否被 Thymeleaf 安全策略禁止。
+    /// 对应 Java: `ExpressionUtils#isTypeForbidden()`。
     #[must_use]
     pub fn is_type_forbidden(type_name: &str) -> bool {
         let normalized = Self::normalize(Some(type_name), false).expect("non-null");
@@ -84,6 +86,7 @@ impl ExpressionUtils {
     ///
     /// Rust 迁移以对象声明的 Java 类名执行同一白名单策略；`getClass` 与 `toString`
     /// 始终允许。
+    /// 对应 Java: `ExpressionUtils#isMemberForbidden()`。
     #[must_use]
     pub fn is_member_forbidden(target: Option<&dyn TemplateObject>, member_name: &str) -> bool {
         let Some(target) = target else {

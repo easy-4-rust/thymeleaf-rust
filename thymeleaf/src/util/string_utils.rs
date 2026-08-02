@@ -9,6 +9,7 @@ static RANDOM_STATE: AtomicU64 = AtomicU64::new(0);
 const ALPHA_NUMERIC: &[u8] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 /// 字符串工具操作错误。
+/// 对应 Java 语义：`StringUtils` 的 Rust 侧类型 `StringUtilsError`。
 #[derive(Debug, Error)]
 pub enum StringUtilsError {
     /// Java 参数校验错误。
@@ -29,12 +30,14 @@ pub struct StringUtils;
 
 impl StringUtils {
     /// 对可空对象文本执行 null-safe `toString()`。
+    /// 对应 Java: `StringUtils#toString()`。
     #[must_use]
     pub fn to_string(target: Option<&JavaString>) -> Option<JavaString> {
         target.cloned()
     }
 
     /// 把超长文本截成 `max_size - 3` 个 UTF-16 单元并追加省略号。
+    /// 对应 Java: `StringUtils#abbreviate()`。
     pub fn abbreviate(
         target: Option<&JavaString>,
         max_size: i32,
@@ -53,12 +56,14 @@ impl StringUtils {
     }
 
     /// 按 Java `toString()` 文本执行 null-safe相等比较。
+    /// 对应 Java: `StringUtils#equals()`。
     #[must_use]
     pub fn equals(first: Option<&JavaString>, second: Option<&JavaString>) -> bool {
         first == second
     }
 
     /// 按 Java `String#equalsIgnoreCase` 执行 null-safe比较。
+    /// 对应 Java: `StringUtils#equalsIgnoreCase()`。
     #[must_use]
     pub fn equals_ignore_case(first: Option<&JavaString>, second: Option<&JavaString>) -> bool {
         match (first, second) {
@@ -71,6 +76,7 @@ impl StringUtils {
     }
 
     /// 判断文本是否包含片段。
+    /// 对应 Java: `StringUtils#contains()`。
     pub fn contains(
         target: Option<&JavaString>,
         fragment: Option<&JavaString>,
@@ -81,6 +87,7 @@ impl StringUtils {
     }
 
     /// 使用指定 Locale 的大小写规则判断是否包含片段。
+    /// 对应 Java: `StringUtils#containsIgnoreCase()`。
     pub fn contains_ignore_case(
         target: Option<&JavaString>,
         fragment: Option<&JavaString>,
@@ -95,6 +102,7 @@ impl StringUtils {
     }
 
     /// 判断文本是否以前缀开始。
+    /// 对应 Java: `StringUtils#startsWith()`。
     pub fn starts_with(
         target: Option<&JavaString>,
         prefix: Option<&JavaString>,
@@ -105,6 +113,7 @@ impl StringUtils {
     }
 
     /// 判断文本是否以后缀结束。
+    /// 对应 Java: `StringUtils#endsWith()`。
     pub fn ends_with(
         target: Option<&JavaString>,
         suffix: Option<&JavaString>,
@@ -115,6 +124,7 @@ impl StringUtils {
     }
 
     /// 返回 `[begin_index,end_index)` UTF-16 子串。
+    /// 对应 Java: `StringUtils#substring()`。
     pub fn substring(
         target: Option<&JavaString>,
         begin_index: i32,
@@ -135,6 +145,7 @@ impl StringUtils {
     }
 
     /// 返回从指定 UTF-16 下标到末尾的子串。
+    /// 对应 Java 语义：`StringUtils` 的 `substring_from` 行为（Rust 侧辅助/私有路径）。
     pub fn substring_from(
         target: Option<&JavaString>,
         begin_index: i32,
@@ -152,6 +163,7 @@ impl StringUtils {
     }
 
     /// 返回第一次出现片段之后的文本；未出现时返回 null。
+    /// 对应 Java: `StringUtils#substringAfter()`。
     pub fn substring_after(
         target: Option<&JavaString>,
         substring: Option<&JavaString>,
@@ -168,6 +180,7 @@ impl StringUtils {
     }
 
     /// 返回第一次出现片段之前的文本；未出现时返回 null。
+    /// 对应 Java: `StringUtils#substringBefore()`。
     pub fn substring_before(
         target: Option<&JavaString>,
         substring: Option<&JavaString>,
@@ -181,6 +194,7 @@ impl StringUtils {
     }
 
     /// 在非空目标前追加前缀。
+    /// 对应 Java: `StringUtils#prepend()`。
     pub fn prepend(
         target: Option<&JavaString>,
         prefix: Option<&JavaString>,
@@ -190,6 +204,7 @@ impl StringUtils {
     }
 
     /// 在非空目标后追加后缀。
+    /// 对应 Java: `StringUtils#append()`。
     pub fn append(
         target: Option<&JavaString>,
         suffix: Option<&JavaString>,
@@ -199,6 +214,7 @@ impl StringUtils {
     }
 
     /// 重复目标指定次数。
+    /// 对应 Java: `StringUtils#repeat()`。
     #[must_use]
     pub fn repeat(target: Option<&JavaString>, times: i32) -> Option<JavaString> {
         target.map(|target| {
@@ -211,12 +227,14 @@ impl StringUtils {
     }
 
     /// 拼接所有值，以空串替代 null。
+    /// 对应 Java: `StringUtils#concat()`。
     #[must_use]
     pub fn concat(values: Option<&[Option<JavaString>]>) -> JavaString {
         Self::concat_replace_nulls(Some(&JavaString::from_rust_str("")), values)
     }
 
     /// 拼接所有值，以指定文本替代 null。
+    /// 对应 Java: `StringUtils#concatReplaceNulls()`。
     #[must_use]
     pub fn concat_replace_nulls(
         null_value: Option<&JavaString>,
@@ -232,6 +250,7 @@ impl StringUtils {
     }
 
     /// 返回片段第一次出现的 UTF-16 下标，未出现时返回 -1。
+    /// 对应 Java: `StringUtils#indexOf()`。
     pub fn index_of(
         target: Option<&JavaString>,
         fragment: Option<&JavaString>,
@@ -244,12 +263,14 @@ impl StringUtils {
     }
 
     /// 判断字符串为 null 或零长度。
+    /// 对应 Java: `StringUtils#isEmpty()`。
     #[must_use]
     pub fn is_empty(target: Option<&JavaString>) -> bool {
         target.is_none_or(JavaString::is_empty)
     }
 
     /// 判断字符串为 null、空或全部为 Java whitespace。
+    /// 对应 Java: `StringUtils#isEmptyOrWhitespace()`。
     #[must_use]
     pub fn is_empty_or_whitespace(target: Option<&JavaString>) -> bool {
         target.is_none_or(|target| {
@@ -262,6 +283,7 @@ impl StringUtils {
     }
 
     /// 使用分隔符连接值；null 元素按文本 `null`。
+    /// 对应 Java: `StringUtils#join()`。
     pub fn join(
         target: Option<&[Option<JavaString>]>,
         separator: Option<&JavaString>,
@@ -282,6 +304,7 @@ impl StringUtils {
     }
 
     /// 按 Java `StringTokenizer` 的“分隔符字符集合”规则拆分文本。
+    /// 对应 Java: `StringUtils#split()`。
     pub fn split(
         target: Option<&JavaString>,
         separator: Option<&JavaString>,
@@ -302,12 +325,14 @@ impl StringUtils {
     }
 
     /// 返回 `toString()` 后的 UTF-16 长度。
+    /// 对应 Java: `StringUtils#length()`。
     pub fn length(target: Option<&JavaString>) -> Result<i32, StringUtilsError> {
         let target = required(target, "Cannot apply length on null")?;
         Ok(i32::try_from(target.len()).unwrap_or(i32::MAX))
     }
 
     /// 非正则地替换全部非重叠片段。
+    /// 对应 Java: `StringUtils#replace()`。
     pub fn replace(
         target: Option<&JavaString>,
         before: Option<&JavaString>,
@@ -336,6 +361,7 @@ impl StringUtils {
     }
 
     /// 使用 Locale 转为大写。
+    /// 对应 Java: `StringUtils#toUpperCase()`。
     pub fn to_upper_case(
         target: Option<&JavaString>,
         locale: Option<&JavaLocale>,
@@ -345,6 +371,7 @@ impl StringUtils {
     }
 
     /// 使用 Locale 转为小写。
+    /// 对应 Java: `StringUtils#toLowerCase()`。
     pub fn to_lower_case(
         target: Option<&JavaString>,
         locale: Option<&JavaLocale>,
@@ -354,6 +381,7 @@ impl StringUtils {
     }
 
     /// 按 Java `String#trim` 删除首尾 `<= U+0020` 的单元。
+    /// 对应 Java: `StringUtils#trim()`。
     #[must_use]
     pub fn trim(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(|target| {
@@ -371,6 +399,7 @@ impl StringUtils {
     }
 
     /// 删除全部 whitespace/控制字符并按默认 Locale 小写。
+    /// 对应 Java: `StringUtils#pack()`。
     #[must_use]
     pub fn pack(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(|target| {
@@ -387,18 +416,21 @@ impl StringUtils {
     }
 
     /// 把第一个 UTF-16 字符转为 title case。
+    /// 对应 Java: `StringUtils#capitalize()`。
     #[must_use]
     pub fn capitalize(target: Option<&JavaString>) -> Option<JavaString> {
         change_first_case(target, true)
     }
 
     /// 把第一个 UTF-16 字符转为小写。
+    /// 对应 Java: `StringUtils#unCapitalize()`。
     #[must_use]
     pub fn un_capitalize(target: Option<&JavaString>) -> Option<JavaString> {
         change_first_case(target, false)
     }
 
     /// 按 whitespace 界定单词并 title-case 每个首字符。
+    /// 对应 Java: `StringUtils#capitalizeWords()`。
     #[must_use]
     pub fn capitalize_words(
         target: Option<&JavaString>,
@@ -423,36 +455,42 @@ impl StringUtils {
     }
 
     /// 按 HTML4/XML 兼容规则转义文本。
+    /// 对应 Java: `StringUtils#escapeXml()`。
     #[must_use]
     pub fn escape_xml(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(|target| escape_common(target, EscapeKind::Xml))
     }
 
     /// 按 JavaScript 字符串规则转义文本。
+    /// 对应 Java: `StringUtils#escapeJavaScript()`。
     #[must_use]
     pub fn escape_java_script(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(|target| escape_common(target, EscapeKind::JavaScript))
     }
 
     /// 按 Java 字符串规则转义文本。
+    /// 对应 Java: `StringUtils#escapeJava()`。
     #[must_use]
     pub fn escape_java(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(|target| escape_common(target, EscapeKind::Java))
     }
 
     /// 反解 JavaScript 字符串转义。
+    /// 对应 Java: `StringUtils#unescapeJavaScript()`。
     #[must_use]
     pub fn unescape_java_script(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(unescape_backslashes)
     }
 
     /// 反解 Java 字符串转义。
+    /// 对应 Java: `StringUtils#unescapeJava()`。
     #[must_use]
     pub fn unescape_java(target: Option<&JavaString>) -> Option<JavaString> {
         target.map(unescape_backslashes)
     }
 
     /// 返回只含数字和大写英文字母的随机文本。
+    /// 对应 Java: `StringUtils#randomAlphanumeric()`。
     #[must_use]
     pub fn random_alphanumeric(count: i32) -> JavaString {
         let count = usize::try_from(count).unwrap_or(0);

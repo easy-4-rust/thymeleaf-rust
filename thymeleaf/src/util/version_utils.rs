@@ -93,6 +93,7 @@ impl VersionQualifier {
     ///
     /// # 返回
     /// 与 Java `String#charAt(int)` 逐项一致的只读码元切片。
+    /// 对应 Java 语义：`VersionUtils` 的 `as_utf16` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_utf16(&self) -> &[u16] {
         &self.utf16
@@ -103,6 +104,7 @@ impl VersionQualifier {
     /// # 返回
     /// 常规限定符返回 `Some(&str)`；含孤立代理项时返回 `None`，原始值仍可从
     /// [`VersionQualifier::as_utf16`] 读取。
+    /// 对应 Java 语义：`VersionUtils` 的 `as_str` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_str(&self) -> Option<&str> {
         self.scalar.as_deref()
@@ -112,6 +114,7 @@ impl VersionQualifier {
     ///
     /// # 返回
     /// 等价于对原始 UTF-16 码元执行有损解码的拥有字符串。
+    /// 对应 Java 语义：`VersionUtils` 的 `to_string_lossy` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn to_string_lossy(&self) -> String {
         String::from_utf16_lossy(&self.utf16)

@@ -271,7 +271,7 @@ impl TemplateSpec {
             template_resolution_attributes,
         )
     }
-/// 对应 Java 语义：`TemplateSpec` 的 `try_new` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`TemplateSpec` 的 `try_new` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn try_new(
         template: Option<&str>,

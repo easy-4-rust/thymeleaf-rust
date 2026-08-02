@@ -78,7 +78,7 @@ impl JavaCharsetDecoder {
             encoding.new_decoder_without_bom_handling(),
         ))
     }
-/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(super) fn decode_chunk(&mut self, input: &[u8], last: bool) -> Vec<u8> {
         match self {

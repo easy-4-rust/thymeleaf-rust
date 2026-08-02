@@ -16,6 +16,7 @@ pub type RenderedTemplateStream =
 ///
 /// 这是 Rust Web 整合扩展，不对应额外 Java 对象。所有框架适配 crate 只需把该
 /// 中立表示转换成各自的 Body，不得重新实现模板处理。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub enum RenderedTemplateBody {
     /// 已按响应字符集编码的完整缓冲输出。
     Full(Bytes),
@@ -54,6 +55,7 @@ impl Body for RenderedTemplateBody {
 ///
 /// 状态码、Header 和 Body 使用 Rust HTTP 生态的中立类型，因此核心不依赖
 /// Actix Web、Axum、Hyper、Poem、Rocket、Salvo 等任一宿主框架。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct RenderedTemplate {
     status: StatusCode,
     headers: HeaderMap,
@@ -62,6 +64,7 @@ pub struct RenderedTemplate {
 
 impl RenderedTemplate {
     /// 创建状态为 `200 OK` 的中立渲染结果。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn new(headers: HeaderMap, body: RenderedTemplateBody) -> Self {
         Self {
@@ -78,6 +81,7 @@ impl RenderedTemplate {
     }
 
     /// 修改 HTTP 状态码并返回自身。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn with_status(mut self, status: StatusCode) -> Self {
         self.status = status;
@@ -91,6 +95,7 @@ impl RenderedTemplate {
     }
 
     /// 返回可修改的响应 Header。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn get_headers_mut(&mut self) -> &mut HeaderMap {
         &mut self.headers
@@ -103,12 +108,14 @@ impl RenderedTemplate {
     }
 
     /// 消费结果并返回状态码、Header 与 Body。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn into_parts(self) -> (StatusCode, HeaderMap, RenderedTemplateBody) {
         (self.status, self.headers, self.body)
     }
 
     /// 转换为 Hyper、Tower、Axum 等生态可直接消费的标准 HTTP 响应。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn into_http_response(self) -> Response<RenderedTemplateBody> {
         let mut response = Response::new(self.body);

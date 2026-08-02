@@ -35,6 +35,7 @@ impl PatternSpecError {
     ///
     /// # 返回
     /// 显式校验或模式语法消息；隐式 null 错误返回 `None`。
+    /// 对应 Java 语义：Java 接口/超类方法 `getMessage()` 的 Rust 移植（`PatternSpec` 继承路径）。
     #[must_use]
     pub fn get_message(&self) -> Option<&str> {
         match self {

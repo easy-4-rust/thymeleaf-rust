@@ -87,6 +87,7 @@ impl TextParsingElementError {
     }
 
     /// 返回 Java `String.valueOf(Throwable#getMessage())` 的 UTF-16 表示。
+    /// 对应 Java 语义：`TextParsingElementUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn java_message(&self) -> JavaString {
         match self {
             Self::TextParse(exception) => exception

@@ -21,6 +21,7 @@ impl JavaString {
     ///
     /// # 返回
     /// 保存与 Java `String` 相同代码单元的值。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn from_rust_str(value: &str) -> Self {
         Self {
@@ -35,6 +36,7 @@ impl JavaString {
     ///
     /// # 返回
     /// 不执行 Unicode 修复或替换的 Java 字符串适配值。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn from_utf16(utf16: impl Into<Vec<u16>>) -> Self {
         Self {
@@ -46,6 +48,7 @@ impl JavaString {
     ///
     /// # 返回
     /// UTF-16 代码单元数量，而不是 Unicode 标量或 UTF-8 字节数。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn len(&self) -> usize {
         self.utf16.len()
@@ -55,6 +58,7 @@ impl JavaString {
     ///
     /// # 返回
     /// 不含 UTF-16 代码单元时返回 `true`。
+    /// 对应 Java 语义：Java 接口/超类方法 `isEmpty()` 的 Rust 移植（`None` 继承路径）。
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.utf16.is_empty()
@@ -64,6 +68,7 @@ impl JavaString {
     ///
     /// # 返回
     /// 与 Java `charAt`/`substring` 使用的代码单元序列相同的只读切片。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn as_utf16(&self) -> &[u16] {
         &self.utf16
@@ -75,6 +80,7 @@ impl JavaString {
     /// 有效代理对按原字符解码；孤立代理项按 Rust 标准规则显示为替换字符。
     ///
     /// 精确协议比较应使用 [`Self::as_utf16`]，不能使用本有损显示入口。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn to_string_lossy(&self) -> String {
         String::from_utf16_lossy(&self.utf16)
@@ -107,6 +113,7 @@ impl<'a> JavaStringResult<'a> {
     ///
     /// # 返回
     /// 借用或拥有分支中的统一只读引用。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn as_java_string(&self) -> &JavaString {
         match self {
@@ -122,6 +129,7 @@ impl<'a> JavaStringResult<'a> {
     ///
     /// # 返回
     /// 结果为同一借用对象时返回 `true`。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn is_borrowed_from(&self, source: &JavaString) -> bool {
         matches!(self, Self::Borrowed(value) if std::ptr::eq(*value, source))
@@ -131,6 +139,7 @@ impl<'a> JavaStringResult<'a> {
     ///
     /// # 返回
     /// 已拥有结果直接移动；借用结果克隆相同 UTF-16 代码单元。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn into_owned(self) -> JavaString {
         match self {

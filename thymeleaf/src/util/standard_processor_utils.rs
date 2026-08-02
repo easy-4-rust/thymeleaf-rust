@@ -10,6 +10,7 @@ pub struct StandardProcessorUtils;
 
 impl StandardProcessorUtils {
     /// 用新属性替换旧属性。
+    /// 对应 Java: `StandardProcessorUtils#replaceAttribute()`。
     pub fn replace_attribute(
         structure_handler: &mut dyn IElementTagStructureHandler,
         old_attribute_name: AttributeNameValue,
@@ -26,6 +27,7 @@ impl StandardProcessorUtils {
     }
 
     /// 设置属性。
+    /// 对应 Java: `StandardProcessorUtils#setAttribute()`。
     pub fn set_attribute(
         structure_handler: &mut dyn IElementTagStructureHandler,
         _attribute_definition: &AttributeDefinition,

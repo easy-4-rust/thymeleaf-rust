@@ -5,6 +5,7 @@ use num_bigint::BigInt;
 use super::{JavaBigDecimal, JavaLocale, JavaNumber, JavaString, NumberPointType};
 
 /// 数字格式化与序列生成错误。
+/// 对应 Java 语义：`NumberUtils` 的 Rust 侧类型 `NumberUtilsError`。
 #[derive(Debug, Error)]
 pub enum NumberUtilsError {
     /// 必填参数为空或序列方向非法。
@@ -22,6 +23,7 @@ pub struct NumberUtils;
 
 impl NumberUtils {
     /// 使用指定整数、小数位和分隔符规则格式化数字。
+    /// 对应 Java: `NumberUtils#format()`。
     pub fn format(
         target: Option<&JavaNumber>,
         min_integer_digits: Option<i32>,
@@ -89,6 +91,7 @@ impl NumberUtils {
     }
 
     /// 创建包含边界且按方向选择默认步长的整数序列。
+    /// 对应 Java: `NumberUtils#sequence()`。
     pub fn sequence(from: Option<i32>, to: Option<i32>) -> Result<Vec<i32>, NumberUtilsError> {
         let from = required(from, "Value to start the sequence from cannot be null")?;
         let to = required(to, "Value to generate the sequence up to cannot be null")?;
@@ -96,6 +99,7 @@ impl NumberUtils {
     }
 
     /// 创建包含边界的整数序列；步长方向不匹配时返回空序列。
+    /// 对应 Java 语义：`NumberUtils` 的 `sequence_with_step` 行为（Rust 侧辅助/私有路径）。
     pub fn sequence_with_step(
         from: Option<i32>,
         to: Option<i32>,
@@ -138,6 +142,7 @@ impl NumberUtils {
     }
 
     /// 按 Locale 货币格式格式化数字。
+    /// 对应 Java: `NumberUtils#formatCurrency()`。
     pub fn format_currency(
         target: Option<&JavaNumber>,
         locale: Option<&JavaLocale>,
@@ -165,6 +170,7 @@ impl NumberUtils {
     }
 
     /// 把数字乘以一百并按 Locale 百分号格式输出。
+    /// 对应 Java: `NumberUtils#formatPercent()`。
     pub fn format_percent(
         target: Option<&JavaNumber>,
         min_integer_digits: Option<i32>,

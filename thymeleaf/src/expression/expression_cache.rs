@@ -20,7 +20,7 @@ impl ExpressionCache {
     const EXPRESSION_SEQUENCE: &'static str = "eseq";
     const EACH: &'static str = "each";
     const FRAGMENT_SIGNATURE: &'static str = "fsig";
-/// 对应 Java: `ExpressionCache#getExpressionFromCache()`。
+    /// 对应 Java: `ExpressionCache#getExpressionFromCache()`。
 
     pub(crate) fn get_expression_from_cache(
         configuration: &dyn IEngineConfiguration,
@@ -29,7 +29,7 @@ impl ExpressionCache {
         Self::get_from_cache::<CachedStandardExpression>(configuration, input, Self::EXPRESSION)
             .map(|cached| Arc::clone(&cached.0))
     }
-/// 对应 Java: `ExpressionCache#putExpressionIntoCache()`。
+    /// 对应 Java: `ExpressionCache#putExpressionIntoCache()`。
 
     pub(crate) fn put_expression_into_cache(
         configuration: &dyn IEngineConfiguration,
@@ -43,7 +43,7 @@ impl ExpressionCache {
             Self::EXPRESSION,
         );
     }
-/// 对应 Java: `ExpressionCache#getAssignationSequenceFromCache()`。
+    /// 对应 Java: `ExpressionCache#getAssignationSequenceFromCache()`。
 
     pub(crate) fn get_assignation_sequence_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -54,7 +54,7 @@ impl ExpressionCache {
     {
         Self::get_from_cache(configuration, input, Self::ASSIGNATION_SEQUENCE)
     }
-/// 对应 Java: `ExpressionCache#putAssignationSequenceIntoCache()`。
+    /// 对应 Java: `ExpressionCache#putAssignationSequenceIntoCache()`。
 
     pub(crate) fn put_assignation_sequence_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -65,7 +65,7 @@ impl ExpressionCache {
     {
         Self::put_into_cache(configuration, input, value, Self::ASSIGNATION_SEQUENCE);
     }
-/// 对应 Java: `ExpressionCache#getExpressionSequenceFromCache()`。
+    /// 对应 Java: `ExpressionCache#getExpressionSequenceFromCache()`。
 
     pub(crate) fn get_expression_sequence_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -76,7 +76,7 @@ impl ExpressionCache {
     {
         Self::get_from_cache(configuration, input, Self::EXPRESSION_SEQUENCE)
     }
-/// 对应 Java: `ExpressionCache#putExpressionSequenceIntoCache()`。
+    /// 对应 Java: `ExpressionCache#putExpressionSequenceIntoCache()`。
 
     pub(crate) fn put_expression_sequence_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -87,7 +87,7 @@ impl ExpressionCache {
     {
         Self::put_into_cache(configuration, input, value, Self::EXPRESSION_SEQUENCE);
     }
-/// 对应 Java: `ExpressionCache#getEachFromCache()`。
+    /// 对应 Java: `ExpressionCache#getEachFromCache()`。
 
     pub(crate) fn get_each_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -98,7 +98,7 @@ impl ExpressionCache {
     {
         Self::get_from_cache(configuration, input, Self::EACH)
     }
-/// 对应 Java: `ExpressionCache#putEachIntoCache()`。
+    /// 对应 Java: `ExpressionCache#putEachIntoCache()`。
 
     pub(crate) fn put_each_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -109,7 +109,7 @@ impl ExpressionCache {
     {
         Self::put_into_cache(configuration, input, value, Self::EACH);
     }
-/// 对应 Java: `ExpressionCache#getFragmentSignatureFromCache()`。
+    /// 对应 Java: `ExpressionCache#getFragmentSignatureFromCache()`。
 
     pub(crate) fn get_fragment_signature_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
@@ -120,7 +120,7 @@ impl ExpressionCache {
     {
         Self::get_from_cache(configuration, input, Self::FRAGMENT_SIGNATURE)
     }
-/// 对应 Java: `ExpressionCache#putFragmentSignatureIntoCache()`。
+    /// 对应 Java: `ExpressionCache#putFragmentSignatureIntoCache()`。
 
     pub(crate) fn put_fragment_signature_into_cache<T>(
         configuration: &dyn IEngineConfiguration,

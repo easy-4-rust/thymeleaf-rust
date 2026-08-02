@@ -28,6 +28,7 @@ const DEFAULT_CHUNK_SIZE: i32 = 8 * 1024;
 ///
 /// 完整渲染直接返回 `Bytes`；流式渲染在线程内创建并驱动 Java 语义节流处理器，
 /// 只把 `http-body` 数据帧跨线程发送，避免把请求级非并发处理状态暴露给宿主。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct ThymeleafRenderer {
     engine: Arc<dyn ITemplateEngine>,
     chunk_size: i32,
@@ -35,6 +36,7 @@ pub struct ThymeleafRenderer {
 
 impl ThymeleafRenderer {
     /// 使用默认 8 KiB 流式分块大小创建渲染器。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn new(engine: Arc<dyn ITemplateEngine>) -> Self {
         Self {
@@ -46,6 +48,7 @@ impl ThymeleafRenderer {
     /// 设置每次节流处理允许写出的最大字节数。
     ///
     /// 小于一的值会归一化为一，避免产生不能推进处理状态的空循环。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn with_chunk_size(mut self, chunk_size: i32) -> Self {
         self.chunk_size = chunk_size.max(1);
@@ -53,6 +56,7 @@ impl ThymeleafRenderer {
     }
 
     /// 完整渲染模板，并按响应 `Content-Type` 的字符集编码 HTTP Body。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn render_full(
         &self,
         template_spec: &TemplateSpec,
@@ -79,6 +83,7 @@ impl ThymeleafRenderer {
     ///
     /// `context` 必须由调用方以 `Arc` 交出共享生命周期；处理器只在工作线程内部
     /// 创建和使用，因此仍遵守 Java “同一处理器不得并发 process” 的合同。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn render_stream(
         &self,
         template_spec: TemplateSpec,
@@ -115,6 +120,7 @@ impl ThymeleafRenderer {
     /// `data_driven_iterator` 必须与模板 Context 中的迭代值来自同一次
     /// [`DataDrivenTemplateIterator::shared_template_value`] 调用。工作线程会绑定
     /// Thymeleaf Writer 控制器，并在队列暂空时休眠，直到调用方喂入数据或标记结束。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn render_data_stream(
         &self,
         template_spec: TemplateSpec,

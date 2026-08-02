@@ -91,7 +91,7 @@ impl TemplateFragmentMarkupReferenceResolver {
             .or_insert_with(|| selector.clone())
             .clone()
     }
-/// 对应 Java 语义：`TemplateFragmentMarkupReferenceResolver` 的 `reference_attribute_names` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`TemplateFragmentMarkupReferenceResolver` 的 `reference_attribute_names` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn reference_attribute_names(&self) -> Vec<String> {
         match (self.html, self.standard_dialect_prefix.as_deref()) {

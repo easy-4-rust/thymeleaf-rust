@@ -160,27 +160,27 @@ impl ThrottledTemplateWriterWriterAdapter {
     pub(crate) fn close(&mut self) -> io::Result<()> {
         self.writer_mut()?.close()
     }
-/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#isOverflown()`。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#isOverflown()`。
 
     pub(crate) fn is_overflown(&self) -> bool {
         self.overflow_size > 0
     }
-/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#isStopped()`。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#isStopped()`。
 
     pub(crate) fn is_stopped(&self) -> bool {
         self.limit == 0
     }
-/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getWrittenCount()`。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getWrittenCount()`。
 
     pub(crate) fn get_written_count(&self) -> i32 {
         self.written_count
     }
-/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getMaxOverflowSize()`。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getMaxOverflowSize()`。
 
     pub(crate) fn get_max_overflow_size(&self) -> i32 {
         self.max_overflow_size as i32
     }
-/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getOverflowGrowCount()`。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getOverflowGrowCount()`。
 
     pub(crate) fn get_overflow_grow_count(&self) -> i32 {
         self.overflow_grow_count

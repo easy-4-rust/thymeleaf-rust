@@ -151,12 +151,12 @@ impl IterationStatusVar {
             state.index.wrapping_add(1)
         ))
     }
-/// 对应 Java 语义：`IterationStatusVar` 的 `set_current` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`IterationStatusVar` 的 `set_current` 行为（Rust 侧辅助/私有路径）。
 
     pub(super) fn set_current(&self, current: Option<Arc<TemplateValue>>) {
         write_state(&self.state).current = current;
     }
-/// 对应 Java 语义：`IterationStatusVar` 的 `increment_index` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`IterationStatusVar` 的 `increment_index` 行为（Rust 侧辅助/私有路径）。
 
     pub(super) fn increment_index(&self) {
         let mut state = write_state(&self.state);

@@ -7,12 +7,14 @@ pub struct StandardExpressionUtils;
 
 impl StandardExpressionUtils {
     /// 判断表达式是否可能引用 `#expressionObject`。
+    /// 对应 Java: `StandardExpressionUtils#mightNeedExpressionObjects()`。
     #[must_use]
     pub fn might_need_expression_objects(expression: &str) -> bool {
         expression.contains('#')
     }
 
     /// 检测 OGNL `new`、`param` 或 `@Type@` 外部访问语法。
+    /// 对应 Java: `StandardExpressionUtils#containsExternalAccess()`。
     #[must_use]
     pub fn contains_external_access(expression: &str) -> bool {
         let expression =

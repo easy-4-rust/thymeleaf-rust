@@ -12,6 +12,7 @@ use super::{Validate, ValidateError};
 /// 这是 `org.thymeleaf.util.SetUtils` 所需的 Rust 等价适配：既允许借用
 /// [`HashSet`]，也允许借用保持插入顺序的 [`IndexSet`]，从而使
 /// [`SetUtils::to_set`] 在输入已经是集合时返回同一个集合视图，而不复制数据。
+/// 对应 Java 语义：`SetUtils` 的 Rust 侧类型 `SetView`。
 pub trait SetView<T> {
     /// 返回集合元素数。
     ///
@@ -151,6 +152,7 @@ impl<'a, T> JavaSet<'a, T> {
     ///
     /// # 返回
     /// 当前集合包含的唯一元素数。
+    /// 对应 Java 语义：`SetUtils` 的 `len` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn len(&self) -> usize {
         match &self.storage {
@@ -163,6 +165,7 @@ impl<'a, T> JavaSet<'a, T> {
     ///
     /// # 返回
     /// 集合长度为零时返回 `true`。
+    /// 对应 Java: `SetUtils#isEmpty()`。
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -175,6 +178,7 @@ impl<'a, T> JavaSet<'a, T> {
     ///
     /// # 返回
     /// 借用或拥有的底层集合包含该元素时返回 `true`。
+    /// 对应 Java: `SetUtils#contains()`。
     #[must_use]
     pub fn contains(&self, element: &T) -> bool
     where
@@ -190,6 +194,7 @@ impl<'a, T> JavaSet<'a, T> {
     ///
     /// # 返回
     /// 借用集合元素的只读迭代器。
+    /// 对应 Java 语义：`SetUtils` 的 `iter` 行为（Rust 侧辅助/私有路径）。
     pub fn iter(&self) -> Box<dyn Iterator<Item = &T> + '_>
     where
         T: Eq + Hash,
@@ -210,6 +215,7 @@ impl<'a, T> JavaSet<'a, T> {
     ///
     /// # 返回
     /// 当前集合直接借用 `target` 时返回 `true`。
+    /// 对应 Java 语义：`SetUtils` 的 `is_borrowed_from` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn is_borrowed_from(&self, target: &dyn SetView<T>) -> bool {
         match self.storage {
@@ -237,6 +243,7 @@ where
 }
 
 /// `SetUtils#toSet(Object)` 的类型化错误。
+/// 对应 Java 语义：`SetUtils` 的 Rust 侧类型 `SetUtilsError`。
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum SetUtilsError {
     /// Java `Validate.notNull` 对应的参数错误。

@@ -175,6 +175,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 CDATA Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_cdata_section` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_cdata_section(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,
@@ -191,6 +192,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 Comment Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_comment` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_comment(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,
@@ -207,6 +209,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 DOCTYPE Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_doc_type` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_doc_type(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,
@@ -223,6 +226,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 ProcessingInstruction Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_processing_instruction` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_processing_instruction(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,
@@ -239,6 +243,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 TemplateBoundaries Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_template_boundaries` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_template_boundaries(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,
@@ -255,6 +260,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 Text Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_text` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_text(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,
@@ -267,6 +273,7 @@ impl ProcessorConfigurationUtils {
     }
 
     /// 包装 XMLDeclaration Processor。
+    /// 对应 Java 语义：`ProcessorConfigurationUtils` 的 `wrap_xml_declaration` 行为（Rust 侧辅助/私有路径）。
     pub fn wrap_xml_declaration(
         processor: Arc<dyn IProcessor>,
         dialect_precedence: i32,

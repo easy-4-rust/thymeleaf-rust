@@ -17,6 +17,7 @@ pub struct TextTemplateParser {
 
 impl TextTemplateParser {
     /// 创建 TEXT Parser；TEXT 模式不启用 JS/CSS 注释与字面量扫描。
+    /// 对应 Java 语义：`TextTemplateParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn new(buffer_pool_size: i32, buffer_size: i32, standard_dialect_present: bool) -> Self {
         Self {

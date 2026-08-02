@@ -129,6 +129,7 @@ pub trait IWebRequest: Send + Sync {
 }
 
 /// Web 请求默认计算方法的错误。
+/// 对应 Java 语义：`IWebRequest` 的 Rust 侧类型 `WebRequestError`。
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum WebRequestError {
     /// Java `UnsupportedOperationException` 对应错误。

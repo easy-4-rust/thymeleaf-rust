@@ -50,6 +50,7 @@ impl ResourceLoaderUtils {
     ///
     /// 线程上下文根目录优先；随后依次包含 crate、可执行文件和当前工作目录，
     /// 重复目录只保留第一次出现的位置。
+    /// 对应 Java 语义：`ClassLoaderUtils` 的 `get_resource_roots` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn get_resource_roots() -> Vec<PathBuf> {
         let mut roots = Vec::new();
@@ -74,6 +75,7 @@ impl ResourceLoaderUtils {
     ///
     /// `class_name` 保留 Java `ClassLoaderUtils` 的参数语义；集成 crate 可用其 Java
     /// 兼容类名或 Rust 能力名进行注册。
+    /// 对应 Java 语义：`ClassLoaderUtils` 的 `register_class` 行为（Rust 侧辅助/私有路径）。
     pub fn register_class(class_name: impl Into<String>) {
         let mut classes = registered_classes()
             .write()

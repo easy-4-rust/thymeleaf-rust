@@ -17,6 +17,7 @@ pub struct CSSTemplateParser {
 
 impl CSSTemplateParser {
     /// 创建启用 CSS 注释与字面量扫描的 Parser。
+    /// 对应 Java 语义：`CSSTemplateParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn new(buffer_pool_size: i32, buffer_size: i32, standard_dialect_present: bool) -> Self {
         Self {

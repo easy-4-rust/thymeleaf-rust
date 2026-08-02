@@ -38,6 +38,7 @@ impl ChainedTextHandlerRuntimeError {
     ///
     /// # 返回
     /// 精确保留失败回调签名及字段表达式 `this.next`。
+    /// 对应 Java 语义：`AbstractChainedTextHandler` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn java_message(&self) -> JavaString {
         JavaString::from_rust_str(&format!(

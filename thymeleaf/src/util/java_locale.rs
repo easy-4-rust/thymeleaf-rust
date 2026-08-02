@@ -45,6 +45,7 @@ impl JavaLocale {
     }
 
     /// 返回 Java `Locale#getLanguage()` 对应语言代码。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn get_language(&self) -> JavaString {
         JavaString::from_rust_str(
@@ -57,6 +58,7 @@ impl JavaLocale {
     }
 
     /// 返回 Java `Locale#getVariant()` 对应变体。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn get_variant(&self) -> JavaString {
         let tag = self.language_tag.to_string_lossy();
@@ -75,6 +77,7 @@ impl JavaLocale {
     }
 
     /// 返回当前进程默认 Locale 的独立值快照。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
     pub fn get_default() -> Self {
         read_recovering_poison(default_locale_lock()).clone()
@@ -85,6 +88,7 @@ impl JavaLocale {
     /// # 参数
     ///
     /// - `locale`：替换 `Locale.getDefault()` 结果的值。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn set_default(locale: Self) {
         *write_recovering_poison(default_locale_lock()) = locale;
     }

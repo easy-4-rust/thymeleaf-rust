@@ -181,9 +181,13 @@ def main() -> int:
             path = Path(args.rust_root) / file
             src_lines = path.read_text(encoding="utf-8").splitlines()
             for lineno, _item, comment in sorted(entries, reverse=True):
-                indent_match = re.match(r"(\s*)", src_lines[lineno - 1])
+                # 插入到属性块（#[must_use] 等）之上，保持 doc 注释在属性前
+                cursor = lineno - 1
+                while cursor > 0 and src_lines[cursor - 1].lstrip().startswith("#["):
+                    cursor -= 1
+                indent_match = re.match(r"(\s*)", src_lines[cursor])
                 indent = indent_match.group(1)
-                src_lines.insert(lineno - 1, f"{indent}{comment}")
+                src_lines.insert(cursor, f"{indent}{comment}")
             path.write_text("\n".join(src_lines) + "\n", encoding="utf-8")
             applied += len(entries)
         print(f"applied {applied} comments")

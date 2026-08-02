@@ -47,6 +47,7 @@ impl LazyEscapingCharSequence {
 /// 立即生成与 `LazyEscapingCharSequence` 相同的 HTML/XML/TEXT 转义结果。
 ///
 /// 该入口供 `StandardTextTagProcessor` 在短文本分支复用同一套字符级语义。
+/// 对应 Java 语义：`LazyEscapingCharSequence` 的 `escape_text_immediately` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn escape_text_immediately(
     template_mode: TemplateMode,
     input: &JavaString,

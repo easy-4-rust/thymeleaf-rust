@@ -31,6 +31,7 @@ impl JavaBigDecimal {
     ///
     /// # 返回
     /// 保留两个构造参数且不做规范化的新值。
+    /// 对应 Java 语义：`AggregateUtils` 的 `from_unscaled` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn from_unscaled(unscaled_value: BigInt, scale: i32) -> Self {
         Self {
@@ -49,6 +50,7 @@ impl JavaBigDecimal {
     ///
     /// # 错误
     /// 语法非法或指数导致 scale 超出 Java `i32` 范围时返回数字格式错误。
+    /// 对应 Java 语义：Java 接口/超类方法 `parse()` 的 Rust 移植（`AggregateUtils` 继承路径）。
     pub fn parse(value: &str) -> Result<Self, AggregateError> {
         parse_decimal(value)
     }
@@ -57,6 +59,7 @@ impl JavaBigDecimal {
     ///
     /// # 返回
     /// 未规范化的任意精度整数引用。
+    /// 对应 Java 语义：`AggregateUtils` 的 `unscaled_value` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn unscaled_value(&self) -> &BigInt {
         &self.unscaled_value
@@ -75,6 +78,7 @@ impl JavaBigDecimal {
     ///
     /// # 返回
     /// unscaled value 的十进制数字数；零的精度固定为 1。
+    /// 对应 Java 语义：`AggregateUtils` 的 `precision` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn precision(&self) -> usize {
         if self.unscaled_value.is_zero() {
@@ -88,6 +92,7 @@ impl JavaBigDecimal {
     ///
     /// # 返回
     /// 不使用指数记法且保留 scale 的十进制文本。
+    /// 对应 Java 语义：`AggregateUtils` 的 `to_plain_string` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn to_plain_string(&self) -> String {
         let negative = self.unscaled_value.sign() == Sign::Minus;
@@ -133,6 +138,7 @@ impl JavaBigDecimal {
         }
         parse_decimal(&java_double_string(value))
     }
+    /// 对应 Java 语义：`AggregateUtils` 的 `from_f64_exact` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn from_f64_exact(value: f64) -> Option<Self> {
         if !value.is_finite() {
@@ -176,6 +182,7 @@ impl JavaBigDecimal {
         }
         Some(Self::from_unscaled(unscaled, 0))
     }
+    /// 对应 Java 语义：`AggregateUtils` 的 `add_java` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn add_java(&self, other: &Self) -> Self {
         let result_scale = self.scale.max(other.scale);
@@ -185,6 +192,7 @@ impl JavaBigDecimal {
     }
 
     /// 按 `DecimalFormat` 默认的 HALF_EVEN 规则调整到指定 scale。
+    /// 对应 Java 语义：`AggregateUtils` 的 `with_scale_half_even` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn with_scale_half_even(&self, target_scale: i32) -> Self {
         if target_scale >= self.scale {
             return Self::from_unscaled(
@@ -213,6 +221,7 @@ impl JavaBigDecimal {
     }
 
     /// 按 Java `BigDecimal#subtract` 语义相减。
+    /// 对应 Java 语义：`AggregateUtils` 的 `subtract_java` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn subtract_java(&self, other: &Self) -> Self {
         let result_scale = self.scale.max(other.scale);
         let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
@@ -221,6 +230,7 @@ impl JavaBigDecimal {
     }
 
     /// 按 Java `BigDecimal#compareTo` 比较数值，忽略 scale 差异。
+    /// 对应 Java 语义：`AggregateUtils` 的 `compare_java` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn compare_java(&self, other: &Self) -> std::cmp::Ordering {
         let comparison_scale = self.scale.max(other.scale);
         let left = rescale_unscaled(&self.unscaled_value, self.scale, comparison_scale);
@@ -229,6 +239,7 @@ impl JavaBigDecimal {
     }
 
     /// 按 Java `BigDecimal#multiply` 语义相乘。
+    /// 对应 Java 语义：`AggregateUtils` 的 `multiply_java` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn multiply_java(
         &self,
         other: &Self,
@@ -242,6 +253,7 @@ impl JavaBigDecimal {
     }
 
     /// 按 Java `BigDecimal#divide` 执行精确除法。
+    /// 对应 Java 语义：`AggregateUtils` 的 `divide_java` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn divide_java(
         &self,
         divisor: &Self,
@@ -254,6 +266,7 @@ impl JavaBigDecimal {
     }
 
     /// 按指定 scale 和 HALF_UP 模式执行 Java BigDecimal 除法。
+    /// 对应 Java 语义：`AggregateUtils` 的 `divide_java_half_up` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn divide_java_half_up(
         &self,
         divisor: &Self,
@@ -291,6 +304,7 @@ impl JavaBigDecimal {
     }
 
     /// 按 Java `BigDecimal#remainder` 返回截断商对应的余数。
+    /// 对应 Java 语义：`AggregateUtils` 的 `remainder_java` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn remainder_java(
         &self,
         divisor: &Self,
@@ -454,6 +468,7 @@ pub enum JavaAggregateObject {
 ///
 /// Java `AggregateUtils` 先由 `Validate.containsNoNulls` 遍历一次，再执行第二次聚合
 /// 遍历。本 trait 明确保留“两次调用 iterator()”的可观察行为。
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `JavaNumberIterable`。
 pub trait JavaNumberIterable {
     /// 创建一次新的 Java 迭代器。
     ///
@@ -466,6 +481,7 @@ pub trait JavaNumberIterable {
 ///
 /// 对应 `Iterable<? extends Number>` 的常规集合输入；元素中的 `None` 保留 Java
 /// null，并由 `AggregateUtils` 按原异常顺序校验。
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `JavaNumberList`。
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct JavaNumberList {
     values: Vec<Option<JavaNumber>>,
@@ -479,6 +495,7 @@ impl JavaNumberList {
     ///
     /// # 返回
     /// 拥有输入内容且可重复创建迭代器的列表。
+    /// 对应 Java 语义：`AggregateUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn new(values: Vec<Option<JavaNumber>>) -> Self {
         Self { values }
@@ -488,6 +505,7 @@ impl JavaNumberList {
     ///
     /// # 返回
     /// 保留顺序和 null 槽位的只读视图。
+    /// 对应 Java 语义：`AggregateUtils` 的 `as_slice` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_slice(&self) -> &[Option<JavaNumber>] {
         &self.values
@@ -501,6 +519,7 @@ impl JavaNumberIterable for JavaNumberList {
 }
 
 /// 聚合过程的 Java 异常等价分类。
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `AggregateError`。
 #[derive(Clone, Debug, Eq, Error, PartialEq)]
 pub enum AggregateError {
     /// Java `IllegalArgumentException`，用于 null 目标或 null 元素。
@@ -651,12 +670,14 @@ impl AggregateUtils {
     pub fn avg_doubles(target: Option<&[f64]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Doubles), true)
     }
+    /// 对应 Java 语义：`AggregateUtils` 的 `sum_numbers` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn sum_numbers(
         target: Option<&[Option<JavaNumber>]>,
     ) -> Result<Option<JavaBigDecimal>, AggregateError> {
         aggregate_number_array(target, false)
     }
+    /// 对应 Java 语义：`AggregateUtils` 的 `avg_numbers` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn avg_numbers(
         target: Option<&[Option<JavaNumber>]>,
@@ -906,6 +927,7 @@ fn parse_decimal(value: &str) -> Result<JavaBigDecimal, AggregateError> {
         checked_scale(i64::try_from(fraction.len()).expect("fraction length fits i64") - exponent)?;
     Ok(JavaBigDecimal::from_unscaled(unscaled, scale))
 }
+/// 对应 Java 语义：`AggregateUtils` 的 `java_double_string` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn java_double_string(value: f64) -> String {
     if value.is_nan() {
@@ -992,6 +1014,7 @@ enum DivisionError {
 }
 
 /// Standard Expression 使用 Java BigDecimal 运算时的 ArithmeticException 分类。
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `JavaBigDecimalArithmeticError`。
 #[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
 pub(crate) enum JavaBigDecimalArithmeticError {
     /// 除数为零。

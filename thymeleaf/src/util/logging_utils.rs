@@ -49,6 +49,7 @@ impl LoggingUtils {
     /// 调用精确 UTF-16 实现后生成的可显示文本；若截断恰好切开代理对，孤立代理项
     /// 因 Rust `String` 限制显示为替换字符。需要无损比较时使用
     /// [`Self::loggify_template_name`]。
+    /// 对应 Java 语义：`LoggingUtils` 的 `loggify_str` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn loggify_str(template: Option<&str>) -> Option<String> {
         let template = template.map(JavaString::from_rust_str)?;

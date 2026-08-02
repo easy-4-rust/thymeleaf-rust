@@ -41,6 +41,7 @@ impl PatternUtilsError {
     ///
     /// # 返回
     /// null 输入没有稳定 JDK 消息，因此返回 `None`；语法错误返回底层编译诊断。
+    /// 对应 Java 语义：Java 接口/超类方法 `getMessage()` 的 Rust 移植（`PatternUtils` 继承路径）。
     #[must_use]
     pub fn get_message(&self) -> Option<&str> {
         match self {
@@ -53,6 +54,7 @@ impl PatternUtilsError {
     ///
     /// # 返回
     /// 语法错误返回表达式；null 输入返回 `None`。
+    /// 对应 Java 语义：`PatternUtils` 的 `get_pattern` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn get_pattern(&self) -> Option<&str> {
         match self {
@@ -90,6 +92,7 @@ impl StringPattern {
     ///
     /// # 返回
     /// 以 `^` 和 `$` 包围、且按 `PatternUtils` 替换规则生成的文本。
+    /// 对应 Java 语义：`PatternUtils` 的 `as_str` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_str(&self) -> &str {
         &self.java_pattern

@@ -13,6 +13,7 @@ use crate::expression::{TemplateObject, TemplateValue};
 use super::{JavaLocale, JavaNumber, JavaString};
 
 /// Java `Date`/`Calendar` 的 Rust 时间值适配。
+/// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `JavaDate`。
 #[derive(Clone, Debug)]
 pub struct JavaDate {
     instant: DateTime<Utc>,
@@ -67,6 +68,7 @@ impl JavaDate {
     }
 
     /// 返回自 Unix epoch 起毫秒数。
+    /// 对应 Java 语义：`DateUtils` 的 `time_in_millis` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn time_in_millis(&self) -> i64 {
         self.instant.timestamp_millis()
@@ -220,6 +222,7 @@ enum JavaTimeZone {
 }
 
 /// 日期创建、归一化或格式化错误。
+/// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `DateUtilsError`。
 #[derive(Debug, Error)]
 pub enum DateUtilsError {
     /// Java 参数或目标类型不符合约束。
@@ -237,6 +240,7 @@ pub struct DateUtils;
 
 impl DateUtils {
     /// 按 Calendar lenient 字段规则创建带时区日历。
+    /// 对应 Java: `DateUtils#create()`。
     #[allow(clippy::too_many_arguments)]
     pub fn create(
         year: Option<i32>,
@@ -301,12 +305,14 @@ impl DateUtils {
     }
 
     /// 返回指定时区的当前 Calendar。
+    /// 对应 Java: `DateUtils#createNow()`。
     #[must_use]
     pub fn create_now(time_zone: Option<&str>, _locale: Option<&JavaLocale>) -> JavaDate {
         JavaDate::calendar_for_time_zone(Utc::now(), parse_time_zone(time_zone))
     }
 
     /// 返回指定时区当天零点 Calendar。
+    /// 对应 Java: `DateUtils#createToday()`。
     #[must_use]
     pub fn create_today(time_zone: Option<&str>, locale: Option<&JavaLocale>) -> JavaDate {
         let now = Self::create_now(time_zone, locale);
@@ -320,6 +326,7 @@ impl DateUtils {
     }
 
     /// 使用 Locale 默认长日期时间格式或指定 SimpleDateFormat pattern 格式化。
+    /// 对应 Java: `DateUtils#format()`。
     pub fn format(
         target: Option<&JavaDate>,
         pattern: Option<&JavaString>,
@@ -343,12 +350,14 @@ impl DateUtils {
     }
 
     /// 返回一个月中的日期。
+    /// 对应 Java: `DateUtils#day()`。
     #[must_use]
     pub fn day(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().day() as i32)
     }
 
     /// 返回一月为 1 的月份。
+    /// 对应 Java: `DateUtils#month()`。
     #[must_use]
     pub fn month(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().month() as i32)
@@ -375,12 +384,14 @@ impl DateUtils {
     }
 
     /// 返回年份。
+    /// 对应 Java: `DateUtils#year()`。
     #[must_use]
     pub fn year(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().year())
     }
 
     /// 返回 Java Calendar 周日为 1 的星期编号。
+    /// 对应 Java: `DateUtils#dayOfWeek()`。
     #[must_use]
     pub fn day_of_week(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| match target.local_date_time().weekday() {
@@ -415,24 +426,28 @@ impl DateUtils {
     }
 
     /// 返回 24 小时制小时。
+    /// 对应 Java: `DateUtils#hour()`。
     #[must_use]
     pub fn hour(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().hour() as i32)
     }
 
     /// 返回分钟。
+    /// 对应 Java: `DateUtils#minute()`。
     #[must_use]
     pub fn minute(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().minute() as i32)
     }
 
     /// 返回秒。
+    /// 对应 Java: `DateUtils#second()`。
     #[must_use]
     pub fn second(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().second() as i32)
     }
 
     /// 返回毫秒。
+    /// 对应 Java: `DateUtils#millisecond()`。
     #[must_use]
     pub fn millisecond(target: Option<&JavaDate>) -> Option<i32> {
         target.map(|target| target.local_date_time().and_utc().timestamp_subsec_millis() as i32)
@@ -440,6 +455,7 @@ impl DateUtils {
 
     /// 输出 `yyyy-MM-dd'T'HH:mm:ss.SSS+HH:MM` 形式（Java `formatISO` 的
     /// `ZZZ` + `insert(26, ':')`，零偏移为 `+00:00` 而非 "Z"）。
+    /// 对应 Java 语义：`DateUtils` 的 `format_iso` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn format_iso(target: Option<&JavaDate>) -> Option<JavaString> {
         target.map(|target| {
@@ -453,6 +469,7 @@ impl DateUtils {
     }
 
     /// 从动态模板值读取 Java Date/Calendar。
+    /// 对应 Java 语义：`DateUtils` 的 `from_template_value` 行为（Rust 侧辅助/私有路径）。
     pub fn from_template_value(
         value: Option<&TemplateValue>,
     ) -> Result<Option<&JavaDate>, DateUtilsError> {
@@ -476,6 +493,7 @@ impl DateUtils {
     }
 
     /// 包装为模板动态对象。
+    /// 对应 Java 语义：`DateUtils` 的 `into_template_value` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn into_template_value(value: JavaDate) -> Arc<TemplateValue> {
         Arc::new(TemplateValue::Object(Arc::new(value)))
@@ -1044,6 +1062,7 @@ fn localized_zone_display_name<'a>(
 }
 
 /// 从模板动态数字提取 Java intValue。
+/// 对应 Java 语义：`DateUtils` 的 `template_integer` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn template_integer(
     value: &Option<Arc<TemplateValue>>,
 ) -> Result<Option<i32>, DateUtilsError> {

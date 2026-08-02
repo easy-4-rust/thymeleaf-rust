@@ -6,6 +6,7 @@ use super::{
 };
 
 /// `AbstractLazyCharSequence` 子类提供的延迟解析与未解析写出行为。
+/// 对应 Java 语义：`AbstractLazyCharSequence` 的 Rust 侧类型 `LazyCharSequenceResolver`。
 pub trait LazyCharSequenceResolver: Send + Sync {
     /// 返回 Java 具体子类全限定名，供基类 `equals` 执行精确类判断。
     fn java_class_name(&self) -> &str;
@@ -41,6 +42,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     /// 返回缓存文本；未解析时调用一次 `resolveText()`。
     ///
     /// 若 resolver 返回 null，缓存仍保持 null，后续访问会再次求值。
+    /// 对应 Java: `AbstractLazyCharSequence#getText()`。
     pub fn get_text(&self) -> Option<JavaString> {
         if let Some(value) = read_lock(&self.resolved_text).as_ref() {
             return Some(value.clone());
@@ -51,6 +53,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     }
 
     /// 按 Java 精确具体类与解析后字符串内容判断相等。
+    /// 对应 Java 语义：`AbstractLazyCharSequence` 的 `equals_java` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_java(&self, other: &Self) -> Result<bool, TextUtilsError> {
         if std::ptr::eq(self, other) {
             return Ok(true);
@@ -64,6 +67,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     }
 
     /// 返回解析字符串的 Java `String#hashCode()`。
+    /// 对应 Java: `AbstractLazyCharSequence#hashCode()`。
     pub fn hash_code(&self) -> Result<i32, TextUtilsError> {
         self.get_text()
             .ok_or(TextUtilsError::NullPointer)
@@ -71,6 +75,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     }
 
     /// 返回解析后的 Java String。
+    /// 对应 Java 语义：`AbstractLazyCharSequence` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, TextUtilsError> {
         self.get_text().ok_or(TextUtilsError::NullPointer)
     }

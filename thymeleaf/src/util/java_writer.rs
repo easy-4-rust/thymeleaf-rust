@@ -5,6 +5,7 @@ use std::io;
 /// Thymeleaf 内部以 Java `char` 代码单元工作，不能直接退化为 Rust UTF-8
 /// `std::io::Write`，否则孤立代理项及字符计数会改变。宿主适配器负责决定最终编码
 /// 或保存 UTF-16，并通过 `io::Result` 映射 Java `IOException`。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub trait JavaWriter: Send {
     /// 写出完整 UTF-16 代码单元切片。
     ///

@@ -56,6 +56,7 @@ impl TextUtilsError {
     ///
     /// # 返回
     /// 与上游调用路径对应的 `Throwable#getClass().getName()`。
+    /// 对应 Java 语义：`TextUtils` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn java_class_name(&self) -> &str {
         match self {
@@ -71,6 +72,7 @@ impl TextUtilsError {
     ///
     /// # 返回
     /// 显式或运行时消息的 UTF-16 副本；隐式 null 解引用返回 `None`。
+    /// 对应 Java 语义：Java 接口/超类方法 `message()` 的 Rust 移植（`TextUtils` 继承路径）。
     #[must_use]
     pub fn message(&self) -> Option<JavaString> {
         match self {
@@ -310,6 +312,7 @@ impl TextUtils {
     /// 参数与 Java 同名重载一致。
     /// # 返回
     /// 两段 UTF-16 内容是否相等。
+    /// 对应 Java 语义：`TextUtils` 的 `equals_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_sequence_and_chars(
         case_sensitive: bool,
         text1: Option<&dyn JavaCharSequence>,
@@ -334,6 +337,7 @@ impl TextUtils {
     /// `None` 保留 Java 数组长度读取产生的 NPE 顺序。
     /// # 返回
     /// 两个数组内容是否相等。
+    /// 对应 Java 语义：`TextUtils` 的 `equals_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_chars(
         case_sensitive: bool,
         text1: Option<&[u16]>,
@@ -350,6 +354,7 @@ impl TextUtils {
     /// offset/len 均按 Java `int` 和 UTF-16 代码单元解释。
     /// # 返回
     /// 两个范围是否相等。
+    /// 对应 Java 语义：`TextUtils` 的 `equals_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn equals_chars_range(
         case_sensitive: bool,
@@ -384,6 +389,7 @@ impl TextUtils {
     /// offset/len 保留 Java 边界和访问顺序。
     /// # 返回
     /// 两个范围是否相等。
+    /// 对应 Java 语义：`TextUtils` 的 `equals_sequence_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn equals_sequence_and_chars_range(
         case_sensitive: bool,
@@ -415,6 +421,7 @@ impl TextUtils {
     /// offset/len 按上游原样执行，不预先归一化。
     /// # 返回
     /// 两个范围是否相等。
+    /// 对应 Java 语义：`TextUtils` 的 `equals_sequences_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn equals_sequences_range(
         case_sensitive: bool,
@@ -480,6 +487,7 @@ impl TextUtils {
     /// 参数求值顺序与 Java 委托重载一致。
     /// # 返回
     /// 是否匹配指定前缀。
+    /// 对应 Java 语义：`TextUtils` 的 `starts_with_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn starts_with_sequence_and_chars(
         case_sensitive: bool,
         text: Option<&dyn JavaCharSequence>,
@@ -504,6 +512,7 @@ impl TextUtils {
     /// 两个数组均可用 `None` 表达 Java null。
     /// # 返回
     /// 是否匹配指定前缀。
+    /// 对应 Java 语义：`TextUtils` 的 `starts_with_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn starts_with_chars(
         case_sensitive: bool,
         text: Option<&[u16]>,
@@ -520,6 +529,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `prefix` 范围开头。
+    /// 对应 Java 语义：`TextUtils` 的 `starts_with_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn starts_with_chars_range(
         case_sensitive: bool,
@@ -547,6 +557,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `prefix` 范围开头。
+    /// 对应 Java 语义：`TextUtils` 的 `starts_with_sequence_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn starts_with_sequence_and_chars_range(
         case_sensitive: bool,
@@ -574,6 +585,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `prefix` 范围开头。
+    /// 对应 Java 语义：`TextUtils` 的 `starts_with_chars_and_sequence_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn starts_with_chars_and_sequence_range(
         case_sensitive: bool,
@@ -601,6 +613,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `prefix` 范围开头。
+    /// 对应 Java 语义：`TextUtils` 的 `starts_with_sequences_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn starts_with_sequences_range(
         case_sensitive: bool,
@@ -661,6 +674,7 @@ impl TextUtils {
     /// 参数求值顺序与 Java 委托重载一致。
     /// # 返回
     /// 是否匹配指定后缀。
+    /// 对应 Java 语义：`TextUtils` 的 `ends_with_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn ends_with_sequence_and_chars(
         case_sensitive: bool,
         text: Option<&dyn JavaCharSequence>,
@@ -685,6 +699,7 @@ impl TextUtils {
     /// 两个数组均可用 `None` 表达 Java null。
     /// # 返回
     /// 是否匹配指定后缀。
+    /// 对应 Java 语义：`TextUtils` 的 `ends_with_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn ends_with_chars(
         case_sensitive: bool,
         text: Option<&[u16]>,
@@ -701,6 +716,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `suffix` 范围结尾。
+    /// 对应 Java 语义：`TextUtils` 的 `ends_with_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn ends_with_chars_range(
         case_sensitive: bool,
@@ -728,6 +744,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `suffix` 范围结尾。
+    /// 对应 Java 语义：`TextUtils` 的 `ends_with_sequence_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn ends_with_sequence_and_chars_range(
         case_sensitive: bool,
@@ -755,6 +772,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `suffix` 范围结尾。
+    /// 对应 Java 语义：`TextUtils` 的 `ends_with_chars_and_sequence_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn ends_with_chars_and_sequence_range(
         case_sensitive: bool,
@@ -782,6 +800,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否以 `suffix` 范围结尾。
+    /// 对应 Java 语义：`TextUtils` 的 `ends_with_sequences_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn ends_with_sequences_range(
         case_sensitive: bool,
@@ -840,6 +859,7 @@ impl TextUtils {
     /// 参数求值顺序与 Java 委托重载一致。
     /// # 返回
     /// 是否包含指定片段。
+    /// 对应 Java 语义：`TextUtils` 的 `contains_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn contains_sequence_and_chars(
         case_sensitive: bool,
         text: Option<&dyn JavaCharSequence>,
@@ -864,6 +884,7 @@ impl TextUtils {
     /// 两个数组均可用 `None` 表达 Java null。
     /// # 返回
     /// 是否包含指定片段。
+    /// 对应 Java 语义：`TextUtils` 的 `contains_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn contains_chars(
         case_sensitive: bool,
         text: Option<&[u16]>,
@@ -880,6 +901,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否包含 `fragment` 范围。
+    /// 对应 Java 语义：`TextUtils` 的 `contains_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn contains_chars_range(
         case_sensitive: bool,
@@ -907,6 +929,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否包含 `fragment` 范围。
+    /// 对应 Java 语义：`TextUtils` 的 `contains_sequence_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn contains_sequence_and_chars_range(
         case_sensitive: bool,
@@ -934,6 +957,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否包含 `fragment` 范围。
+    /// 对应 Java 语义：`TextUtils` 的 `contains_chars_and_sequence_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn contains_chars_and_sequence_range(
         case_sensitive: bool,
@@ -961,6 +985,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// `text` 范围是否包含 `fragment` 范围。
+    /// 对应 Java 语义：`TextUtils` 的 `contains_sequences_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn contains_sequences_range(
         case_sensitive: bool,
@@ -1014,6 +1039,7 @@ impl TextUtils {
     /// 参数求值顺序与 Java 委托重载一致。
     /// # 返回
     /// 精确字符差值或长度差值。
+    /// 对应 Java 语义：`TextUtils` 的 `compare_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn compare_sequence_and_chars(
         case_sensitive: bool,
         text1: Option<&dyn JavaCharSequence>,
@@ -1038,6 +1064,7 @@ impl TextUtils {
     /// 两个数组均可用 `None` 表达 Java null。
     /// # 返回
     /// 精确字符差值或长度差值。
+    /// 对应 Java 语义：`TextUtils` 的 `compare_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn compare_chars(
         case_sensitive: bool,
         text1: Option<&[u16]>,
@@ -1054,6 +1081,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// 精确字符差值或长度差值。
+    /// 对应 Java 语义：`TextUtils` 的 `compare_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn compare_chars_range(
         case_sensitive: bool,
@@ -1086,6 +1114,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// 精确字符差值或长度差值。
+    /// 对应 Java 语义：`TextUtils` 的 `compare_sequence_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn compare_sequence_and_chars_range(
         case_sensitive: bool,
@@ -1113,6 +1142,7 @@ impl TextUtils {
     /// offset/len 使用 Java `int`。
     /// # 返回
     /// 精确字符差值或长度差值。
+    /// 对应 Java 语义：`TextUtils` 的 `compare_sequences_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn compare_sequences_range(
         case_sensitive: bool,
@@ -1147,6 +1177,7 @@ impl TextUtils {
     /// `values` 是完整有序数组；text offset/len 指定搜索键。
     /// # 返回
     /// 命中下标或 Java `-(insertion point)-1`。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_chars_values_and_chars` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_chars_values_and_chars(
         case_sensitive: bool,
@@ -1173,6 +1204,7 @@ impl TextUtils {
     /// `values` 是完整有序数组；text offset/len 指定搜索键。
     /// # 返回
     /// 命中下标或 Java `-(insertion point)-1`。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_chars_values_and_sequence` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_chars_values_and_sequence(
         case_sensitive: bool,
@@ -1199,6 +1231,7 @@ impl TextUtils {
     /// `values` 是完整有序数组；text offset/len 指定搜索键。
     /// # 返回
     /// 命中下标或 Java `-(insertion point)-1`。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_sequence_values_and_chars` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_chars(
         case_sensitive: bool,
@@ -1225,6 +1258,7 @@ impl TextUtils {
     /// `values` 是完整有序数组；text offset/len 指定搜索键。
     /// # 返回
     /// 命中下标或 Java `-(insertion point)-1`。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_sequence_values_and_sequence` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_sequence(
         case_sensitive: bool,
@@ -1251,6 +1285,7 @@ impl TextUtils {
     /// 两组 offset/len 均按 Java `int` 回绕。
     /// # 返回
     /// 命中下标或精确插入点编码。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_chars_values_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_chars_values_and_chars_range(
         case_sensitive: bool,
@@ -1295,6 +1330,7 @@ impl TextUtils {
     /// 两组 offset/len 均按 Java `int` 回绕。
     /// # 返回
     /// 命中下标或精确插入点编码。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_chars_values_and_sequence_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_chars_values_and_sequence_range(
         case_sensitive: bool,
@@ -1339,6 +1375,7 @@ impl TextUtils {
     /// 两组 offset/len 均按 Java `int` 回绕。
     /// # 返回
     /// 命中下标或精确插入点编码。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_sequence_values_and_chars_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_chars_range(
         case_sensitive: bool,
@@ -1384,6 +1421,7 @@ impl TextUtils {
     /// 两组 offset/len 均按 Java `int` 回绕。
     /// # 返回
     /// 命中下标或精确插入点编码。
+    /// 对应 Java 语义：`TextUtils` 的 `binary_search_sequence_values_and_sequence_range` 行为（Rust 侧辅助/私有路径）。
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_sequence_range(
         case_sensitive: bool,
@@ -1429,6 +1467,7 @@ impl TextUtils {
     /// `text_offset`/`text_len` 按 Java 循环原样执行。
     /// # 返回
     /// 31 倍累乘并按 `int` 回绕的哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_chars_range` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_chars_range(
         text: Option<&[u16]>,
         text_offset: i32,
@@ -1454,6 +1493,7 @@ impl TextUtils {
     /// `text` 可用 `None` 表达 Java null。
     /// # 返回
     /// 完整 UTF-16 内容哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_sequence` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_sequence(text: Option<&dyn JavaCharSequence>) -> Result<i32, TextUtilsError> {
         hash_part_whole(0, text)
     }
@@ -1464,6 +1504,7 @@ impl TextUtils {
     /// 范围端点按 Java `int` 原样执行。
     /// # 返回
     /// 指定 UTF-16 范围哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_sequence_range` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_sequence_range(
         text: Option<&dyn JavaCharSequence>,
         begin_index: i32,
@@ -1478,6 +1519,7 @@ impl TextUtils {
     /// `text0`、`text1` 按从左到右顺序读取。
     /// # 返回
     /// 不分配拼接字符串的等价哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_pair` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_pair(
         text0: Option<&dyn JavaCharSequence>,
         text1: Option<&dyn JavaCharSequence>,
@@ -1491,6 +1533,7 @@ impl TextUtils {
     /// 三个序列按从左到右顺序读取。
     /// # 返回
     /// 不分配拼接字符串的等价哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_triple` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_triple(
         text0: Option<&dyn JavaCharSequence>,
         text1: Option<&dyn JavaCharSequence>,
@@ -1505,6 +1548,7 @@ impl TextUtils {
     /// 四个序列按从左到右顺序读取。
     /// # 返回
     /// 不分配拼接字符串的等价哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_quadruple` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_quadruple(
         text0: Option<&dyn JavaCharSequence>,
         text1: Option<&dyn JavaCharSequence>,
@@ -1523,6 +1567,7 @@ impl TextUtils {
     /// 五个序列按从左到右顺序读取。
     /// # 返回
     /// 不分配拼接字符串的等价哈希。
+    /// 对应 Java 语义：`TextUtils` 的 `hash_quintuple` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_quintuple(
         text0: Option<&dyn JavaCharSequence>,
         text1: Option<&dyn JavaCharSequence>,
@@ -1870,6 +1915,7 @@ fn java_upper(value: u16) -> u16 {
 /// 按 JDK 21 `Character.toLowerCase(char)` 对单个 UTF-16 code unit 做简单小写映射。
 ///
 /// 返回值仍是单个 code unit，不使用可能扩张为多个字符的字符串级 lowercase。
+/// 对应 Java 语义：`TextUtils` 的 `java_lower` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn java_lower(value: u16) -> u16 {
     case_map(value, false)
 }
@@ -1905,6 +1951,7 @@ fn case_map(value: u16, upper: bool) -> u16 {
         value
     }
 }
+/// 对应 Java 语义：`TextUtils` 的 `java_case_fold_unit` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn java_case_fold_unit(value: u16) -> u16 {
     java_lower(java_upper(value))

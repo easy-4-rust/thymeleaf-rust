@@ -51,6 +51,7 @@ impl TextParsingUtilError {
     /// 返回 Java `Throwable#getMessage()`。
     ///
     /// `None` 仅对应 null text 的无消息 NPE。
+    /// 对应 Java 语义：`TextParsingUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn java_message(&self) -> Option<JavaString> {
         let message = match self {
             Self::NullText => return None,
