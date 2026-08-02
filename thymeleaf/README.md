@@ -377,7 +377,7 @@ cd thymeleaf-rust
 cargo test --workspace --all-features
 THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
 THYMELEAF_SCOPE=semantic_all \
-cargo test --test thtest_upstream_plain_batch
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch
 
 # Optional diagnostic; no fail-under threshold
 cargo llvm-cov --workspace --all-features --summary-only
