@@ -14,6 +14,10 @@ from typing import Any
 
 BASELINE = "10f9dd2eb8cbd98515ce14b149d115e0287d0add"
 CORE_MODULE = "tests/thymeleaf-tests-core"
+# 多 crate 布局：主 crate 在 thymeleaf/，测试 crate 在 thymeleaf-test/。证据路径
+# 一律按仓库根相对记录，供 xtask 与 source_parity_inventory.rs 门禁解析。
+RUST_MAIN = "thymeleaf"
+RUST_TEST_CRATE = "thymeleaf-test"
 ALLOWED_DISPOSITIONS = {
     "MAPPED",
     "MERGED",
@@ -141,6 +145,15 @@ def parse_args() -> argparse.Namespace:
 def java_class_name(java_file: str) -> str:
     relative = java_file.split("/src/test/java/", 1)[1]
     return relative.removesuffix(".java").replace("/", ".")
+
+
+def relocate_evidence_path(path: str) -> str:
+    """把证据路径从单 crate 时代（tests/…、src/…）改写到多 crate 仓库根相对。"""
+    if path == "src" or path.startswith("src/"):
+        return f"{RUST_MAIN}/{path}"
+    if path.startswith("tests/"):
+        return f"{RUST_TEST_CRATE}/{path}"
+    return path
 
 
 def normalize_runtime_method(name: str) -> str:
@@ -382,6 +395,10 @@ def main() -> None:
             disposition, evidence, rationale = integration_evidence(module, class_name)
         if disposition not in ALLOWED_DISPOSITIONS:
             raise AssertionError(disposition)
+        evidence = [
+            {"kind": item["kind"], "path": relocate_evidence_path(item["path"]), "marker": item["marker"]}
+            for item in evidence
+        ]
         entries.append(
             {
                 "id": f"{module}:{class_name}#{method_name}",

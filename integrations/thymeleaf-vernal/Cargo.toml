@@ -10,7 +10,7 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 [dependencies]
 futures-util = "0.3.31"
 http = "1.3"
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 vernal-http = { git = "https://github.com/easy-4-rust/vernal.git", rev = "8dce0d5c32f1ba3a4078791cdef8654860680bc7" }
 
 [dev-dependencies]

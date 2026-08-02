@@ -11,7 +11,7 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 futures-util = "0.3.31"
 http-body-util = "0.1.3"
 poem = { version = "=3.1.12", default-features = false }
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 
 [dev-dependencies]
 futures-executor = "0.3.31"

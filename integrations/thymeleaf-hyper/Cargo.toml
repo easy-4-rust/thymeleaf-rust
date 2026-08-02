@@ -10,7 +10,7 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 [dependencies]
 hyper = { version = "1.9.0", features = ["http1", "http2", "server"] }
 indexmap = "2.13.0"
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 url = "2.5.7"
 
 [dev-dependencies]

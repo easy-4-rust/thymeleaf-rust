@@ -4,7 +4,7 @@ set -euo pipefail
 java_root="${1:?usage: regenerate_template_resource_golden.sh /absolute/path/to/thymeleaf [output]}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_root="$(cd "${script_dir}/.." && pwd)"
-output="${2:-${project_root}/tests/fixtures/template_resource_golden.txt}"
+output="${2:-${project_root}/thymeleaf/tests/fixtures/template_resource_golden.txt}"
 expected_sha="10f9dd2eb8cbd98515ce14b149d115e0287d0add"
 actual_sha="$(git -C "${java_root}" rev-parse HEAD)"
 
@@ -19,10 +19,10 @@ trap 'rm -rf "${temporary_dir}"' EXIT
 thymeleaf_sources="${java_root}/lib/thymeleaf/src/main/java/org/thymeleaf"
 
 javac -encoding UTF-8 -d "${temporary_dir}" \
-    "${project_root}/tests/java/stubs/org/slf4j/Logger.java" \
-    "${project_root}/tests/java/stubs/org/slf4j/LoggerFactory.java" \
-    "${project_root}/tests/java/stubs/org/thymeleaf/TemplateEngine.java" \
-    "${project_root}/tests/java/stubs/org/thymeleaf/util/StringUtils.java" \
+    "${project_root}/thymeleaf-test/tests/java/stubs/org/slf4j/Logger.java" \
+    "${project_root}/thymeleaf-test/tests/java/stubs/org/slf4j/LoggerFactory.java" \
+    "${project_root}/thymeleaf-test/tests/java/stubs/org/thymeleaf/TemplateEngine.java" \
+    "${project_root}/thymeleaf-test/tests/java/stubs/org/thymeleaf/util/StringUtils.java" \
     "${thymeleaf_sources}/templatemode/TemplateMode.java" \
     "${thymeleaf_sources}/util/Validate.java" \
     "${thymeleaf_sources}/exceptions/"*.java \
@@ -31,7 +31,7 @@ javac -encoding UTF-8 -d "${temporary_dir}" \
     "${thymeleaf_sources}/templateresource/FileTemplateResource.java" \
     "${thymeleaf_sources}/templateresource/StringTemplateResource.java" \
     "${thymeleaf_sources}/templateresource/UrlTemplateResource.java" \
-    "${project_root}/tests/java/TemplateResourceGolden.java"
+    "${project_root}/thymeleaf-test/tests/java/TemplateResourceGolden.java"
 
 mkdir -p "$(dirname "${output}")"
 java -cp "${temporary_dir}" TemplateResourceGolden > "${output}"

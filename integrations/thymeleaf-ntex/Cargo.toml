@@ -10,7 +10,7 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 [dependencies]
 http-body = "1.0"
 ntex = { version = "=2.18.0", default-features = false, features = ["tokio"] }
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 
 [dev-dependencies]
 futures-executor = "0.3.31"

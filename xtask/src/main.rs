@@ -13,8 +13,8 @@ const OBJECT_TABLE_PATH: &str = "docs/migration/对象级对照表.md";
 const TODO_MACRO: &str = concat!("todo", "!(");
 const UNIMPLEMENTED_MACRO: &str = concat!("unimplemented", "!(");
 const APPROVED_RUST_EXTENSION_FILES: [&str; 2] = [
-    "src/processor/processor_set.rs",
-    "src/templateresource/template_resource_reader.rs",
+    "thymeleaf/src/processor/processor_set.rs",
+    "thymeleaf/src/templateresource/template_resource_reader.rs",
 ];
 
 #[derive(Debug, Deserialize)]
@@ -217,7 +217,7 @@ fn migration_check(
     validate_baseline(upstream, baseline, &inventory, &mut violations)?;
     validate_manifest(&inventory, &rows, &mut violations);
 
-    let rust_files = collect_rust_files(&project_root.join("src"))?;
+    let rust_files = collect_rust_files(&project_root.join("thymeleaf").join("src"))?;
     let red_lines = scan_red_lines(project_root, &rust_files, &mut violations)?;
     let live = inspect_live_objects(project_root, &inventory, &rows, &mut violations)?;
     let methods = inspect_live_methods(project_root, &inventory, &rows)?;
@@ -233,14 +233,14 @@ fn migration_check(
 
     let expected_files = rows
         .iter()
-        .filter(|row| row.target_file.starts_with("src/"))
+        .filter(|row| row.target_file.starts_with("thymeleaf/src/"))
         .map(|row| row.target_file.as_str())
         .collect::<BTreeSet<_>>();
     let extra = rust_files
         .iter()
         .filter(|path| {
             let relative = relative_path(project_root, path);
-            relative != "src/lib.rs"
+            relative != "thymeleaf/src/lib.rs"
                 && !relative.ends_with("/mod.rs")
                 && !expected_files.contains(relative.as_str())
                 && !is_approved_rust_extension_file(&relative)
@@ -311,7 +311,7 @@ fn inspect_live_methods(
             if is_constructor(method)
                 || method.qualified_name.contains("$anon@")
                 || is_rust_idiom_method(&method.name)
-                || !row.target_file.starts_with("src/")
+                || !row.target_file.starts_with("thymeleaf/src/")
             {
                 report.rust_idiom_or_constructor += 1;
             } else if contains_rust_method(&source, &method.name) {
@@ -341,7 +341,7 @@ fn live_sibling_source_for_row(
     project_root: &Path,
     row: &ObjectRow,
 ) -> Result<String, Box<dyn Error>> {
-    if !row.target_file.starts_with("src/") {
+    if !row.target_file.starts_with("thymeleaf/src/") {
         return Ok(String::new());
     }
     let Some(parent) = project_root
@@ -483,7 +483,7 @@ fn live_source_for_row(
     project_root: &Path,
     row: &ObjectRow,
 ) -> Result<Option<String>, Box<dyn Error>> {
-    if row.target_file.starts_with("src/") {
+    if row.target_file.starts_with("thymeleaf/src/") {
         let path = project_root.join(&row.target_file);
         return path
             .is_file()
@@ -682,7 +682,7 @@ fn inspect_live_objects(
     let mut report = LiveObjectReport::default();
 
     for row in rows {
-        if !row.target_file.starts_with("src/") {
+        if !row.target_file.starts_with("thymeleaf/src/") {
             if inspect_host_integration_object(project_root, row)? {
                 report.present += 1;
                 report.equivalent += 1;
@@ -863,7 +863,7 @@ fn validate_implemented_objects(
         .collect::<BTreeMap<_, _>>();
 
     for row in rows.iter().filter(|row| is_implemented(row)) {
-        if !row.target_file.starts_with("src/") {
+        if !row.target_file.starts_with("thymeleaf/src/") {
             violations.push(format!(
                 "implemented object {} has non-core target {}",
                 row.java_name, row.target_file
@@ -1180,10 +1180,10 @@ mod tests {
     #[test]
     fn recognizes_only_explicit_rust_extension_files() {
         assert!(is_approved_rust_extension_file(
-            "src/processor/processor_set.rs"
+            "thymeleaf/src/processor/processor_set.rs"
         ));
         assert!(is_approved_rust_extension_file(
-            "src/templateresource/template_resource_reader.rs"
+            "thymeleaf/src/templateresource/template_resource_reader.rs"
         ));
         assert!(!is_approved_rust_extension_file(
             "src/processor/unregistered_helper.rs"

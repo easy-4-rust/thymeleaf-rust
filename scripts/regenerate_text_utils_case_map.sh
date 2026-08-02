@@ -14,9 +14,9 @@ fi
 javac \
     -encoding UTF-8 \
     -d "${temporary_dir}" \
-    "${project_root}/tests/java/TextUtilsCaseMapGenerator.java"
+    "${project_root}/thymeleaf-test/tests/java/TextUtilsCaseMapGenerator.java"
 
 java \
     -cp "${temporary_dir}" \
     TextUtilsCaseMapGenerator \
-    "${project_root}/src/util/text_utils_case_map.bin"
+    "${project_root}/thymeleaf/src/util/text_utils_case_map.bin"

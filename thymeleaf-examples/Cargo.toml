@@ -1,0 +1,14 @@
+[package]
+name = "thymeleaf-examples"
+description = "thymeleaf-rust 示例模块——Java examples/core 的 GTVG 示例移植（模板 1:1 复制，业务层/控制器 1:1 移植为引擎级渲染）"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+thymeleaf = { path = "../thymeleaf" }

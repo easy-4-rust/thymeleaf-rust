@@ -8,7 +8,7 @@ license = "MIT"
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 tonic = { version = "=0.12.3", default-features = false }
 
 [lints.rust]

@@ -3,7 +3,7 @@ set -euo pipefail
 java_root="${1:?usage: regenerate_model_golden.sh /absolute/path/to/thymeleaf [output]}"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_root="$(cd "${script_dir}/.." && pwd)"
-output="${2:-${project_root}/tests/fixtures/model_golden.txt}"
+output="${2:-${project_root}/thymeleaf/tests/fixtures/model_golden.txt}"
 expected_sha="10f9dd2eb8cbd98515ce14b149d115e0287d0add"
 actual_sha="$(git -C "${java_root}" rev-parse HEAD)"
 [[ "${actual_sha}" == "${expected_sha}" ]] || { echo "expected Thymeleaf ${expected_sha}, got ${actual_sha}" >&2; exit 1; }
@@ -15,7 +15,7 @@ dependency_classpath="$(<"${temporary_dir}/classpath")"
 java_classpath="${java_root}/lib/thymeleaf/target/classes:${dependency_classpath}"
 javac -encoding UTF-8 -cp "${java_classpath}" -d "${temporary_dir}" \
   "${java_root}/tests/thymeleaf-tests-core/src/test/java/org/thymeleaf/context/TestTemplateEngineConfigurationBuilder.java" \
-  "${project_root}/tests/java/org/thymeleaf/engine/ModelGolden.java"
+  "${project_root}/thymeleaf-test/tests/java/org/thymeleaf/engine/ModelGolden.java"
 mkdir -p "$(dirname "${output}")"
 java -cp "${temporary_dir}:${java_classpath}" org.thymeleaf.engine.ModelGolden > "${output}"
 echo "generated ${output} from ${actual_sha}"

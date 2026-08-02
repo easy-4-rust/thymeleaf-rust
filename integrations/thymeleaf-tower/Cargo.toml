@@ -9,7 +9,7 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
 http = "1.4.0"
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 tower = { version = "0.5.3", features = ["util"] }
 
 [dev-dependencies]

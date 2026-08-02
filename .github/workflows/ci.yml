@@ -95,7 +95,7 @@ jobs:
           cmp \
             docs/migration/baseline/source_parity_inventory.json \
             target/source_parity_inventory.json
-          cargo test --test source_parity_inventory
+          cargo test -p thymeleaf-test --test source_parity_inventory
 
       - name: Run tests
         run: cargo test --workspace --all-features
@@ -104,7 +104,7 @@ jobs:
         env:
           THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
           THYMELEAF_SCOPE: semantic_all
-        run: cargo test --test thtest_upstream_plain_batch
+        run: cargo test -p thymeleaf-test --test thtest_upstream_plain_batch
 
       - name: Report source coverage
         run: >-

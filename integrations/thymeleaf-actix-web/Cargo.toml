@@ -10,7 +10,7 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 [dependencies]
 actix-web = { version = "=4.11.0", default-features = false, features = ["macros"] }
 http-body = "1.0"
-thymeleaf = { path = "../.." }
+thymeleaf = { path = "../../thymeleaf" }
 
 [dev-dependencies]
 http = "1.3"
