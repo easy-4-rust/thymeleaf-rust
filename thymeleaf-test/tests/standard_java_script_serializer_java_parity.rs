@@ -20,7 +20,7 @@ use std::sync::{Arc, Mutex};
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
 use thymeleaf::serializer::{IStandardJavaScriptSerializer, StandardJavaScriptSerializer};
-use thymeleaf::util::{JavaNumber, JavaString, JavaWriter};
+use thymeleaf::util::{DateUtils, JavaNumber, JavaString, JavaWriter};
 use thymeleaf::{ITemplateResolver, TemplateEngine};
 
 // ===========================================================================
@@ -351,5 +351,58 @@ fn script_inline_collection_variable() {
                 ]))),
             )],
         )
+    );
+}
+
+// ===========================================================================
+// JavaDate 序列化偏移形态（Java 21 实测）：JacksonThymeleafISO8601DateFormat
+// ===========================================================================
+
+#[test]
+fn java_date_serializes_with_colon_offset_never_z() {
+    // Java JacksonThymeleafISO8601DateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZ"
+    // + insert(26, ':')：UTC 日期 -> "...+00:00"（非 "Z"）。
+    let utc = DateUtils::create(
+        Some(2024),
+        Some(5),
+        Some(17),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some("UTC"),
+        None,
+    )
+    .expect("utc date");
+    let value = TemplateValue::Object(Arc::new(utc));
+    assert_eq!(
+        serialize_value(false, Some(&value)),
+        "\"2024-05-17T00:00:00.000+00:00\"",
+        "UTC 日期 JS 序列化必须是 +00:00（ZZZ+insert 行为）"
+    );
+    assert_eq!(
+        serialize_value(true, Some(&value)),
+        "\"2024-05-17T00:00:00.000+00:00\"",
+        "jackson 分支同样 +00:00"
+    );
+
+    // 非零固定偏移 -> "+HH:MM"。
+    let gmt5 = DateUtils::create(
+        Some(2024),
+        Some(5),
+        Some(17),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some("Etc/GMT+5"),
+        None,
+    )
+    .expect("gmt+5 date");
+    let value = TemplateValue::Object(Arc::new(gmt5));
+    assert_eq!(
+        serialize_value(false, Some(&value)),
+        "\"2024-05-17T00:00:00.000-05:00\"",
+        "固定偏移 JS 日期带冒号"
     );
 }

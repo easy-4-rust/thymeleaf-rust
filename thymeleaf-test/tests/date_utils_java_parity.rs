@@ -489,3 +489,133 @@ fn from_template_value_none_returns_none() {
     let result = DateUtils::from_template_value(None).expect("no error for none");
     assert!(result.is_none());
 }
+
+// ===========================================================================
+// 偏移形态差分（Java 21 实测）：formatISO 的 ZZZ+insert(26,':') 与 'Z'/'X' pattern
+// ===========================================================================
+
+#[test]
+fn format_iso_uses_colon_offset_never_z() {
+    // Java DateUtils.formatISO = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZ" + insert(26, ':'):
+    // 零偏移输出 "+00:00"（SimpleDateFormat ZZZ 从不输出 "Z"），固定偏移 "+HH:MM"。
+    // 该格式器同时是 StandardJavaScriptSerializer 日期序列化路径。
+    let utc = DateUtils::create(
+        Some(2024),
+        Some(5),
+        Some(17),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some("UTC"),
+        Some(&locale_en()),
+    )
+    .expect("utc date");
+    let iso = DateUtils::format_iso(Some(&utc))
+        .expect("iso")
+        .to_string_lossy();
+    assert_eq!(
+        iso, "2024-05-17T00:00:00.000+00:00",
+        "UTC 零偏移必须是 +00:00（非 Z）: {iso}"
+    );
+
+    let gmt5 = DateUtils::create(
+        Some(2024),
+        Some(5),
+        Some(17),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some("Etc/GMT+5"),
+        Some(&locale_en()),
+    )
+    .expect("gmt+5 date");
+    let iso = DateUtils::format_iso(Some(&gmt5))
+        .expect("iso")
+        .to_string_lossy();
+    assert_eq!(
+        iso, "2024-05-17T00:00:00.000-05:00",
+        "固定偏移输出 +HH:MM（带冒号）: {iso}"
+    );
+}
+
+#[test]
+fn java_z_pattern_zero_offset_plus0000_and_x_uses_z() {
+    // java.time 模式字母（Java 21 实测）：'Z' 零偏移输出 "+0000"（非 "Z"）；
+    // 'X'（count=1）与 'XXX'（count=3）零偏移输出 "Z"。
+    let utc = DateUtils::create(
+        Some(2024),
+        Some(5),
+        Some(17),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some("UTC"),
+        Some(&locale_en()),
+    )
+    .expect("utc date");
+
+    let z = DateUtils::format(
+        Some(&utc),
+        Some(&js("yyyy-MM-dd'T'HH:mm:ss.SSSZ")),
+        Some(&locale_en()),
+    )
+    .expect("format")
+    .expect("non-null")
+    .to_string_lossy();
+    assert_eq!(
+        z, "2024-05-17T00:00:00.000+0000",
+        "'Z' 模式零偏移为 +0000: {z}"
+    );
+
+    let x = DateUtils::format(
+        Some(&utc),
+        Some(&js("yyyy-MM-dd'T'HH:mm:ss.SSSX")),
+        Some(&locale_en()),
+    )
+    .expect("format")
+    .expect("non-null")
+    .to_string_lossy();
+    assert_eq!(x, "2024-05-17T00:00:00.000Z", "'X' 模式零偏移为 Z: {x}");
+
+    let xxx = DateUtils::format(
+        Some(&utc),
+        Some(&js("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")),
+        Some(&locale_en()),
+    )
+    .expect("format")
+    .expect("non-null")
+    .to_string_lossy();
+    assert_eq!(
+        xxx, "2024-05-17T00:00:00.000Z",
+        "'XXX' 模式零偏移为 Z: {xxx}"
+    );
+
+    // 'Z' 非零偏移：+HHmm 无冒号（java.time 'Z'）。
+    let gmt5 = DateUtils::create(
+        Some(2024),
+        Some(5),
+        Some(17),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some(0),
+        Some("Etc/GMT+5"),
+        Some(&locale_en()),
+    )
+    .expect("gmt+5 date");
+    let z = DateUtils::format(
+        Some(&gmt5),
+        Some(&js("yyyy-MM-dd'T'HH:mm:ss.SSSZ")),
+        Some(&locale_en()),
+    )
+    .expect("format")
+    .expect("non-null")
+    .to_string_lossy();
+    assert_eq!(
+        z, "2024-05-17T00:00:00.000-0500",
+        "'Z' 模式非零偏移为 +HHmm 无冒号: {z}"
+    );
+}
