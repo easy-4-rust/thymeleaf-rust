@@ -103,12 +103,21 @@
   `#[cfg(test)]` 局部测试）+ 共享端到端语料。
 - **NOT_APPLICABLE**：基准工作负载类，正确性由语料与端到端测试承担。
 
-## 测试文件镜像
+## 测试脚本镜像与测试逻辑 1:1
 
-上游五模块完整测试树（java + resources，4295 文件）已 1:1 字节镜像到
-`thymeleaf-test/assets/thymeleaf-tests/`（`diff -r` 验证），由
-`tests/acceptance.rs` 按 SHA-256 逐文件固定；`source-test-parity.json`
-的 `test_case`（2608 可执行 .thtest）与 `test_asset`（4372 条目）双门禁。
+- **测试脚本**：上游 `tests/` 五模块的 **.thtest 语料（3493 文件）** 1:1 字节镜像到
+  `thymeleaf-test/assets/thymeleaf-tests/`（`diff -r` 验证），由
+  `tests/acceptance.rs` 按 SHA-256 逐文件固定；`source-test-parity.json`
+  的 `test_case`（2608 可执行 .thtest）与 `test_asset`（3570 条目）双门禁。
+  Java 源码与其余资源不镜像 —— 测试用例以 Rust 1:1 复刻。
+- **测试逻辑**：每个 Java 测试类的断言逻辑在 `thymeleaf-test/tests/*_java_parity.rs`
+  （或对象合同所在 `thymeleaf/src/**` 的 `#[cfg(test)]` 单测）中逐方法 1:1 复刻，
+  与 Java 使用相同输入与期望。代表性缺口补齐：
+  - `BareHtmlEngineTest`（26 个裸 HTML 解析边界用例）→
+    `tests/bare_html_engine_java_parity.rs`
+  - `OfflineTest`（offline01.html 渲染对比）→ `tests/offline_java_parity.rs`
+  - `ElementProcessorIteratorTest` 05/10-14（迭代器动态 set/remove）→
+    `thymeleaf/src/engine/element_processor_iterator.rs` 单测扩展
 ## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）
 
 | 模块 | 测试类 | 方法 | 运行时 case | 处置 |

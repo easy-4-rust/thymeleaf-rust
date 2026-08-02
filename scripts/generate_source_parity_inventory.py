@@ -73,6 +73,14 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
         "tests/version_utils_java_parity.rs",
         "version_utils_and_spec_match_java_golden",
     ),
+    "org.thymeleaf.engine.BareHtmlEngineTest": (
+        "tests/bare_html_engine_java_parity.rs",
+        "bare_html_engine_matches_java_26_cases",
+    ),
+    "org.thymeleaf.offline.OfflineTest": (
+        "tests/offline_java_parity.rs",
+        "offline01_matches_java",
+    ),
     "org.thymeleaf.templateparser.reader.ParserLevelCommentMarkupReaderTest": (
         "tests/markup_comment_reader_java_parity.rs",
         "markup_comment_readers_match_java_golden",
