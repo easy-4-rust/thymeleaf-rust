@@ -352,3 +352,60 @@ fn exchange_preserves_scope_identity_metadata_attributes_and_url_transform() {
     exchange.remove_attribute(Some(&name));
     assert_eq!(exchange.get_attribute_count(), 0);
 }
+
+/// Hyper 适配器端到端：exchange 属性通过 WebContext 渲染为模板变量。
+/// 对应 Java Servlet 语义（JakartaServletWebExchange → Thymeleaf 引擎），
+/// 但宿主为 Hyper 请求/响应（策略性替代，无 Java 1:1 对照）。
+#[test]
+fn exchange_renders_template_with_request_context() {
+    let request = Arc::new(HostWebRequest::from_request(
+        &hyper::Request::builder()
+            .uri("https://example.test/shop/items?tag=rust&tag=web")
+            .body(())
+            .expect("valid request"),
+        "/shop",
+    ));
+    let exchange: Arc<dyn IWebExchange> = Arc::new(HostWebExchange::new(
+        Arc::clone(&request),
+        None,
+        Arc::new(HostWebApplication::new(Vec::new())),
+        None,
+        None,
+    ));
+    exchange.set_attribute_value(Some(text("greeting")), Some(template_text("hello-web")));
+
+    // 请求路径信息经 IWebRequest 桥可读
+    let request = exchange.get_request();
+    assert_eq!(
+        request.get_application_path().map(|v| v.to_string_lossy()),
+        Some("/shop".into())
+    );
+    assert_eq!(
+        request
+            .get_path_within_application()
+            .map(|v| v.to_string_lossy()),
+        Some("/items".into())
+    );
+    assert_eq!(
+        request.get_query_string().map(|v| v.to_string_lossy()),
+        Some("tag=rust&tag=web".into())
+    );
+
+    // 渲染：exchange 属性 -> 模板变量
+    let mut resolver = thymeleaf::templateresolver::StringTemplateResolver::new();
+    resolver.set_template_mode(thymeleaf::TemplateMode::HTML);
+    let engine = thymeleaf::TemplateEngine::new();
+    engine
+        .set_template_resolver(Arc::new(resolver) as Arc<dyn thymeleaf::ITemplateResolver>)
+        .expect("resolver");
+    let web_context =
+        thymeleaf::context::WebContext::new(Some(exchange)).expect("valid web context");
+    let rendered = engine
+        .process_template("<p th:text=\"${greeting}\">x</p>", &web_context)
+        .expect("render")
+        .to_string_lossy();
+    assert!(
+        rendered.contains("hello-web"),
+        "exchange 属性在模板中可见: {rendered}"
+    );
+}
