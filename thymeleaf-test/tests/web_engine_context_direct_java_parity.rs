@@ -391,3 +391,164 @@ fn web_engine_context_exchange_direct_write_visible_without_rollback() {
     );
     assert_eq!(variable(vm.as_ref(), "six"), "outer6");
 }
+
+// ===========================================================================
+// WebEngineContextTest#test01：5 层嵌套遮蔽完整序列（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn web_engine_context_test01_nested_shadowing_matches_java() {
+    let (vm, _) = web_context("test01", TemplateMode::HTML);
+
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    assert!(vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "a value");
+    vm.set_variable(Some(js("one")), Some(value("two values")));
+    assert_eq!(variable(vm.as_ref(), "one"), "two values");
+
+    // 第 1 层
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("hello")));
+    vm.set_variable(Some(js("two")), Some(value("twello")));
+    assert_eq!(variable(vm.as_ref(), "one"), "hello");
+    assert_eq!(variable(vm.as_ref(), "two"), "twello");
+    vm.decrease_level();
+    assert!(vm.contains_variable(Some(&js("one"))));
+    assert!(!vm.contains_variable(Some(&js("two"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "two values");
+    assert_eq!(variable(vm.as_ref(), "two"), "null");
+
+    // 第 2 层
+    vm.increase_level();
+    vm.set_variable(Some(js("two")), Some(value("twellor")));
+    assert_eq!(variable(vm.as_ref(), "one"), "two values");
+    assert_eq!(variable(vm.as_ref(), "two"), "twellor");
+
+    // 第 3 层
+    vm.increase_level();
+    vm.set_variable(Some(js("three")), Some(value("twelloree")));
+    vm.set_variable(Some(js("one")), Some(value("atwe")));
+    assert!(vm.contains_variable(Some(&js("three"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "atwe");
+    assert_eq!(variable(vm.as_ref(), "two"), "twellor");
+    assert_eq!(variable(vm.as_ref(), "three"), "twelloree");
+
+    // 第 4/5/6 层（Java 连续 increaseLevel ×3）
+    vm.increase_level();
+    vm.increase_level();
+    vm.increase_level();
+    assert_eq!(variable(vm.as_ref(), "one"), "atwe");
+    assert_eq!(variable(vm.as_ref(), "two"), "twellor");
+    assert_eq!(variable(vm.as_ref(), "three"), "twelloree");
+    vm.set_variable(Some(js("four")), Some(value("lotwss")));
+    assert!(vm.contains_variable(Some(&js("four"))));
+    assert_eq!(variable(vm.as_ref(), "four"), "lotwss");
+    vm.set_variable(Some(js("two")), Some(value("itwiii")));
+    assert!(!vm.contains_variable(Some(&js("five"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "atwe");
+    assert_eq!(variable(vm.as_ref(), "two"), "itwiii");
+    assert_eq!(variable(vm.as_ref(), "three"), "twelloree");
+    assert_eq!(variable(vm.as_ref(), "four"), "lotwss");
+
+    // 逐层降回（Java decreaseLevel ×5）
+    for _ in 0..3 {
+        vm.decrease_level();
+        assert!(!vm.contains_variable(Some(&js("four"))));
+        assert_eq!(variable(vm.as_ref(), "one"), "atwe");
+        assert_eq!(variable(vm.as_ref(), "two"), "twellor");
+        assert_eq!(variable(vm.as_ref(), "three"), "twelloree");
+        assert_eq!(variable(vm.as_ref(), "four"), "null");
+    }
+    vm.decrease_level();
+    assert!(!vm.contains_variable(Some(&js("three"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "two values");
+    assert_eq!(variable(vm.as_ref(), "two"), "twellor");
+    assert_eq!(variable(vm.as_ref(), "three"), "null");
+    vm.decrease_level();
+    assert!(!vm.contains_variable(Some(&js("two"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "two values");
+    assert_eq!(variable(vm.as_ref(), "two"), "null");
+    assert_eq!(variable(vm.as_ref(), "three"), "null");
+}
+
+// ===========================================================================
+// WebEngineContextTest#test14：setVariable(name, null) == removeVariable
+// ===========================================================================
+
+#[test]
+fn web_engine_context_set_variable_null_removes_like_java() {
+    let (vm, _) = web_context("test01", TemplateMode::HTML);
+
+    assert!(!vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "null");
+    // setVariable(name, null) == remove：不产生变量
+    vm.set_variable(Some(js("one")), None);
+    assert!(!vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "null");
+
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    assert!(vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "a value");
+    // 已存在变量 set null -> 删除
+    vm.set_variable(Some(js("one")), None);
+    assert!(!vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "null");
+    assert_eq!(vm.to_string(), "{}(test01)");
+}
+
+// ===========================================================================
+// WebEngineContextTest#test10：exchange 直写 + 层级变量 toString/names（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn web_engine_context_test10_variables_and_representations_after_direct_writes() {
+    let (vm, exchange) = web_context("test01", TemplateMode::HTML);
+
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    vm.set_variable(Some(js("ten")), Some(value("tieen")));
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("hello")));
+    assert!(vm.is_variable_local(Some(&js("one"))));
+    assert_eq!(
+        vm.get_string_representation_by_level(),
+        "{1:{one=hello},0:{one=a value, ten=tieen}(test01)}[1]"
+    );
+    assert_eq!(vm.to_string(), "{one=hello, ten=tieen}(test01)");
+    assert_eq!(names(vm.as_ref()), vec!["one", "ten"]);
+
+    vm.set_variable(Some(js("two")), Some(value("twello")));
+    assert!(vm.is_variable_local(Some(&js("two"))));
+    assert_eq!(
+        vm.get_string_representation_by_level(),
+        "{1:{one=hello, two=twello},0:{one=a value, ten=tieen}(test01)}[1]"
+    );
+    assert_eq!(vm.to_string(), "{one=hello, ten=tieen, two=twello}(test01)");
+    assert_eq!(names(vm.as_ref()), vec!["one", "ten", "two"]);
+
+    // Java 此点直接写 request 属性 one=outer1 / six=outer6（exchange 侧）：
+    // 表示串不产生 local change，但有效视图（toString/names）读取 exchange。
+    exchange.set_attribute_value(Some(js("one")), Some(value("outer1")));
+    exchange.set_attribute_value(Some(js("six")), Some(value("outer6")));
+    assert_eq!(
+        vm.get_string_representation_by_level(),
+        "{1:{two=twello},0:{one=outer1, ten=tieen, six=outer6}(test01)}[1]"
+    );
+    assert_eq!(
+        vm.to_string(),
+        "{one=outer1, ten=tieen, two=twello, six=outer6}(test01)"
+    );
+    assert_eq!(names(vm.as_ref()), vec!["one", "six", "ten", "two"]);
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("helloz")));
+    assert_eq!(
+        vm.get_string_representation_by_level(),
+        "{2:{one=helloz},1:{two=twello},0:{one=outer1, ten=tieen, six=outer6}(test01)}[2]"
+    );
+    assert_eq!(
+        vm.to_string(),
+        "{one=helloz, ten=tieen, two=twello, six=outer6}(test01)"
+    );
+    assert_eq!(names(vm.as_ref()), vec!["one", "six", "ten", "two"]);
+}

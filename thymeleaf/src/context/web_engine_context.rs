@@ -145,19 +145,23 @@ impl WebEngineContext {
     /// 对应 Java: `WebEngineContext#getStringRepresentationByLevel()`。
     #[must_use]
     pub fn get_string_representation_by_level(&self) -> String {
-        // Java 委托 ExchangeAttributeMap；该诊断串只报告按层记录的上下文变更，
-        // 不附加 exchange 的私有实现信息。
+        // Java 委托 `ExchangeAttributeMap#getStringRepresentationByLevel`：逐层
+        // 重推导，丢弃被 request 直写覆盖的条目（newValue 与当前 exchange 值不再
+        // 同一），基座从活 exchange + 恢复值构建。
         let mut representation = self.core.get_string_representation_by_level();
-        // `ExchangeAttributeMap` 用数组保留同层变量第一次修改的顺序，而普通
-        // `EngineContext` 为诊断目的按名称排序。将 core 的层级骨架替换为 Web 的
-        // 变更序列，保留 Java 两种实现这一可观察差别。
-        for level in read_changes(&self.local_changes).iter() {
-            replace_level_variable_map(
-                &mut representation,
-                level.level,
-                &format_web_level_changes(&level.changes),
+        let mut old_values_sum: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> =
+            IndexMap::new();
+        // Java 从最深层向基座循环；core 骨架保留各层 selection/inliner/template。
+        for level in read_changes(&self.local_changes).iter().rev() {
+            let rendered = format_web_level_changes_exchange_aware(
+                &level.changes,
+                &mut old_values_sum,
+                self.web_exchange.as_ref(),
             );
+            replace_level_variable_map(&mut representation, level.level, &rendered);
         }
+        let base = format_web_base_exchange_aware(self.web_exchange.as_ref(), &mut old_values_sum);
+        replace_level_variable_map(&mut representation, 0, &base);
         representation
     }
 
@@ -931,11 +935,34 @@ fn format_link_parameters(
     result
 }
 
-fn format_web_level_changes(changes: &IndexMap<Option<JavaString>, WebVariableChange>) -> String {
+/// Java `ExchangeAttributeMap` 单层重推导：丢弃被 exchange 直写覆盖的条目。
+fn format_web_level_changes_exchange_aware(
+    changes: &IndexMap<Option<JavaString>, WebVariableChange>,
+    old_values_sum: &mut IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    exchange: &dyn crate::web::IWebExchange,
+) -> String {
     let mut output = String::from("{");
     let mut written = 0_usize;
     for (name, change) in changes {
         if same_identity(change.new_value.as_ref(), change.old_value.as_ref()) {
+            // Java：newValue == oldValue 的空操作，跳过。
+            continue;
+        }
+        let exchange_value = name
+            .as_ref()
+            .and_then(|name| exchange.get_attribute_value(Some(name)));
+        let discard = if !old_values_sum.contains_key(name) {
+            // 该名未被更深层改动：若当前 exchange 值已被 request 直写替换，
+            // newValue 与 exchange 值不再同一 -> 丢弃。
+            !same_identity(change.new_value.as_ref(), exchange_value.as_ref())
+        } else {
+            // 该名已在恢复值表：newValue 需与记录的旧值同一，否则丢弃。
+            !same_identity(
+                change.new_value.as_ref(),
+                old_values_sum.get(name).and_then(Option::as_ref),
+            )
+        };
+        if discard {
             continue;
         }
         if written != 0 {
@@ -955,6 +982,51 @@ fn format_web_level_changes(changes: &IndexMap<Option<JavaString>, WebVariableCh
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
         );
         written += 1;
+        old_values_sum.insert(name.clone(), change.old_value.clone());
+    }
+    output.push('}');
+    output
+}
+
+/// Java 基座（level 0）：从活 exchange 属性 + 恢复值表构建。
+fn format_web_base_exchange_aware(
+    exchange: &dyn crate::web::IWebExchange,
+    old_values_sum: &mut IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+) -> String {
+    let mut base: IndexMap<JavaString, Option<Arc<TemplateValue>>> = IndexMap::new();
+    for name in exchange.get_all_attribute_names() {
+        let Some(name) = name else {
+            continue;
+        };
+        if let Some(old) = old_values_sum.shift_remove(&Some(name.clone())) {
+            if old.is_some() {
+                base.insert(name, old);
+            }
+        } else {
+            base.insert(name.clone(), exchange.get_attribute_value(Some(&name)));
+        }
+    }
+    for (name, old) in old_values_sum.iter() {
+        let Some(name) = name else {
+            continue;
+        };
+        if !base.contains_key(name) && old.is_some() {
+            base.insert(name.clone(), old.clone());
+        }
+    }
+    let mut output = String::from("{");
+    for (index, (name, value)) in base.iter().enumerate() {
+        if index != 0 {
+            output.push_str(", ");
+        }
+        output.push_str(&name.to_string_lossy());
+        output.push('=');
+        output.push_str(
+            &value
+                .as_deref()
+                .and_then(TemplateValue::to_java_string)
+                .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
+        );
     }
     output.push('}');
     output
