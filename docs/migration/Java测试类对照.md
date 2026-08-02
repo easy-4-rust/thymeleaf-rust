@@ -13,26 +13,26 @@
 | `BenchmarkTest` | NOT_APPLICABLE | 1 | 1 | template_engine_smoke.rs |
 | `StandardCacheTest` | MAPPED | 1 | 1 | standard_cache_java_parity.rs |
 | `ContextSequenceTest` | SPLIT | 1 | 1 | src；语料运行器 |
-| `LazyContextVariableTest` | SPLIT | 10 | 10 | lazy_context_variable_template_java_parity.rs（TEMPLATE1-4 模板驱动：th:if 短路不求值/缓存/求值次数，Java 逐字）；test05-08 Web 变体同机制；test09/10 session/application 属性变体待补 |
+| `LazyContextVariableTest` | SPLIT | 10 | 10 | lazy_context_variable_template_java_parity.rs（TEMPLATE1-4 模板驱动 + test09/10 session/application 属性变体：th:if 短路不求值/缓存/求值次数，Java 逐字）10/10 全方法 |
 | `DialectOrderingTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `DialectProcessWrappingTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `AttributeDefinitionsTest` | SPLIT | 4 | 4 | src/engine/attribute_definitions.rs；语料运行器 |
-| `AttributeNamesTest` | SPLIT | 6 | 6 | attribute_element_name_java_parity.rs（HTML 3 方法 + XMLBuffer + TEXT 2 方法完整）；testXMLString 别名系列待补 |
+| `AttributeNamesTest` | SPLIT | 6 | 6 | attribute_element_name_java_parity.rs（HTMLBuffer/HTMLString/XMLBuffer/XMLString/TEXT 2 方法）6/6 全方法：toString/前缀/isPrefixed 全断言 + assertSame 别名系列（空/空白/null 前缀折叠）+ 5 组 IllegalArgumentException |
 | `BareHtmlEngineTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `CDATASectionTest` | SPLIT | 3 | 3 | src/engine/cdata_section.rs；语料运行器 |
 | `CommentTest` | SPLIT | 3 | 3 | src/engine/comment.rs；语料运行器 |
 | `DocTypeTest` | SPLIT | 1 | 1 | src/engine/doc_type.rs；语料运行器 |
 | `ElementAttributesTest` | MAPPED | 4 | 4 | element_attributes_java_parity.rs（attr management 全序列 + ba/XML 家族 + AttrObtention 查询形态，Java 逐字 4/4） |
 | `ElementDefinitionsTest` | SPLIT | 4 | 4 | src/engine/element_definitions.rs；语料运行器 |
-| `ElementNamesTest` | SPLIT | 6 | 6 | attribute_element_name_java_parity.rs（HTMLBuffer + TEXT 2 方法完整）；HTMLString/XMLBuffer/XMLString 别名与 data:/xml: 前缀系列待补 |
+| `ElementNamesTest` | SPLIT | 6 | 6 | attribute_element_name_java_parity.rs（HTMLBuffer/HTMLString/XMLBuffer/XMLString/TEXT 2 方法）6/6 全方法：HTMLString 补别名（TH-SOMETHING/th-something/XMLNS 大小写折叠）+ XMLString data:/xml:/xmlns: 前缀族 + 别名 assertSame + 非法参数 |
 | `ElementProcessorIteratorTest` | SPLIT | 14 | 14 | src/engine/element_processor_iterator.rs；语料运行器 |
-| `EngineContextTest` | SPLIT | 10 | 10 | engine_context_java_parity.rs（Golden + (*removed*)/inliner 表示锁定）；test01/02/06/07 完整序列与 setVariable(null) 待补 |
+| `EngineContextTest` | SPLIT | 10 | 10 | engine_context_java_parity.rs（Golden + (*removed*)/inliner 表示 + test01/02/06/07/10 完整序列）10/10 全方法：多层遮蔽、starting Map、七变量、selection target 多级表示串、setVariable(name,null)->contains=true/get=null |
 | `OpenElementTagTest` | SPLIT | 2 | 2 | src/engine/open_element_tag.rs；语料运行器 |
 | `ProcessingInstructionTest` | SPLIT | 1 | 1 | src/engine/processing_instruction.rs；语料运行器 |
 | `SSEThrottledTemplateWriterTest` | SPLIT | 1 | 1 | src/engine/sse_throttled_template_writer.rs；语料运行器 |
 | `StandaloneElementTagTest` | SPLIT | 4 | 4 | src/engine/standalone_element_tag.rs；语料运行器 |
 | `TextTest` | SPLIT | 3 | 3 | src/engine/text.rs；语料运行器 |
-| `WebEngineContextTest` | SPLIT | 14 | 14 | src/context/web_engine_context.rs；web_engine_context_direct_java_parity.rs（test08/11/13/04 直接差分）+ web_engine_context_java_parity.rs（共享标识守卫）；语料运行器 |
+| `WebEngineContextTest` | SPLIT | 14 | 14 | src/context/web_engine_context.rs（getStringRepresentationByLevel 活 exchange 感知，Java ExchangeAttributeMap 语义）；web_engine_context_direct_java_parity.rs 14/14 全方法 + web_engine_context_java_parity.rs（共享标识守卫）；语料运行器 |
 | `XmlDeclarationTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `ScriptInlineTest` | MERGED | 4 | 4 | 语料运行器 |
 | `LinkBuilderTest` | MAPPED | 2 | 2 | link_builder_java_parity.rs |
@@ -130,14 +130,14 @@
     `tests/standard_java_script_serializer_java_parity.rs`；抽查修复 JS 日期序列化
     UTC 偏移 `Z` → `+00:00`（Java `ZZZ`+`insert(26,':')`）与 `#dates` 'Z' pattern
     零偏移 `+0000`
-  - `WebEngineContextTest`：新增直接差分（`tests/web_engine_context_direct_java_parity.rs`，
-    Java 21 期望逐字复刻）——test08 变量表示串/removeVariable null 占位/
-    isVariableLocal 翻转、test11 多级 selection target 链、test13
-    templateData/templateStack 多级、test04 exchange 直写不回滚；加上此前共享
-    标识守卫（`web_engine_context_java_parity.rs`），14 方法中 8 项已 1:1 锁定；
-    剩余 test01（5 层遮蔽序列）、test02（初始变量层级）、test05（request 直删）、
-    test06/07（toString 多级精确串+inliner）、test09（多变量）、test12 等 6 项
-    仍为 SPLIT（实现语义已核验一致，断言缺口如实登记）
+  - `WebEngineContextTest`：直接差分（`tests/web_engine_context_direct_java_parity.rs`，
+    Java 21 期望逐字复刻）14/14 全方法 1:1 锁定——test01/02（多层遮蔽+初始变量）、
+    test04（exchange 直写不回滚）、test05（request.removeAttribute 变量消失）、
+    test06/07（toString 多级精确串 + StandardTextInliner 降层回退）、test08
+    （变量表示串/removeVariable null 占位）、test09（多变量）、test10（初始变量+
+    exchange 直写、表示串活 exchange 感知）、test11/12（多级 selection target 链
+    与降层清除）、test13（templateData/templateStack 多级）、test14（setVariable
+    null==remove）；配合 `web_engine_context_java_parity.rs` 共享标识守卫
 ## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）—— 已移除
 
 | 模块 | 测试类 | 方法 | 运行时 case | 处置 |
