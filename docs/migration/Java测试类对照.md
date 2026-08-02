@@ -134,16 +134,20 @@
     属性双向可见，`tests/web_engine_context_java_parity.rs`）；多层嵌套遮蔽、
     toString 精确串、template stack 等 7 项仍为 SPLIT（实现语义已核验一致，
     断言缺口如实登记）
-## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）
+## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）—— 已移除
 
 | 模块 | 测试类 | 方法 | 运行时 case | 处置 |
 |---|---|---|---|---|
-| `tests/thymeleaf-tests-spring5` | 36 | 229 | 499 | `POLICY_DIFFERENCE`（全部） |
-| `tests/thymeleaf-tests-spring6` | 36 | 229 | 499 | `POLICY_DIFFERENCE`（全部） |
-| `tests/thymeleaf-tests-springsecurity5` | 2 | 2 | 2 | `POLICY_DIFFERENCE`（全部） |
-| `tests/thymeleaf-tests-springsecurity6` | 2 | 2 | 2 | `POLICY_DIFFERENCE`（全部） |
+| `tests/thymeleaf-tests-spring5` | 36 | 229 | 499 | `POLICY_DIFFERENCE`（已移除） |
+| `tests/thymeleaf-tests-spring6` | 36 | 229 | 499 | `POLICY_DIFFERENCE`（已移除） |
+| `tests/thymeleaf-tests-springsecurity5` | 2 | 2 | 2 | `POLICY_DIFFERENCE`（已移除） |
+| `tests/thymeleaf-tests-springsecurity6` | 2 | 2 | 2 | `POLICY_DIFFERENCE`（已移除） |
 
 Spring MVC/WebFlux/SpEL/BeanFactory/ViewResolver 与 Spring Security 方言属于宿主
-集成，不迁入中立 crate；资产树已完整镜像，等价能力由中立 Web 合同测试
-（`web_renderer_source_parity.rs`）、独立 `thymeleaf-*` 适配器与共享语料承担
-（每类证据见 `source_parity_inventory.json` 对应条目）。
+集成，不迁入中立 crate。4 个 Spring 资产目录（共 884 个 `.thtest`）已于 2026-08
+移除（`source-test-parity.json` test_asset 分母 3,570 → 2,686），不再镜像。等价
+安全方言与 Web 上下文能力由 Rust 原生整合承接：`integrations/thymeleaf-sa-token`
+（sec 方言 + `#authentication`/`#authorization` 表达式对象，基于 sa-token-rust）
+与 `integrations/thymeleaf-vernal`（VernalWebExchange，把 vernal 请求/主体注入
+thymeleaf Web 上下文）；中立 Web 合同测试（`web_renderer_source_parity.rs`）与
+共享语料继续承担其余等价证据（每类证据见 `source_parity_inventory.json` 对应条目）。

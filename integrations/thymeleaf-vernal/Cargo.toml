@@ -8,14 +8,22 @@ license = "MIT"
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
+form_urlencoded = "1.2"
+futures-executor = "0.3.31"
 futures-util = "0.3.31"
 http = "1.3"
+indexmap = "2.12"
 thymeleaf = { path = "../../thymeleaf" }
+tokio = { version = "1", features = ["rt", "macros", "sync"] }
 vernal-http = { git = "https://github.com/easy-4-rust/vernal.git", rev = "8dce0d5c32f1ba3a4078791cdef8654860680bc7" }
+vernal-web = { git = "https://github.com/easy-4-rust/vernal.git", rev = "8dce0d5c32f1ba3a4078791cdef8654860680bc7" }
 
 [dev-dependencies]
 futures-executor = "0.3.31"
 http-body = "1.0"
+thymeleaf-sa-token = { path = "../thymeleaf-sa-token" }
+tokio = { version = "1", features = ["rt", "macros", "sync"] }
+tokio-util = "0.7"
 
 [lints.rust]
 missing_docs = "deny"

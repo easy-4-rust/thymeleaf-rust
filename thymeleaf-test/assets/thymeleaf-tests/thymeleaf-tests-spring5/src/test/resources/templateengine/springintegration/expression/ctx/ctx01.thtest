@@ -1,8 +1,0 @@
-%EXTENDS ../../springintegration.common
-# ------------------------------------------------------------
-%INPUT
-<p th:text="${#ctx} ? 'ctx exists' : 'ctx does not exist'">...</p>
-# ------------------------------------------------------------
-%OUTPUT
-<p>ctx exists</p>
-
