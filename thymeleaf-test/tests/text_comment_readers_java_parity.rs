@@ -87,9 +87,9 @@ fn test_message(kind: &ReaderKind, message: &str, expected: &str) {
                     result.push_str(&String::from_utf16_lossy(&unit));
                 }
                 if result != expected {
-                    let _ = write!(
+                    let _ = writeln!(
                         failures,
-                        "checking '{message}' ({j},{k},{l}): expected {expected:?}, got {result:?}\n"
+                        "checking '{message}' ({j},{k},{l}): expected {expected:?}, got {result:?}"
                     );
                 }
             }
