@@ -32,7 +32,7 @@
 | `SSEThrottledTemplateWriterTest` | SPLIT | 1 | 1 | src/engine/sse_throttled_template_writer.rs；语料运行器 |
 | `StandaloneElementTagTest` | SPLIT | 4 | 4 | src/engine/standalone_element_tag.rs；语料运行器 |
 | `TextTest` | SPLIT | 3 | 3 | src/engine/text.rs；语料运行器 |
-| `WebEngineContextTest` | SPLIT | 14 | 14 | src/context/web_engine_context.rs；web_engine_context_java_parity.rs（共享标识守卫）；语料运行器 |
+| `WebEngineContextTest` | SPLIT | 14 | 14 | src/context/web_engine_context.rs；web_engine_context_direct_java_parity.rs（test08/11/13/04 直接差分）+ web_engine_context_java_parity.rs（共享标识守卫）；语料运行器 |
 | `XmlDeclarationTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `ScriptInlineTest` | MERGED | 4 | 4 | 语料运行器 |
 | `LinkBuilderTest` | MAPPED | 2 | 2 | link_builder_java_parity.rs |
@@ -130,10 +130,14 @@
     `tests/standard_java_script_serializer_java_parity.rs`；抽查修复 JS 日期序列化
     UTC 偏移 `Z` → `+00:00`（Java `ZZZ`+`insert(26,':')`）与 `#dates` 'Z' pattern
     零偏移 `+0000`
-  - `WebEngineContextTest`：新增共享标识守卫测试（WebContext 变量 ↔ exchange
-    属性双向可见，`tests/web_engine_context_java_parity.rs`）；多层嵌套遮蔽、
-    toString 精确串、template stack 等 7 项仍为 SPLIT（实现语义已核验一致，
-    断言缺口如实登记）
+  - `WebEngineContextTest`：新增直接差分（`tests/web_engine_context_direct_java_parity.rs`，
+    Java 21 期望逐字复刻）——test08 变量表示串/removeVariable null 占位/
+    isVariableLocal 翻转、test11 多级 selection target 链、test13
+    templateData/templateStack 多级、test04 exchange 直写不回滚；加上此前共享
+    标识守卫（`web_engine_context_java_parity.rs`），14 方法中 8 项已 1:1 锁定；
+    剩余 test01（5 层遮蔽序列）、test02（初始变量层级）、test05（request 直删）、
+    test06/07（toString 多级精确串+inliner）、test09（多变量）、test12 等 6 项
+    仍为 SPLIT（实现语义已核验一致，断言缺口如实登记）
 ## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）—— 已移除
 
 | 模块 | 测试类 | 方法 | 运行时 case | 处置 |
