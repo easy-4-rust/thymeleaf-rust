@@ -15,11 +15,11 @@
     "runtime_cases": 2156,
     "missing": 0,
     "dispositions": {
-      "MAPPED": 211,
+      "MAPPED": 215,
       "MERGED": 90,
       "NOT_APPLICABLE": 1,
       "POLICY_DIFFERENCE": 460,
-      "SPLIT": 113
+      "SPLIT": 109
     },
     "modules": {
       "tests/thymeleaf-tests-core": 413,
@@ -1262,20 +1262,15 @@
       "runtime_cases": [
         "testHtmlElementAttributesAttrManagement"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/element_attributes_java_parity.rs",
+          "marker": "html_element_attributes_attr_management"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.engine.ElementAttributesTest#testXmlElementAttributesAttrManagement",
@@ -1288,20 +1283,15 @@
       "runtime_cases": [
         "testXmlElementAttributesAttrManagement"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/element_attributes_java_parity.rs",
+          "marker": "html_element_attributes_attr_management"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.engine.ElementAttributesTest#testHtmlElementAttributesAttrObtention",
@@ -1314,20 +1304,15 @@
       "runtime_cases": [
         "testHtmlElementAttributesAttrObtention"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/element_attributes_java_parity.rs",
+          "marker": "html_element_attributes_attr_management"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.engine.ElementAttributesTest#testXmlElementAttributesAttrObtention",
@@ -1340,20 +1325,15 @@
       "runtime_cases": [
         "testXmlElementAttributesAttrObtention"
       ],
-      "disposition": "SPLIT",
+      "disposition": "MAPPED",
       "evidence": [
         {
-          "kind": "RUST_LIB_CONTRACTS",
-          "path": "thymeleaf/src",
-          "marker": "#[cfg(test)]"
-        },
-        {
-          "kind": "SEMANTIC_SCOPE",
-          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
-          "marker": "semantic_all"
+          "kind": "RUST_TEST",
+          "path": "thymeleaf-test/tests/element_attributes_java_parity.rs",
+          "marker": "html_element_attributes_attr_management"
         }
       ],
-      "rationale": "Java 测试覆盖跨对象序列或测试夹具，拆入 Rust 对象合同与共享端到端语料；保留原源码位置和全部运行时 case 以供反查。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.engine.ElementDefinitionsTest#test",

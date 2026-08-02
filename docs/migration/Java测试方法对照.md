@@ -12,32 +12,27 @@ Java 基线：`10f9dd2eb8cbd98515ce14b149d115e0287d0add`（thymeleaf/thymeleaf�
 |:---|---:|
 | 核心测试方法（tests/thymeleaf-tests-core） | 413 |
 | 运行时 case（核心） | 1154 |
-| 集成测试方法（spring5/6/security，已移除） | 462 |
-| 运行时 case（集成，已移除） | 1002 |
+| 集成测试方法（spring5/6/security） | 462 |
+| 运行时 case（集成） | 1002 |
 | 未处置（missing） | 0 |
 
 核心处置分布：
 
 | 处置 | 方法数 | 含义 |
 |:---|---:|:---|
-| SPLIT | 113 | 方法级断言拆入对应 Rust 对象合同（`thymeleaf/src/**` `#[cfg(test)]`）+ 共享端到端语料 |
+| SPLIT | 109 | 方法级断言拆入对应 Rust 对象合同（`thymeleaf/src/**` `#[cfg(test)]`）+ 共享端到端语料 |
 | MERGED | 90 | Java `TestExecutor` 外壳合并到数据驱动语料运行器（`thtest_upstream_plain_batch.rs`），输入/期望/异常直读固定上游 .thtest |
-| MAPPED | 209 | Java 测试由同名 Rust 合同测试 + 固定 Java Golden 逐记录验证（`thymeleaf-test/tests/*_java_parity.rs`） |
+| MAPPED | 213 | Java 测试由同名 Rust 合同测试 + 固定 Java Golden 逐记录验证（`thymeleaf-test/tests/*_java_parity.rs`） |
 | NOT_APPLICABLE | 1 | 基准工作负载类，正确性由语料与端到端测试承担 |
 
-集成模块（Spring 方言）原全部为 `POLICY_DIFFERENCE`，已于 2026-08 移除：
+集成模块（Spring 方言）全部为 `POLICY_DIFFERENCE`：
 
 | 模块 | 方法数 | 处置 |
 |:---|---:|:---|
-| `tests/thymeleaf-tests-spring5` | 229 | POLICY_DIFFERENCE（已移除） |
-| `tests/thymeleaf-tests-spring6` | 229 | POLICY_DIFFERENCE（已移除） |
-| `tests/thymeleaf-tests-springsecurity5` | 2 | POLICY_DIFFERENCE（已移除） |
-| `tests/thymeleaf-tests-springsecurity6` | 2 | POLICY_DIFFERENCE（已移除） |
-
-Spring MVC/WebFlux/SpEL/BeanFactory/ViewResolver 与 Spring Security 方言属于宿主
-集成，不迁入中立 crate；等价能力由 `thymeleaf-support/thymeleaf-sa-token`（sec 方言 +
-`#authentication`/`#authorization`）与 `thymeleaf-support/thymeleaf-vernal`
-（VernalWebExchange）承接。
+| `tests/thymeleaf-tests-spring5` | 229 | POLICY_DIFFERENCE |
+| `tests/thymeleaf-tests-spring6` | 229 | POLICY_DIFFERENCE |
+| `tests/thymeleaf-tests-springsecurity5` | 2 | POLICY_DIFFERENCE |
+| `tests/thymeleaf-tests-springsecurity6` | 2 | POLICY_DIFFERENCE |
 
 ## 2. 方法级映射（按测试类）
 
@@ -147,14 +142,14 @@ Spring MVC/WebFlux/SpEL/BeanFactory/ViewResolver 与 Spring Security 方言属�
 |---|---|---|---|
 | `test` | SPLIT | test | `thymeleaf/src/engine/doc_type.rs` 对象合同 |
 
-### `ElementAttributesTest`（4 方法；SPLIT=4）
+### `ElementAttributesTest`（4 方法；MAPPED=4）
 
 | 方法 | 处置 | 运行时 case | Rust 覆盖证据 |
 |---|---|---|---|
-| `testHtmlElementAttributesAttrManagement` | SPLIT | testHtmlElementAttributesAttrManagement | `thymeleaf/src` `#[cfg(test)]` |
-| `testXmlElementAttributesAttrManagement` | SPLIT | testXmlElementAttributesAttrManagement | `thymeleaf/src` `#[cfg(test)]` |
-| `testHtmlElementAttributesAttrObtention` | SPLIT | testHtmlElementAttributesAttrObtention | `thymeleaf/src` `#[cfg(test)]` |
-| `testXmlElementAttributesAttrObtention` | SPLIT | testXmlElementAttributesAttrObtention | `thymeleaf/src` `#[cfg(test)]` |
+| `testHtmlElementAttributesAttrManagement` | MAPPED | testHtmlElementAttributesAttrManagement | `element_attributes_java_parity.rs` `html_element_attributes_attr_management` |
+| `testXmlElementAttributesAttrManagement` | MAPPED | testXmlElementAttributesAttrManagement | `element_attributes_java_parity.rs` `html_element_attributes_attr_management` |
+| `testHtmlElementAttributesAttrObtention` | MAPPED | testHtmlElementAttributesAttrObtention | `element_attributes_java_parity.rs` `html_element_attributes_attr_management` |
+| `testXmlElementAttributesAttrObtention` | MAPPED | testXmlElementAttributesAttrObtention | `element_attributes_java_parity.rs` `html_element_attributes_attr_management` |
 
 ### `ElementDefinitionsTest`（4 方法；SPLIT=4）
 

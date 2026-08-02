@@ -81,6 +81,10 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
         "tests/offline_java_parity.rs",
         "offline01_matches_java",
     ),
+    "org.thymeleaf.engine.ElementAttributesTest": (
+        "tests/element_attributes_java_parity.rs",
+        "html_element_attributes_attr_management",
+    ),
     "org.thymeleaf.standard.expression.TemporalsFormattingTest": (
         "tests/temporal_objects_java_parity.rs",
         "temporals_format_matches_java",
