@@ -10,7 +10,10 @@
 
 use std::sync::Arc;
 
-use thymeleaf::engine::{AttributeNameValue, AttributeNames, ElementNameValue, ElementNames};
+use thymeleaf::engine::{
+    AttributeNameValue, AttributeNames, ElementNameValue, ElementNames, TextAttributeName,
+    TextElementName,
+};
 use thymeleaf::util::JavaString;
 
 fn js(value: &str) -> JavaString {
@@ -27,6 +30,24 @@ fn attribute_to_string(value: &AttributeNameValue) -> String {
         .as_attribute_name()
         .to_java_string()
         .expect("attribute name to string")
+        .to_string_lossy()
+}
+
+/// `TextAttributeName#toString()`（TEXT 模式 string 入口返回 Arc<TextAttributeName>）。
+fn text_attribute_to_string(value: &Arc<TextAttributeName>) -> String {
+    value
+        .as_attribute_name()
+        .to_java_string()
+        .expect("text attribute name to string")
+        .to_string_lossy()
+}
+
+/// `TextElementName#toString()`。
+fn text_element_to_string(value: &Arc<TextElementName>) -> String {
+    value
+        .as_element_name()
+        .to_java_string()
+        .expect("text element name to string")
         .to_string_lossy()
 }
 
@@ -930,4 +951,216 @@ fn element_names_xml_errors() {
         ElementNames::for_name_buffer(xml, Some(&as_utf16(" ")), 0, 1).is_err(),
         "blank name rejected"
     );
+}
+
+// ===========================================================================
+// AttributeNamesTest#testTextBuffer / testTextString（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn attribute_names_text_buffer() {
+    let text = Some(thymeleaf::TemplateMode::TEXT);
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("th:something")), 0, 12)
+        .expect("text attr");
+    assert_eq!(attribute_to_string(&name), "{th:something}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("th".to_owned())
+    );
+
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("something")), 0, 9)
+        .expect("text attr");
+    assert_eq!(attribute_to_string(&name), "{something}");
+
+    // buffer 偏移切片
+    let name = AttributeNames::for_name_buffer(
+        text,
+        Some(&as_utf16("abcdefghijkliklmnsomethingba")),
+        17,
+        9,
+    )
+    .expect("text attr offset");
+    assert_eq!(attribute_to_string(&name), "{something}");
+    let name = AttributeNames::for_name_buffer(
+        text,
+        Some(&as_utf16("abcdefghijkliklmnth:somethingba")),
+        17,
+        12,
+    )
+    .expect("text attr offset prefixed");
+    assert_eq!(attribute_to_string(&name), "{th:something}");
+
+    // 大小写保留
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("SOMETHING")), 0, 9)
+        .expect("text attr upper");
+    assert_eq!(attribute_to_string(&name), "{SOMETHING}");
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("TH:SOMETHING")), 0, 12)
+        .expect("text attr upper prefixed");
+    assert_eq!(attribute_to_string(&name), "{TH:SOMETHING}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("TH".to_owned())
+    );
+
+    // 无前缀冒号 / data- 形式
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16(":something")), 0, 10)
+        .expect("text attr colon");
+    assert_eq!(attribute_to_string(&name), "{:something}");
+    assert!(!name.as_attribute_name().is_prefixed());
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("data-th-something")), 0, 17)
+        .expect("text attr data-th");
+    assert_eq!(attribute_to_string(&name), "{data-th-something}");
+    assert!(!name.as_attribute_name().is_prefixed());
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("data-something")), 0, 14)
+        .expect("text attr data");
+    assert_eq!(attribute_to_string(&name), "{data-something}");
+
+    // xml:/xmlns: 前缀
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("xml:ns")), 0, 6)
+        .expect("text attr xml:ns");
+    assert_eq!(attribute_to_string(&name), "{xml:ns}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("xml".to_owned())
+    );
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("XML:SPACE")), 0, 9)
+        .expect("text attr XML:SPACE");
+    assert_eq!(attribute_to_string(&name), "{XML:SPACE}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("XML".to_owned())
+    );
+    let name = AttributeNames::for_name_buffer(text, Some(&as_utf16("xmlns:th")), 0, 8)
+        .expect("text attr xmlns:th");
+    assert_eq!(attribute_to_string(&name), "{xmlns:th}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("xmlns".to_owned())
+    );
+
+    // 缓存同一性（assertSame 语义，string 入口返回 Arc）
+    let first = AttributeNames::for_text_name(Some(&js("data-something"))).expect("first");
+    let second = AttributeNames::for_text_name(Some(&js("data-something"))).expect("second");
+    assert!(Arc::ptr_eq(&first, &second), "TEXT 名称仓库缓存同一性");
+
+    // 非法输入：null/空/空白
+    assert!(AttributeNames::for_name_buffer(text, None, 0, 0).is_err());
+    assert!(AttributeNames::for_name_buffer(text, Some(&[]), 0, 0).is_err());
+    assert!(AttributeNames::for_name_buffer(text, Some(&as_utf16(" ")), 0, 1).is_err());
+}
+
+#[test]
+fn attribute_names_text_string() {
+    let name = AttributeNames::for_text_name(Some(&js("th:something"))).expect("text attr");
+    assert_eq!(text_attribute_to_string(&name), "{th:something}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("th".to_owned())
+    );
+    let name = AttributeNames::for_text_name(Some(&js("something"))).expect("text attr");
+    assert_eq!(text_attribute_to_string(&name), "{something}");
+    let name = AttributeNames::for_text_name(Some(&js("TH:SOMETHING"))).expect("text attr");
+    assert_eq!(text_attribute_to_string(&name), "{TH:SOMETHING}");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("TH".to_owned())
+    );
+    let name = AttributeNames::for_text_name(Some(&js(":something"))).expect("text attr");
+    assert_eq!(text_attribute_to_string(&name), "{:something}");
+    assert!(!name.as_attribute_name().is_prefixed());
+    let name = AttributeNames::for_text_name(Some(&js("data-th-something"))).expect("text attr");
+    assert_eq!(text_attribute_to_string(&name), "{data-th-something}");
+    assert!(!name.as_attribute_name().is_prefixed());
+}
+
+// ===========================================================================
+// ElementNamesTest#testTextBuffer / testTextString（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn element_names_text_buffer() {
+    let text = Some(thymeleaf::TemplateMode::TEXT);
+    let name = ElementNames::for_name_buffer(text, Some(&as_utf16("th:something")), 0, 12)
+        .expect("text element");
+    assert_eq!(element_to_string(&name), "{th:something}");
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("th".to_owned())
+    );
+
+    let name = ElementNames::for_name_buffer(text, Some(&as_utf16("something")), 0, 9)
+        .expect("text element");
+    assert_eq!(element_to_string(&name), "{something}");
+
+    let name =
+        ElementNames::for_name_buffer(text, Some(&as_utf16("abcdefghijkliklmnsomething")), 17, 9)
+            .expect("text element offset");
+    assert_eq!(element_to_string(&name), "{something}");
+    let name = ElementNames::for_name_buffer(
+        text,
+        Some(&as_utf16("abcdefghijkliklmnth:something")),
+        17,
+        12,
+    )
+    .expect("text element offset prefixed");
+    assert_eq!(element_to_string(&name), "{th:something}");
+
+    let name = ElementNames::for_name_buffer(text, Some(&as_utf16("SOMETHING")), 0, 9)
+        .expect("text element upper");
+    assert_eq!(element_to_string(&name), "{SOMETHING}");
+    let name = ElementNames::for_name_buffer(text, Some(&as_utf16("TH:SOMETHING")), 0, 12)
+        .expect("text element upper prefixed");
+    assert_eq!(element_to_string(&name), "{TH:SOMETHING}");
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("TH".to_owned())
+    );
+
+    // 空名在 TEXT 模式允许（Java forTextName("",0,0) 不抛）
+    let name = ElementNames::for_name_buffer(text, Some(&[]), 0, 0).expect("empty text element ok");
+    assert_eq!(element_to_string(&name), "{}");
+}
+
+#[test]
+fn element_names_text_string() {
+    let name = ElementNames::for_text_name(Some(&js("th:something"))).expect("text element");
+    assert_eq!(text_element_to_string(&name), "{th:something}");
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("th".to_owned())
+    );
+    let name = ElementNames::for_text_name(Some(&js("TH:SOMETHING"))).expect("text element");
+    assert_eq!(text_element_to_string(&name), "{TH:SOMETHING}");
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .map(|p| p.to_string_lossy()),
+        Some("TH".to_owned())
+    );
+    let name = ElementNames::for_text_name(Some(&js(":something"))).expect("text element");
+    assert_eq!(text_element_to_string(&name), "{:something}");
+    assert!(!name.as_element_name().is_prefixed());
+    let name = ElementNames::for_text_name(Some(&js("data-th-something"))).expect("text element");
+    assert_eq!(text_element_to_string(&name), "{data-th-something}");
+    assert!(!name.as_element_name().is_prefixed());
 }

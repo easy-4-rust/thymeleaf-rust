@@ -1765,3 +1765,176 @@ fn xml_element_attributes_extra_families_match_java() {
         .expect("remove one");
     assert_eq!(attrs_text(&attrs), "\ntwo=\"\"");
 }
+
+// ===========================================================================
+// ElementAttributesTest AttrObtention 查询形态（Java L866-979 + L1209-1314）
+// ===========================================================================
+
+#[test]
+fn element_attributes_obtention_query_forms_match_java() {
+    // 空 Attributes：全部 hasAttribute 形态为 false
+    let empty = Attributes::empty();
+    assert!(
+        !empty
+            .has_attribute(TemplateMode::HTML, &js("type"))
+            .expect("has type")
+    );
+    assert!(
+        !empty
+            .has_attribute_with_prefix(TemplateMode::HTML, None, &js("type"))
+            .expect("has type prefix none")
+    );
+    assert!(
+        !empty
+            .has_attribute_with_prefix(TemplateMode::HTML, Some(&js("")), &js("type"))
+            .expect("has type prefix empty")
+    );
+    assert!(!empty.has_attribute_name(&html_name("type")));
+    assert!(
+        !empty
+            .has_attribute(TemplateMode::HTML, &js("th:type"))
+            .expect("has th:type")
+    );
+    assert!(
+        !empty
+            .has_attribute(TemplateMode::HTML, &js("TH:Type"))
+            .expect("has TH:Type")
+    );
+    assert!(
+        !empty
+            .has_attribute_with_prefix(TemplateMode::HTML, Some(&js("th")), &js("type"))
+            .expect("has th type")
+    );
+    assert!(
+        !empty
+            .has_attribute_with_prefix(TemplateMode::HTML, Some(&js("TH")), &js("Type"))
+            .expect("has TH Type")
+    );
+    assert!(!empty.has_attribute_name(&html_name("th:type")));
+    assert!(!empty.has_attribute_name(&html_name("TH:TYPE")));
+    assert!(
+        empty.as_attribute_slice().is_none(),
+        "空 Attributes 无后备数组"
+    );
+
+    // HTML：type=text（NONE 引号）与 th:type="${thetype}"（DOUBLE）
+    let attrs = html_attrs("<input type=text th:type=\"${thetype}\">");
+    let type_attr = attrs
+        .get_attribute(TemplateMode::HTML, &js("type"))
+        .expect("get type")
+        .expect("type exists");
+    assert_eq!(
+        type_attr.get_value_quotes(),
+        Some(AttributeValueQuotes::NONE)
+    );
+    let type_prefix = attrs
+        .get_attribute_with_prefix(TemplateMode::HTML, Some(&js("")), &js("type"))
+        .expect("get type prefix")
+        .expect("type exists");
+    assert_eq!(
+        type_prefix.get_value_quotes(),
+        Some(AttributeValueQuotes::NONE)
+    );
+    let th_type = attrs
+        .get_attribute(TemplateMode::HTML, &js("th:type"))
+        .expect("get th:type")
+        .expect("th:type exists");
+    assert_eq!(
+        th_type.get_value_quotes(),
+        Some(AttributeValueQuotes::DOUBLE)
+    );
+    let th_type_prefix = attrs
+        .get_attribute_with_prefix(TemplateMode::HTML, Some(&js("th")), &js("type"))
+        .expect("get th type")
+        .expect("th type exists");
+    assert_eq!(
+        th_type_prefix.get_value_quotes(),
+        Some(AttributeValueQuotes::DOUBLE)
+    );
+    let th_type_case = attrs
+        .get_attribute_with_prefix(TemplateMode::HTML, Some(&js("TH")), &js("Type"))
+        .expect("get TH Type")
+        .expect("TH Type exists");
+    assert_eq!(
+        th_type_case.get_value_quotes(),
+        Some(AttributeValueQuotes::DOUBLE),
+        "HTML 大小写不敏感"
+    );
+
+    // HTML 行/列：type='text' 在 1:8，th:type 在 2:1
+    let attrs = html_attrs("<input type='text' \nth:type=\"${thetype}\">");
+    let type_attr = attrs
+        .get_attribute(TemplateMode::HTML, &js("type"))
+        .expect("get type")
+        .expect("type exists");
+    assert_eq!(type_attr.get_line(), 1);
+    assert_eq!(type_attr.get_col(), 8);
+    let th_type = attrs
+        .get_attribute(TemplateMode::HTML, &js("th:type"))
+        .expect("get th:type")
+        .expect("th:type exists");
+    assert_eq!(th_type.get_line(), 2);
+    assert_eq!(th_type.get_col(), 1);
+    let th_type_prefix = attrs
+        .get_attribute_with_prefix(TemplateMode::HTML, Some(&js("TH")), &js("Type"))
+        .expect("get TH Type")
+        .expect("TH Type exists");
+    assert_eq!(th_type_prefix.get_line(), 2);
+    assert_eq!(th_type_prefix.get_col(), 1);
+
+    // XML 空 Attributes 全形态 false
+    assert!(
+        !empty
+            .has_attribute(TemplateMode::XML, &js("type"))
+            .expect("has xml type")
+    );
+    assert!(
+        !empty
+            .has_attribute_with_prefix(TemplateMode::XML, None, &js("type"))
+            .expect("has xml type prefix none")
+    );
+    assert!(!empty.has_attribute_name(&xml_name("th:type")));
+    assert!(!empty.has_attribute_name(&xml_name("TH:TYPE")));
+
+    // XML：type='text'（SINGLE）与 th:type（DOUBLE），大小写敏感
+    let attrs = xml_attrs("<input type='text' th:type=\"${thetype}\"/>");
+    let type_attr = attrs
+        .get_attribute(TemplateMode::XML, &js("type"))
+        .expect("get type")
+        .expect("type exists");
+    assert_eq!(
+        type_attr.get_value_quotes(),
+        Some(AttributeValueQuotes::SINGLE)
+    );
+    let type_prefix = attrs
+        .get_attribute_with_prefix(TemplateMode::XML, Some(&js("")), &js("type"))
+        .expect("get type prefix")
+        .expect("type exists");
+    assert_eq!(
+        type_prefix.get_value_quotes(),
+        Some(AttributeValueQuotes::SINGLE)
+    );
+    let th_type = attrs
+        .get_attribute(TemplateMode::XML, &js("th:type"))
+        .expect("get th:type")
+        .expect("th:type exists");
+    assert_eq!(
+        th_type.get_value_quotes(),
+        Some(AttributeValueQuotes::DOUBLE)
+    );
+    let th_type_prefix = attrs
+        .get_attribute_with_prefix(TemplateMode::XML, Some(&js("th")), &js("type"))
+        .expect("get th type")
+        .expect("th type exists");
+    assert_eq!(
+        th_type_prefix.get_value_quotes(),
+        Some(AttributeValueQuotes::DOUBLE)
+    );
+    // XML 大小写敏感：TH:Type 不存在
+    assert!(
+        attrs
+            .get_attribute(TemplateMode::XML, &js("TH:Type"))
+            .expect("get TH:Type ok")
+            .is_none()
+    );
+}
