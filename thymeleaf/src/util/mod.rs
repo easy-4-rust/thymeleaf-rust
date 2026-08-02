@@ -14,12 +14,12 @@ mod fast_string_writer;
 mod i_writable_char_sequence;
 mod identity_counter;
 mod java_locale;
+mod java_string;
 pub(crate) mod java_string_case_utils;
 mod java_writer;
 mod lazy_escaping_char_sequence;
 mod lazy_processing_char_sequence;
 mod list_utils;
-mod java_string;
 mod logging_utils;
 mod map_utils;
 mod number_point_type;
@@ -68,6 +68,7 @@ pub use fast_string_writer::{FastStringWriter, FastStringWriterError};
 pub use i_writable_char_sequence::IWritableCharSequence;
 pub use identity_counter::{IdentityCounter, IdentityCounterError};
 pub use java_locale::JavaLocale;
+pub use java_string::{JavaString, JavaStringResult};
 pub use java_writer::JavaWriter;
 pub use lazy_escaping_char_sequence::LazyEscapingCharSequence;
 pub(crate) use lazy_escaping_char_sequence::escape_text_immediately;
@@ -76,7 +77,6 @@ pub use list_utils::{
     JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,
     ListView,
 };
-pub use java_string::{JavaString, JavaStringResult};
 pub use logging_utils::LoggingUtils;
 pub use map_utils::MapUtils;
 pub use number_point_type::NumberPointType;

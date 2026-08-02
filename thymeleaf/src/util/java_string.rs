@@ -153,10 +153,12 @@ mod tests {
         assert_eq!(result.as_java_string().as_utf16(), &[] as &[u16]);
         assert_eq!(result.as_java_string().to_string_lossy(), "");
         assert_eq!(format!("{empty:?}"), "JavaString { utf16: [] }");
-        assert!(JavaStringResult::Owned(empty.clone())
-            .into_owned()
-            .as_utf16()
-            .is_empty());
+        assert!(
+            JavaStringResult::Owned(empty.clone())
+                .into_owned()
+                .as_utf16()
+                .is_empty()
+        );
     }
 
     #[test]
