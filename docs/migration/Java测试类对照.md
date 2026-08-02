@@ -32,7 +32,7 @@
 | `SSEThrottledTemplateWriterTest` | SPLIT | 1 | 1 | src/engine/sse_throttled_template_writer.rs；语料运行器 |
 | `StandaloneElementTagTest` | SPLIT | 4 | 4 | src/engine/standalone_element_tag.rs；语料运行器 |
 | `TextTest` | SPLIT | 3 | 3 | src/engine/text.rs；语料运行器 |
-| `WebEngineContextTest` | SPLIT | 14 | 14 | src/context/web_engine_context.rs；语料运行器 |
+| `WebEngineContextTest` | SPLIT | 14 | 14 | src/context/web_engine_context.rs；web_engine_context_java_parity.rs（共享标识守卫）；语料运行器 |
 | `XmlDeclarationTest` | SPLIT | 1 | 1 | src；语料运行器 |
 | `ScriptInlineTest` | MERGED | 4 | 4 | 语料运行器 |
 | `LinkBuilderTest` | MAPPED | 2 | 2 | link_builder_java_parity.rs |
@@ -51,7 +51,7 @@
 | `TemporalsListTest` | MAPPED | 17 | 17 | temporal_utils_java_parity.rs |
 | `TemporalsSetTest` | MAPPED | 17 | 17 | temporal_utils_java_parity.rs |
 | `FragmentInsertionExpressionTest` | SPLIT | 1 | 1 | src；语料运行器 |
-| `StandardJavaScriptSerializerTest` | SPLIT | 12 | 12 | src/serializer/standard_java_script_serializer.rs；语料运行器 |
+| `StandardJavaScriptSerializerTest` | MAPPED | 12 | 12 | standard_java_script_serializer_java_parity.rs |
 | `AggregationTest` | MERGED | 1 | 14 | 语料运行器 |
 | `AttrProcessorsTest` | MERGED | 19 | 266 | 语料运行器 |
 | `ConditionalCommentsTest` | MERGED | 1 | 14 | 语料运行器 |
@@ -88,7 +88,7 @@
 | `ListUtilsTest` | MAPPED | 2 | 2 | list_utils_java_parity.rs |
 | `NumberUtilsTest` | SPLIT | 1 | 1 | src/util/number_utils.rs；语料运行器 |
 | `StandardExpressionUtilsTest` | SPLIT | 1 | 1 | src/util/standard_expression_utils.rs；语料运行器 |
-| `StringUtilsTest` | SPLIT | 31 | 31 | src/util/string_utils.rs；语料运行器 |
+| `StringUtilsTest` | MAPPED | 31 | 31 | string_utils_java_parity.rs（31 方法全部 1:1，含 capitalizeWords/substring/pack 边界） |
 | `TextUtilsTest` | MAPPED | 1 | 1 | text_utils_java_parity.rs |
 | `VersionUtilsTest` | MAPPED | 2 | 2 | version_utils_java_parity.rs |
 
@@ -124,6 +124,16 @@
     Offset 类型 GMT 偏移段、OffsetTime 的 formatISO 走默认 ZoneId）
   - `TemporalsArrayTest` / `TemporalsListTest` / `TemporalsSetTest` /
     `TemporalsCreationTest` → `tests/temporal_utils_java_parity.rs`（utils 层 1:1）
+  - `StringUtilsTest`（31 方法全部，capitalize/unCapitalize/capitalizeWords/
+    substring/pack 边界与 null/空串/空白变体）→ `tests/string_utils_java_parity.rs`
+  - `StandardJavaScriptSerializerTest`（12 方法 enum/字符串/record）→
+    `tests/standard_java_script_serializer_java_parity.rs`；抽查修复 JS 日期序列化
+    UTC 偏移 `Z` → `+00:00`（Java `ZZZ`+`insert(26,':')`）与 `#dates` 'Z' pattern
+    零偏移 `+0000`
+  - `WebEngineContextTest`：新增共享标识守卫测试（WebContext 变量 ↔ exchange
+    属性双向可见，`tests/web_engine_context_java_parity.rs`）；多层嵌套遮蔽、
+    toString 精确串、template stack 等 7 项仍为 SPLIT（实现语义已核验一致，
+    断言缺口如实登记）
 ## Spring 集成模块（thymeleaf-tests-spring5/6/springsecurity5/6）
 
 | 模块 | 测试类 | 方法 | 运行时 case | 处置 |

@@ -20,9 +20,9 @@ Java 基线：`10f9dd2eb8cbd98515ce14b149d115e0287d0add`（thymeleaf/thymeleaf�
 
 | 处置 | 方法数 | 含义 |
 |:---|---:|:---|
-| SPLIT | 156 | 方法级断言拆入对应 Rust 对象合同（`thymeleaf/src/**` `#[cfg(test)]`）+ 共享端到端语料 |
+| SPLIT | 113 | 方法级断言拆入对应 Rust 对象合同（`thymeleaf/src/**` `#[cfg(test)]`）+ 共享端到端语料 |
 | MERGED | 90 | Java `TestExecutor` 外壳合并到数据驱动语料运行器（`thtest_upstream_plain_batch.rs`），输入/期望/异常直读固定上游 .thtest |
-| MAPPED | 166 | Java 测试由同名 Rust 合同测试 + 固定 Java Golden 逐记录验证（`thymeleaf-test/tests/*_java_parity.rs`） |
+| MAPPED | 209 | Java 测试由同名 Rust 合同测试 + 固定 Java Golden 逐记录验证（`thymeleaf-test/tests/*_java_parity.rs`） |
 | NOT_APPLICABLE | 1 | 基准工作负载类，正确性由语料与端到端测试承担 |
 
 集成模块（Spring 方言）全部为 `POLICY_DIFFERENCE`：
@@ -483,22 +483,22 @@ Java 基线：`10f9dd2eb8cbd98515ce14b149d115e0287d0add`（thymeleaf/thymeleaf�
 |---|---|---|---|
 | `testFragmentExpressionSelection` | SPLIT | testFragmentExpressionSelection | `thymeleaf/src` `#[cfg(test)]` |
 
-### `StandardJavaScriptSerializerTest`（12 方法；SPLIT=12）
+### `StandardJavaScriptSerializerTest`（12 方法；MAPPED=12）
 
 | 方法 | 处置 | 运行时 case | Rust 覆盖证据 |
 |---|---|---|---|
-| `testPrintTestEnumDefaultJS01` | SPLIT | testPrintTestEnumDefaultJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintTestEnumJacksonJS01` | SPLIT | testPrintTestEnumJacksonJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintAnonymousEnumDefaultJS01` | SPLIT | testPrintAnonymousEnumDefaultJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintAnonymousEnumJacksonJS01` | SPLIT | testPrintAnonymousEnumJacksonJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintTestEnumDefaultJS02` | SPLIT | testPrintTestEnumDefaultJS02 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintTestEnumJacksonJS02` | SPLIT | testPrintTestEnumJacksonJS02 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintAnonymousEnumDefaultJS02` | SPLIT | testPrintAnonymousEnumDefaultJS02 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintAnonymousEnumJacksonJS02` | SPLIT | testPrintAnonymousEnumJacksonJS02 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintRecordDefaultJS01` | SPLIT | testPrintRecordDefaultJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintRecordJacksonJS01` | SPLIT | testPrintRecordJacksonJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintRecordWithSpecialCharsDefaultJS01` | SPLIT | testPrintRecordWithSpecialCharsDefaultJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
-| `testPrintRecordWithSpecialCharsJacksonJS01` | SPLIT | testPrintRecordWithSpecialCharsJacksonJS01 | `thymeleaf/src/serializer/standard_java_script_serializer.rs` 对象合同 |
+| `testPrintTestEnumDefaultJS01` | MAPPED | testPrintTestEnumDefaultJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintTestEnumJacksonJS01` | MAPPED | testPrintTestEnumJacksonJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintAnonymousEnumDefaultJS01` | MAPPED | testPrintAnonymousEnumDefaultJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintAnonymousEnumJacksonJS01` | MAPPED | testPrintAnonymousEnumJacksonJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintTestEnumDefaultJS02` | MAPPED | testPrintTestEnumDefaultJS02 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintTestEnumJacksonJS02` | MAPPED | testPrintTestEnumJacksonJS02 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintAnonymousEnumDefaultJS02` | MAPPED | testPrintAnonymousEnumDefaultJS02 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintAnonymousEnumJacksonJS02` | MAPPED | testPrintAnonymousEnumJacksonJS02 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintRecordDefaultJS01` | MAPPED | testPrintRecordDefaultJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintRecordJacksonJS01` | MAPPED | testPrintRecordJacksonJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintRecordWithSpecialCharsDefaultJS01` | MAPPED | testPrintRecordWithSpecialCharsDefaultJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
+| `testPrintRecordWithSpecialCharsJacksonJS01` | MAPPED | testPrintRecordWithSpecialCharsJacksonJS01 | `standard_java_script_serializer_java_parity.rs` `print_test_enum_default_js01` |
 
 ### `AggregationTest`（1 方法；MERGED=1）
 
@@ -815,41 +815,41 @@ Java 基线：`10f9dd2eb8cbd98515ce14b149d115e0287d0add`（thymeleaf/thymeleaf�
 |---|---|---|---|
 | `testcontainsExternalAccess` | SPLIT | testcontainsExternalAccess | `thymeleaf/src/util/standard_expression_utils.rs` 对象合同 |
 
-### `StringUtilsTest`（31 方法；SPLIT=31）
+### `StringUtilsTest`（31 方法；MAPPED=31）
 
 | 方法 | 处置 | 运行时 case | Rust 覆盖证据 |
 |---|---|---|---|
-| `testCapitalize1` | SPLIT | testCapitalize1 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalize2` | SPLIT | testCapitalize2 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalize3` | SPLIT | testCapitalize3 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalize4` | SPLIT | testCapitalize4 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalize5` | SPLIT | testCapitalize5 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalize6` | SPLIT | testCapitalize6 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testUnCapitalize1` | SPLIT | testUnCapitalize1 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testUnCapitalize2` | SPLIT | testUnCapitalize2 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testUnCapitalize3` | SPLIT | testUnCapitalize3 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testUnCapitalize4` | SPLIT | testUnCapitalize4 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testUnCapitalize5` | SPLIT | testUnCapitalize5 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testUnCapitalize6` | SPLIT | testUnCapitalize6 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords1` | SPLIT | testCapitalizeWords1 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords2` | SPLIT | testCapitalizeWords2 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords3` | SPLIT | testCapitalizeWords3 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords4` | SPLIT | testCapitalizeWords4 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords5` | SPLIT | testCapitalizeWords5 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords6` | SPLIT | testCapitalizeWords6 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords7` | SPLIT | testCapitalizeWords7 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords8` | SPLIT | testCapitalizeWords8 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords9` | SPLIT | testCapitalizeWords9 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords10` | SPLIT | testCapitalizeWords10 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords11` | SPLIT | testCapitalizeWords11 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords12` | SPLIT | testCapitalizeWords12 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testCapitalizeWords13` | SPLIT | testCapitalizeWords13 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testSubstring1` | SPLIT | testSubstring1 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testSubstring2` | SPLIT | testSubstring2 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testSubstring3` | SPLIT | testSubstring3 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testSubstring4` | SPLIT | testSubstring4 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testSubstring5` | SPLIT | testSubstring5 | `thymeleaf/src/util/string_utils.rs` 对象合同 |
-| `testPack` | SPLIT | testPack | `thymeleaf/src/util/string_utils.rs` 对象合同 |
+| `testCapitalize1` | MAPPED | testCapitalize1 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalize2` | MAPPED | testCapitalize2 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalize3` | MAPPED | testCapitalize3 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalize4` | MAPPED | testCapitalize4 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalize5` | MAPPED | testCapitalize5 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalize6` | MAPPED | testCapitalize6 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testUnCapitalize1` | MAPPED | testUnCapitalize1 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testUnCapitalize2` | MAPPED | testUnCapitalize2 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testUnCapitalize3` | MAPPED | testUnCapitalize3 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testUnCapitalize4` | MAPPED | testUnCapitalize4 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testUnCapitalize5` | MAPPED | testUnCapitalize5 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testUnCapitalize6` | MAPPED | testUnCapitalize6 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords1` | MAPPED | testCapitalizeWords1 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords2` | MAPPED | testCapitalizeWords2 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords3` | MAPPED | testCapitalizeWords3 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords4` | MAPPED | testCapitalizeWords4 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords5` | MAPPED | testCapitalizeWords5 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords6` | MAPPED | testCapitalizeWords6 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords7` | MAPPED | testCapitalizeWords7 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords8` | MAPPED | testCapitalizeWords8 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords9` | MAPPED | testCapitalizeWords9 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords10` | MAPPED | testCapitalizeWords10 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords11` | MAPPED | testCapitalizeWords11 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords12` | MAPPED | testCapitalizeWords12 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testCapitalizeWords13` | MAPPED | testCapitalizeWords13 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testSubstring1` | MAPPED | testSubstring1 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testSubstring2` | MAPPED | testSubstring2 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testSubstring3` | MAPPED | testSubstring3 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testSubstring4` | MAPPED | testSubstring4 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testSubstring5` | MAPPED | testSubstring5 | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
+| `testPack` | MAPPED | testPack | `string_utils_java_parity.rs` `capitalize_all_java_variants_match` |
 
 ### `TextUtilsTest`（1 方法；MAPPED=1）
 
