@@ -14,6 +14,7 @@ use thymeleaf::context::{
 };
 use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
+use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::templateresource::StringTemplateResource;
 use thymeleaf::util::{JavaLocale, JavaString};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
@@ -243,4 +244,89 @@ fn abstract_engine_context_defers_expression_object_construction() {
     assert_eq!(fixture["expression.factory.after.first"], "1");
     assert_eq!(fixture["expression.factory.same"], "true");
     assert_eq!(fixture["expression.factory.after.second"], "1");
+}
+
+// ===========================================================================
+// EngineContextTest test03/test05 关键序列（Java 21 逐字）：
+//   (*removed*) 占位标记 与 [StandardTextInliner] 表示
+// ===========================================================================
+
+#[test]
+fn engine_context_removed_marker_and_inliner_representation_match_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let mut variables = IndexMap::new();
+    variables.insert(Some(java_string("one")), Some(value("two values")));
+    let context = EngineContext::new(
+        Arc::clone(&configuration),
+        template_data("test01"),
+        None,
+        locale("en-US", "US"),
+        Some(&variables),
+    );
+
+    // 初始：{0:{one=two values}(test01)}[0]
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=two values}(test01)}[0]"
+    );
+    assert_eq!(context.to_string(), "{one=two values}(test01)");
+
+    context.increase_level();
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=hello},0:{one=two values}(test01)}[1]"
+    );
+
+    // removeVariable -> EngineContext 用 (*removed*) 占位（WebEngineContext 为 null）
+    context.remove_variable(Some(&java_string("one")));
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=(*removed*)},0:{one=two values}(test01)}[1]"
+    );
+    assert_eq!(context.to_string(), "{}(test01)");
+
+    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.remove_variable(Some(&java_string("two")));
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=hello},0:{one=two values}(test01)}[1]",
+        "删除不存在的变量无副作用"
+    );
+
+    // setInliner(StandardTextInliner) -> 表示串与 toString 带 [StandardTextInliner]
+    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    context.set_inliner(Some(Arc::new(StandardTextInliner::new(
+        configuration.as_ref(),
+    ))));
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=hello, two=twello}[StandardTextInliner],0:{one=two values}(test01)}[1]"
+    );
+    assert_eq!(
+        context.to_string(),
+        "{one=hello, two=twello}[StandardTextInliner](test01)"
+    );
+
+    context.remove_variable(Some(&java_string("two")));
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=hello}[StandardTextInliner],0:{one=two values}(test01)}[1]"
+    );
+    context.remove_variable(Some(&java_string("one")));
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{1:{one=(*removed*)}[StandardTextInliner],0:{one=two values}(test01)}[1]"
+    );
+    assert_eq!(context.to_string(), "{}[StandardTextInliner](test01)");
+
+    // 降层恢复
+    context.decrease_level();
+    assert_eq!(
+        context.get_string_representation_by_level(),
+        "{0:{one=two values}(test01)}[0]"
+    );
+    assert_eq!(context.to_string(), "{one=two values}(test01)");
 }

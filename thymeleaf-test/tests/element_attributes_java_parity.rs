@@ -1312,3 +1312,456 @@ fn attribute_location_information() {
     assert_eq!(one.get_line(), -1, "new attribute has no location");
     assert_eq!(one.get_col(), -1, "new attribute has no location");
 }
+
+// ===========================================================================
+// ElementAttributesTest 缺失族补移植（Java 21 逐字复刻）
+//   - HTML：`ba= s` 家族（null/空值/引号形态/重加折叠）
+//   - XML：`ba='twenty'→'thirty'`、无间隔属性、空/空白输入追加序列
+// ===========================================================================
+
+#[test]
+fn html_element_attributes_ba_family_matches_java() {
+    let attribute_definitions = empty_attribute_definitions();
+    let mut attrs;
+
+    // Java L217-221：remove type 后 set type=null -> 追加 null 属性
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    attrs = attrs
+        .remove_attribute(TemplateMode::HTML, &js("type"))
+        .expect("remove type");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!'    ba= s");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("type"),
+            None,
+            None,
+        )
+        .expect("set type null");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!'    ba= s type");
+
+    // Java L223-227：set title=null -> 追加
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    attrs = attrs
+        .remove_attribute(TemplateMode::HTML, &js("type"))
+        .expect("remove type");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("title"),
+            None,
+            None,
+        )
+        .expect("set title null");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!'    ba= s title");
+
+    // Java L229-233：set title="" -> 双引号空值
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    attrs = attrs
+        .remove_attribute(TemplateMode::HTML, &js("type"))
+        .expect("remove type");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("title"),
+            Some(js("")),
+            None,
+        )
+        .expect("set title empty");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!'    ba= s title=\"\"");
+
+    // Java L235-241：SINGLE 保留单引号；NONE 被 HTML 强制回 DOUBLE
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    attrs = attrs
+        .remove_attribute(TemplateMode::HTML, &js("type"))
+        .expect("remove type");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("title"),
+            Some(js("")),
+            Some(AttributeValueQuotes::SINGLE),
+        )
+        .expect("set title empty single");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!'    ba= s title=''");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("title"),
+            Some(js("")),
+            Some(AttributeValueQuotes::NONE),
+        )
+        .expect("set title empty none");
+    assert_eq!(
+        attrs_text(&attrs),
+        " value='hello!!!'    ba= s title=\"\"",
+        "HTML 下 NONE 引号强制回 DOUBLE"
+    );
+
+    // Java L243-248：value="one" NONE -> 无引号；value="" -> 双引号
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba= s"
+    );
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("value"),
+            Some(js("one")),
+            Some(AttributeValueQuotes::NONE),
+        )
+        .expect("set value one none");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"   value=one    ba= s");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("value"),
+            Some(js("")),
+            None,
+        )
+        .expect("set value empty");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"   value=\"\"    ba= s");
+
+    // Java L250-253：ba="" -> HTML 保留空值带引号写法
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("ba"),
+            Some(js("")),
+            None,
+        )
+        .expect("set ba empty");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba= \"\""
+    );
+
+    // Java L255-262：ba="one" -> 无引号；remove ba -> 恢复原状；重加 -> 单空格双引号
+    attrs = html_attrs("<input type=\"text\"   value='hello!!!'    ba= s>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("ba"),
+            Some(js("one")),
+            None,
+        )
+        .expect("set ba one");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba= one"
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::HTML, &js("ba"))
+        .expect("remove ba");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"   value='hello!!!'");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::HTML,
+            None,
+            js("ba"),
+            Some(js("one")),
+            None,
+        )
+        .expect("re-add ba");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!' ba=\"one\"",
+        "重加属性空白折叠为单空格"
+    );
+}
+
+#[test]
+fn xml_element_attributes_extra_families_match_java() {
+    let attribute_definitions = empty_attribute_definitions();
+    let mut attrs;
+
+    // Java L444-446：ba='twenty' -> set 'thirty'
+    attrs = xml_attrs("<input type=\"text\"   value='hello!!!'    ba='twenty' />");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("ba"),
+            Some(js("thirty")),
+            None,
+        )
+        .expect("set ba thirty");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba='thirty' "
+    );
+
+    // Java L448-462：无间隔属性族
+    attrs = xml_attrs("<input type=\"text\"value='hello!!!' />");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"value='hello!!!' ");
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("type"))
+        .expect("remove type");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!' ");
+
+    attrs = xml_attrs("<input type=\"text\"value='hello!!!' name='one' />");
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("type"))
+        .expect("remove type");
+    assert_eq!(attrs_text(&attrs), " value='hello!!!' name='one' ");
+
+    attrs = xml_attrs("<input type=\"text\"value='hello!!!' name='one'/>");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"value='hello!!!' name='one'"
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("name"))
+        .expect("remove name");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"value='hello!!!'");
+
+    // Java L526-536：value 引号形态 + ba 空值
+    attrs = xml_attrs("<input type=\"text\"   value='hello!!!'    ba= 's'/>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("value"),
+            Some(js("one")),
+            Some(AttributeValueQuotes::DOUBLE),
+        )
+        .expect("set value double");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value=\"one\"    ba= 's'"
+    );
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("value"),
+            Some(js("")),
+            None,
+        )
+        .expect("set value empty");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"   value=\"\"    ba= 's'");
+
+    attrs = xml_attrs("<input type=\"text\"   value='hello!!!'    ba= 's'/>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("ba"),
+            Some(js("")),
+            None,
+        )
+        .expect("set ba empty");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba= ''"
+    );
+
+    // Java L538-545：ba='one' -> remove -> 重加单空格双引号
+    attrs = xml_attrs("<input type=\"text\"   value='hello!!!'    ba= 's'/>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("ba"),
+            Some(js("one")),
+            None,
+        )
+        .expect("set ba one");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba= 'one'"
+    );
+    attrs = attrs
+        .remove_attribute_with_prefix(TemplateMode::XML, None, &js("ba"))
+        .expect("remove ba");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"   value='hello!!!'");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("ba"),
+            Some(js("one")),
+            None,
+        )
+        .expect("re-add ba");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!' ba=\"one\""
+    );
+
+    // Java L547-570：ba=\"\" 追加序列（ba/be/bi/bo/bu 顺序追加 + 逐步删除）
+    attrs = xml_attrs("<input type=\"text\"   value='hello!!!'    ba=\"\"/>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("ba"),
+            Some(js("one")),
+            Some(AttributeValueQuotes::SINGLE),
+        )
+        .expect("set ba single");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!'    ba='one'"
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("ba"))
+        .expect("remove ba");
+    assert_eq!(attrs_text(&attrs), " type=\"text\"   value='hello!!!'");
+    for (name, value) in [
+        ("ba", "two"),
+        ("be", "three"),
+        ("bi", "four"),
+        ("bo", "five"),
+        ("bu", "six"),
+    ] {
+        attrs = attrs
+            .set_attribute(
+                &attribute_definitions,
+                TemplateMode::XML,
+                None,
+                js(name),
+                Some(js(value)),
+                None,
+            )
+            .expect("append attribute");
+    }
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!' ba=\"two\" be=\"three\" bi=\"four\" bo=\"five\" bu=\"six\""
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("be"))
+        .expect("remove be");
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("bu"))
+        .expect("remove bu");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!' ba=\"two\" bi=\"four\" bo=\"five\""
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("bi"))
+        .expect("remove bi");
+    assert_eq!(
+        attrs_text(&attrs),
+        " type=\"text\"   value='hello!!!' ba=\"two\" bo=\"five\""
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("type"))
+        .expect("remove type");
+    assert_eq!(
+        attrs_text(&attrs),
+        " value='hello!!!' ba=\"two\" bo=\"five\""
+    );
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("type"))
+        .expect("remove type again");
+    assert_eq!(
+        attrs_text(&attrs),
+        " value='hello!!!' ba=\"two\" bo=\"five\"",
+        "重复 remove 无副作用"
+    );
+
+    // Java L572-597：空/空白/换行输入追加序列
+    attrs = xml_attrs("<input/>");
+    assert_eq!(attrs_text(&attrs), "");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("a"),
+            Some(js("one")),
+            None,
+        )
+        .expect("set a");
+    assert_eq!(attrs_text(&attrs), " a=\"one\"");
+
+    attrs = xml_attrs("<input/>");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("a"),
+            Some(js("one")),
+            Some(AttributeValueQuotes::SINGLE),
+        )
+        .expect("set a single");
+    assert_eq!(attrs_text(&attrs), " a='one'");
+
+    attrs = xml_attrs("<input   />");
+    assert_eq!(attrs_text(&attrs), "   ");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("a"),
+            Some(js("one")),
+            None,
+        )
+        .expect("set a");
+    assert_eq!(attrs_text(&attrs), " a=\"one\"   ");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("b"),
+            Some(js("two")),
+            None,
+        )
+        .expect("set b");
+    assert_eq!(attrs_text(&attrs), " a=\"one\" b=\"two\"   ");
+
+    attrs = xml_attrs("<input\none=\"\"  />");
+    assert_eq!(attrs_text(&attrs), "\none=\"\"  ");
+    attrs = attrs
+        .set_attribute(
+            &attribute_definitions,
+            TemplateMode::XML,
+            None,
+            js("a"),
+            Some(js("two")),
+            None,
+        )
+        .expect("set a");
+    assert_eq!(attrs_text(&attrs), "\none=\"\" a=\"two\"  ");
+
+    attrs = xml_attrs("<input\none=\"\" two=\"\"/>");
+    assert_eq!(attrs_text(&attrs), "\none=\"\" two=\"\"");
+    attrs = attrs
+        .remove_attribute(TemplateMode::XML, &js("one"))
+        .expect("remove one");
+    assert_eq!(attrs_text(&attrs), "\ntwo=\"\"");
+}
