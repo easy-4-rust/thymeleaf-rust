@@ -14,6 +14,8 @@ mod support;
 
 use std::sync::Arc;
 
+use indexmap::IndexMap;
+
 use support::CorpusWebExchange;
 use thymeleaf::cache::AlwaysValidCacheEntryValidity;
 use thymeleaf::context::{
@@ -21,6 +23,7 @@ use thymeleaf::context::{
 };
 use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
+use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::templateresource::StringTemplateResource;
 use thymeleaf::util::{JavaLocale, JavaString};
 use thymeleaf::web::IWebExchange;
@@ -551,4 +554,210 @@ fn web_engine_context_test10_variables_and_representations_after_direct_writes()
         "{one=helloz, ten=tieen, two=twello, six=outer6}(test01)"
     );
     assert_eq!(names(vm.as_ref()), vec!["one", "six", "ten", "two"]);
+}
+
+// ===========================================================================
+// WebEngineContextTest#test02：初始变量 + 层级遮蔽（Java 逐字）
+// ===========================================================================
+
+/// 带初始变量的 Web 引擎上下文（对应 Java `starting` Map 构造）。
+fn web_context_with_initial(
+    name: &str,
+    initial: &[(&str, &str)],
+) -> (Arc<WebEngineContext>, Arc<dyn IWebExchange>) {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("engine configuration");
+    let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
+    let mut variables = IndexMap::new();
+    for (key, value_str) in initial {
+        variables.insert(Some(js(key)), Some(value(value_str)));
+    }
+    let context = WebEngineContext::new(
+        configuration,
+        template_data(name, TemplateMode::HTML),
+        None,
+        Arc::clone(&exchange),
+        locale_en(),
+        Some(&variables),
+    );
+    (context, exchange)
+}
+
+#[test]
+fn web_engine_context_test02_initial_variables_shadowing_matches_java() {
+    let (vm, _) = web_context_with_initial("test01", &[("one", "ha"), ("ten", "tieen")]);
+    assert!(vm.contains_variable(Some(&js("one"))));
+    assert!(vm.contains_variable(Some(&js("ten"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "ha");
+    assert_eq!(variable(vm.as_ref(), "ten"), "tieen");
+
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    assert_eq!(variable(vm.as_ref(), "one"), "a value");
+    assert_eq!(variable(vm.as_ref(), "ten"), "tieen");
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("hello")));
+    assert_eq!(variable(vm.as_ref(), "one"), "hello");
+    assert_eq!(variable(vm.as_ref(), "ten"), "tieen");
+
+    vm.decrease_level();
+    assert_eq!(variable(vm.as_ref(), "one"), "a value", "降层恢复初始变量");
+    assert_eq!(variable(vm.as_ref(), "ten"), "tieen");
+}
+
+// ===========================================================================
+// WebEngineContextTest#test09：多变量（one..seven）层级遮蔽（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn web_engine_context_test09_many_variables_shadowing_matches_java() {
+    let (vm, _) = web_context("test01", TemplateMode::HTML);
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    assert_eq!(variable(vm.as_ref(), "one"), "a value");
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("hello")));
+    vm.set_variable(Some(js("two")), Some(value("twello")));
+    assert!(vm.contains_variable(Some(&js("two"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "hello");
+    assert_eq!(variable(vm.as_ref(), "two"), "twello");
+
+    vm.set_variable(Some(js("three")), Some(value("trwello")));
+    assert!(vm.contains_variable(Some(&js("three"))));
+    assert_eq!(variable(vm.as_ref(), "three"), "trwello");
+
+    vm.set_variable(Some(js("four")), Some(value("fwello")));
+    assert_eq!(variable(vm.as_ref(), "four"), "fwello");
+
+    vm.set_variable(Some(js("five")), Some(value("vwello")));
+    assert!(vm.contains_variable(Some(&js("five"))));
+    assert_eq!(variable(vm.as_ref(), "five"), "vwello");
+
+    vm.set_variable(Some(js("six")), Some(value("swello")));
+    assert!(vm.contains_variable(Some(&js("six"))));
+    assert_eq!(variable(vm.as_ref(), "six"), "swello");
+
+    vm.set_variable(Some(js("seven")), Some(value("swello")));
+    assert!(vm.contains_variable(Some(&js("seven"))));
+    assert_eq!(variable(vm.as_ref(), "seven"), "swello");
+    // 逐级读取全部变量
+    assert_eq!(variable(vm.as_ref(), "one"), "hello");
+    assert_eq!(variable(vm.as_ref(), "two"), "twello");
+    assert_eq!(variable(vm.as_ref(), "three"), "trwello");
+    assert_eq!(variable(vm.as_ref(), "four"), "fwello");
+    assert_eq!(variable(vm.as_ref(), "five"), "vwello");
+    assert_eq!(variable(vm.as_ref(), "six"), "swello");
+}
+
+// ===========================================================================
+// WebEngineContextTest#test12：selection target 层级设置与清除（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn web_engine_context_test12_selection_cleared_by_level_matches_java() {
+    let (vm, _) = web_context("test01", TemplateMode::HTML);
+    vm.set_variable(Some(js("one")), Some(value("a val1")));
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("a val2")));
+    vm.set_selection_target(Some(value("FORM")));
+    assert!(vm.has_selection_target());
+    assert_eq!(
+        vm.get_selection_target()
+            .and_then(|value| value.to_java_string())
+            .map(|value| value.to_string_lossy()),
+        Some("FORM".to_owned())
+    );
+
+    // 降层清除 selection（Java：降层后 target 消失）
+    vm.decrease_level();
+    vm.set_variable(Some(js("one")), Some(value("a val3")));
+    assert!(!vm.has_selection_target());
+    assert!(vm.get_selection_target().is_none());
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("a val4")));
+    assert!(!vm.has_selection_target());
+    assert!(vm.get_selection_target().is_none());
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("a val5")));
+    assert!(!vm.has_selection_target());
+    assert!(vm.get_selection_target().is_none());
+}
+
+// ===========================================================================
+// WebEngineContextTest#test06/07 核心：多级 toString 精确串 + StandardTextInliner
+// ===========================================================================
+
+#[test]
+fn web_engine_context_to_string_with_inliner_matches_java() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("configuration");
+    let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
+    let vm = WebEngineContext::new(
+        configuration.clone(),
+        template_data("test01", TemplateMode::HTML),
+        None,
+        exchange,
+        locale_en(),
+        None,
+    );
+
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    assert_eq!(vm.to_string(), "{one=a value}(test01)");
+
+    vm.increase_level();
+    vm.set_variable(Some(js("one")), Some(value("hello")));
+    vm.set_variable(Some(js("two")), Some(value("twello")));
+    assert_eq!(vm.to_string(), "{one=hello, two=twello}(test01)");
+
+    // StandardTextInliner -> toString 带 [StandardTextInliner]（Java test06 语义）
+    vm.set_inliner(Some(Arc::new(StandardTextInliner::new(
+        configuration.as_ref(),
+    ))));
+    assert_eq!(
+        vm.to_string(),
+        "{one=hello, two=twello}[StandardTextInliner](test01)"
+    );
+    assert_eq!(
+        vm.get_string_representation_by_level(),
+        "{1:{one=hello, two=twello}[StandardTextInliner],0:{one=a value}(test01)}[1]"
+    );
+
+    // 降层后 inliner 随层级回退（Java：inliner 记录在当前层，降层恢复上一层的空 inliner）
+    vm.decrease_level();
+    assert_eq!(vm.to_string(), "{one=a value}(test01)");
+    assert_eq!(
+        vm.get_string_representation_by_level(),
+        "{0:{one=a value}(test01)}[0]"
+    );
+}
+
+// ===========================================================================
+// WebEngineContextTest#test05：request.removeAttribute 后变量消失（Java 逐字）
+// ===========================================================================
+
+#[test]
+fn web_engine_context_request_remove_attribute_hides_variable() {
+    let (vm, exchange) = web_context("test01", TemplateMode::HTML);
+    vm.set_variable(Some(js("one")), Some(value("a value")));
+    assert!(vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "a value");
+
+    // 直接删除 request 属性（Java `mockRequest.removeAttribute("one")`）
+    exchange.remove_attribute(Some(&js("one")));
+    assert!(
+        !vm.contains_variable(Some(&js("one"))),
+        "变量随 request 属性删除而消失"
+    );
+    assert_eq!(variable(vm.as_ref(), "one"), "null");
+    assert_eq!(vm.to_string(), "{}(test01)");
+
+    // 重新设置 request 属性 -> 变量重新可见
+    exchange.set_attribute_value(Some(js("one")), Some(value("outer1")));
+    assert!(vm.contains_variable(Some(&js("one"))));
+    assert_eq!(variable(vm.as_ref(), "one"), "outer1");
+    assert_eq!(vm.to_string(), "{one=outer1}(test01)");
 }
