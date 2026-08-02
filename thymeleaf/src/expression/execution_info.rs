@@ -15,6 +15,7 @@ pub struct ExecutionInfo {
 
 impl ExecutionInfo {
     /// 创建执行信息快照；`now` 固定为构造瞬间。
+    /// 对应 Java 语义：`ExecutionInfo` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(context: Option<Arc<dyn IExpressionContext>>) -> Result<Self, ValidateError> {
         let context = context.ok_or_else(|| ValidateError::IllegalArgument {
             message: Some("Context cannot be null".to_owned()),
@@ -29,6 +30,7 @@ impl ExecutionInfo {
     }
 
     /// 返回当前叶模板名称。
+    /// 对应 Java: `ExecutionInfo#getTemplateName()`。
     pub fn get_template_name(&self) -> Option<JavaString> {
         self.template_context()
             .get_template_data()
@@ -37,6 +39,7 @@ impl ExecutionInfo {
     }
 
     /// 返回当前叶模板模式。
+    /// 对应 Java: `ExecutionInfo#getTemplateMode()`。
     pub fn get_template_mode(&self) -> Option<TemplateMode> {
         self.template_context()
             .get_template_data()
@@ -44,6 +47,7 @@ impl ExecutionInfo {
     }
 
     /// 返回首次调用 TemplateEngine 的顶层模板名称。
+    /// 对应 Java: `ExecutionInfo#getProcessedTemplateName()`。
     pub fn get_processed_template_name(&self) -> Option<JavaString> {
         self.template_context()
             .get_template_stack()
@@ -52,6 +56,7 @@ impl ExecutionInfo {
     }
 
     /// 返回顶层模板模式。
+    /// 对应 Java: `ExecutionInfo#getProcessedTemplateMode()`。
     pub fn get_processed_template_mode(&self) -> Option<TemplateMode> {
         self.template_context()
             .get_template_stack()
@@ -60,6 +65,7 @@ impl ExecutionInfo {
     }
 
     /// 返回从顶层到当前叶模板的名称快照。
+    /// 对应 Java: `ExecutionInfo#getTemplateNames()`。
     pub fn get_template_names(&self) -> Vec<Option<JavaString>> {
         self.template_context()
             .get_template_stack()
@@ -69,6 +75,7 @@ impl ExecutionInfo {
     }
 
     /// 返回从顶层到当前叶模板的模式快照。
+    /// 对应 Java: `ExecutionInfo#getTemplateModes()`。
     pub fn get_template_modes(&self) -> Vec<Option<TemplateMode>> {
         self.template_context()
             .get_template_stack()
@@ -78,6 +85,7 @@ impl ExecutionInfo {
     }
 
     /// 返回 Context 当前模板栈的只读引用快照。
+    /// 对应 Java: `ExecutionInfo#getTemplateStack()`。
     pub fn get_template_stack(&self) -> Vec<Arc<TemplateData>> {
         self.template_context().get_template_stack()
     }

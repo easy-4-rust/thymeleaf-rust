@@ -29,6 +29,7 @@ pub(crate) struct StandardMessageResolutionUtils;
 
 impl StandardMessageResolutionUtils {
     /// 按基础资源、语言、国家和变体由低到高合并模板消息。
+    /// 对应 Java: `StandardMessageResolutionUtils#resolveMessagesForTemplate()`。
     pub(crate) fn resolve_messages_for_template(
         template_resource: &dyn ITemplateResource,
         locale: &JavaLocale,
@@ -57,6 +58,7 @@ impl StandardMessageResolutionUtils {
     }
 
     /// 返回宿主为 Rust 类型注册的 classpath 等价消息。
+    /// 对应 Java: `StandardMessageResolutionUtils#resolveMessagesForOrigin()`。
     pub(crate) fn resolve_messages_for_origin(origin: TypeId, locale: &JavaLocale) -> Messages {
         let messages = read_lock(origin_messages());
         let parents = read_lock(origin_parents());
@@ -83,11 +85,13 @@ impl StandardMessageResolutionUtils {
     ///
     /// Rust 没有 JVM `ClassLoader#getResourceAsStream`；宿主集成层在加载等价
     /// classpath 资源后通过此入口登记，解析器仍按 origin 与 Locale 缓存。
+    /// 对应 Java 语义：`StandardMessageResolutionUtils` 的 `register_origin_messages` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn register_origin_messages(origin: TypeId, locale: JavaLocale, messages: Messages) {
         write_lock(origin_messages()).insert((origin, locale), messages);
     }
 
     /// 登记 Rust origin 类型的直接父类型，复现 Java superclass 消息回退。
+    /// 对应 Java 语义：`StandardMessageResolutionUtils` 的 `register_origin_parent` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn register_origin_parent(
         origin: TypeId,
         parent: TypeId,
@@ -115,6 +119,7 @@ impl StandardMessageResolutionUtils {
     }
 
     /// 使用 Java `MessageFormat` 的索引占位符和引号规则格式化消息。
+    /// 对应 Java: `StandardMessageResolutionUtils#formatMessage()`。
     pub(crate) fn format_message(
         locale: &JavaLocale,
         message: &JavaString,

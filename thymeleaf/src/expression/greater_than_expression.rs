@@ -20,6 +20,7 @@ pub struct GreaterThanExpression {
 
 impl GreaterThanExpression {
     /// 创建大于表达式。
+    /// 对应 Java 语义：`GreaterThanExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         left: Option<Arc<dyn IStandardExpression>>,
         right: Option<Arc<dyn IStandardExpression>>,
@@ -28,11 +29,13 @@ impl GreaterThanExpression {
     }
 
     /// 返回左操作数。
+    /// 对应 Java 语义：Java 接口/超类方法 `getLeft()` 的 Rust 移植（`GreaterThanExpression` 继承路径）。
     pub fn get_left(&self) -> &dyn IStandardExpression {
         self.operation.get_left()
     }
 
     /// 返回右操作数。
+    /// 对应 Java 语义：Java 接口/超类方法 `getRight()` 的 Rust 移植（`GreaterThanExpression` 继承路径）。
     pub fn get_right(&self) -> &dyn IStandardExpression {
         self.operation.get_right()
     }
@@ -79,6 +82,7 @@ impl IStandardExpression for GreaterThanExpression {
 
 impl ComplexExpression for GreaterThanExpression {}
 impl super::GreaterLesserExpression for GreaterThanExpression {}
+/// 对应 Java 语义：`GreaterThanExpression` 的 `comparison_null_error` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn comparison_null_error(
     operation: &str,
@@ -91,6 +95,7 @@ pub(crate) fn comparison_null_error(
         display_value(right)
     ))))
 }
+/// 对应 Java 语义：`GreaterThanExpression` 的 `operation_error` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn operation_error(
     operation: &str,

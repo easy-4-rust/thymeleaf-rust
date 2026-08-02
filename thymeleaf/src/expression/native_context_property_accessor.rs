@@ -24,6 +24,7 @@ impl NativeContextPropertyAccessor {
     }
 
     /// 读取 Context 变量并执行 `param` 访问限制。
+    /// 对应 Java: `OGNLContextPropertyAccessor#getProperty()`。
     pub fn get_property(
         &self,
         restrict_expression_objects: bool,
@@ -45,6 +46,7 @@ impl NativeContextPropertyAccessor {
     }
 
     /// Context 在 OGNL 中只读，写操作始终失败。
+    /// 对应 Java: `OGNLContextPropertyAccessor#setProperty()`。
     pub fn set_property(
         &self,
         _target: &dyn IContext,
@@ -63,6 +65,7 @@ impl Default for NativeContextPropertyAccessor {
 
 /// Context 属性访问失败类别。
 #[derive(Debug, Error, Eq, PartialEq)]
+/// 对应 Java 语义：`OGNLContextPropertyAccessor` 的 Rust 侧类型 `NativeContextPropertyError`。
 pub enum NativeContextPropertyError {
     /// 受限上下文禁止访问 `param`。
     #[error(

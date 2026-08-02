@@ -25,6 +25,7 @@ impl Dates {
 
     /// 创建 Date；可选时间字段必须遵守 Calendar 成组规则。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java: `Dates#create()`。
     pub fn create(
         &self,
         year: Option<i32>,
@@ -51,17 +52,20 @@ impl Dates {
 
     /// 返回当前瞬时 Date。
     #[must_use]
+    /// 对应 Java: `Dates#createNow()`。
     pub fn create_now(&self, time_zone: Option<&str>) -> JavaDate {
         DateUtils::create_now(time_zone, Some(&self.locale)).to_date()
     }
 
     /// 返回指定时区当天零点对应的 Date 瞬时。
     #[must_use]
+    /// 对应 Java: `Dates#createToday()`。
     pub fn create_today(&self, time_zone: Option<&str>) -> JavaDate {
         DateUtils::create_today(time_zone, Some(&self.locale)).to_date()
     }
 
     /// 使用默认长格式或指定 pattern 格式化 Date。
+    /// 对应 Java: `Dates#format()`。
     pub fn format(
         &self,
         target: Option<&JavaDate>,
@@ -189,6 +193,7 @@ impl TemplateObject for Dates {
 
 /// `#dates` 创建、类型转换和格式化错误。
 #[derive(Debug)]
+/// 对应 Java 语义：`Dates` 的 Rust 侧类型 `DatesError`。
 pub struct DatesError {
     message: String,
 }

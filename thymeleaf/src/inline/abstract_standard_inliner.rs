@@ -22,6 +22,7 @@ pub struct AbstractStandardInliner {
     write_texts_to_output: bool,
     escaping: StandardInlinerEscaping,
 }
+/// 对应 Java 语义：`AbstractStandardInliner` 的 Rust 侧类型 `StandardInlinerEscaping`。
 
 pub(crate) enum StandardInlinerEscaping {
     Html,
@@ -32,6 +33,7 @@ pub(crate) enum StandardInlinerEscaping {
 
 impl AbstractStandardInliner {
     /// 创建指定模板模式和转义策略的共享实现。
+    /// 对应 Java 语义：`AbstractStandardInliner` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: &dyn IEngineConfiguration,
         template_mode: TemplateMode,
@@ -47,6 +49,7 @@ impl AbstractStandardInliner {
     }
 
     /// 对 Text 执行 Standard inline。
+    /// 对应 Java 语义：`AbstractStandardInliner` 的 `inline_text` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn inline_text(
         &self,
         context: &dyn ITemplateContext,
@@ -82,6 +85,7 @@ impl AbstractStandardInliner {
     }
 
     /// 对 CDATA 执行 Standard inline。
+    /// 对应 Java 语义：`AbstractStandardInliner` 的 `inline_cdata_section` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn inline_cdata_section(
         &self,
         context: &dyn ITemplateContext,
@@ -117,6 +121,7 @@ impl AbstractStandardInliner {
     }
 
     /// 对 Comment 执行 Standard inline。
+    /// 对应 Java 语义：`AbstractStandardInliner` 的 `inline_comment` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn inline_comment(
         &self,
         context: &dyn ITemplateContext,

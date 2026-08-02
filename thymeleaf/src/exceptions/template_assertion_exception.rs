@@ -42,6 +42,7 @@ impl TemplateAssertionException {
 
     /// 返回与上游完全相同格式的断言错误消息。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getMessage()` 的 Rust 移植（`TemplateAssertionException` 继承路径）。
     pub fn get_message(&self) -> &str {
         &self.message
     }

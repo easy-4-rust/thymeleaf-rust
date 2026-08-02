@@ -24,6 +24,7 @@ pub struct AbstractStandardTargetSelectionTagProcessor {
 impl AbstractStandardTargetSelectionTagProcessor {
     /// 创建 selection target Processor，并保留校验和附加局部变量两个扩展钩子。
     #[allow(clippy::type_complexity)]
+    /// 对应 Java 语义：`AbstractStandardTargetSelectionTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new<V, L>(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

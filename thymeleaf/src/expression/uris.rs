@@ -15,6 +15,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 转义完整 URI path。
+    /// 对应 Java: `Uris#escapePath()`。
     pub fn escape_path(
         &self,
         text: Option<&JavaString>,
@@ -23,6 +24,7 @@ impl Uris {
     }
 
     /// 使用指定字符集转义完整 URI path。
+    /// 对应 Java 语义：`Uris` 的 `escape_path_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_path_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -32,6 +34,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 反转义完整 URI path。
+    /// 对应 Java: `Uris#unescapePath()`。
     pub fn unescape_path(
         &self,
         text: Option<&JavaString>,
@@ -40,6 +43,7 @@ impl Uris {
     }
 
     /// 使用指定字符集反转义完整 URI path。
+    /// 对应 Java 语义：`Uris` 的 `unescape_path_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_path_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -49,6 +53,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 转义单个 URI path segment。
+    /// 对应 Java: `Uris#escapePathSegment()`。
     pub fn escape_path_segment(
         &self,
         text: Option<&JavaString>,
@@ -57,6 +62,7 @@ impl Uris {
     }
 
     /// 使用指定字符集转义单个 URI path segment。
+    /// 对应 Java 语义：`Uris` 的 `escape_path_segment_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_path_segment_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -66,6 +72,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 反转义 URI path segment。
+    /// 对应 Java: `Uris#unescapePathSegment()`。
     pub fn unescape_path_segment(
         &self,
         text: Option<&JavaString>,
@@ -74,6 +81,7 @@ impl Uris {
     }
 
     /// 使用指定字符集反转义 URI path segment。
+    /// 对应 Java 语义：`Uris` 的 `unescape_path_segment_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_path_segment_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -83,6 +91,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 转义 URI fragment identifier。
+    /// 对应 Java: `Uris#escapeFragmentId()`。
     pub fn escape_fragment_id(
         &self,
         text: Option<&JavaString>,
@@ -91,6 +100,7 @@ impl Uris {
     }
 
     /// 使用指定字符集转义 URI fragment identifier。
+    /// 对应 Java 语义：`Uris` 的 `escape_fragment_id_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_fragment_id_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -100,6 +110,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 反转义 URI fragment identifier。
+    /// 对应 Java: `Uris#unescapeFragmentId()`。
     pub fn unescape_fragment_id(
         &self,
         text: Option<&JavaString>,
@@ -108,6 +119,7 @@ impl Uris {
     }
 
     /// 使用指定字符集反转义 URI fragment identifier。
+    /// 对应 Java 语义：`Uris` 的 `unescape_fragment_id_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_fragment_id_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -117,6 +129,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 转义 URI query parameter 名称或值。
+    /// 对应 Java: `Uris#escapeQueryParam()`。
     pub fn escape_query_param(
         &self,
         text: Option<&JavaString>,
@@ -125,6 +138,7 @@ impl Uris {
     }
 
     /// 使用指定字符集转义 URI query parameter。
+    /// 对应 Java 语义：`Uris` 的 `escape_query_param_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_query_param_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -134,6 +148,7 @@ impl Uris {
     }
 
     /// 使用 UTF-8 反转义 URI query parameter。
+    /// 对应 Java: `Uris#unescapeQueryParam()`。
     pub fn unescape_query_param(
         &self,
         text: Option<&JavaString>,
@@ -142,6 +157,7 @@ impl Uris {
     }
 
     /// 使用指定字符集反转义 URI query parameter。
+    /// 对应 Java 语义：`Uris` 的 `unescape_query_param_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_query_param_with_encoding(
         &self,
         text: Option<&JavaString>,
@@ -280,6 +296,7 @@ fn from_hex(value: u8) -> Option<u8> {
 
 /// URI 转义/反转义错误。
 #[derive(Debug, Error, Eq, PartialEq)]
+/// 对应 Java 语义：`Uris` 的 Rust 侧类型 `UriExpressionError`。
 pub enum UriExpressionError {
     /// Java Charset 名称在当前运行时不可用。
     #[error("Unsupported encoding: {encoding}")]

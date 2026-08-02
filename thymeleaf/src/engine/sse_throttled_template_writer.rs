@@ -45,6 +45,7 @@ pub(crate) struct SSEThrottledTemplateWriter {
 
 impl SSEThrottledTemplateWriter {
     /// 创建尚未绑定输出的 SSE 节流 Writer。
+    /// 对应 Java 语义：`SSEThrottledTemplateWriter` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_name: String,
         flow_controller: Arc<Mutex<TemplateFlowController>>,
@@ -59,6 +60,7 @@ impl SSEThrottledTemplateWriter {
     }
 
     /// 绑定字符输出。
+    /// 对应 Java 语义：`SSEThrottledTemplateWriter` 的 `set_output_writer` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_output_writer(
         &mut self,
         writer: Box<dyn JavaWriter>,
@@ -67,6 +69,7 @@ impl SSEThrottledTemplateWriter {
     }
 
     /// 绑定字节输出。
+    /// 对应 Java 语义：Java 接口/超类方法 `setOutputStream()` 的 Rust 移植（`SSEThrottledTemplateWriter` 继承路径）。
     pub(crate) fn set_output_stream(
         &mut self,
         output_stream: Box<dyn Write + Send>,
@@ -78,11 +81,13 @@ impl SSEThrottledTemplateWriter {
     }
 
     /// 允许下一轮写出指定数量。
+    /// 对应 Java 语义：Java 接口/超类方法 `allow()` 的 Rust 移植（`SSEThrottledTemplateWriter` 继承路径）。
     pub(crate) fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
         self.writer.allow(limit)
     }
 
     /// 写出 SSE 正文并在每个 LF 后追加 `data: `。
+    /// 对应 Java 语义：`SSEThrottledTemplateWriter` 的 `write_utf16` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         if characters.is_empty() {
             return self.writer.write_utf16(characters);

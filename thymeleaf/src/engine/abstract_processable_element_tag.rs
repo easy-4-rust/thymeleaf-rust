@@ -101,11 +101,13 @@ impl AbstractProcessableElementTag {
 
     /// 返回可空属性快照。
     #[must_use]
+    /// 对应 Java 语义：`AbstractProcessableElementTag` 的 `attributes` 行为（Rust 侧辅助/私有路径）。
     pub fn attributes(&self) -> Option<&Arc<Attributes>> {
         self.attributes.as_ref()
     }
 
     /// 按完整名称判断属性是否存在。
+    /// 对应 Java: `AbstractProcessableElementTag#hasAttribute()`。
     pub fn has_attribute(&self, complete_name: &JavaString) -> Result<bool, AttributesError> {
         let Some(attributes) = self.attributes.as_ref() else {
             return Ok(false);
@@ -114,6 +116,7 @@ impl AbstractProcessableElementTag {
     }
 
     /// 按 prefix 与本地名称判断属性是否存在。
+    /// 对应 Java 语义：`AbstractProcessableElementTag` 的 `has_attribute_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn has_attribute_with_prefix(
         &self,
         prefix: Option<&JavaString>,
@@ -127,6 +130,7 @@ impl AbstractProcessableElementTag {
 
     /// 按规范化名称对象身份判断属性是否存在。
     #[must_use]
+    /// 对应 Java 语义：`AbstractProcessableElementTag` 的 `has_attribute_name` 行为（Rust 侧辅助/私有路径）。
     pub fn has_attribute_name(&self, attribute_name: &AttributeName) -> bool {
         self.attributes
             .as_ref()
@@ -134,6 +138,7 @@ impl AbstractProcessableElementTag {
     }
 
     /// 按完整名称返回属性。
+    /// 对应 Java: `AbstractProcessableElementTag#getAttribute()`。
     pub fn get_attribute(
         &self,
         complete_name: &JavaString,
@@ -147,6 +152,7 @@ impl AbstractProcessableElementTag {
     }
 
     /// 按 prefix 与本地名称返回属性。
+    /// 对应 Java 语义：`AbstractProcessableElementTag` 的 `get_attribute_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn get_attribute_with_prefix(
         &self,
         prefix: Option<&JavaString>,
@@ -162,6 +168,7 @@ impl AbstractProcessableElementTag {
 
     /// 按规范化名称对象身份返回属性。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getAttributeName()` 的 Rust 移植（`AbstractProcessableElementTag` 继承路径）。
     pub fn get_attribute_name(&self, attribute_name: &AttributeName) -> Option<&Attribute> {
         self.attributes
             .as_ref()
@@ -171,6 +178,7 @@ impl AbstractProcessableElementTag {
 
     /// 返回属性数组的防御性浅副本。
     #[must_use]
+    /// 对应 Java: `AbstractProcessableElementTag#getAllAttributes()`。
     pub fn get_all_attributes(&self) -> Vec<Arc<Attribute>> {
         self.attributes
             .as_ref()
@@ -179,6 +187,7 @@ impl AbstractProcessableElementTag {
 
     /// 按插入顺序返回属性名称和值的防御性 Map。
     #[must_use]
+    /// 对应 Java: `AbstractProcessableElementTag#getAttributeMap()`。
     pub fn get_attribute_map(&self) -> IndexMap<JavaString, Option<JavaString>> {
         self.attributes
             .as_ref()
@@ -200,6 +209,7 @@ impl AbstractProcessableElementTag {
     }
 
     /// 判断标签是否至少关联一个适用 Processor。
+    /// 对应 Java: `AbstractProcessableElementTag#hasAssociatedProcessors()`。
     pub fn has_associated_processors(&self) -> Result<bool, MatchingElementNameError> {
         Ok(!self.get_associated_processors()?.is_empty())
     }

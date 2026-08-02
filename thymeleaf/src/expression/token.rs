@@ -7,6 +7,7 @@ use crate::util::JavaString;
 ///
 /// 该适配保留 `String#toString()` 返回原实例，以及自定义对象返回共享字符串的
 /// 引用身份；Java 允许覆写 `toString()` 后返回 null。
+/// 对应 Java 语义：`Token` 的 Rust 侧类型 `JavaTokenStringResult`。
 pub enum JavaTokenStringResult<'a> {
     /// Java null。
     Null,
@@ -17,6 +18,7 @@ pub enum JavaTokenStringResult<'a> {
 }
 
 /// 可被 `Token` 保存并按 Java 规则转换为字符串的值。
+/// 对应 Java 语义：`Token` 的 Rust 侧类型 `JavaTokenValue`。
 pub trait JavaTokenValue {
     /// 执行 Java `Object#toString()` 等价操作。
     ///
@@ -42,6 +44,7 @@ impl<T: JavaTokenValue> JavaTokenValue for Arc<T> {
 
 /// `Token` 操作中可观察的 Java 异常。
 #[derive(Debug, Error, Eq, PartialEq)]
+/// 对应 Java 语义：`Token` 的 Rust 侧类型 `TokenError`。
 pub enum TokenError {
     /// 对 null String 或 null token 值调用实例方法。
     #[error("")]
@@ -88,6 +91,7 @@ impl TokenError {
     /// # 返回
     /// 保留类别和消息的错误。
     #[must_use]
+    /// 对应 Java 语义：`Token` 的 `runtime` 行为（Rust 侧辅助/私有路径）。
     pub fn runtime(exception_class_name: impl Into<String>, message: impl Into<String>) -> Self {
         Self::Runtime {
             exception_class_name: exception_class_name.into(),

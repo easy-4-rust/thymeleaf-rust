@@ -16,6 +16,7 @@ pub struct TemporalObjects;
 
 /// Java `z` pattern 的通用时区名：带偏移类型保留偏移（UTC → "Z"、否则
 /// "+HH:MM"）；其余在默认 ZoneId 下取 UTC → "Z"、命名时区取缩写。
+/// 对应 Java 语义：`TemporalObjects` 的 `java_short_zone` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn java_short_zone(target: &JavaTemporal, default_zone: &Tz) -> String {
     match target {
         JavaTemporal::OffsetDateTime(value) => fixed_offset_zone(value.offset()),
@@ -24,6 +25,7 @@ pub(crate) fn java_short_zone(target: &JavaTemporal, default_zone: &Tz) -> Strin
         _ => tz_zone(*default_zone),
     }
 }
+/// 对应 Java 语义：`TemporalObjects` 的 `fixed_offset_zone` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn fixed_offset_zone(offset: &chrono::FixedOffset) -> String {
     if offset.local_minus_utc() == 0 {
@@ -36,6 +38,7 @@ pub(crate) fn fixed_offset_zone(offset: &chrono::FixedOffset) -> String {
             .to_string()
     }
 }
+/// 对应 Java 语义：`TemporalObjects` 的 `tz_zone` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn tz_zone(zone: Tz) -> String {
     if zone == Tz::UTC {
@@ -50,6 +53,7 @@ pub(crate) fn tz_zone(zone: Tz) -> String {
 
 impl TemporalObjects {
     /// 从模板动态值读取 Java `Temporal`。
+    /// 对应 Java: `TemporalObjects#temporal()`。
     pub fn temporal(value: Option<&TemplateValue>) -> Result<Option<&JavaTemporal>, TemporalError> {
         match value {
             None | Some(TemplateValue::Null) => Ok(None),
@@ -77,6 +81,7 @@ impl TemporalObjects {
     /// UTC → "Z"）；OffsetDateTime → `appendLocalized(LONG, MEDIUM)` +
     /// `appendLocalizedOffset(FULL)`（"GMT"/"GMT+HH:MM"，在 format 时追加）；
     /// OffsetTime → `HH:mm:ss` + 同样的偏移段。
+    /// 对应 Java: `TemporalObjects#formatterFor()`。
     pub fn formatter_for(
         target: &JavaTemporal,
         locale: &JavaLocale,
@@ -124,6 +129,7 @@ impl TemporalObjects {
     }
 
     /// 将缺失字段按 Java `zonedTime` 规则补齐并换算到可格式化时间。
+    /// 对应 Java: `TemporalObjects#zonedTime()`。
     pub fn zoned_time(
         target: &JavaTemporal,
         default_zone_id: Tz,
@@ -162,6 +168,7 @@ impl TemporalObjects {
     }
 
     /// 读取日期字段；目标不支持该字段时返回 Java 式错误。
+    /// 对应 Java 语义：`TemporalObjects` 的 `date_fields` 行为（Rust 侧辅助/私有路径）。
     pub fn date_fields(target: &JavaTemporal) -> Result<(i32, u32, u32, u32), TemporalError> {
         let date = match target {
             JavaTemporal::LocalDate(value) => *value,
@@ -183,6 +190,7 @@ impl TemporalObjects {
     }
 
     /// 读取时间字段；目标不支持该字段时返回 Java 式错误。
+    /// 对应 Java 语义：`TemporalObjects` 的 `time_fields` 行为（Rust 侧辅助/私有路径）。
     pub fn time_fields(target: &JavaTemporal) -> Result<(u32, u32, u32, u32), TemporalError> {
         let time = match target {
             JavaTemporal::LocalTime(value) | JavaTemporal::OffsetTime(value, _) => *value,
@@ -196,6 +204,7 @@ impl TemporalObjects {
 
     /// 返回 temporal 自身固定偏移秒数；无偏移类型返回默认时区当前偏移。
     #[must_use]
+    /// 对应 Java 语义：`TemporalObjects` 的 `offset_seconds` 行为（Rust 侧辅助/私有路径）。
     pub fn offset_seconds(target: &JavaTemporal, default_zone_id: Tz) -> i32 {
         match target {
             JavaTemporal::OffsetDateTime(value) => value.offset().local_minus_utc(),
@@ -242,6 +251,7 @@ fn localized_datetime_pattern(language: &str) -> String {
 /// Java temporal 规范化或字段访问错误。
 #[derive(Debug, Error)]
 #[error("{message}")]
+/// 对应 Java 语义：`TemporalObjects` 的 Rust 侧类型 `TemporalError`。
 pub struct TemporalError {
     message: String,
 }

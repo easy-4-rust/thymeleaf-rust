@@ -31,6 +31,7 @@ impl StandardExpressions {
     ///
     /// # 错误
     /// 属性不存在、为 Java null 或运行时类型不正确时返回模板处理错误。
+    /// 对应 Java: `StandardExpressions#getExpressionParser()`。
     pub fn get_expression_parser(
         configuration: &dyn IEngineConfiguration,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpressionParser>> {
@@ -53,6 +54,7 @@ impl StandardExpressions {
     ///
     /// # 错误
     /// 属性不存在、为 Java null 或运行时类型不正确时返回模板处理错误。
+    /// 对应 Java: `StandardExpressions#getVariableExpressionEvaluator()`。
     pub fn get_variable_expression_evaluator(
         configuration: &dyn IEngineConfiguration,
     ) -> StandardExpressionResult<Arc<dyn IStandardVariableExpressionEvaluator>> {
@@ -75,6 +77,7 @@ impl StandardExpressions {
     ///
     /// # 错误
     /// 属性不存在、为 Java null 或运行时类型不正确时返回模板处理错误。
+    /// 对应 Java: `StandardExpressions#getConversionService()`。
     pub fn get_conversion_service(
         configuration: &dyn IEngineConfiguration,
     ) -> StandardExpressionResult<Arc<dyn IStandardConversionService>> {

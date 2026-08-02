@@ -26,6 +26,7 @@ impl StandardInlineHTMLTagProcessor {
     pub const ATTR_NAME: &'static str = "inline";
 
     /// 创建 HTML 模式 `th:inline` Processor。
+    /// 对应 Java 语义：`StandardInlineHTMLTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(dialect_prefix: Option<JavaString>) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardTextInlineSettingTagProcessor::new(

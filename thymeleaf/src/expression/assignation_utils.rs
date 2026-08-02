@@ -16,6 +16,7 @@ pub struct AssignationUtils;
 
 impl AssignationUtils {
     /// 预处理并解析逗号分隔的赋值序列。
+    /// 对应 Java: `AssignationUtils#parseAssignationSequence()`。
     pub fn parse_assignation_sequence(
         context: &dyn IExpressionContext,
         input: Option<&JavaString>,
@@ -48,6 +49,7 @@ impl AssignationUtils {
     }
 
     /// 不执行预处理和缓存，直接解析赋值序列。
+    /// 对应 Java: `AssignationUtils#internalParseAssignationSequence()`。
     pub(crate) fn internal_parse_assignation_sequence(
         input: &JavaString,
         allow_parameters_without_value: bool,

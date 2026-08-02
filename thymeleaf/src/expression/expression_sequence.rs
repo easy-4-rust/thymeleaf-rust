@@ -18,6 +18,7 @@ pub struct ExpressionSequence {
 
 impl ExpressionSequence {
     /// 保存原列表身份，并在构造瞬间拒绝 null 列表或 null 元素。
+    /// 对应 Java 语义：`ExpressionSequence` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         expressions: Option<Arc<RwLock<Vec<Option<Arc<dyn IStandardExpression>>>>>>,
     ) -> Result<Self, ValidateError> {
@@ -36,6 +37,7 @@ impl ExpressionSequence {
     }
 
     /// 返回 Java unmodifiableList 背后的实时只读视图。
+    /// 对应 Java: `ExpressionSequence#getExpressions()`。
     pub fn get_expressions(
         &self,
     ) -> RwLockReadGuard<'_, Vec<Option<Arc<dyn IStandardExpression>>>> {
@@ -43,11 +45,13 @@ impl ExpressionSequence {
     }
 
     /// 返回当前 backing list 大小。
+    /// 对应 Java: `ExpressionSequence#size()`。
     pub fn size(&self) -> i32 {
         i32::try_from(read_recovering_poison(&self.expressions).len()).unwrap_or(i32::MAX)
     }
 
     /// 返回逗号连接且不插入空格的当前字符串表示。
+    /// 对应 Java: `ExpressionSequence#getStringRepresentation()`。
     pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
         let expressions = read_recovering_poison(&self.expressions);
         let mut units = Vec::new();

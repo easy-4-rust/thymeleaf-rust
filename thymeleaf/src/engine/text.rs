@@ -46,11 +46,13 @@ impl Text {
     }
 
     /// 判断文本内容是否全部为 Java whitespace。
+    /// 对应 Java 语义：Java 接口/超类方法 `isWhitespace()` 的 Rust 移植（`Text` 继承路径）。
     pub fn is_whitespace(&self) -> Result<bool, TextUtilsError> {
         self.textual_event.is_whitespace()
     }
 
     /// 判断文本是否含可执行内联表达式边界。
+    /// 对应 Java 语义：Java 接口/超类方法 `isInlineable()` 的 Rust 移植（`Text` 继承路径）。
     pub fn is_inlineable(&self) -> Result<bool, TextUtilsError> {
         self.textual_event.is_inlineable()
     }

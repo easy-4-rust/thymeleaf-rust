@@ -17,6 +17,7 @@ pub struct StandardCSSInliner(AbstractStandardInliner);
 
 impl StandardCSSInliner {
     /// 创建并绑定配置中 CSS Serializer 的内联器。
+    /// 对应 Java 语义：`StandardCSSInliner` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         configuration: &dyn IEngineConfiguration,
     ) -> Result<Self, TemplateProcessingException> {

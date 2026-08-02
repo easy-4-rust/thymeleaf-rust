@@ -81,6 +81,7 @@ impl AbstractElementTag {
 
     /// 返回元素元数据 Definition。
     #[must_use]
+    /// 对应 Java: `AbstractElementTag#getElementDefinition()`。
     pub fn get_element_definition(&self) -> &ElementDefinition {
         self.element_definition.as_element_definition()
     }

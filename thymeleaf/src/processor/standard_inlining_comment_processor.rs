@@ -30,6 +30,7 @@ impl StandardInliningCommentProcessor {
     pub const PRECEDENCE: i32 = 1000;
 
     /// 创建指定模板模式的内联 Processor。
+    /// 对应 Java 语义：`StandardInliningCommentProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(template_mode: TemplateMode) -> Result<Self, TemplateProcessingException> {
         let callback: CommentCallback = Box::new(|context, comment, structure_handler| {
             let Some(inliner) = context.get_inliner() else {

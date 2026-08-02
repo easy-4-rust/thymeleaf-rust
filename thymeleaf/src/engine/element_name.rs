@@ -6,6 +6,7 @@ use crate::util::{JavaHashCode, JavaString};
 
 /// `ElementName` 的具体 Java 子类标识。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`ElementName` 的 Rust 侧类型 `ElementNameKind`。
 pub enum ElementNameKind {
     /// `HTMLElementName`。
     Html,
@@ -66,6 +67,7 @@ pub struct ElementName {
 }
 
 impl ElementName {
+    /// 对应 Java 语义：`ElementName` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn new(
         kind: ElementNameKind,
         prefix: Option<JavaString>,
@@ -123,6 +125,7 @@ impl ElementName {
     ///
     /// 所有调用共享同一个可写数组，等价于 Java 直接返回字段引用。
     #[must_use]
+    /// 对应 Java: `ElementName#getCompleteElementNames()`。
     pub fn get_complete_element_names(&self) -> Arc<RwLock<Vec<Option<JavaString>>>> {
         Arc::clone(&self.complete_element_names)
     }
@@ -138,6 +141,7 @@ impl ElementName {
     /// # 错误
     ///
     /// complete names 数组为空时保留 Java 首元素访问越界异常。
+    /// 对应 Java 语义：`ElementName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, ElementNameError> {
         let names = read_recovering_poison(&self.complete_element_names);
         let Some(first) = names.first() else {

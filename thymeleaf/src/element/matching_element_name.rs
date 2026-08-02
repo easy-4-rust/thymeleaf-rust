@@ -7,6 +7,7 @@ use crate::util::{JavaString, java_case_fold_unit};
 
 /// `MatchingElementName` 构造、匹配和显示错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`MatchingElementName` 的 Rust 侧类型 `MatchingElementNameError`。
 pub enum MatchingElementNameError {
     /// Java `Validate.notNull` 或类型/模式不匹配。
     IllegalArgument(&'static str),
@@ -54,6 +55,7 @@ impl MatchingElementName {
     /// # 错误
     ///
     /// mode/name 为 null 或名称具体子类与 HTML/XML/文本模式不一致时返回参数错误。
+    /// 对应 Java: `MatchingElementName#forElementName()`。
     pub fn for_element_name(
         template_mode: Option<TemplateMode>,
         matching_element_name: Option<ElementNameValue>,
@@ -75,6 +77,7 @@ impl MatchingElementName {
     }
 
     /// 创建匹配指定可空 prefix 下所有元素的规则。
+    /// 对应 Java: `MatchingElementName#forAllElementsWithPrefix()`。
     pub fn for_all_elements_with_prefix(
         template_mode: Option<TemplateMode>,
         prefix: Option<JavaString>,
@@ -88,6 +91,7 @@ impl MatchingElementName {
     }
 
     /// 创建匹配指定模式全部元素的规则。
+    /// 对应 Java: `MatchingElementName#forAllElements()`。
     pub fn for_all_elements(
         template_mode: Option<TemplateMode>,
     ) -> Result<Self, MatchingElementNameError> {
@@ -128,6 +132,7 @@ impl MatchingElementName {
     /// # 错误
     ///
     /// 输入名称为 null 时返回 Java `IllegalArgumentException` 对应错误。
+    /// 对应 Java: `MatchingElementName#matches()`。
     pub fn matches(
         &self,
         element_name: Option<&ElementNameValue>,
@@ -163,6 +168,7 @@ impl MatchingElementName {
     /// # 错误
     ///
     /// 精确名称的 complete names 数组被外部破坏时传播对应错误。
+    /// 对应 Java 语义：`MatchingElementName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, MatchingElementNameError> {
         if let Some(name) = self.matching_element_name.as_ref() {
             return name

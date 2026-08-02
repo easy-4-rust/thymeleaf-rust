@@ -17,6 +17,7 @@ use super::processor_execution_vars::ProcessorExecutionVars;
     dead_code,
     reason = "完整保留 Java IGatheringModelProcessable 内部 SPI"
 )]
+/// 对应 Java: `IGatheringModelProcessable`。
 pub(crate) trait IGatheringModelProcessable: IEngineProcessable {
     /// 判断对应元素的事件边界是否已经完整收集。
     fn is_gathering_finished(&self) -> bool;

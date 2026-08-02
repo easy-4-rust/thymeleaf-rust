@@ -89,6 +89,7 @@ impl IProcessor for AbstractProcessor {
 }
 
 /// Rust 组合式抽象 Processor 共用的基础状态与异常装饰器。
+/// 对应 Java 语义：`AbstractProcessor` 的 Rust 侧类型 `AbstractProcessorAdapter`。
 pub(crate) struct AbstractProcessorAdapter<F> {
     processor: AbstractProcessor,
     processor_class_name: &'static str,
@@ -97,6 +98,7 @@ pub(crate) struct AbstractProcessorAdapter<F> {
 
 impl<F> AbstractProcessorAdapter<F> {
     /// 创建带 Java 具体类名和 `doProcess` 回调的适配器。
+    /// 对应 Java 语义：`AbstractProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_mode: Option<TemplateMode>,
         precedence: i32,
@@ -111,6 +113,7 @@ impl<F> AbstractProcessorAdapter<F> {
     }
 
     /// 执行具体 Processor 回调，并按 Java 抽象基类规则补充或包装异常位置。
+    /// 对应 Java 语义：Java 接口/超类方法 `execute()` 的 Rust 移植（`AbstractProcessor` 继承路径）。
     pub(crate) fn execute(
         &self,
         event: &dyn ITemplateEvent,
@@ -120,6 +123,7 @@ impl<F> AbstractProcessorAdapter<F> {
     }
 
     /// 执行可能没有首事件可用于异常定位的模型 Processor。
+    /// 对应 Java 语义：`AbstractProcessor` 的 `execute_optional` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn execute_optional(
         &self,
         event: Option<&dyn ITemplateEvent>,
@@ -150,10 +154,12 @@ impl<F> AbstractProcessorAdapter<F> {
             }
         }
     }
+/// 对应 Java 语义：`AbstractProcessor` 的 `template_mode` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn template_mode(&self) -> Option<TemplateMode> {
         IProcessor::get_template_mode(&self.processor)
     }
+/// 对应 Java 语义：`AbstractProcessor` 的 `precedence` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn precedence(&self) -> i32 {
         IProcessor::get_precedence(&self.processor)

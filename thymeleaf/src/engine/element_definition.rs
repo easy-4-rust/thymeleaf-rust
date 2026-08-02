@@ -10,6 +10,7 @@ use super::{ElementNameError, ElementNameValue};
 
 /// `ElementDefinition` 的具体 Java 子类标识。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`ElementDefinition` 的 Rust 侧类型 `ElementDefinitionKind`。
 pub enum ElementDefinitionKind {
     /// `HTMLElementDefinition`。
     Html,
@@ -21,6 +22,7 @@ pub enum ElementDefinitionKind {
 
 /// 元素定义构造和显示错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`ElementDefinition` 的 Rust 侧类型 `ElementDefinitionError`。
 pub enum ElementDefinitionError {
     /// 元素名为 null。
     NullElementName,
@@ -75,6 +77,7 @@ pub struct ElementDefinition {
 }
 
 impl ElementDefinition {
+    /// 对应 Java 语义：`ElementDefinition` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn new(
         kind: ElementDefinitionKind,
         element_name: Option<ElementNameValue>,
@@ -122,12 +125,14 @@ impl ElementDefinition {
 
     /// 返回引擎内部排序的固定 Processor 快照。
     #[must_use]
+    /// 对应 Java 语义：`ElementDefinition` 的 `sorted_associated_processors` 行为（Rust 侧辅助/私有路径）。
     pub fn sorted_associated_processors(&self) -> &[Arc<dyn IElementProcessor>] {
         &self.associated_processors
     }
 
     /// 判断两个定义是否属于同一具体类且元素名相等。
     #[must_use]
+    /// 对应 Java 语义：`ElementDefinition` 的 `equals_java` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_java(&self, other: &Self) -> bool {
         std::ptr::eq(self, other)
             || (self.kind == other.kind
@@ -136,6 +141,7 @@ impl ElementDefinition {
 
     /// 返回元素名缓存哈希。
     #[must_use]
+    /// 对应 Java: `ElementDefinition#hashCode()`。
     pub fn hash_code(&self) -> i32 {
         self.element_name.as_element_name().hash_code()
     }
@@ -145,6 +151,7 @@ impl ElementDefinition {
     /// # 错误
     ///
     /// complete names 数组为空时传播对应错误。
+    /// 对应 Java 语义：`ElementDefinition` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, ElementDefinitionError> {
         self.element_name
             .as_element_name()

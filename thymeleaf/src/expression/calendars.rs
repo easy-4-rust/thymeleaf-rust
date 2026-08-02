@@ -25,6 +25,7 @@ impl Calendars {
 
     /// 创建 Calendar；时间字段遵守 Java `DateUtils#create` 的成组规则。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java: `Calendars#create()`。
     pub fn create(
         &self,
         year: Option<i32>,
@@ -51,17 +52,20 @@ impl Calendars {
 
     /// 返回指定时区的当前 Calendar。
     #[must_use]
+    /// 对应 Java: `Calendars#createNow()`。
     pub fn create_now(&self, time_zone: Option<&str>) -> JavaDate {
         DateUtils::create_now(time_zone, Some(&self.locale))
     }
 
     /// 返回指定时区当天零点 Calendar。
     #[must_use]
+    /// 对应 Java: `Calendars#createToday()`。
     pub fn create_today(&self, time_zone: Option<&str>) -> JavaDate {
         DateUtils::create_today(time_zone, Some(&self.locale))
     }
 
     /// 使用默认长格式或指定 pattern 格式化 Calendar。
+    /// 对应 Java: `Calendars#format()`。
     pub fn format(
         &self,
         target: Option<&JavaDate>,
@@ -226,6 +230,7 @@ impl TemplateObject for Calendars {
 
 /// `#calendars` 创建、类型转换和格式化错误。
 #[derive(Debug)]
+/// 对应 Java 语义：`Calendars` 的 Rust 侧类型 `CalendarsError`。
 pub struct CalendarsError {
     message: String,
 }

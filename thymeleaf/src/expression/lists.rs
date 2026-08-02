@@ -205,6 +205,7 @@ impl Lists {
     ///
     /// # 错误
     /// 传播 Comparator 或列表实现错误。
+    /// 对应 Java 语义：`Lists` 的 `sort_with_required_comparator` 行为（Rust 侧辅助/私有路径）。
     pub fn sort_with_required_comparator<T>(
         &self,
         list: Option<&dyn ListView<T>>,

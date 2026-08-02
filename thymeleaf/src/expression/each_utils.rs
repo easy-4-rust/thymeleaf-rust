@@ -16,6 +16,7 @@ pub struct EachUtils;
 
 impl EachUtils {
     /// 预处理、缓存并解析迭代声明。
+    /// 对应 Java: `EachUtils#parseEach()`。
     pub fn parse_each(
         context: &dyn IExpressionContext,
         input: Option<&JavaString>,

@@ -7,6 +7,7 @@ use crate::util::{JavaString, java_case_fold_unit};
 
 /// `MatchingAttributeName` 构造、匹配和显示错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`MatchingAttributeName` 的 Rust 侧类型 `MatchingAttributeNameError`。
 pub enum MatchingAttributeNameError {
     /// Java `Validate.notNull` 或类型/模式不匹配。
     IllegalArgument(&'static str),
@@ -52,6 +53,7 @@ impl MatchingAttributeName {
     /// # 错误
     ///
     /// mode/name 为 null 或名称具体子类与模板模式不一致时返回参数错误。
+    /// 对应 Java: `MatchingAttributeName#forAttributeName()`。
     pub fn for_attribute_name(
         template_mode: Option<TemplateMode>,
         matching_attribute_name: Option<AttributeNameValue>,
@@ -73,6 +75,7 @@ impl MatchingAttributeName {
     }
 
     /// 创建匹配指定可空 prefix 下所有属性的规则。
+    /// 对应 Java: `MatchingAttributeName#forAllAttributesWithPrefix()`。
     pub fn for_all_attributes_with_prefix(
         template_mode: Option<TemplateMode>,
         prefix: Option<JavaString>,
@@ -86,6 +89,7 @@ impl MatchingAttributeName {
     }
 
     /// 创建匹配指定模式全部属性的规则。
+    /// 对应 Java: `MatchingAttributeName#forAllAttributes()`。
     pub fn for_all_attributes(
         template_mode: Option<TemplateMode>,
     ) -> Result<Self, MatchingAttributeNameError> {
@@ -126,6 +130,7 @@ impl MatchingAttributeName {
     /// # 错误
     ///
     /// 输入为 null 或精确名称数组被外部破坏时返回 Java 对应错误。
+    /// 对应 Java: `MatchingAttributeName#matches()`。
     pub fn matches(
         &self,
         attribute_name: Option<&AttributeNameValue>,
@@ -167,6 +172,7 @@ impl MatchingAttributeName {
     /// # 错误
     ///
     /// 精确属性名数组被外部破坏时传播对应错误。
+    /// 对应 Java 语义：`MatchingAttributeName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, MatchingAttributeNameError> {
         if let Some(name) = self.matching_attribute_name.as_ref() {
             return name

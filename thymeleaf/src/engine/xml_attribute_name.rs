@@ -11,6 +11,7 @@ pub struct XMLAttributeName {
 }
 
 impl XMLAttributeName {
+    /// 对应 Java: `XMLAttributeName#forName()`。
     pub(super) fn for_name(
         prefix: Option<JavaString>,
         attribute_name: Option<JavaString>,

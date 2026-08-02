@@ -47,6 +47,7 @@ impl StandardConditionalFixedValueTagProcessor {
     ];
 
     /// 创建指定条件属性 Processor。
+    /// 对应 Java 语义：`StandardConditionalFixedValueTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         dialect_prefix: Option<JavaString>,
         attr_name: JavaString,

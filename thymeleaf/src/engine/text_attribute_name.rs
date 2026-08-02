@@ -11,6 +11,7 @@ pub struct TextAttributeName {
 }
 
 impl TextAttributeName {
+    /// 对应 Java: `TextAttributeName#forName()`。
     pub(super) fn for_name(
         prefix: Option<JavaString>,
         attribute_name: Option<JavaString>,

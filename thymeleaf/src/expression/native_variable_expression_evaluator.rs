@@ -42,6 +42,7 @@ pub struct NativeVariableExpressionEvaluator {
 impl NativeVariableExpressionEvaluator {
     /// 创建求值器并决定是否优先启用点分属性快速路径。
     #[must_use]
+    /// 对应 Java 语义：`OGNLVariableExpressionEvaluator` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(apply_ognl_shortcuts: bool) -> Self {
         Self {
             apply_ognl_shortcuts,
@@ -51,6 +52,7 @@ impl NativeVariableExpressionEvaluator {
 
     /// 使用宿主提供的静态成员与构造器运行时创建求值器。
     #[must_use]
+    /// 对应 Java 语义：`OGNLVariableExpressionEvaluator` 的 `with_runtime` 行为（Rust 侧辅助/私有路径）。
     pub fn with_runtime(apply_ognl_shortcuts: bool, runtime: Arc<dyn OgnlRuntime>) -> Self {
         Self {
             apply_ognl_shortcuts,

@@ -22,6 +22,7 @@ pub struct SwitchStructure {
 
 impl SwitchStructure {
     /// 创建尚未命中的 switch 状态。
+    /// 对应 Java 语义：`StandardSwitchTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(expression: Arc<dyn IStandardExpression>) -> Self {
         Self {
             expression,
@@ -29,10 +30,12 @@ impl SwitchStructure {
         }
     }
     /// 返回 switch 表达式共享身份。
+    /// 对应 Java: `StandardSwitchTagProcessor#getExpression()`。
     pub fn get_expression(&self) -> Arc<dyn IStandardExpression> {
         Arc::clone(&self.expression)
     }
     /// 判断是否已有 case 命中。
+    /// 对应 Java: `StandardSwitchTagProcessor#isExecuted()`。
     pub fn is_executed(&self) -> bool {
         *self
             .executed
@@ -40,6 +43,7 @@ impl SwitchStructure {
             .unwrap_or_else(std::sync::PoisonError::into_inner)
     }
     /// 设置 case 命中状态。
+    /// 对应 Java: `StandardSwitchTagProcessor#setExecuted()`。
     pub fn set_executed(&self, executed: bool) {
         *self
             .executed
@@ -75,6 +79,7 @@ impl StandardSwitchTagProcessor {
     pub const SWITCH_VARIABLE_NAME: &'static str = "%%SWITCH_EXPR%%";
 
     /// 创建 Processor。
+    /// 对应 Java 语义：`StandardSwitchTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

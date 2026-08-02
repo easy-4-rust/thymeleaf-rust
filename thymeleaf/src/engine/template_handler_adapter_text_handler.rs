@@ -39,6 +39,7 @@ impl TemplateHandlerAdapterTextHandler {
     /// `configuration` 持有 Java 中 ElementDefinitions 与 AttributeDefinitions 两个
     /// repository 的共同所有者，避免 Rust 借用越过 parser handler 生命周期。
     #[must_use]
+    /// 对应 Java 语义：`TemplateHandlerAdapterTextHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_name: Option<JavaString>,
         template_handler: Box<dyn ITemplateHandler>,

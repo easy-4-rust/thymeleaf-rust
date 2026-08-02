@@ -101,6 +101,7 @@ pub(crate) struct ThrottledTemplateWriter {
 
 impl ThrottledTemplateWriter {
     /// 创建尚未绑定输出的节流 Writer。
+    /// 对应 Java 语义：`ThrottledTemplateWriter` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_name: String,
         flow_controller: Arc<Mutex<TemplateFlowController>>,
@@ -114,6 +115,7 @@ impl ThrottledTemplateWriter {
     }
 
     /// 绑定字符型 Writer；已选择字节模式时返回模板输出异常。
+    /// 对应 Java 语义：`ThrottledTemplateWriter` 的 `set_output_writer` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_output_writer(
         &mut self,
         writer: Box<dyn JavaWriter>,
@@ -143,6 +145,7 @@ impl ThrottledTemplateWriter {
     }
 
     /// 绑定字节型输出并配置字符集和首轮最大字节数。
+    /// 对应 Java 语义：Java 接口/超类方法 `setOutputStream()` 的 Rust 移植（`ThrottledTemplateWriter` 继承路径）。
     pub(crate) fn set_output_stream(
         &mut self,
         output_stream: Box<dyn Write + Send>,
@@ -185,6 +188,7 @@ impl ThrottledTemplateWriter {
     }
 
     /// 允许下一轮最多写出指定数量的字符或字节。
+    /// 对应 Java: `ThrottledTemplateWriter#allow()`。
     pub(crate) fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
         match self.adapter_mut()? {
             ThrottledTemplateWriterAdapterMode::Characters(adapter) => adapter.allow(limit),
@@ -193,6 +197,7 @@ impl ThrottledTemplateWriter {
     }
 
     /// 写出 UTF-16 内容，并保持 Java 字符计数或编码后的字节计数。
+    /// 对应 Java 语义：`ThrottledTemplateWriter` 的 `write_utf16` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.flushable = true;
         match self.adapter_io_mut()? {
@@ -213,6 +218,7 @@ impl ThrottledTemplateWriter {
     }
 
     /// 刷新当前底层输出。
+    /// 对应 Java: `ThrottledTemplateWriter#flush()`。
     pub(crate) fn flush(&mut self) -> io::Result<()> {
         match self.adapter_io_mut()? {
             ThrottledTemplateWriterAdapterMode::Characters(adapter) => adapter.flush(),
@@ -231,6 +237,7 @@ impl ThrottledTemplateWriter {
     }
 
     /// 关闭当前底层输出。
+    /// 对应 Java: `ThrottledTemplateWriter#close()`。
     pub(crate) fn close(&mut self) -> io::Result<()> {
         match self.adapter_io_mut()? {
             ThrottledTemplateWriterAdapterMode::Characters(adapter) => adapter.close(),

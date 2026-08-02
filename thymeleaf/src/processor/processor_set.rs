@@ -16,6 +16,7 @@ use super::IProcessor;
 /// [`Arc::ptr_eq`] 去重。第三方 Processor 若在 Java 中覆盖 `equals`，可使用
 /// [`Self::insert_with`] 显式提供同一等价关系。
 #[derive(Default)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct ProcessorSet {
     entries: Vec<Option<Arc<dyn IProcessor>>>,
 }
@@ -96,6 +97,7 @@ impl ProcessorSet {
     ///
     /// 包含可选 `null` 元素在内的元素数量。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn len(&self) -> usize {
         self.entries.len()
     }
@@ -106,6 +108,7 @@ impl ProcessorSet {
     ///
     /// 没有任何元素时返回 `true`。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `isEmpty()` 的 Rust 移植（`None` 继承路径）。
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }

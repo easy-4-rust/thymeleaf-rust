@@ -27,6 +27,7 @@ pub struct ExpressionObjects {
 
 /// 创建或使用表达式对象容器时可能出现的结构错误。
 #[derive(Debug, Error, PartialEq, Eq)]
+/// 对应 Java 语义：`ExpressionObjects` 的 Rust 侧类型 `ExpressionObjectsError`。
 pub enum ExpressionObjectsError {
     /// Java `Validate.notNull` 对应错误。
     #[error("{message}")]

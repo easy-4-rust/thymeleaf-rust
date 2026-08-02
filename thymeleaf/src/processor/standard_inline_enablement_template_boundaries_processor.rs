@@ -44,6 +44,7 @@ impl StandardInlineEnablementTemplateBoundariesProcessor {
     pub const PRECEDENCE: i32 = 10;
 
     /// 创建指定模板模式的边界 Processor。
+    /// 对应 Java 语义：`StandardInlineEnablementTemplateBoundariesProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(template_mode: TemplateMode) -> Result<Self, TemplateProcessingException> {
         let start: StartCallback = Box::new(move |context, _start, structure_handler| {
             let inliner: Option<Arc<dyn IInliner>> = match template_mode {

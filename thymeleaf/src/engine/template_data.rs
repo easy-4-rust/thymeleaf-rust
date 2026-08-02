@@ -24,6 +24,7 @@ pub struct TemplateData {
 impl TemplateData {
     /// 原样保存五个构造参数。
     #[must_use]
+    /// 对应 Java 语义：`TemplateData` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template: Option<JavaString>,
         template_selectors: Option<Vec<JavaString>>,
@@ -54,12 +55,14 @@ impl TemplateData {
 
     /// 返回可空、保持原顺序的模板选择器。
     #[must_use]
+    /// 对应 Java: `TemplateData#getTemplateSelectors()`。
     pub fn get_template_selectors(&self) -> Option<&[JavaString]> {
         self.template_selectors.as_deref()
     }
 
     /// 返回可空模板资源。
     #[must_use]
+    /// 对应 Java: `TemplateData#getTemplateResource()`。
     pub fn get_template_resource(&self) -> Option<&dyn ITemplateResource> {
         self.template_resource.as_deref()
     }
@@ -80,6 +83,7 @@ impl TemplateData {
 
     /// 返回可空缓存有效性对象。
     #[must_use]
+    /// 对应 Java: `TemplateData#getValidity()`。
     pub fn get_validity(&self) -> Option<&dyn ICacheEntryValidity> {
         self.cache_validity.as_deref()
     }

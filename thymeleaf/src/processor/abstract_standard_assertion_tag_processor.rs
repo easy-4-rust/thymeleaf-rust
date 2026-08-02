@@ -24,6 +24,7 @@ pub struct AbstractStandardAssertionTagProcessor {
 
 impl AbstractStandardAssertionTagProcessor {
     /// 创建断言属性 Processor；空或全空白属性值不执行任何断言。
+    /// 对应 Java 语义：`AbstractStandardAssertionTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

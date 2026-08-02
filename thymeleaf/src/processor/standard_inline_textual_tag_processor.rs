@@ -26,6 +26,7 @@ impl StandardInlineTextualTagProcessor {
     pub const ATTR_NAME: &'static str = "inline";
 
     /// 创建文本模板模式 `th:inline` Processor。
+    /// 对应 Java 语义：`StandardInlineTextualTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

@@ -88,6 +88,7 @@ impl StandardCacheManager {
 
     /// 返回模板缓存名称。
     #[must_use]
+    /// 对应 Java: `StandardCacheManager#getTemplateCacheName()`。
     pub fn get_template_cache_name(&self) -> &JavaString {
         &self.template_cache_name
     }
@@ -112,12 +113,14 @@ impl StandardCacheManager {
 
     /// 返回模板缓存 logger 名；`None` 使用引擎默认 logger 路径。
     #[must_use]
+    /// 对应 Java: `StandardCacheManager#getTemplateCacheLoggerName()`。
     pub fn get_template_cache_logger_name(&self) -> Option<&JavaString> {
         self.template_cache_logger_name.as_ref()
     }
 
     /// 返回模板缓存有效性检查器。
     #[must_use]
+    /// 对应 Java: `StandardCacheManager#getTemplateCacheValidityChecker()`。
     pub fn get_template_cache_validity_checker(
         &self,
     ) -> Option<&dyn ICacheEntryValidityChecker<TemplateCacheKey, TemplateModel>> {
@@ -126,6 +129,7 @@ impl StandardCacheManager {
 
     /// 返回表达式缓存名称。
     #[must_use]
+    /// 对应 Java: `StandardCacheManager#getExpressionCacheName()`。
     pub fn get_expression_cache_name(&self) -> &JavaString {
         &self.expression_cache_name
     }
@@ -150,12 +154,14 @@ impl StandardCacheManager {
 
     /// 返回表达式缓存 logger 名；`None` 使用引擎默认 logger 路径。
     #[must_use]
+    /// 对应 Java: `StandardCacheManager#getExpressionCacheLoggerName()`。
     pub fn get_expression_cache_logger_name(&self) -> Option<&JavaString> {
         self.expression_cache_logger_name.as_ref()
     }
 
     /// 返回表达式缓存有效性检查器。
     #[must_use]
+    /// 对应 Java: `StandardCacheManager#getExpressionCacheValidityChecker()`。
     pub fn get_expression_cache_validity_checker(
         &self,
     ) -> Option<&dyn ICacheEntryValidityChecker<ExpressionCacheKey, dyn Any + Send + Sync>> {
@@ -194,6 +200,7 @@ impl StandardCacheManager {
     }
 
     /// 设置模板缓存有效性检查器。`None` 表示每次读取不做额外检查。
+    /// 对应 Java: `StandardCacheManager#setTemplateCacheValidityChecker()`。
     pub fn set_template_cache_validity_checker(
         &mut self,
         template_cache_validity_checker: Option<
@@ -243,6 +250,7 @@ impl StandardCacheManager {
     }
 
     /// 设置表达式缓存有效性检查器。
+    /// 对应 Java: `StandardCacheManager#setExpressionCacheValidityChecker()`。
     pub fn set_expression_cache_validity_checker(
         &mut self,
         expression_cache_validity_checker: Option<

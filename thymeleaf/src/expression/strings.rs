@@ -23,11 +23,13 @@ impl Strings {
 
     /// 执行 null-safe 文本转换。
     #[must_use]
+    /// 对应 Java: `Strings#toString()`。
     pub fn to_string(&self, target: Option<&TemplateValue>) -> Option<JavaString> {
         value_as_string(target)
     }
 
     /// 将文本缩略到最大 UTF-16 长度。
+    /// 对应 Java: `Strings#abbreviate()`。
     pub fn abbreviate(
         &self,
         target: Option<&TemplateValue>,
@@ -41,6 +43,7 @@ impl Strings {
 
     /// 比较两个对象的 `toString()` 文本。
     #[must_use]
+    /// 对应 Java: `Strings#equals()`。
     pub fn equals(&self, first: Option<&TemplateValue>, second: Option<&TemplateValue>) -> bool {
         StringUtils::equals(
             value_as_string(first).as_ref(),
@@ -50,6 +53,7 @@ impl Strings {
 
     /// 忽略大小写比较两个对象文本。
     #[must_use]
+    /// 对应 Java: `Strings#equalsIgnoreCase()`。
     pub fn equals_ignore_case(
         &self,
         first: Option<&TemplateValue>,
@@ -62,6 +66,7 @@ impl Strings {
     }
 
     /// 判断目标是否包含片段。
+    /// 对应 Java: `Strings#contains()`。
     pub fn contains(
         &self,
         target: Option<&TemplateValue>,
@@ -74,6 +79,7 @@ impl Strings {
     }
 
     /// 按当前 Locale 忽略大小写判断包含关系。
+    /// 对应 Java: `Strings#containsIgnoreCase()`。
     pub fn contains_ignore_case(
         &self,
         target: Option<&TemplateValue>,
@@ -87,6 +93,7 @@ impl Strings {
     }
 
     /// 判断目标文本是否以前缀开始。
+    /// 对应 Java: `Strings#startsWith()`。
     pub fn starts_with(
         &self,
         target: Option<&TemplateValue>,
@@ -99,6 +106,7 @@ impl Strings {
     }
 
     /// 判断目标文本是否以后缀结束。
+    /// 对应 Java: `Strings#endsWith()`。
     pub fn ends_with(
         &self,
         target: Option<&TemplateValue>,
@@ -111,6 +119,7 @@ impl Strings {
     }
 
     /// 返回 `[start,end)` 子串。
+    /// 对应 Java: `Strings#substring()`。
     pub fn substring(
         &self,
         target: Option<&TemplateValue>,
@@ -125,6 +134,7 @@ impl Strings {
     }
 
     /// 返回从 `start` 到结尾的子串。
+    /// 对应 Java 语义：`Strings` 的 `substring_from` 行为（Rust 侧辅助/私有路径）。
     pub fn substring_from(
         &self,
         target: Option<&TemplateValue>,
@@ -138,11 +148,13 @@ impl Strings {
 
     /// 判断目标为 null、空或全 whitespace。
     #[must_use]
+    /// 对应 Java: `Strings#isEmpty()`。
     pub fn is_empty(&self, target: Option<&TemplateValue>) -> bool {
         StringUtils::is_empty_or_whitespace(value_as_string(target).as_ref())
     }
 
     /// 使用当前 Locale 转为大写。
+    /// 对应 Java: `Strings#toUpperCase()`。
     pub fn to_upper_case(
         &self,
         target: Option<&TemplateValue>,
@@ -154,6 +166,7 @@ impl Strings {
     }
 
     /// 使用当前 Locale 转为小写。
+    /// 对应 Java: `Strings#toLowerCase()`。
     pub fn to_lower_case(
         &self,
         target: Option<&TemplateValue>,
@@ -449,6 +462,7 @@ impl TemplateObject for Strings {
 
 /// `#strings` 动态方法调用错误。
 #[derive(Debug)]
+/// 对应 Java 语义：`Strings` 的 Rust 侧类型 `StringsError`。
 pub struct StringsError {
     message: String,
 }

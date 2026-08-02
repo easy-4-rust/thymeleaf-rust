@@ -12,6 +12,7 @@ pub struct FragmentSignature {
 
 impl FragmentSignature {
     /// 创建签名；参数列表保留原始共享身份，与 Java 直接保存 List 引用一致。
+    /// 对应 Java 语义：`FragmentSignature` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         fragment_name: Option<JavaString>,
         parameter_names: Option<Arc<RwLock<Vec<Option<JavaString>>>>>,
@@ -28,11 +29,13 @@ impl FragmentSignature {
     }
 
     /// 返回 Fragment 名称。
+    /// 对应 Java: `FragmentSignature#getFragmentName()`。
     pub fn get_fragment_name(&self) -> &JavaString {
         &self.fragment_name
     }
 
     /// 判断当前共享参数列表非 null 且非空。
+    /// 对应 Java: `FragmentSignature#hasParameters()`。
     pub fn has_parameters(&self) -> bool {
         self.parameter_names
             .as_ref()
@@ -40,6 +43,7 @@ impl FragmentSignature {
     }
 
     /// 返回原共享参数列表的实时只读视图。
+    /// 对应 Java: `FragmentSignature#getParameterNames()`。
     pub fn get_parameter_names(&self) -> Option<RwLockReadGuard<'_, Vec<Option<JavaString>>>> {
         self.parameter_names
             .as_ref()
@@ -47,6 +51,7 @@ impl FragmentSignature {
     }
 
     /// 返回与 Java `StringUtils.join` 一致的当前签名文本。
+    /// 对应 Java: `FragmentSignature#getStringRepresentation()`。
     pub fn get_string_representation(&self) -> JavaString {
         let Some(parameter_names) = self.parameter_names.as_ref() else {
             return self.fragment_name.clone();

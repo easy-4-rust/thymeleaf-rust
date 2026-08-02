@@ -7,6 +7,7 @@ use crate::util::JavaString;
 
 /// 标识符序列参数或状态错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`IdentifierSequences` 的 Rust 侧类型 `IdentifierSequencesError`。
 pub enum IdentifierSequencesError {
     /// `Validate.notNull` 对应的参数错误。
     NullId,

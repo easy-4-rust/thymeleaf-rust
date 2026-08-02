@@ -70,6 +70,7 @@ impl DecoupledTemplateLogicBuilderMarkupHandler {
     ///
     /// 这是 Rust 所有权入口；可观察内容等同 Java getter 返回的同一容器。
     #[must_use]
+    /// 对应 Java 语义：`DecoupledTemplateLogicBuilderMarkupHandler` 的 `into_decoupled_template_logic` 行为（Rust 侧辅助/私有路径）。
     pub fn into_decoupled_template_logic(self) -> DecoupledTemplateLogic {
         self.decoupled_template_logic
     }
@@ -82,6 +83,7 @@ impl DecoupledTemplateLogicBuilderMarkupHandler {
     /// # 错误
     ///
     /// 缺少/重复 `sel`、属性结构损坏或标签未闭合时返回带模板位置的输入错误。
+    /// 对应 Java 语义：Java 接口/超类方法 `parse()` 的 Rust 移植（`DecoupledTemplateLogicBuilderMarkupHandler` 继承路径）。
     pub fn parse(&mut self, source: &str) -> Result<(), TemplateInputException> {
         let mut position = 0;
         while let Some(relative_start) = source[position..].find('<') {

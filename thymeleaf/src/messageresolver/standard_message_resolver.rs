@@ -66,6 +66,7 @@ impl StandardMessageResolver {
     ///
     /// 未配置扩展钩子、缓存为空的标准消息解析器。
     #[must_use]
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new() -> Self {
         Self {
             base: AbstractMessageResolver::new(
@@ -93,6 +94,7 @@ impl StandardMessageResolver {
     ///
     /// 安装钩子后的解析器，便于继续链式配置。
     #[must_use]
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `with_template_messages_hook` 行为（Rust 侧辅助/私有路径）。
     pub fn with_template_messages_hook<F>(mut self, hook: F) -> Self
     where
         F: Fn(
@@ -120,6 +122,7 @@ impl StandardMessageResolver {
     ///
     /// 安装钩子后的解析器。
     #[must_use]
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `with_origin_messages_hook` 行为（Rust 侧辅助/私有路径）。
     pub fn with_origin_messages_hook<F>(mut self, hook: F) -> Self
     where
         F: Fn(TypeId, &JavaLocale) -> Messages + Send + Sync + 'static,
@@ -165,6 +168,7 @@ impl StandardMessageResolver {
     ///
     /// 安装钩子后的解析器。
     #[must_use]
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `with_absent_message_hook` 行为（Rust 侧辅助/私有路径）。
     pub fn with_absent_message_hook<F>(mut self, hook: F) -> Self
     where
         F: Fn(
@@ -182,11 +186,13 @@ impl StandardMessageResolver {
     }
 
     /// 设置可空解析器名称。
+    /// 对应 Java 语义：Java 接口/超类方法 `setName()` 的 Rust 移植（`StandardMessageResolver` 继承路径）。
     pub fn set_name(&mut self, name: Option<JavaString>) {
         self.base.set_name(name);
     }
 
     /// 设置可空解析器执行顺序。
+    /// 对应 Java 语义：Java 接口/超类方法 `setOrder()` 的 Rust 移植（`StandardMessageResolver` 继承路径）。
     pub fn set_order(&mut self, order: Option<i32>) {
         self.base.set_order(order);
     }
@@ -202,6 +208,7 @@ impl StandardMessageResolver {
     }
 
     /// 把给定消息合并进默认消息，保留未被覆盖的旧条目。
+    /// 对应 Java: `StandardMessageResolver#setDefaultMessages()`。
     pub fn set_default_messages(&self, default_messages: Option<&Messages>) {
         if let Some(default_messages) = default_messages {
             write_lock(&self.default_messages).extend(default_messages.clone());
@@ -209,6 +216,7 @@ impl StandardMessageResolver {
     }
 
     /// 增加或覆盖一个默认消息。
+    /// 对应 Java: `StandardMessageResolver#addDefaultMessage()`。
     pub fn add_default_message(
         &self,
         key: JavaString,
@@ -240,11 +248,13 @@ impl StandardMessageResolver {
     }
 
     /// 清空所有默认消息。
+    /// 对应 Java: `StandardMessageResolver#clearDefaultMessages()`。
     pub fn clear_default_messages(&self) {
         write_lock(&self.default_messages).clear();
     }
 
     /// 为 Rust origin 类型登记由宿主加载的 classpath 等价消息。
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `register_origin_messages` 行为（Rust 侧辅助/私有路径）。
     pub fn register_origin_messages(
         origin: TypeId,
         locale: JavaLocale,
@@ -257,6 +267,7 @@ impl StandardMessageResolver {
     ///
     /// Rust `TypeId` 不携带继承元数据，因此宿主对象适配层必须为存在继承关系的
     /// origin 显式登记该关系。具体类型消息始终覆盖父类型消息。
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `register_origin_parent` 行为（Rust 侧辅助/私有路径）。
     pub fn register_origin_parent(origin: TypeId, parent: TypeId) -> MessageResolutionResult<()> {
         StandardMessageResolutionUtils::register_origin_parent(origin, parent)
     }
@@ -337,6 +348,7 @@ impl StandardMessageResolver {
         clippy::too_many_arguments,
         reason = "三个阶段开关与 Java 消息解析方法参数保持一一对应"
     )]
+    /// 对应 Java 语义：`StandardMessageResolver` 的 `resolve_message_with_phases` 行为（Rust 侧辅助/私有路径）。
     pub fn resolve_message_with_phases(
         &self,
         context: &dyn ITemplateContext,

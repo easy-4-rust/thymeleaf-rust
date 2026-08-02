@@ -28,6 +28,7 @@ pub(crate) struct ThrottledTemplateWriterOutputStreamAdapter {
 
 impl ThrottledTemplateWriterOutputStreamAdapter {
     /// 创建尚未绑定输出且初始停止的字节适配器。
+    /// 对应 Java 语义：`ThrottledTemplateWriterOutputStreamAdapter` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_name: String,
         flow_controller: Arc<Mutex<TemplateFlowController>>,
@@ -53,12 +54,14 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
     }
 
     /// 绑定下一轮 OutputStream，并按 Java 语义仅重置本轮写出计数。
+    /// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#setOutputStream()`。
     pub(crate) fn set_output_stream(&mut self, output_stream: Box<dyn Write + Send>) {
         self.output_stream = Some(output_stream);
         self.written_count = 0;
     }
 
     /// 允许最多写出 `limit` 个字节，并优先排空已有溢出数据。
+    /// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#allow()`。
     pub(crate) fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
         if limit == i32::MAX || limit < 0 {
             self.unlimited = true;
@@ -114,6 +117,7 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
     }
 
     /// 写出字节；超过本轮额度的尾部进入溢出缓冲区。
+    /// 对应 Java 语义：`ThrottledTemplateWriterOutputStreamAdapter` 的 `write_bytes` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn write_bytes(&mut self, bytes: &[u8]) -> io::Result<()> {
         if self.limit == 0 {
             self.overflow(bytes);
@@ -142,30 +146,37 @@ impl ThrottledTemplateWriterOutputStreamAdapter {
     }
 
     /// 刷新当前 OutputStream。
+    /// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#flush()`。
     pub(crate) fn flush(&mut self) -> io::Result<()> {
         self.output_mut()?.flush()
     }
 
     /// Java OutputStream 的 close 会先刷新；Rust 所有权释放随后关闭资源。
+    /// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#close()`。
     pub(crate) fn close(&mut self) -> io::Result<()> {
         self.output_mut()?.flush()
     }
+/// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#isOverflown()`。
 
     pub(crate) fn is_overflown(&self) -> bool {
         self.overflow_size > 0
     }
+/// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#isStopped()`。
 
     pub(crate) fn is_stopped(&self) -> bool {
         self.limit == 0
     }
+/// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#getWrittenCount()`。
 
     pub(crate) fn get_written_count(&self) -> i32 {
         self.written_count
     }
+/// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#getMaxOverflowSize()`。
 
     pub(crate) fn get_max_overflow_size(&self) -> i32 {
         self.max_overflow_size as i32
     }
+/// 对应 Java: `ThrottledTemplateWriterOutputStreamAdapter#getOverflowGrowCount()`。
 
     pub(crate) fn get_overflow_grow_count(&self) -> i32 {
         self.overflow_grow_count

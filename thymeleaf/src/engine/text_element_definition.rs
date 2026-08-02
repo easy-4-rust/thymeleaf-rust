@@ -16,6 +16,7 @@ pub struct TextElementDefinition {
 }
 
 impl TextElementDefinition {
+    /// 对应 Java 语义：`TextElementDefinition` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         name: Arc<TextElementName>,
         associated_processors: Arc<RwLock<ElementProcessorSet>>,

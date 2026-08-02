@@ -31,6 +31,7 @@ pub(crate) struct ThrottledTemplateWriterWriterAdapter {
 
 impl ThrottledTemplateWriterWriterAdapter {
     /// 创建尚未绑定输出且初始停止的字符适配器。
+    /// 对应 Java 语义：`ThrottledTemplateWriterWriterAdapter` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_name: String,
         flow_controller: Arc<Mutex<TemplateFlowController>>,
@@ -54,12 +55,14 @@ impl ThrottledTemplateWriterWriterAdapter {
     }
 
     /// 绑定下一轮输出 Writer，并按 Java 语义仅重置本轮写出计数。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#setWriter()`。
     pub(crate) fn set_writer(&mut self, writer: Box<dyn JavaWriter>) {
         self.writer = Some(writer);
         self.written_count = 0;
     }
 
     /// 允许最多写出 `limit` 个 UTF-16 代码单元，并优先排空溢出缓冲。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#allow()`。
     pub(crate) fn allow(&mut self, limit: i32) -> Result<(), TemplateOutputException> {
         if limit == i32::MAX || limit < 0 {
             self.unlimited = true;
@@ -117,6 +120,7 @@ impl ThrottledTemplateWriterWriterAdapter {
     }
 
     /// 写出 UTF-16 代码单元；超过额度的尾部进入溢出缓冲区。
+    /// 对应 Java 语义：`ThrottledTemplateWriterWriterAdapter` 的 `write_utf16` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         if self.limit == 0 {
             self.overflow(characters);
@@ -146,30 +150,37 @@ impl ThrottledTemplateWriterWriterAdapter {
     }
 
     /// 刷新底层 Writer；溢出状态由查询方法单独报告。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#flush()`。
     pub(crate) fn flush(&mut self) -> io::Result<()> {
         self.writer_mut()?.flush()
     }
 
     /// 关闭当前 Writer。
+    /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#close()`。
     pub(crate) fn close(&mut self) -> io::Result<()> {
         self.writer_mut()?.close()
     }
+/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#isOverflown()`。
 
     pub(crate) fn is_overflown(&self) -> bool {
         self.overflow_size > 0
     }
+/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#isStopped()`。
 
     pub(crate) fn is_stopped(&self) -> bool {
         self.limit == 0
     }
+/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getWrittenCount()`。
 
     pub(crate) fn get_written_count(&self) -> i32 {
         self.written_count
     }
+/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getMaxOverflowSize()`。
 
     pub(crate) fn get_max_overflow_size(&self) -> i32 {
         self.max_overflow_size as i32
     }
+/// 对应 Java: `ThrottledTemplateWriterWriterAdapter#getOverflowGrowCount()`。
 
     pub(crate) fn get_overflow_grow_count(&self) -> i32 {
         self.overflow_grow_count

@@ -32,6 +32,7 @@ pub struct NoOpInliner;
 impl NoOpInliner {
     /// 返回 Java `NoOpInliner.INSTANCE` 对应的唯一共享引用。
     #[must_use]
+    /// 对应 Java 语义：`NoOpInliner` 的 `instance` 行为（Rust 侧辅助/私有路径）。
     pub fn instance() -> &'static Self {
         concrete_instance().as_ref()
     }
@@ -41,6 +42,7 @@ impl NoOpInliner {
     /// 每次调用都克隆同一个 [`Arc`]，从而使不同 `th:inline="none"` 处理结果保持
     /// Java 静态单例的引用身份。
     #[must_use]
+    /// 对应 Java 语义：`NoOpInliner` 的 `shared` 行为（Rust 侧辅助/私有路径）。
     pub fn shared() -> Arc<dyn IInliner> {
         Arc::<NoOpInliner>::clone(concrete_instance())
     }

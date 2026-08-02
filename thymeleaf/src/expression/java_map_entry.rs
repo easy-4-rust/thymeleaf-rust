@@ -15,6 +15,7 @@ pub(crate) struct JavaMapEntry {
 
 impl JavaMapEntry {
     /// 创建键值条目快照。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(key: Arc<TemplateValue>, value: Arc<TemplateValue>) -> Self {
         Self { key, value }
     }

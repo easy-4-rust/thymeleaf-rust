@@ -31,6 +31,7 @@ impl<F> AbstractAttributeTagProcessor<F> {
     /// # 错误
     /// 模式、属性名或匹配名称配置非法时返回处理异常。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractAttributeTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: Option<TemplateMode>,
         dialect_prefix: Option<JavaString>,
@@ -83,6 +84,7 @@ impl<F> AbstractAttributeTagProcessor<F> {
     }
 
     /// 返回构造时保存的可空方言前缀。
+    /// 对应 Java 语义：Java 接口/超类方法 `getDialectPrefix()` 的 Rust 移植（`AbstractAttributeTagProcessor` 继承路径）。
     pub fn get_dialect_prefix(&self) -> Option<&JavaString> {
         self.dialect_prefix.as_ref()
     }

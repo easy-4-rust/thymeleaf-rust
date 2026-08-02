@@ -19,6 +19,7 @@ pub struct ConditionalExpression {
 
 impl ConditionalExpression {
     /// 创建条件表达式，并按 Java 顺序校验 condition、then、else。
+    /// 对应 Java 语义：`ConditionalExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         condition_expression: Option<Arc<dyn IStandardExpression>>,
         then_expression: Option<Arc<dyn IStandardExpression>>,
@@ -41,14 +42,17 @@ impl ConditionalExpression {
         })
     }
     /// 返回条件表达式。
+    /// 对应 Java: `ConditionalExpression#getConditionExpression()`。
     pub fn get_condition_expression(&self) -> &dyn IStandardExpression {
         self.condition_expression.as_ref()
     }
     /// 返回 then 表达式。
+    /// 对应 Java: `ConditionalExpression#getThenExpression()`。
     pub fn get_then_expression(&self) -> &dyn IStandardExpression {
         self.then_expression.as_ref()
     }
     /// 返回 else 表达式。
+    /// 对应 Java: `ConditionalExpression#getElseExpression()`。
     pub fn get_else_expression(&self) -> &dyn IStandardExpression {
         self.else_expression.as_ref()
     }

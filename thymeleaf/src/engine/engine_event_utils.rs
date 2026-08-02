@@ -14,11 +14,13 @@ pub struct EngineEventUtils;
 
 impl EngineEventUtils {
     /// 判断 Text 是否为非空全 Java-whitespace 内容。
+    /// 对应 Java 语义：`EngineEventUtils` 的 `is_whitespace_text` 行为（Rust 侧辅助/私有路径）。
     pub fn is_whitespace_text(text: Option<&dyn IText>) -> Result<bool, TextUtilsError> {
         text.map_or(Ok(false), |text| compute_whitespace(text))
     }
 
     /// 判断 CDATA 内容是否为非空全 Java-whitespace。
+    /// 对应 Java 语义：`EngineEventUtils` 的 `is_whitespace_cdata` 行为（Rust 侧辅助/私有路径）。
     pub fn is_whitespace_cdata(
         cdata_section: Option<&dyn ICDATASection>,
     ) -> Result<bool, TextUtilsError> {
@@ -32,6 +34,7 @@ impl EngineEventUtils {
     }
 
     /// 判断 Comment 内容是否为非空全 Java-whitespace。
+    /// 对应 Java 语义：`EngineEventUtils` 的 `is_whitespace_comment` 行为（Rust 侧辅助/私有路径）。
     pub fn is_whitespace_comment(comment: Option<&dyn IComment>) -> Result<bool, TextUtilsError> {
         let Some(comment) = comment else {
             return Ok(false);
@@ -41,11 +44,13 @@ impl EngineEventUtils {
     }
 
     /// 判断 Text 是否包含内联表达式边界。
+    /// 对应 Java 语义：`EngineEventUtils` 的 `is_inlineable_text` 行为（Rust 侧辅助/私有路径）。
     pub fn is_inlineable_text(text: Option<&dyn IText>) -> Result<bool, TextUtilsError> {
         text.map_or(Ok(false), |text| compute_inlineable(text))
     }
 
     /// 判断 CDATA 内容是否包含内联表达式边界。
+    /// 对应 Java 语义：`EngineEventUtils` 的 `is_inlineable_cdata` 行为（Rust 侧辅助/私有路径）。
     pub fn is_inlineable_cdata(
         cdata_section: Option<&dyn ICDATASection>,
     ) -> Result<bool, TextUtilsError> {
@@ -59,6 +64,7 @@ impl EngineEventUtils {
     }
 
     /// 判断 Comment 内容是否包含内联表达式边界。
+    /// 对应 Java 语义：`EngineEventUtils` 的 `is_inlineable_comment` 行为（Rust 侧辅助/私有路径）。
     pub fn is_inlineable_comment(comment: Option<&dyn IComment>) -> Result<bool, TextUtilsError> {
         let Some(comment) = comment else {
             return Ok(false);
@@ -70,6 +76,7 @@ impl EngineEventUtils {
     /// 解析属性表达式，并在内建 Attribute 上缓存安全结果。
     ///
     /// 含预处理标记 `_` 或 FragmentExpression 的结果不得缓存。
+    /// 对应 Java: `EngineEventUtils#computeAttributeExpression()`。
     pub fn compute_attribute_expression(
         context: &dyn ITemplateContext,
         tag: &dyn IProcessableElementTag,

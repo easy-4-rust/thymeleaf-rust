@@ -11,6 +11,7 @@ pub struct XMLElementName {
 }
 
 impl XMLElementName {
+    /// 对应 Java: `XMLElementName#forName()`。
     pub(super) fn for_name(
         prefix: Option<JavaString>,
         element_name: Option<JavaString>,

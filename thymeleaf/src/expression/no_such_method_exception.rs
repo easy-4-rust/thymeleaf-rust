@@ -11,6 +11,7 @@ pub struct NoSuchMethodException {
 impl NoSuchMethodException {
     /// 创建包含目标类与方法信息的异常。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn new(message: String) -> Self {
         Self { message }
     }

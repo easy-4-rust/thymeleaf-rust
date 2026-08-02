@@ -24,6 +24,7 @@ pub struct JavaObjectArray<T> {
 }
 
 impl<T> JavaObjectArray<T> {
+    /// 对应 Java 语义：`Objects` 的 `from_parts` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn from_parts(
         component_class_name: String,
         elements: Vec<Option<T>>,
@@ -35,6 +36,7 @@ impl<T> JavaObjectArray<T> {
             component_predicate,
         }
     }
+/// 对应 Java 语义：`Objects` 的 `component_predicate` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn component_predicate(&self) -> Arc<ComponentPredicate<T>> {
         Arc::clone(&self.component_predicate)
@@ -96,6 +98,7 @@ impl<T> JavaObjectArray<T> {
     /// # 返回
     /// 创建数组时保存的 `Class#getName()` 等价值。
     #[must_use]
+    /// 对应 Java 语义：`Objects` 的 `component_class_name` 行为（Rust 侧辅助/私有路径）。
     pub fn component_class_name(&self) -> &str {
         &self.component_class_name
     }
@@ -105,6 +108,7 @@ impl<T> JavaObjectArray<T> {
     /// # 返回
     /// 当前元素槽位数。
     #[must_use]
+    /// 对应 Java 语义：`Objects` 的 `len` 行为（Rust 侧辅助/私有路径）。
     pub fn len(&self) -> usize {
         self.elements.len()
     }
@@ -114,6 +118,7 @@ impl<T> JavaObjectArray<T> {
     /// # 返回
     /// 数组长度为零时返回 `true`。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `isEmpty()` 的 Rust 移植（`Objects` 继承路径）。
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
     }
@@ -123,6 +128,7 @@ impl<T> JavaObjectArray<T> {
     /// # 返回
     /// 按索引排列的只读元素。
     #[must_use]
+    /// 对应 Java 语义：`Objects` 的 `as_slice` 行为（Rust 侧辅助/私有路径）。
     pub fn as_slice(&self) -> &[Option<T>] {
         &self.elements
     }

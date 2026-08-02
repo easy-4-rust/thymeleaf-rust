@@ -21,6 +21,7 @@ pub(crate) struct XMLDeclarationStructureHandler {
 
 impl XMLDeclarationStructureHandler {
     /// 创建无待执行动作的处理器。
+    /// 对应 Java 语义：`XMLDeclarationStructureHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new() -> Self {
         let mut handler = Self {
             set_xml_declaration: false,

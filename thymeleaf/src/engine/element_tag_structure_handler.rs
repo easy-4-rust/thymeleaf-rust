@@ -98,6 +98,7 @@ pub(crate) struct ElementTagStructureHandler {
 
 impl ElementTagStructureHandler {
     /// 创建已重置的结构处理器。
+    /// 对应 Java 语义：`ElementTagStructureHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new() -> Self {
         Self {
             set_body_text: false,
@@ -173,6 +174,7 @@ impl ElementTagStructureHandler {
     }
 
     /// 使用已解析的 AttributeDefinition 添加属性动作，供 Standard Dialect 优化。
+    /// 对应 Java 语义：`ElementTagStructureHandler` 的 `set_attribute_with_definition` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_attribute_with_definition(
         &mut self,
         attribute_definition: AttributeDefinitionValue,
@@ -190,6 +192,7 @@ impl ElementTagStructureHandler {
     }
 
     /// 使用已解析的新 AttributeDefinition 添加替换动作。
+    /// 对应 Java 语义：`ElementTagStructureHandler` 的 `replace_attribute_with_definition` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn replace_attribute_with_definition(
         &mut self,
         old_attribute_name: AttributeNameValue,
@@ -209,6 +212,7 @@ impl ElementTagStructureHandler {
     }
 
     /// 将上下文变更按 Java 固定顺序应用。
+    /// 对应 Java: `ElementTagStructureHandler#applyContextModifications()`。
     pub(crate) fn apply_context_modifications(&self, engine_context: Option<&dyn IEngineContext>) {
         let Some(engine_context) = engine_context else {
             return;
@@ -237,6 +241,7 @@ impl ElementTagStructureHandler {
     }
 
     /// 将收集的属性动作应用到不可变标签。
+    /// 对应 Java: `ElementTagStructureHandler#applyAttributes()`。
     pub(crate) fn apply_attributes(
         &self,
         attribute_definitions: &AttributeDefinitions,

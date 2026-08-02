@@ -24,6 +24,7 @@ pub(crate) struct DecreaseContextLevelProcessable {
 
 impl DecreaseContextLevelProcessable {
     /// 创建共享同一上下文与流控状态的待处理任务。
+    /// 对应 Java 语义：`DecreaseContextLevelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         context: Option<Arc<dyn IEngineContext>>,
         flow_controller: Arc<Mutex<TemplateFlowController>>,

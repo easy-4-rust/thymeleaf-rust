@@ -13,6 +13,7 @@ pub(crate) struct StandardExpressionPreprocessor;
 
 impl StandardExpressionPreprocessor {
     /// 以 RESTRICTED 上下文执行预处理表达式并替换到原输入。
+    /// 对应 Java: `StandardExpressionPreprocessor#preprocess()`。
     pub(crate) fn preprocess(
         context: &dyn IExpressionContext,
         input: &JavaString,

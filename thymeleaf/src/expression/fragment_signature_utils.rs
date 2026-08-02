@@ -16,6 +16,7 @@ pub struct FragmentSignatureUtils;
 
 impl FragmentSignatureUtils {
     /// 解析并缓存 Fragment 名称及形参名称。
+    /// 对应 Java: `FragmentSignatureUtils#parseFragmentSignature()`。
     pub fn parse_fragment_signature(
         configuration: Option<&dyn IEngineConfiguration>,
         input: Option<&JavaString>,

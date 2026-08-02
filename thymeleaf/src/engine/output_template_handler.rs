@@ -24,6 +24,7 @@ pub struct OutputTemplateHandler {
 
 impl OutputTemplateHandler {
     /// 创建拥有指定输出 Writer 的处理器。
+    /// 对应 Java 语义：`OutputTemplateHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(writer: Box<dyn JavaWriter>) -> Self {
         Self {
             base: AbstractTemplateHandler::new(),

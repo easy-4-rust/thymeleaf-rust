@@ -35,6 +35,7 @@ pub(crate) struct AbstractGatheringModelProcessable {
 impl AbstractGatheringModelProcessable {
     /// 创建空合成 Model 并克隆起始 Processor 状态。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         processor_template_handler: TemplateHandlerHandle,
@@ -59,6 +60,7 @@ impl AbstractGatheringModelProcessable {
             model_level: 0,
         }
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#resetGatheredSkipFlagsAfterNoIterations()`。
 
     pub(crate) fn reset_gathered_skip_flags_after_no_iterations(&self) {
         if let Some(controller) = self.model_controller.upgrade() {
@@ -72,6 +74,7 @@ impl AbstractGatheringModelProcessable {
                 .skip(skip_body, self.build_time_skip_close_tag);
         }
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#resetGatheredSkipFlags()`。
 
     pub(crate) fn reset_gathered_skip_flags(&self) {
         if let Some(controller) = self.model_controller.upgrade() {
@@ -80,6 +83,7 @@ impl AbstractGatheringModelProcessable {
                 .skip(self.build_time_skip_body, self.build_time_skip_close_tag);
         }
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#prepareProcessing()`。
 
     pub(crate) fn prepare_processing(&self) {
         self.processor_template_handler
@@ -93,6 +97,7 @@ impl AbstractGatheringModelProcessable {
             )));
         self.reset_gathered_skip_flags();
     }
+/// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `reentrant_processor_template_handler` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn reentrant_processor_template_handler(&self) -> Box<dyn ITemplateHandler> {
         let handler = self.get_processor_template_handler();
@@ -110,10 +115,12 @@ impl AbstractGatheringModelProcessable {
     pub(crate) fn get_processor_template_handler(&self) -> TemplateHandlerHandle {
         self.processor_template_handler.clone()
     }
+/// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `flow_controller` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn flow_controller(&self) -> Option<Arc<Mutex<TemplateFlowController>>> {
         self.flow_controller.clone()
     }
+/// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `context` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn context(&self) -> Arc<dyn IEngineContext> {
         Arc::clone(&self.context)
@@ -131,9 +138,11 @@ impl AbstractGatheringModelProcessable {
         dead_code,
         reason = "保留 Java AbstractGatheringModelProcessable 的包级方法合同"
     )]
+    /// 对应 Java: `AbstractGatheringModelProcessable#initializeProcessorExecutionVars()`。
     pub(crate) fn initialize_processor_execution_vars(&self) -> ProcessorExecutionVars {
         self.processor_execution_vars.clone_vars()
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherText()`。
 
     pub(crate) fn gather_text(
         &mut self,
@@ -141,6 +150,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.gather_event(event)
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherComment()`。
 
     pub(crate) fn gather_comment(
         &mut self,
@@ -148,6 +158,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.gather_event(event)
     }
+/// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `gather_cdata_section` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn gather_cdata_section(
         &mut self,
@@ -155,6 +166,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.gather_event(event)
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherStandaloneElement()`。
 
     pub(crate) fn gather_standalone_element(
         &mut self,
@@ -167,6 +179,7 @@ impl AbstractGatheringModelProcessable {
         }
         Ok(())
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherOpenElement()`。
 
     pub(crate) fn gather_open_element(
         &mut self,
@@ -177,6 +190,7 @@ impl AbstractGatheringModelProcessable {
         self.model_level = self.model_level.wrapping_add(1);
         Ok(())
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherCloseElement()`。
 
     pub(crate) fn gather_close_element(
         &mut self,
@@ -193,6 +207,7 @@ impl AbstractGatheringModelProcessable {
         }
         Ok(())
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherUnmatchedCloseElement()`。
 
     pub(crate) fn gather_unmatched_close_element(
         &mut self,
@@ -200,6 +215,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.gather_event(event)
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherDocType()`。
 
     pub(crate) fn gather_doc_type(
         &mut self,
@@ -207,6 +223,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.gather_event(event)
     }
+/// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `gather_xml_declaration` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn gather_xml_declaration(
         &mut self,
@@ -214,6 +231,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.gather_event(event)
     }
+/// 对应 Java: `AbstractGatheringModelProcessable#gatherProcessingInstruction()`。
 
     pub(crate) fn gather_processing_instruction(
         &mut self,

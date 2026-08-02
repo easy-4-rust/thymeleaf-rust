@@ -13,6 +13,7 @@ use super::{
 };
 
 /// 调用无状态 Standard Expression 对象的 Java 方法面。
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn invoke_stateless_expression_object(
     object: &dyn Any,
     class_name: &str,
@@ -47,6 +48,7 @@ pub(crate) fn invoke_stateless_expression_object(
 }
 
 /// 读取 Standard Expression 对象的 JavaBean 属性。
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn get_standard_expression_object_property(
     object: &dyn Any,
     property_name: &JavaString,

@@ -27,6 +27,7 @@ pub(crate) struct SimpleModelProcessable {
 
 impl SimpleModelProcessable {
     /// 创建 offset 为零的模型处理任务。
+    /// 对应 Java 语义：`SimpleModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         model: Rc<RefCell<Model>>,
         model_handler: Rc<RefCell<Box<dyn ITemplateHandler>>>,
@@ -41,11 +42,13 @@ impl SimpleModelProcessable {
     }
 
     /// 返回处理事件使用的同一 Handler。
+    /// 对应 Java: `SimpleModelProcessable#getModelHandler()`。
     pub(crate) fn get_model_handler(&self) -> Rc<RefCell<Box<dyn ITemplateHandler>>> {
         Rc::clone(&self.model_handler)
     }
 
     /// 返回待处理的同一 Model。
+    /// 对应 Java: `SimpleModelProcessable#getModel()`。
     pub(crate) fn get_model(&self) -> Rc<RefCell<Model>> {
         Rc::clone(&self.model)
     }

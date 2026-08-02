@@ -16,6 +16,7 @@ pub struct ExpressionSequenceUtils;
 
 impl ExpressionSequenceUtils {
     /// 预处理、缓存并解析表达式序列。
+    /// 对应 Java: `ExpressionSequenceUtils#parseExpressionSequence()`。
     pub fn parse_expression_sequence(
         context: &dyn IExpressionContext,
         input: Option<&JavaString>,
@@ -49,6 +50,7 @@ impl ExpressionSequenceUtils {
     }
 
     /// 不执行预处理和缓存，直接解析表达式序列。
+    /// 对应 Java: `ExpressionSequenceUtils#internalParseExpressionSequence()`。
     pub(crate) fn internal_parse_expression_sequence(
         input: &JavaString,
     ) -> Option<ExpressionSequence> {

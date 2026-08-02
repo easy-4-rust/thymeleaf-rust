@@ -25,6 +25,7 @@ pub(crate) struct TemplateEndModelProcessable {
 
 impl TemplateEndModelProcessable {
     /// 创建从 Model 偏移零开始的模板结束任务。
+    /// 对应 Java 语义：`TemplateEndModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_end: Arc<dyn ITemplateEnd>,
         model: Model,

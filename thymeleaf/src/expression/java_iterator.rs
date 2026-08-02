@@ -15,6 +15,7 @@ pub(crate) struct JavaIterator {
 
 impl JavaIterator {
     /// 从集合当前顺序创建迭代器。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(values: Arc<Vec<Arc<TemplateValue>>>) -> Self {
         Self {
             values,

@@ -43,6 +43,7 @@ pub struct AbstractStandardMultipleAttributeModifierTagProcessor {
 impl AbstractStandardMultipleAttributeModifierTagProcessor {
     /// 创建多属性修改器。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractStandardMultipleAttributeModifierTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

@@ -17,6 +17,7 @@ pub struct NativeShortcutExpression {
 
 impl NativeShortcutExpression {
     /// 保存已经解析的属性层级。
+    /// 对应 Java 语义：`OGNLShortcutExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(expression_levels: Vec<JavaString>) -> Self {
         Self { expression_levels }
     }
@@ -24,6 +25,7 @@ impl NativeShortcutExpression {
     /// 尝试把表达式解析为点分 Java 标识符序列。
     ///
     /// 任一层为空或包含非 Java 标识符字符时返回 `None`，由完整求值器处理。
+    /// 对应 Java: `OGNLShortcutExpression#parse()`。
     pub fn parse(expression: Option<&JavaString>) -> Option<Vec<JavaString>> {
         let expression = expression?;
         let mut levels = Vec::new();
@@ -37,6 +39,7 @@ impl NativeShortcutExpression {
     }
 
     /// 依次读取 Context、Map、List、数组或宿主对象属性。
+    /// 对应 Java: `OGNLShortcutExpression#evaluate()`。
     pub fn evaluate(
         &self,
         context: &dyn IExpressionContext,
@@ -228,6 +231,7 @@ fn is_java_identifier_part(code_point: u32) -> bool {
 
 /// OGNL 快速路径的可观察失败类别。
 #[derive(Debug, Error)]
+/// 对应 Java 语义：`OGNLShortcutExpression` 的 Rust 侧类型 `NativeShortcutError`。
 pub enum NativeShortcutError {
     /// 中间属性结果为 Java null。
     #[error("source is null for getProperty(null, \"{property_name}\")")]

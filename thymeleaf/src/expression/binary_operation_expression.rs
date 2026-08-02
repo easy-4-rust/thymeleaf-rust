@@ -24,6 +24,7 @@ pub struct BinaryOperationExpression {
     left: Arc<dyn IStandardExpression>,
     right: Arc<dyn IStandardExpression>,
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `execute_operands` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn execute_operands(
     expression: &BinaryOperationExpression,
@@ -39,6 +40,7 @@ pub(crate) fn execute_operands(
             .execute_with_context(context, execution_context)?,
     ))
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `execute_raw_operands` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn execute_raw_operands(
     expression: &BinaryOperationExpression,
@@ -54,6 +56,7 @@ pub(crate) fn execute_raw_operands(
             .execute_raw(context, execution_context)?,
     ))
 }
+/// 对应 Java 语义：Java 接口/超类方法 `evaluateAsNumber()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 
 pub(crate) fn evaluate_as_number(
     value: Option<&Arc<TemplateValue>>,
@@ -66,6 +69,7 @@ pub(crate) fn evaluate_as_number(
             .map(|result| result.as_decimal().clone()),
     )
 }
+/// 对应 Java 语义：Java 接口/超类方法 `evaluateAsBoolean()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 
 pub(crate) fn evaluate_as_boolean(
     value: Option<&Arc<TemplateValue>>,
@@ -75,10 +79,12 @@ pub(crate) fn evaluate_as_boolean(
         .unwrap_or(crate::util::JavaEvaluationValue::Null);
     Ok(EvaluationUtils::evaluate_as_boolean(&evaluation_value)?)
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `normalized_null_value` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn normalized_null_value(value: Option<Arc<TemplateValue>>) -> Arc<TemplateValue> {
     value.unwrap_or_else(|| Arc::new(TemplateValue::string(JavaString::from_rust_str("null"))))
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `literal_unwrapped_string` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn literal_unwrapped_string(value: &TemplateValue) -> Option<JavaString> {
     match value {
@@ -86,6 +92,7 @@ pub(crate) fn literal_unwrapped_string(value: &TemplateValue) -> Option<JavaStri
         _ => value.to_java_string(),
     }
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `unwrap_literal_result` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn unwrap_literal_result(
     value: Option<Arc<TemplateValue>>,
@@ -99,6 +106,7 @@ pub(crate) fn unwrap_literal_result(
         _ => value,
     }
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `collapse_java_null` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn collapse_java_null(value: Option<Arc<TemplateValue>>) -> Option<Arc<TemplateValue>> {
     match value.as_deref() {
@@ -106,6 +114,7 @@ pub(crate) fn collapse_java_null(value: Option<Arc<TemplateValue>>) -> Option<Ar
         _ => value,
     }
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `java_values_equal` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn java_values_equal(
     left: Option<&Arc<TemplateValue>>,
@@ -132,6 +141,7 @@ pub(crate) fn java_values_equal(
     }
     Ok(left.java_equals(right.as_ref()))
 }
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `compare_java_values` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn compare_java_values(
     left: &Arc<TemplateValue>,
@@ -163,6 +173,7 @@ fn character_as_string(value: &Arc<TemplateValue>) -> Arc<TemplateValue> {
 
 impl BinaryOperationExpression {
     /// 创建二元运算状态，并按 Java 顺序校验左右操作数。
+    /// 对应 Java 语义：`BinaryOperationExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         left: Option<Arc<dyn IStandardExpression>>,
         right: Option<Arc<dyn IStandardExpression>>,
@@ -177,26 +188,31 @@ impl BinaryOperationExpression {
     }
 
     /// 返回左操作数的同一动态对象。
+    /// 对应 Java: `BinaryOperationExpression#getLeft()`。
     pub fn get_left(&self) -> &dyn IStandardExpression {
         self.left.as_ref()
     }
 
     /// 返回左操作数共享引用，供具体运算执行。
+    /// 对应 Java 语义：`BinaryOperationExpression` 的 `left_arc` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn left_arc(&self) -> &Arc<dyn IStandardExpression> {
         &self.left
     }
 
     /// 返回右操作数的同一动态对象。
+    /// 对应 Java: `BinaryOperationExpression#getRight()`。
     pub fn get_right(&self) -> &dyn IStandardExpression {
         self.right.as_ref()
     }
 
     /// 返回右操作数共享引用，供具体运算执行。
+    /// 对应 Java 语义：`BinaryOperationExpression` 的 `right_arc` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn right_arc(&self) -> &Arc<dyn IStandardExpression> {
         &self.right
     }
 
     /// 返回 `left operator right`，复杂子表达式自动添加圆括号。
+    /// 对应 Java: `BinaryOperationExpression#getStringRepresentation()`。
     pub fn get_string_representation(
         &self,
         operator: Option<&JavaString>,

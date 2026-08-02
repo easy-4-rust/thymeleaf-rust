@@ -9,6 +9,7 @@ use crate::util::{JavaHashCode, JavaString};
 /// Java `AttributeName#equals` 要求两个对象运行时类完全一致，因此组合式 Rust
 /// 迁移显式保存该标识。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`AttributeName` 的 Rust 侧类型 `AttributeNameKind`。
 pub enum AttributeNameKind {
     /// `HTMLAttributeName`。
     Html,
@@ -76,6 +77,7 @@ pub struct AttributeName {
 }
 
 impl AttributeName {
+    /// 对应 Java 语义：`AttributeName` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn new(
         kind: AttributeNameKind,
         prefix: Option<JavaString>,
@@ -127,6 +129,7 @@ impl AttributeName {
 
     /// 返回内部 complete names 数组的共享可变句柄。
     #[must_use]
+    /// 对应 Java: `AttributeName#getCompleteAttributeNames()`。
     pub fn get_complete_attribute_names(&self) -> Arc<RwLock<Vec<Option<JavaString>>>> {
         Arc::clone(&self.complete_attribute_names)
     }
@@ -142,6 +145,7 @@ impl AttributeName {
     /// # 错误
     ///
     /// 外部通过数组 getter 清空数组或把首元素设为 null 时，返回对应 JVM 异常。
+    /// 对应 Java 语义：`AttributeName` 的 `equals_java` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_java(&self, other: &Self) -> Result<bool, AttributeNameError> {
         if std::ptr::eq(self, other) {
             return Ok(true);
@@ -167,6 +171,7 @@ impl AttributeName {
     /// # 错误
     ///
     /// complete names 数组为空时返回 Java 数组越界对应错误。
+    /// 对应 Java 语义：`AttributeName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> Result<JavaString, AttributeNameError> {
         let names = read_recovering_poison(&self.complete_attribute_names);
         let Some(first) = names.first() else {

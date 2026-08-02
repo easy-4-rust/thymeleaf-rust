@@ -61,6 +61,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     /// 发送文档开始事件；parser 计时信息与 Java 版一样被忽略。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `document_start` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn document_start(&mut self) -> Result<(), TemplateParserError> {
         self.template_handler
             .handle_template_start(TemplateStart::instance())
@@ -68,6 +69,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     /// 发送文档结束事件；parser 计时信息与 Java 版一样被忽略。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `document_end` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn document_end(&mut self) -> Result<(), TemplateParserError> {
         self.template_handler
             .handle_template_end(TemplateEnd::instance())
@@ -75,6 +77,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     /// 发送保留完整源码形态的文本事件。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `text` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn text(
         &mut self,
         source: &str,
@@ -96,6 +99,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     /// 发送保留 parser 实际边界的注释事件。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `comment` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn comment(
         &mut self,
         source: &str,
@@ -121,6 +125,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     /// 发送保留 parser 实际边界的 CDATA 事件。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `cdata` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn cdata(
         &mut self,
         source: &str,
@@ -147,6 +152,7 @@ impl TemplateHandlerAdapterMarkupHandler {
 
     /// 发送 XML declaration，并保留完整声明文本及分解字段。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `xml_declaration` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn xml_declaration(
         &mut self,
         source: &str,
@@ -174,6 +180,7 @@ impl TemplateHandlerAdapterMarkupHandler {
 
     /// 发送 DOCTYPE，并保留完整声明文本及分解字段。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `doc_type` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn doc_type(
         &mut self,
         source: &str,
@@ -204,6 +211,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     /// 发送 processing instruction，并保留完整文本。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `processing_instruction` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn processing_instruction(
         &mut self,
         source: &str,
@@ -231,6 +239,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     /// 元素定义上不具有独立 body。
     #[expect(dead_code, reason = "保留 AttoParser 原始 elementStart 回调合同")]
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `element_start` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn element_start(
         &mut self,
         source: &str,
@@ -386,6 +395,7 @@ impl TemplateHandlerAdapterMarkupHandler {
 
     /// 发送 close/auto-close/unmatched-close Engine 事件。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `element_end` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn element_end(
         &mut self,
         source: &str,
@@ -430,6 +440,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     ///
     /// 合成标签使用触发自动闭合的当前位置，而不是原始开放标签的位置；名称来自
     /// 元素栈，因此不要求 `source` 中当前位置实际包含该名称。
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `synthetic_element_end` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn synthetic_element_end(
         &mut self,
         source: &str,
@@ -463,6 +474,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         dead_code,
         reason = "保留 Java handleAutoOpenElementStart 合同；当前 HTMLTemplateParser 使用 AUTO_CLOSE"
     )]
+    /// 对应 Java 语义：`TemplateHandlerAdapterMarkupHandler` 的 `synthetic_element_start` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn synthetic_element_start(
         &mut self,
         source: &str,

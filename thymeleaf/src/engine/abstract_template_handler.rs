@@ -20,6 +20,7 @@ pub struct AbstractTemplateHandler {
 
 impl AbstractTemplateHandler {
     /// 创建尚未连接下一处理器的基础处理器。
+    /// 对应 Java 语义：`AbstractTemplateHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new() -> Self {
         Self {
             next: None,
@@ -38,16 +39,19 @@ impl AbstractTemplateHandler {
     }
 
     /// 返回链中下一处理器，供组合型扩展处理器转发事件。
+    /// 对应 Java: `AbstractTemplateHandler#getNext()`。
     pub fn get_next(&self) -> Option<TemplateHandlerHandle> {
         self.next.clone()
     }
 
     /// 返回链中下一处理器的可变引用。
+    /// 对应 Java 语义：`AbstractTemplateHandler` 的 `get_next_mut` 行为（Rust 侧辅助/私有路径）。
     pub fn get_next_mut(&mut self) -> Option<TemplateHandlerHandle> {
         self.next.clone()
     }
 
     /// 返回当前模板执行上下文；设置上下文前返回 `None`。
+    /// 对应 Java: `AbstractTemplateHandler#getContext()`。
     pub fn get_context(&self) -> Option<&dyn ITemplateContext> {
         self.context.as_deref()
     }

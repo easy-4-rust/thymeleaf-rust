@@ -36,6 +36,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
 
     /// 创建 insert/replace 处理器。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractStandardFragmentInsertionTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,
@@ -57,6 +58,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
 
     /// 创建仅插入 Fragment 内容的处理器；该模式只供 deprecated `th:include`。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractStandardFragmentInsertionTagProcessor` 的 `with_insert_only_contents` 行为（Rust 侧辅助/私有路径）。
     pub fn with_insert_only_contents(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,
@@ -268,6 +270,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
 
     /// 判断旧式输入是否应包裹为 `~{...}` Fragment 表达式。
     #[must_use]
+    /// 对应 Java: `AbstractStandardFragmentInsertionTagProcessor#shouldBeWrappedAsFragmentExpression()`。
     pub fn should_be_wrapped_as_fragment_expression(input: &JavaString) -> bool {
         let input = input.as_utf16();
         if input.len() > 2

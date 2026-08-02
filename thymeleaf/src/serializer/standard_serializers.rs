@@ -19,6 +19,7 @@ impl StandardSerializers {
     pub const STANDARD_CSS_SERIALIZER_ATTRIBUTE_NAME: &'static str = "StandardCSSSerializer";
 
     /// 返回 Standard Dialect 注册的 JavaScript Serializer。
+    /// 对应 Java: `StandardSerializers#getJavaScriptSerializer()`。
     pub fn get_java_script_serializer(
         configuration: &dyn IEngineConfiguration,
     ) -> Result<Arc<dyn IStandardJavaScriptSerializer>, TemplateProcessingException> {
@@ -30,6 +31,7 @@ impl StandardSerializers {
     }
 
     /// 返回 Standard Dialect 注册的 CSS Serializer。
+    /// 对应 Java 语义：`StandardSerializers` 的 `get_css_serializer` 行为（Rust 侧辅助/私有路径）。
     pub fn get_css_serializer(
         configuration: &dyn IEngineConfiguration,
     ) -> Result<Arc<dyn IStandardCSSSerializer>, TemplateProcessingException> {

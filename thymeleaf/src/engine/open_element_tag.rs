@@ -195,6 +195,7 @@ impl OpenElementTag {
 
     /// 返回完整 UTF-16 标签表示。
     #[must_use]
+    /// 对应 Java 语义：`OpenElementTag` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> JavaString {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)

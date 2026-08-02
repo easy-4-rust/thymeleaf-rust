@@ -14,6 +14,7 @@ pub struct Ids {
 
 impl Ids {
     /// 创建绑定模板上下文的 ID 工具对象。
+    /// 对应 Java 语义：`Ids` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(context: Option<Arc<dyn IExpressionContext>>) -> Result<Self, ValidateError> {
         let context = context.ok_or_else(|| ValidateError::IllegalArgument {
             message: Some("Context cannot be null".to_owned()),

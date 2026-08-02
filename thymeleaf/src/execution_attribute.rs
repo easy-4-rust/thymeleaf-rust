@@ -20,6 +20,7 @@ impl ExecutionAttributeValue {
     ///
     /// # 返回
     /// 保留具体运行时类型、可供后续安全下转的共享包装。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn new<T>(value: T) -> Self
     where
         T: Any + Send + Sync,
@@ -37,6 +38,7 @@ impl ExecutionAttributeValue {
     ///
     /// # 返回
     /// 类型一致时返回同一对象的借用，否则返回 `None`。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn downcast_ref<T>(&self) -> Option<&T>
     where
         T: Any + Send + Sync,
@@ -53,6 +55,7 @@ impl ExecutionAttributeValue {
     ///
     /// 返回不包含对象地址的稳定诊断字符串。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn diagnostic_string(&self) -> String {
         macro_rules! scalar {
             ($type:ty) => {

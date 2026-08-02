@@ -10,6 +10,7 @@ use crate::util::ValidateError;
 /// `IllegalArgumentException`，也可能在聚合方言贡献时抛出
 /// `ConfigurationException`。Rust 使用显式联合保留异常类别。
 #[derive(Debug)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub enum DialectSetConfigurationError {
     /// Java 参数前置条件失败。
     IllegalArgument(ValidateError),
@@ -34,6 +35,7 @@ impl DialectSetConfigurationError {
     /// 正常内部调用始终传入非空集合；该转换仍保留防御性错误消息。
     ///
     /// 返回保留原配置异常或以前置条件异常为 cause 的 `ConfigurationException`。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn into_configuration_exception(self) -> ConfigurationException {
         match self {
             Self::Configuration(error) => error,

@@ -26,6 +26,7 @@ impl StandardEachTagProcessor {
     pub const ATTR_NAME: &'static str = "each";
 
     /// 创建 Processor。
+    /// 对应 Java 语义：`StandardEachTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

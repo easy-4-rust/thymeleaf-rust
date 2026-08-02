@@ -32,6 +32,7 @@ impl FragmentExpression {
     const UNNAMED_PARAMETERS_PREFIX: &'static str = "_arg";
 
     /// 创建非空 Fragment 表达式。
+    /// 对应 Java 语义：`FragmentExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_name: Option<Arc<dyn IStandardExpression>>,
         fragment_selector: Option<Arc<dyn IStandardExpression>>,
@@ -69,26 +70,31 @@ impl FragmentExpression {
     }
 
     /// 返回模板名称表达式。
+    /// 对应 Java: `FragmentExpression#getTemplateName()`。
     pub fn get_template_name(&self) -> Option<&dyn IStandardExpression> {
         self.template_name.as_deref()
     }
 
     /// 返回 Fragment selector 表达式。
+    /// 对应 Java: `FragmentExpression#getFragmentSelector()`。
     pub fn get_fragment_selector(&self) -> Option<&dyn IStandardExpression> {
         self.fragment_selector.as_deref()
     }
 
     /// 判断是否具有 Fragment selector。
+    /// 对应 Java: `FragmentExpression#hasFragmentSelector()`。
     pub fn has_fragment_selector(&self) -> bool {
         self.fragment_selector.is_some()
     }
 
     /// 返回参数赋值序列。
+    /// 对应 Java: `FragmentExpression#getParameters()`。
     pub fn get_parameters(&self) -> Option<&AssignationSequence> {
         self.parameters.as_deref()
     }
 
     /// 判断是否具有至少一个参数。
+    /// 对应 Java: `FragmentExpression#hasParameters()`。
     pub fn has_parameters(&self) -> bool {
         self.parameters
             .as_ref()
@@ -96,11 +102,13 @@ impl FragmentExpression {
     }
 
     /// 判断参数名是否由引擎按位置合成。
+    /// 对应 Java: `FragmentExpression#hasSyntheticParameters()`。
     pub fn has_synthetic_parameters(&self) -> bool {
         self.synthetic_parameters
     }
 
     /// 解析完整 Fragment 表达式。
+    /// 对应 Java: `FragmentExpression#parseFragmentExpression()`。
     pub fn parse_fragment_expression(input: Option<&JavaString>) -> Option<Self> {
         let input = input?;
         let trimmed = java_trim(input.as_utf16());
@@ -183,6 +191,7 @@ impl FragmentExpression {
     }
 
     /// 在 RESTRICTED 上下文中执行模板名、selector 和参数。
+    /// 对应 Java: `FragmentExpression#createExecutedFragmentExpression()`。
     pub fn create_executed_fragment_expression(
         context: &dyn IExpressionContext,
         expression: &FragmentExpression,
@@ -228,6 +237,7 @@ impl FragmentExpression {
     }
 
     /// 将已执行表达式解析为模板模型 Fragment。
+    /// 对应 Java: `FragmentExpression#resolveExecutedFragmentExpression()`。
     pub fn resolve_executed_fragment_expression(
         context: &dyn ITemplateContext,
         executed: &ExecutedFragmentExpression,
@@ -299,6 +309,7 @@ impl FragmentExpression {
     }
 
     /// 将模板名结果转换为名称；`this` 和 null 表示当前模板。
+    /// 对应 Java: `FragmentExpression#resolveTemplateName()`。
     pub fn resolve_template_name(executed: &ExecutedFragmentExpression) -> Option<JavaString> {
         let result = executed.template_name_expression_result.as_deref()?;
         let value = result.to_java_string()?;
@@ -306,6 +317,7 @@ impl FragmentExpression {
     }
 
     /// 将 selector 结果规范化为单元素 selector 集合。
+    /// 对应 Java: `FragmentExpression#resolveFragments()`。
     pub fn resolve_fragments(executed: &ExecutedFragmentExpression) -> Option<Vec<JavaString>> {
         let value = executed
             .fragment_selector_expression_result
@@ -415,26 +427,31 @@ impl ExecutedFragmentExpression {
     }
 
     /// 返回模板名表达式执行结果。
+    /// 对应 Java: `FragmentExpression#getTemplateNameExpressionResult()`。
     pub fn get_template_name_expression_result(&self) -> Option<&TemplateValue> {
         self.template_name_expression_result.as_deref()
     }
 
     /// 返回模板名表达式执行结果的共享身份。
+    /// 对应 Java 语义：`FragmentExpression` 的 `get_template_name_expression_result_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_template_name_expression_result_arc(&self) -> Option<Arc<TemplateValue>> {
         self.template_name_expression_result.clone()
     }
 
     /// 返回 selector 表达式执行结果。
+    /// 对应 Java: `FragmentExpression#getFragmentSelectorExpressionResult()`。
     pub fn get_fragment_selector_expression_result(&self) -> Option<&TemplateValue> {
         self.fragment_selector_expression_result.as_deref()
     }
 
     /// 返回参数 Map 的共享视图。
+    /// 对应 Java: `FragmentExpression#getFragmentParameters()`。
     pub fn get_fragment_parameters(&self) -> Option<&Arc<RwLock<FragmentParameterMap>>> {
         self.fragment_parameters.as_ref()
     }
 
     /// 判断参数名是否为合成位置参数。
+    /// 对应 Java: `FragmentExpression#hasSyntheticParameters()`。
     pub fn has_synthetic_parameters(&self) -> bool {
         self.synthetic_parameters
     }

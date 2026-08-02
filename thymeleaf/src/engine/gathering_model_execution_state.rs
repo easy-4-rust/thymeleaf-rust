@@ -11,6 +11,7 @@ use super::{SkipBody, TemplateModelController};
 /// `ProcessorTemplateHandler.currentGatheringModel`。Rust 复制不可变事件身份和
 /// Processor 游标，同时保留 ModelController 弱引用，避免对同一 `RefCell`
 /// 产生嵌套可变借用。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct GatheringModelExecutionState {
     inner_model: Model,
     processor_execution_vars: ProcessorExecutionVars,
@@ -21,6 +22,7 @@ pub struct GatheringModelExecutionState {
 
 impl GatheringModelExecutionState {
     /// 从收集对象当前状态创建执行快照。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(
         inner_model: Model,
         processor_execution_vars: ProcessorExecutionVars,
@@ -43,11 +45,13 @@ impl GatheringModelExecutionState {
     }
 
     /// 恢复暂停前的 Processor 游标和结构动作状态。
+    /// 对应 Java 语义：Java 接口/超类方法 `initializeProcessorExecutionVars()` 的 Rust 移植（`None` 继承路径）。
     pub(crate) fn initialize_processor_execution_vars(&self) -> ProcessorExecutionVars {
         self.processor_execution_vars.clone_vars()
     }
 
     /// 恢复收集开始时的 body 与 close-tag skip 标志。
+    /// 对应 Java 语义：Java 接口/超类方法 `resetGatheredSkipFlags()` 的 Rust 移植（`None` 继承路径）。
     pub(crate) fn reset_gathered_skip_flags(&self) {
         if let Some(controller) = self.model_controller.upgrade() {
             controller

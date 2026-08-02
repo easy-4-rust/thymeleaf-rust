@@ -28,6 +28,7 @@ pub(crate) struct OpenElementTagModelProcessable {
 impl OpenElementTagModelProcessable {
     /// 创建从 before 阶段开始的开放标签任务。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`OpenElementTagModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         open_element_tag: Arc<dyn IOpenElementTag>,
         vars: ProcessorExecutionVars,

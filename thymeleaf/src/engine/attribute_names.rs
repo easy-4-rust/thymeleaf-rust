@@ -16,6 +16,7 @@ static TEXT_REPOSITORY: OnceLock<RwLock<AttributeNamesRepository>> = OnceLock::n
 
 /// `AttributeNames` 返回的具体名称子类。
 #[derive(Clone)]
+/// 对应 Java 语义：`AttributeNames` 的 Rust 侧类型 `AttributeNameValue`。
 pub enum AttributeNameValue {
     /// HTML 名称。
     Html(Arc<HTMLAttributeName>),
@@ -28,6 +29,7 @@ pub enum AttributeNameValue {
 impl AttributeNameValue {
     /// 返回统一的 `AttributeName` 基类视图。
     #[must_use]
+    /// 对应 Java 语义：`AttributeNames` 的 `as_attribute_name` 行为（Rust 侧辅助/私有路径）。
     pub fn as_attribute_name(&self) -> &AttributeName {
         match self {
             Self::Html(value) => value.as_attribute_name(),
@@ -39,6 +41,7 @@ impl AttributeNameValue {
 
 /// 属性名称规范化或 repository 访问错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`AttributeNames` 的 Rust 侧类型 `AttributeNamesError`。
 pub enum AttributeNamesError {
     /// 指定参数违反公开方法的 null/空规则。
     IllegalArgument(&'static str),
@@ -121,6 +124,7 @@ impl AttributeNames {
     /// # 错误
     ///
     /// null、空范围、负数、越界、RAW 模式或具体名称校验失败时返回 Java 对应错误。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_name_buffer` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_buffer(
         template_mode: Option<TemplateMode>,
         buffer: Option<&[u16]>,
@@ -136,6 +140,7 @@ impl AttributeNames {
     }
 
     /// 从完整 Java String 解析任意结构化模板模式的属性名。
+    /// 对应 Java: `AttributeNames#forName()`。
     pub fn for_name(
         template_mode: Option<TemplateMode>,
         attribute_name: Option<&JavaString>,
@@ -152,6 +157,7 @@ impl AttributeNames {
     }
 
     /// 从显式 prefix 与本地名解析任意结构化模板模式的属性名。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_with_prefix(
         template_mode: Option<TemplateMode>,
         prefix: Option<&JavaString>,
@@ -171,6 +177,7 @@ impl AttributeNames {
     }
 
     /// 解析并缓存文本模式属性名。
+    /// 对应 Java: `AttributeNames#forTextName()`。
     pub fn for_text_name(
         attribute_name: Option<&JavaString>,
     ) -> Result<Arc<TextAttributeName>, AttributeNamesError> {
@@ -184,6 +191,7 @@ impl AttributeNames {
     }
 
     /// 解析并缓存 XML 属性名。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
         attribute_name: Option<&JavaString>,
     ) -> Result<Arc<XMLAttributeName>, AttributeNamesError> {
@@ -197,6 +205,7 @@ impl AttributeNames {
     }
 
     /// 解析并缓存 HTML 属性名。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
         attribute_name: Option<&JavaString>,
     ) -> Result<Arc<HTMLAttributeName>, AttributeNamesError> {
@@ -210,6 +219,7 @@ impl AttributeNames {
     }
 
     /// 使用显式 prefix 解析文本模式属性名。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_text_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_text_name_with_prefix(
         prefix: Option<&JavaString>,
         attribute_name: Option<&JavaString>,
@@ -230,6 +240,7 @@ impl AttributeNames {
     }
 
     /// 使用显式 prefix 解析 XML 属性名。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
         prefix: Option<&JavaString>,
         attribute_name: Option<&JavaString>,
@@ -250,6 +261,7 @@ impl AttributeNames {
     }
 
     /// 使用显式 prefix 解析 HTML 属性名。
+    /// 对应 Java 语义：`AttributeNames` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
         prefix: Option<&JavaString>,
         attribute_name: Option<&JavaString>,

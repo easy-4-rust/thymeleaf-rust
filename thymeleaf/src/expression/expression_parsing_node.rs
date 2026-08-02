@@ -19,6 +19,7 @@ pub(crate) struct ExpressionParsingNode {
 
 impl ExpressionParsingNode {
     /// 从半解析文本创建节点，并执行 Java `String#trim()`。
+    /// 对应 Java 语义：`ExpressionParsingNode` 的 `from_input` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn from_input(input: JavaString) -> Self {
         Self {
             input: Some(java_trim(&input)),
@@ -27,6 +28,7 @@ impl ExpressionParsingNode {
     }
 
     /// 从已解析表达式创建节点。
+    /// 对应 Java 语义：`ExpressionParsingNode` 的 `from_expression` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn from_expression(expression: Arc<dyn IStandardExpression>) -> Self {
         Self {
             input: None,
@@ -35,16 +37,19 @@ impl ExpressionParsingNode {
     }
 
     /// 判断节点是否保存输入文本。
+    /// 对应 Java: `ExpressionParsingNode#isInput()`。
     pub(crate) fn is_input(&self) -> bool {
         self.input.is_some()
     }
 
     /// 判断节点是否保存已解析表达式。
+    /// 对应 Java: `ExpressionParsingNode#isExpression()`。
     pub(crate) fn is_expression(&self) -> bool {
         self.expression.is_some()
     }
 
     /// 判断节点是否保存 SimpleExpression。
+    /// 对应 Java: `ExpressionParsingNode#isSimpleExpression()`。
     pub(crate) fn is_simple_expression(&self) -> bool {
         self.expression
             .as_ref()
@@ -52,6 +57,7 @@ impl ExpressionParsingNode {
     }
 
     /// 判断节点是否保存 ComplexExpression。
+    /// 对应 Java 语义：`ExpressionParsingNode` 的 `complex_expression` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn complex_expression(&self) -> bool {
         self.expression
             .as_ref()
@@ -59,16 +65,19 @@ impl ExpressionParsingNode {
     }
 
     /// 返回可空输入文本。
+    /// 对应 Java: `ExpressionParsingNode#getInput()`。
     pub(crate) fn get_input(&self) -> Option<&JavaString> {
         self.input.as_ref()
     }
 
     /// 返回可空表达式。
+    /// 对应 Java: `ExpressionParsingNode#getExpression()`。
     pub(crate) fn get_expression(&self) -> Option<&Arc<dyn IStandardExpression>> {
         self.expression.as_ref()
     }
 
     /// 返回 Java `toString()` 的节点诊断文本。
+    /// 对应 Java 语义：`ExpressionParsingNode` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn to_java_string(&self) -> StandardExpressionResult<JavaString> {
         if let Some(expression) = &self.expression {
             let mut units = vec![b'[' as u16];

@@ -18,6 +18,7 @@ pub struct OrExpression {
 
 impl OrExpression {
     /// 创建 OR 表达式。
+    /// 对应 Java 语义：`OrExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         left: Option<Arc<dyn IStandardExpression>>,
         right: Option<Arc<dyn IStandardExpression>>,
@@ -25,15 +26,18 @@ impl OrExpression {
         BinaryOperationExpression::new(left, right).map(|operation| Self { operation })
     }
     /// 返回左操作数。
+    /// 对应 Java 语义：Java 接口/超类方法 `getLeft()` 的 Rust 移植（`OrExpression` 继承路径）。
     pub fn get_left(&self) -> &dyn IStandardExpression {
         self.operation.get_left()
     }
     /// 返回右操作数。
+    /// 对应 Java 语义：Java 接口/超类方法 `getRight()` 的 Rust 移植（`OrExpression` 继承路径）。
     pub fn get_right(&self) -> &dyn IStandardExpression {
         self.operation.get_right()
     }
     /// 判断解析阶段是否允许该操作数。
     #[expect(dead_code, reason = "将在后续 ExpressionParsingUtil 组合阶段调用")]
+    /// 对应 Java 语义：`OrExpression` 的 `is_operand_allowed` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn is_operand_allowed(operand: Option<&dyn IStandardExpression>) -> bool {
         operand.is_some_and(|operand| {
             !operand.is_token_expression() || operand.is_boolean_token_expression()

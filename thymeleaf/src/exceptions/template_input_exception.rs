@@ -106,46 +106,54 @@ impl TemplateInputException {
 
     /// 返回包含模板名和位置后缀的完整消息。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getMessage()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn get_message(&self) -> String {
         self.processing.get_message()
     }
 
     /// 返回模板名称。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getTemplateName()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn get_template_name(&self) -> Option<&str> {
         self.processing.get_template_name()
     }
 
     /// 判断是否存在模板名称。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `hasTemplateName()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn has_template_name(&self) -> bool {
         self.processing.has_template_name()
     }
 
     /// 返回行号。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getLine()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn get_line(&self) -> Option<i32> {
         self.processing.get_line()
     }
 
     /// 返回列号。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getCol()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn get_col(&self) -> Option<i32> {
         self.processing.get_col()
     }
 
     /// 判断行和列是否同时存在。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `hasLineAndCol()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn has_line_and_col(&self) -> bool {
         self.processing.has_line_and_col()
     }
 
     /// 修改模板名称。
+    /// 对应 Java 语义：Java 接口/超类方法 `setTemplateName()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn set_template_name(&mut self, template_name: Option<String>) {
         self.processing.set_template_name(template_name);
     }
 
     /// 修改行列；负数位置转换为缺失值。
+    /// 对应 Java 语义：Java 接口/超类方法 `setLineAndCol()` 的 Rust 移植（`TemplateInputException` 继承路径）。
     pub fn set_line_and_col(&mut self, line: i32, col: i32) {
         self.processing.set_line_and_col(line, col);
     }

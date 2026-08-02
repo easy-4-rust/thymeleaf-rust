@@ -32,6 +32,7 @@ impl ExpressionParsingUtil {
     ///
     /// # 返回
     /// 语法完整时返回表达式树，否则返回模板处理错误。
+    /// 对应 Java 语义：Java 接口/超类方法 `parseExpression()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_expression(
         input: &JavaString,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
@@ -45,6 +46,7 @@ impl ExpressionParsingUtil {
     }
 
     /// 解析赋值序列，供 `AssignationUtils` 与 Fragment/Link 表达式共享。
+    /// 对应 Java 语义：Java 接口/超类方法 `parseAssignationSequence()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_assignation_sequence(
         input: &JavaString,
         allow_parameters_without_value: bool,
@@ -53,11 +55,13 @@ impl ExpressionParsingUtil {
     }
 
     /// 解析逗号分隔的表达式序列。
+    /// 对应 Java 语义：Java 接口/超类方法 `parseExpressionSequence()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_expression_sequence(input: &JavaString) -> Option<ExpressionSequence> {
         parse_expression_sequence(input.as_utf16())
     }
 
     /// 解析 `iter[,status] : iterable` 声明。
+    /// 对应 Java 语义：Java 接口/超类方法 `parseEach()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_each(input: &JavaString) -> Option<Each> {
         let input = java_trim(input.as_utf16());
         let operator = find_top_level_character(input, b':' as u16)?;
@@ -79,6 +83,7 @@ impl ExpressionParsingUtil {
     }
 
     /// 解析只允许 token 名称的 Fragment 签名。
+    /// 对应 Java 语义：Java 接口/超类方法 `parseFragmentSignature()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_fragment_signature(input: &JavaString) -> Option<FragmentSignature> {
         let input = java_trim(input.as_utf16());
         if input.is_empty() {

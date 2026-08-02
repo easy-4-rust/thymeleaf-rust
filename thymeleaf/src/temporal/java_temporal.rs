@@ -8,6 +8,7 @@ use crate::util::JavaString;
 
 /// Java Time API 中具体 `Temporal` 类型的判别值。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub enum JavaTemporalKind {
     /// `Instant`。
     Instant,
@@ -33,6 +34,7 @@ pub enum JavaTemporalKind {
 ///
 /// 这是迁移层对象，用于承载 `Temporals` 所接受的九种 Java Time 类型。
 #[derive(Clone, Debug)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub enum JavaTemporal {
     /// `java.time.Instant`。
     Instant(DateTime<Utc>),
@@ -76,6 +78,7 @@ impl JavaTemporal {
     /// `LocalDateTime#toString()` 会省略全零秒字段，但 Jackson 的序列化格式保留秒，
     /// 因此该表示与普通 Java `toString()` 分开维护。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn to_javascript_iso_string(&self) -> JavaString {
         JavaString::from_rust_str(&match self {
             Self::LocalDateTime(value) => value.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),

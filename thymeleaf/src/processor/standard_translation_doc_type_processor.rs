@@ -29,6 +29,7 @@ impl StandardTranslationDocTypeProcessor {
     pub const PRECEDENCE: i32 = 1000;
 
     /// 创建 HTML DOCTYPE 翻译 Processor。
+    /// 对应 Java 语义：`StandardTranslationDocTypeProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new() -> Result<Self, TemplateProcessingException> {
         let callback: DocTypeCallback = Box::new(|_context, doc_type, structure_handler| {
             if !doc_type

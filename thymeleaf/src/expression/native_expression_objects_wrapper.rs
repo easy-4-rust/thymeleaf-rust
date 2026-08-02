@@ -362,6 +362,7 @@ impl NativeExpressionObjectsWrapperError {
 
 /// 表达式对象包装 Map 的访问错误。
 #[derive(Debug, Error, Eq, PartialEq)]
+/// 对应 Java 语义：`OGNLExpressionObjectsWrapper` 的 Rust 侧类型 `NativeExpressionObjectsWrapperError`。
 pub enum NativeExpressionObjectsWrapperError {
     /// Java Map 操作在调用 `key.toString()` 时遇到空键。
     #[error("Cannot invoke \"Object.toString()\" because \"key\" is null")]

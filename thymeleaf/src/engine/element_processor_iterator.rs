@@ -40,6 +40,7 @@ impl ElementProcessorIterator {
     }
 
     /// 清除当前迭代状态并复用已分配空间。
+    /// 对应 Java: `ElementProcessorIterator#reset()`。
     pub(crate) fn reset(&mut self) {
         self.processors.clear();
         self.visited.clear();
@@ -50,6 +51,7 @@ impl ElementProcessorIterator {
     }
 
     /// 返回下一未访问 Processor，必要时按新标签快照重算。
+    /// 对应 Java: `ElementProcessorIterator#next()`。
     pub(crate) fn next(
         &mut self,
         tag: &AbstractProcessableElementTag,
@@ -98,6 +100,7 @@ impl ElementProcessorIterator {
     }
 
     /// 要求下一次返回当前标签最后一个 Processor。
+    /// 对应 Java: `ElementProcessorIterator#setLastToBeRepeated()`。
     pub(crate) fn set_last_to_be_repeated(
         &mut self,
         tag: &AbstractProcessableElementTag,
@@ -118,6 +121,7 @@ impl ElementProcessorIterator {
     }
 
     /// 复制原迭代器的处理快照和访问进度。
+    /// 对应 Java: `ElementProcessorIterator#resetAsCloneOf()`。
     pub(crate) fn reset_as_clone_of(&mut self, original: &Self) {
         self.last = original.last;
         self.processors.clone_from(&original.processors);

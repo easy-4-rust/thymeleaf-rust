@@ -14,6 +14,7 @@ pub struct TemporalSetUtils {
 
 impl TemporalSetUtils {
     /// 使用 Locale 与默认 ZoneId 创建 Set 工具。
+    /// 对应 Java 语义：`TemporalSetUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(locale: JavaLocale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             array_utils: TemporalArrayUtils::new(locale, default_zone_id)?,
@@ -21,6 +22,7 @@ impl TemporalSetUtils {
     }
 
     /// 批量格式化，并按 Java `LinkedHashSet` 语义去重。
+    /// 对应 Java: `TemporalSetUtils#setFormat()`。
     pub fn set_format(
         &self,
         target: &[Option<JavaTemporal>],
@@ -33,6 +35,7 @@ impl TemporalSetUtils {
     }
 
     /// 批量读取日并去重。
+    /// 对应 Java: `TemporalSetUtils#setDay()`。
     pub fn set_day(
         &self,
         target: &[Option<JavaTemporal>],
@@ -40,6 +43,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_day(target)?))
     }
     /// 批量读取月并去重。
+    /// 对应 Java: `TemporalSetUtils#setMonth()`。
     pub fn set_month(
         &self,
         target: &[Option<JavaTemporal>],
@@ -47,6 +51,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_month(target)?))
     }
     /// 批量读取年份并去重。
+    /// 对应 Java: `TemporalSetUtils#setYear()`。
     pub fn set_year(
         &self,
         target: &[Option<JavaTemporal>],
@@ -54,6 +59,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_year(target)?))
     }
     /// 批量读取星期并去重。
+    /// 对应 Java: `TemporalSetUtils#setDayOfWeek()`。
     pub fn set_day_of_week(
         &self,
         target: &[Option<JavaTemporal>],
@@ -61,6 +67,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_day_of_week(target)?))
     }
     /// 批量读取小时并去重。
+    /// 对应 Java: `TemporalSetUtils#setHour()`。
     pub fn set_hour(
         &self,
         target: &[Option<JavaTemporal>],
@@ -68,6 +75,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_hour(target)?))
     }
     /// 批量读取分钟并去重。
+    /// 对应 Java: `TemporalSetUtils#setMinute()`。
     pub fn set_minute(
         &self,
         target: &[Option<JavaTemporal>],
@@ -75,6 +83,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_minute(target)?))
     }
     /// 批量读取秒并去重。
+    /// 对应 Java: `TemporalSetUtils#setSecond()`。
     pub fn set_second(
         &self,
         target: &[Option<JavaTemporal>],
@@ -82,6 +91,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_second(target)?))
     }
     /// 批量读取纳秒并去重。
+    /// 对应 Java: `TemporalSetUtils#setNanosecond()`。
     pub fn set_nanosecond(
         &self,
         target: &[Option<JavaTemporal>],
@@ -89,6 +99,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_nanosecond(target)?))
     }
     /// 批量读取完整月份名并去重。
+    /// 对应 Java: `TemporalSetUtils#setMonthName()`。
     pub fn set_month_name(
         &self,
         target: &[Option<JavaTemporal>],
@@ -96,6 +107,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_month_name(target)?))
     }
     /// 批量读取短月份名并去重。
+    /// 对应 Java: `TemporalSetUtils#setMonthNameShort()`。
     pub fn set_month_name_short(
         &self,
         target: &[Option<JavaTemporal>],
@@ -103,6 +115,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_month_name_short(target)?))
     }
     /// 批量读取完整星期名并去重。
+    /// 对应 Java: `TemporalSetUtils#setDayOfWeekName()`。
     pub fn set_day_of_week_name(
         &self,
         target: &[Option<JavaTemporal>],
@@ -110,6 +123,7 @@ impl TemporalSetUtils {
         Ok(dedupe(self.array_utils.array_day_of_week_name(target)?))
     }
     /// 批量读取短星期名并去重。
+    /// 对应 Java: `TemporalSetUtils#setDayOfWeekNameShort()`。
     pub fn set_day_of_week_name_short(
         &self,
         target: &[Option<JavaTemporal>],
@@ -119,6 +133,7 @@ impl TemporalSetUtils {
         ))
     }
     /// 批量输出 ISO 格式并去重。
+    /// 对应 Java 语义：`TemporalSetUtils` 的 `set_format_iso` 行为（Rust 侧辅助/私有路径）。
     pub fn set_format_iso(
         &self,
         target: &[Option<JavaTemporal>],

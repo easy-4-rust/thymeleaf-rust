@@ -10,6 +10,7 @@ use super::RawParseException;
     clippy::result_large_err,
     reason = "公开 SPI 保留具体 RawParseException，避免破坏 Java checked exception 对照"
 )]
+/// 对应 Java: `IRawHandler`。
 pub trait IRawHandler {
     /// 处理文档开始事件。
     ///

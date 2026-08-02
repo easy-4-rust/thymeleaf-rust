@@ -16,6 +16,7 @@ pub struct XMLAttributeDefinition {
 }
 
 impl XMLAttributeDefinition {
+    /// 对应 Java 语义：`XMLAttributeDefinition` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         name: Arc<XMLAttributeName>,
         associated_processors: Arc<RwLock<ElementProcessorSet>>,

@@ -128,6 +128,7 @@ impl StandardInlineModeParseError {
     /// # 返回
     /// 精确保留固定前缀和未识别输入，包括孤立代理 code unit。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `message()` 的 Rust 移植（`StandardInlineMode` 继承路径）。
     pub fn message(&self) -> JavaString {
         match self {
             Self::NullOrEmpty => JavaString::from_rust_str("Inline mode cannot be null or empty"),

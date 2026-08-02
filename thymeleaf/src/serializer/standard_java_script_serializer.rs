@@ -19,6 +19,7 @@ pub struct StandardJavaScriptSerializer {
 impl StandardJavaScriptSerializer {
     /// 创建 JavaScript 序列化器并保存 Java 构造参数。
     #[must_use]
+    /// 对应 Java 语义：`StandardJavaScriptSerializer` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(use_jackson_if_available: bool) -> Self {
         let delegate = if use_jackson_if_available {
             if ResourceLoaderUtils::is_class_present("tools.jackson.databind.ObjectMapper") {

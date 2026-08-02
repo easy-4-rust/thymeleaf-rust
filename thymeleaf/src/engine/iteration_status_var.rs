@@ -64,48 +64,56 @@ impl IterationStatusVar {
 
     /// 返回从零开始的当前索引。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#getIndex()`。
     pub fn get_index(&self) -> i32 {
         read_state(&self.state).index
     }
 
     /// 返回从一开始的当前计数。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#getCount()`。
     pub fn get_count(&self) -> i32 {
         self.get_index().wrapping_add(1)
     }
 
     /// 判断当前状态是否具有预先确定的总大小。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#hasSize()`。
     pub fn has_size(&self) -> bool {
         read_state(&self.state).size.is_some()
     }
 
     /// 返回可空总大小。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#getSize()`。
     pub fn get_size(&self) -> Option<i32> {
         read_state(&self.state).size
     }
 
     /// 返回可空当前迭代对象并保持对象身份。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#getCurrent()`。
     pub fn get_current(&self) -> Option<Arc<TemplateValue>> {
         read_state(&self.state).current.clone()
     }
 
     /// 判断当前一基计数是否为偶数。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#isEven()`。
     pub fn is_even(&self) -> bool {
         self.get_count() % 2 == 0
     }
 
     /// 判断当前一基计数是否为奇数。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#isOdd()`。
     pub fn is_odd(&self) -> bool {
         !self.is_even()
     }
 
     /// 判断当前元素是否为首个元素。
     #[must_use]
+    /// 对应 Java: `IterationStatusVar#isFirst()`。
     pub fn is_first(&self) -> bool {
         self.get_index() == 0
     }
@@ -115,6 +123,7 @@ impl IterationStatusVar {
     /// # 错误
     ///
     /// `size` 未知时保留 Java 自动拆箱产生的 `NullPointerException`。
+    /// 对应 Java: `IterationStatusVar#isLast()`。
     pub fn is_last(&self) -> Result<bool, IterationStatusVarError> {
         let state = read_state(&self.state);
         state
@@ -125,6 +134,7 @@ impl IterationStatusVar {
 
     /// 按 Java `toString()` 布局生成状态文本。
     #[must_use]
+    /// 对应 Java 语义：`IterationStatusVar` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> JavaString {
         let state = read_state(&self.state);
         let size = state
@@ -141,10 +151,12 @@ impl IterationStatusVar {
             state.index.wrapping_add(1)
         ))
     }
+/// 对应 Java 语义：`IterationStatusVar` 的 `set_current` 行为（Rust 侧辅助/私有路径）。
 
     pub(super) fn set_current(&self, current: Option<Arc<TemplateValue>>) {
         write_state(&self.state).current = current;
     }
+/// 对应 Java 语义：`IterationStatusVar` 的 `increment_index` 行为（Rust 侧辅助/私有路径）。
 
     pub(super) fn increment_index(&self) {
         let mut state = write_state(&self.state);

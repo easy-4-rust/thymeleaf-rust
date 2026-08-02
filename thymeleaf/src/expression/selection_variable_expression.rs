@@ -21,11 +21,13 @@ pub struct SelectionVariableExpression {
 
 impl SelectionVariableExpression {
     /// 创建不启用字符串转换的 selection 表达式。
+    /// 对应 Java 语义：`SelectionVariableExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(expression: Option<JavaString>) -> Result<Self, ValidateError> {
         Self::with_convert_to_string(expression, false)
     }
 
     /// 创建 selection 表达式。
+    /// 对应 Java 语义：`SelectionVariableExpression` 的 `with_convert_to_string` 行为（Rust 侧辅助/私有路径）。
     pub fn with_convert_to_string(
         expression: Option<JavaString>,
         convert_to_string: bool,
@@ -41,11 +43,13 @@ impl SelectionVariableExpression {
     }
 
     /// 返回定界符内部表达式。
+    /// 对应 Java 语义：`SelectionVariableExpression` 的 `get_expression_value` 行为（Rust 侧辅助/私有路径）。
     pub fn get_expression_value(&self) -> &JavaString {
         &self.expression
     }
 
     /// 解析完整 `*{...}` 文本；不匹配时返回 `None`。
+    /// 对应 Java: `SelectionVariableExpression#parseSelectionVariableExpression()`。
     pub(crate) fn parse_selection_variable_expression(input: &JavaString) -> Option<Self> {
         parse_delimited(input, b'*' as u16).and_then(|(expression, convert)| {
             Self::with_convert_to_string(Some(expression), convert).ok()

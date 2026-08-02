@@ -33,6 +33,7 @@ impl StandardInliningTextProcessor {
     pub const PRECEDENCE: i32 = 1000;
 
     /// 创建指定模板模式的内联 Processor。
+    /// 对应 Java 语义：`StandardInliningTextProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(template_mode: TemplateMode) -> Result<Self, TemplateProcessingException> {
         let callback: TextCallback = Box::new(|context, text, structure_handler| {
             if EngineEventUtils::is_whitespace_text(Some(text)).map_err(|error| {

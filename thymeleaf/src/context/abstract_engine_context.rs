@@ -65,6 +65,7 @@ impl AbstractEngineContext {
 
     /// 返回当前引擎配置的共享身份。
     #[must_use]
+    /// 对应 Java 语义：`AbstractEngineContext` 的 `get_configuration_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_configuration_arc(&self) -> Arc<dyn IEngineConfiguration> {
         Arc::clone(&self.configuration)
     }

@@ -355,11 +355,13 @@ impl DialectSetConfiguration {
     }
 
     /// 返回方言配置快照。
+    /// 对应 Java: `DialectSetConfiguration#getDialectConfigurations()`。
     pub fn get_dialect_configurations(&self) -> &[DialectConfiguration] {
         &self.dialect_configurations
     }
 
     /// 返回按首次出现顺序去重的方言。
+    /// 对应 Java: `DialectSetConfiguration#getDialects()`。
     pub fn get_dialects(&self) -> &[Arc<dyn IDialect>] {
         &self.dialects
     }
@@ -370,11 +372,13 @@ impl DialectSetConfiguration {
     }
 
     /// 返回 StandardDialect 实际前缀。
+    /// 对应 Java: `DialectSetConfiguration#getStandardDialectPrefix()`。
     pub fn get_standard_dialect_prefix(&self) -> Option<&JavaString> {
         self.standard_dialect_prefix.as_ref()
     }
 
     /// 返回不可变执行属性。
+    /// 对应 Java: `DialectSetConfiguration#getExecutionAttributes()`。
     pub fn get_execution_attributes(
         &self,
     ) -> &IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>> {
@@ -382,6 +386,7 @@ impl DialectSetConfiguration {
     }
 
     /// 返回指定名称的执行属性；名称缺失或值为 Java null 时返回 `None`。
+    /// 对应 Java: `DialectSetConfiguration#getExecutionAttribute()`。
     pub fn get_execution_attribute(
         &self,
         execution_attribute_name: Option<&JavaString>,
@@ -393,32 +398,38 @@ impl DialectSetConfiguration {
     }
 
     /// 判断执行属性 Map 是否包含指定键，显式 Java null 值仍计为存在。
+    /// 对应 Java: `DialectSetConfiguration#hasExecutionAttribute()`。
     pub fn has_execution_attribute(&self, execution_attribute_name: Option<&JavaString>) -> bool {
         self.execution_attributes
             .contains_key(&execution_attribute_name.cloned())
     }
 
     /// 返回聚合表达式对象工厂。
+    /// 对应 Java: `DialectSetConfiguration#getExpressionObjectFactory()`。
     pub fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory> {
         self.expression_object_factory.clone()
     }
 
     /// 返回元素定义仓库。
+    /// 对应 Java: `DialectSetConfiguration#getElementDefinitions()`。
     pub fn get_element_definitions(&self) -> &ElementDefinitions {
         self.element_definitions.as_ref()
     }
 
     /// 返回属性定义仓库。
+    /// 对应 Java: `DialectSetConfiguration#getAttributeDefinitions()`。
     pub fn get_attribute_definitions(&self) -> &AttributeDefinitions {
         self.attribute_definitions.as_ref()
     }
 
     /// 返回共享元素定义仓库。
+    /// 对应 Java 语义：`DialectSetConfiguration` 的 `get_element_definitions_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_element_definitions_arc(&self) -> Arc<ElementDefinitions> {
         Arc::clone(&self.element_definitions)
     }
 
     /// 返回共享属性定义仓库。
+    /// 对应 Java 语义：`DialectSetConfiguration` 的 `get_attribute_definitions_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_attribute_definitions_arc(&self) -> Arc<AttributeDefinitions> {
         Arc::clone(&self.attribute_definitions)
     }
@@ -427,6 +438,7 @@ impl DialectSetConfiguration {
     ///
     /// 参数 `mode` 为 `None` 时返回 Java `Template mode cannot be null` 校验错误；
     /// 成功时返回按 Java Processor comparator 排序的借用列表，未配置时为空。
+    /// 对应 Java: `DialectSetConfiguration#getTemplateBoundariesProcessors()`。
     pub fn get_template_boundaries_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -440,6 +452,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 CDATA Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java 语义：`DialectSetConfiguration` 的 `get_cdata_section_processors` 行为（Rust 侧辅助/私有路径）。
     pub fn get_cdata_section_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -453,6 +466,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 Comment Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java: `DialectSetConfiguration#getCommentProcessors()`。
     pub fn get_comment_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -466,6 +480,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 DOCTYPE Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java: `DialectSetConfiguration#getDocTypeProcessors()`。
     pub fn get_doc_type_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -479,6 +494,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 Element Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java: `DialectSetConfiguration#getElementProcessors()`。
     pub fn get_element_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -492,6 +508,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 ProcessingInstruction Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java: `DialectSetConfiguration#getProcessingInstructionProcessors()`。
     pub fn get_processing_instruction_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -505,6 +522,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 Text Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java: `DialectSetConfiguration#getTextProcessors()`。
     pub fn get_text_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -518,6 +536,7 @@ impl DialectSetConfiguration {
     /// 返回指定模式的 XMLDeclaration Processor。
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回排序后的借用列表。
+    /// 对应 Java 语义：`DialectSetConfiguration` 的 `get_xml_declaration_processors` 行为（Rust 侧辅助/私有路径）。
     pub fn get_xml_declaration_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -532,6 +551,7 @@ impl DialectSetConfiguration {
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回按 Processor precedence
     /// 和配置实现类名排序的借用列表。Java 实现不会叠加方言级 precedence。
+    /// 对应 Java: `DialectSetConfiguration#getPreProcessors()`。
     pub fn get_pre_processors(
         &self,
         mode: Option<TemplateMode>,
@@ -547,6 +567,7 @@ impl DialectSetConfiguration {
     ///
     /// 参数 `mode` 为 `None` 时返回 Java 校验错误；成功时返回按 Processor precedence
     /// 和配置实现类名排序的借用列表。Java 实现不会叠加方言级 precedence。
+    /// 对应 Java: `DialectSetConfiguration#getPostProcessors()`。
     pub fn get_post_processors(
         &self,
         mode: Option<TemplateMode>,

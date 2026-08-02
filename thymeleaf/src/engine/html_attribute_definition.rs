@@ -17,6 +17,7 @@ pub struct HTMLAttributeDefinition {
 }
 
 impl HTMLAttributeDefinition {
+    /// 对应 Java 语义：`HTMLAttributeDefinition` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         name: Arc<HTMLAttributeName>,
         boolean_attribute: bool,

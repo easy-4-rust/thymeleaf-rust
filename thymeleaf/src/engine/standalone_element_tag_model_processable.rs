@@ -29,6 +29,7 @@ pub(crate) struct StandaloneElementTagModelProcessable {
 impl StandaloneElementTagModelProcessable {
     /// 创建从 before 阶段开始的独立标签任务。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`StandaloneElementTagModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         standalone_element_tag: Arc<dyn IStandaloneElementTag>,
         vars: ProcessorExecutionVars,

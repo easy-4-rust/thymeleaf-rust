@@ -28,6 +28,7 @@ pub(crate) struct Model {
 
 impl Model {
     /// 返回配置共享身份，供同包 processable 克隆模型。
+    /// 对应 Java 语义：`Model` 的 `get_configuration_arc` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn get_configuration_arc(&self) -> Arc<dyn IEngineConfiguration> {
         Arc::clone(&self.configuration)
     }
@@ -37,6 +38,7 @@ impl Model {
         self.template_mode
     }
     /// 使用引擎配置和模板模式创建空模型。
+    /// 对应 Java 语义：`Model` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,
@@ -49,6 +51,7 @@ impl Model {
     }
 
     /// 将全部事件依次交给处理器链。
+    /// 对应 Java: `Model#process()`。
     pub(crate) fn process(
         &self,
         handler: &mut dyn ITemplateHandler,
@@ -65,6 +68,7 @@ impl Model {
     /// 保持同一语义：Java 的 `TemplateFlowController` 是无锁普通共享对象，Rust
     /// 只在读取停止标志的瞬间持锁，避免处理器链在事件写出（Throttled writer
     /// 会设置 stop_processing）时对同一控制器发生不可重入 Mutex 自锁。
+    /// 对应 Java 语义：Java 接口/超类方法 `processThrottled()` 的 Rust 移植（`Model` 继承路径）。
     pub(crate) fn process_throttled(
         &self,
         handler: &mut dyn ITemplateHandler,
@@ -96,6 +100,7 @@ impl Model {
     }
 
     /// 把当前模型恢复为另一个模型的浅克隆，事件对象身份保持不变。
+    /// 对应 Java: `Model#resetAsCloneOf()`。
     pub(crate) fn reset_as_clone_of(&mut self, model: &Self) {
         self.configuration = Arc::clone(&model.configuration);
         self.template_mode = model.template_mode;
@@ -103,6 +108,7 @@ impl Model {
     }
 
     /// 仅按事件对象身份与顺序判断两个模型是否完全未发生变化。
+    /// 对应 Java: `Model#sameAs()`。
     pub(crate) fn same_as(&self, model: &Self) -> bool {
         self.queue.len() == model.queue.len()
             && self

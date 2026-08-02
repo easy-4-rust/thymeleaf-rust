@@ -19,6 +19,7 @@ pub struct MinusExpression {
 
 impl MinusExpression {
     /// 创建数值负号表达式。
+    /// 对应 Java 语义：`MinusExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(operand: Option<Arc<dyn IStandardExpression>>) -> Result<Self, ValidateError> {
         operand
             .map(|operand| Self { operand })
@@ -27,6 +28,7 @@ impl MinusExpression {
             })
     }
     /// 返回操作数。
+    /// 对应 Java: `MinusExpression#getOperand()`。
     pub fn get_operand(&self) -> &dyn IStandardExpression {
         self.operand.as_ref()
     }

@@ -17,6 +17,7 @@ pub struct Conversions {
 
 impl Conversions {
     /// 创建绑定表达式上下文的转换工具。
+    /// 对应 Java 语义：`Conversions` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(context: Option<Arc<dyn IExpressionContext>>) -> Result<Self, ValidateError> {
         Ok(Self {
             context: context.ok_or_else(|| ValidateError::IllegalArgument {
@@ -26,6 +27,7 @@ impl Conversions {
     }
 
     /// 按 Java 类名转换值；裸 `String` 解析为 `java.lang.String`。
+    /// 对应 Java 语义：`Conversions` 的 `convert_by_class_name` 行为（Rust 侧辅助/私有路径）。
     pub fn convert_by_class_name<'a>(
         &'a self,
         target: Option<&'a TemplateValue>,
@@ -48,6 +50,7 @@ impl Conversions {
     }
 
     /// 使用类型化目标类执行转换。
+    /// 对应 Java: `Conversions#convert()`。
     pub fn convert<'a>(
         &'a self,
         target: Option<&'a TemplateValue>,

@@ -25,6 +25,7 @@ pub struct AbstractStandardExpressionAttributeTagProcessor {
 impl AbstractStandardExpressionAttributeTagProcessor {
     /// 创建使用指定执行上下文的表达式属性 Processor。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractStandardExpressionAttributeTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new<F>(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,
@@ -146,6 +147,7 @@ impl AbstractStandardExpressionAttributeTagProcessor {
 
     /// 创建 NORMAL 或 RESTRICTED 执行上下文的表达式属性 Processor。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractStandardExpressionAttributeTagProcessor` 的 `with_restricted_execution` 行为（Rust 侧辅助/私有路径）。
     pub fn with_restricted_execution<F>(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

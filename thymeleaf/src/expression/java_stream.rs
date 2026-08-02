@@ -16,6 +16,7 @@ pub(crate) struct JavaStream {
 
 impl JavaStream {
     /// 从 List 当前顺序创建单次消费流。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(values: Arc<Vec<Arc<TemplateValue>>>) -> Self {
         Self {
             values,

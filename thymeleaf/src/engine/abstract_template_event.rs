@@ -22,6 +22,7 @@ impl AbstractTemplateEvent {
 
     /// 创建带上游原始位置字段的事件基类。
     #[must_use]
+    /// 对应 Java 语义：`AbstractTemplateEvent` 的 `with_location` 行为（Rust 侧辅助/私有路径）。
     pub fn with_location(template_name: Option<JavaString>, line: i32, col: i32) -> Self {
         Self {
             template_name,
@@ -32,6 +33,7 @@ impl AbstractTemplateEvent {
 
     /// 复制另一个事件的原始位置字段。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `copyOf()` 的 Rust 移植（`AbstractTemplateEvent` 继承路径）。
     pub fn copy_of(original: &Self) -> Self {
         Self {
             template_name: original.template_name.clone(),

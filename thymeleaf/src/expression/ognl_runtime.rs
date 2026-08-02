@@ -10,6 +10,7 @@ use super::TemplateValue;
 /// JVM 版 OGNL 通过 ClassLoader 与反射解析任意应用类型；Rust 没有对应的全局反射
 /// 机制，因此应用可显式注册该能力。普通对象属性和实例方法仍由
 /// `TemplateObject` 提供，本合同只承接 `@Type@member` 与 `new Type(...)`。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub trait OgnlRuntime: Send + Sync {
     /// 读取宿主注册类型的静态字段。
     fn read_static_field(
@@ -57,6 +58,7 @@ pub trait OgnlRuntime: Send + Sync {
 pub type OgnlRuntimeError = Box<dyn Error + Send + Sync>;
 
 /// 不暴露额外静态类型或构造器的默认 OGNL 运行时。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct NoOpOgnlRuntime;
 
 impl OgnlRuntime for NoOpOgnlRuntime {}

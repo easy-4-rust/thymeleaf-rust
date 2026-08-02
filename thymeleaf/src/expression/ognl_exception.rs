@@ -15,6 +15,7 @@ impl OgnlException {
     /// # 参数
     /// - `message`：与 Java OGNL 失败对应的详细消息。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn new(message: String) -> Self {
         Self { message }
     }

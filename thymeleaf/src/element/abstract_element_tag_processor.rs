@@ -24,6 +24,7 @@ pub struct AbstractElementTagProcessor<F> {
 impl<F> AbstractElementTagProcessor<F> {
     /// 创建以闭包表达 Java 抽象 `doProcess` 方法的标签 Processor。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractElementTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: Option<TemplateMode>,
         dialect_prefix: Option<JavaString>,
@@ -84,6 +85,7 @@ impl<F> AbstractElementTagProcessor<F> {
     }
 
     /// 返回构造时保存的可空方言前缀。
+    /// 对应 Java: `AbstractElementTagProcessor#getDialectPrefix()`。
     pub fn get_dialect_prefix(&self) -> Option<&JavaString> {
         self.dialect_prefix.as_ref()
     }

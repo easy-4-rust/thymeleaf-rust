@@ -18,6 +18,7 @@ pub struct TemporalFormattingUtils {
 
 impl TemporalFormattingUtils {
     /// 使用 Locale 与默认 ZoneId 创建格式化工具。
+    /// 对应 Java 语义：`TemporalFormattingUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(locale: JavaLocale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             locale,
@@ -26,6 +27,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 使用默认格式或指定 Java DateTimeFormatter pattern 格式化 temporal。
+    /// 对应 Java: `TemporalFormattingUtils#format()`。
     pub fn format(
         &self,
         target: Option<&JavaTemporal>,
@@ -118,6 +120,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回一个月中的日期。
+    /// 对应 Java: `TemporalFormattingUtils#day()`。
     pub fn day(
         &self,
         target: Option<&JavaTemporal>,
@@ -129,6 +132,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回一月为 1 的月份。
+    /// 对应 Java: `TemporalFormattingUtils#month()`。
     pub fn month(
         &self,
         target: Option<&JavaTemporal>,
@@ -160,6 +164,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回年份。
+    /// 对应 Java: `TemporalFormattingUtils#year()`。
     pub fn year(
         &self,
         target: Option<&JavaTemporal>,
@@ -171,6 +176,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回 ISO 周一为 1 的星期编号。
+    /// 对应 Java: `TemporalFormattingUtils#dayOfWeek()`。
     pub fn day_of_week(
         &self,
         target: Option<&JavaTemporal>,
@@ -204,6 +210,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回小时。
+    /// 对应 Java: `TemporalFormattingUtils#hour()`。
     pub fn hour(
         &self,
         target: Option<&JavaTemporal>,
@@ -212,6 +219,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回分钟。
+    /// 对应 Java: `TemporalFormattingUtils#minute()`。
     pub fn minute(
         &self,
         target: Option<&JavaTemporal>,
@@ -220,6 +228,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回秒。
+    /// 对应 Java: `TemporalFormattingUtils#second()`。
     pub fn second(
         &self,
         target: Option<&JavaTemporal>,
@@ -228,6 +237,7 @@ impl TemporalFormattingUtils {
     }
 
     /// 返回纳秒。
+    /// 对应 Java: `TemporalFormattingUtils#nanosecond()`。
     pub fn nanosecond(
         &self,
         target: Option<&JavaTemporal>,
@@ -313,6 +323,7 @@ fn replace_java_fraction_markers(
 /// Temporal 格式化或字段读取错误。
 #[derive(Debug, Error)]
 #[error("{message}")]
+/// 对应 Java 语义：`TemporalFormattingUtils` 的 Rust 侧类型 `TemporalFormattingError`。
 pub struct TemporalFormattingError {
     message: String,
 }

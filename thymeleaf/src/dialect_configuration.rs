@@ -86,6 +86,7 @@ impl DialectConfiguration {
     /// 返回构造时传入的共享方言实例。
     ///
     /// 这是 Rust 所有权适配入口，保留 Java `getDialect()` 的同一对象身份。
+    /// 对应 Java 语义：`DialectConfiguration` 的 `get_dialect_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_dialect_arc(&self) -> Arc<dyn IDialect> {
         Arc::clone(&self.dialect)
     }

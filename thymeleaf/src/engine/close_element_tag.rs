@@ -80,6 +80,7 @@ impl CloseElementTag {
 
     /// 返回完整 UTF-16 输出表示；synthetic 标签返回空字符串。
     #[must_use]
+    /// 对应 Java 语义：`CloseElementTag` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> JavaString {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)

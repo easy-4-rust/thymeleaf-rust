@@ -18,6 +18,7 @@ pub struct AssignationSequence {
 
 impl AssignationSequence {
     /// 保存原列表身份，并在构造瞬间拒绝 null 列表或 null 元素。
+    /// 对应 Java 语义：`AssignationSequence` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         assignations: Option<Arc<RwLock<Vec<Option<Arc<Assignation>>>>>>,
     ) -> Result<Self, ValidateError> {
@@ -36,16 +37,19 @@ impl AssignationSequence {
     }
 
     /// 返回 Java unmodifiableList 背后的实时只读视图。
+    /// 对应 Java: `AssignationSequence#getAssignations()`。
     pub fn get_assignations(&self) -> RwLockReadGuard<'_, Vec<Option<Arc<Assignation>>>> {
         read_recovering_poison(&self.assignations)
     }
 
     /// 返回当前 backing list 大小。
+    /// 对应 Java: `AssignationSequence#size()`。
     pub fn size(&self) -> i32 {
         i32::try_from(read_recovering_poison(&self.assignations).len()).unwrap_or(i32::MAX)
     }
 
     /// 返回逗号连接且不插入空格的当前字符串表示。
+    /// 对应 Java: `AssignationSequence#getStringRepresentation()`。
     pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
         let assignations = read_recovering_poison(&self.assignations);
         let mut units = Vec::new();

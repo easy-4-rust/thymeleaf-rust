@@ -37,6 +37,7 @@ pub(crate) type StandardElementCallback = Box<
 >;
 
 /// 将 Standard Expression 错误保留为模板处理异常的 cause。
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn expression_processing_error(
     message: &'static str,
     error: Box<dyn Error + Send + Sync>,
@@ -71,6 +72,7 @@ impl Error for StandardExpressionCause {
 }
 
 /// 判断 Java `StringUtils.isEmptyOrWhitespace` 所定义的空白文本。
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn is_empty_or_java_whitespace(value: Option<&JavaString>) -> bool {
     value.is_none_or(|value| {
         value.is_empty()
@@ -93,6 +95,7 @@ pub(crate) fn is_empty_or_java_whitespace(value: Option<&JavaString>) -> bool {
 }
 
 /// 解析并执行 Standard Expression，然后按 Thymeleaf 真值规则求布尔值。
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn evaluate_standard_expression_as_boolean(
     context: &dyn ITemplateContext,
     input: Option<&JavaString>,

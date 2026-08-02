@@ -16,6 +16,7 @@ pub struct XMLElementDefinition {
 }
 
 impl XMLElementDefinition {
+    /// 对应 Java 语义：`XMLElementDefinition` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         name: Arc<XMLElementName>,
         associated_processors: Arc<RwLock<ElementProcessorSet>>,

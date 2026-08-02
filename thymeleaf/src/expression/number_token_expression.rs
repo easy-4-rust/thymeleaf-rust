@@ -23,6 +23,7 @@ impl NumberTokenExpression {
     pub const DECIMAL_POINT: u16 = b'.' as u16;
 
     /// 按 Java `BigDecimal(String)` 后的 scale 规则创建数字 Token。
+    /// 对应 Java 语义：`NumberTokenExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(value: Option<&JavaString>) -> StandardExpressionResult<Self> {
         let value = value.ok_or_else(|| {
             Box::new(TokenError::NullPointer) as crate::expression::StandardExpressionError
@@ -47,11 +48,13 @@ impl NumberTokenExpression {
     }
 
     /// 返回保存的 Number。
+    /// 对应 Java 语义：Java 接口/超类方法 `getValue()` 的 Rust 移植（`NumberTokenExpression` 继承路径）。
     pub fn get_value(&self) -> &JavaNumber {
         &self.value
     }
 
     /// 解析只含 Java digit 和至多一个小数点的数字。
+    /// 对应 Java: `NumberTokenExpression#parseNumberTokenExpression()`。
     pub fn parse_number_token_expression(input: Option<&JavaString>) -> Option<Self> {
         let input = input?;
         if input.is_empty() || input.as_utf16().iter().all(|unit| *unit <= 0x20) {

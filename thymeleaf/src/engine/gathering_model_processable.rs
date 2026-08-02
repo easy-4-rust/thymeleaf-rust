@@ -29,6 +29,7 @@ pub(crate) struct GatheringModelProcessable {
 impl GatheringModelProcessable {
     /// 创建尚未收集事件的延迟 Model。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`GatheringModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         processor_template_handler: TemplateHandlerHandle,

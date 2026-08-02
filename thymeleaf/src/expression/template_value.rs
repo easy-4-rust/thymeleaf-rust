@@ -12,6 +12,7 @@ use super::LiteralValue;
 ///
 /// Java `Object` 同时具有运行时类、引用身份和 `toString()`。实现此 trait 可在不
 /// 依赖 JVM 反射的情况下向表达式求值、序列化器和属性访问器提供这些信息。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub trait TemplateObject: Any + Send + Sync {
     /// 返回用于诊断和类型分派的 Java 风格运行时类名。
     fn java_class_name(&self) -> &str;
@@ -140,12 +141,14 @@ pub enum TemplateValue {
 impl TemplateValue {
     /// 创建 Java `String` 模板值。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn string(value: JavaString) -> Self {
         Self::String(Arc::new(value))
     }
 
     /// 创建受信任的免 HTML 转义文本。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn safe_html(value: JavaString) -> Self {
         Self::SafeHtml(Arc::new(value))
     }
@@ -154,6 +157,7 @@ impl TemplateValue {
     ///
     /// 集合、数组、宿主对象和 NoOp 保留为其他对象；SafeHtml 在 Java 中仍是 String。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn to_evaluation_value(&self) -> JavaEvaluationValue {
         match self {
             Self::Null => JavaEvaluationValue::Null,
@@ -179,6 +183,7 @@ impl TemplateValue {
     /// `None` 仅表示 `LiteralValue` 内部为 Java null；普通 `TemplateValue::Null`
     /// 仍按 `String.valueOf`/拼接语义返回文本 `null`。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn to_java_string(&self) -> Option<JavaString> {
         let text = match self {
             Self::Null => return Some(JavaString::from_rust_str("null")),
@@ -244,6 +249,7 @@ impl TemplateValue {
 
     /// 执行 Java 对象的 `equals` 等价比较。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn java_equals(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Null, Self::Null) => true,
@@ -274,6 +280,7 @@ impl TemplateValue {
     }
 
     /// 若两个对象具有相同 Java 运行时类且实现 Comparable，则返回比较结果。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn java_compare_to(
         &self,
         other: &Self,
@@ -299,6 +306,7 @@ impl TemplateValue {
 
     /// 返回 Java 风格运行时类名。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn java_class_name(&self) -> &str {
         match self {
             Self::Null => "null",

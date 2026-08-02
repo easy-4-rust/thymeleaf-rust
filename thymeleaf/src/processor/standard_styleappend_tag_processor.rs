@@ -22,6 +22,7 @@ impl StandardStyleappendTagProcessor {
     pub const TARGET_ATTR_NAME: &'static str = "style";
 
     /// 创建 Processor。
+    /// 对应 Java 语义：`StandardStyleappendTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(dialect_prefix: Option<JavaString>) -> Result<Self, TemplateProcessingException> {
         let target_name = JavaString::from_rust_str(Self::TARGET_ATTR_NAME);
         Ok(Self {

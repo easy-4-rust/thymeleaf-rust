@@ -22,12 +22,14 @@ pub struct AbstractTextualTemplateEvent {
 impl AbstractTextualTemplateEvent {
     /// 创建不带位置的文本事件。
     #[must_use]
+    /// 对应 Java 语义：`AbstractTextualTemplateEvent` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(content: Option<Arc<dyn JavaCharSequence>>) -> Self {
         Self::with_location(content, None, -1, -1)
     }
 
     /// 创建带原模板位置的文本事件。
     #[must_use]
+    /// 对应 Java 语义：`AbstractTextualTemplateEvent` 的 `with_location` 行为（Rust 侧辅助/私有路径）。
     pub fn with_location(
         content: Option<Arc<dyn JavaCharSequence>>,
         template_name: Option<JavaString>,
@@ -60,6 +62,7 @@ impl AbstractTextualTemplateEvent {
     }
 
     /// 按 Java 缓存语义取得可空内容字符串。
+    /// 对应 Java: `AbstractTextualTemplateEvent#getContentText()`。
     pub fn get_content_text(&self) -> Result<Option<JavaString>, TextUtilsError> {
         if self.content_string.is_some() || self.content.is_none() {
             return Ok(self.content_string.clone());
@@ -73,6 +76,7 @@ impl AbstractTextualTemplateEvent {
     }
 
     /// 返回内容 UTF-16 长度；null 内容返回 `-1`。
+    /// 对应 Java: `AbstractTextualTemplateEvent#getContentLength()`。
     pub fn get_content_length(&self) -> Result<i32, TextUtilsError> {
         if self.content_length >= 0 || self.content.is_none() {
             return Ok(self.content_length);
@@ -87,6 +91,7 @@ impl AbstractTextualTemplateEvent {
     }
 
     /// 返回指定 UTF-16 代码单元。
+    /// 对应 Java: `AbstractTextualTemplateEvent#charAtContent()`。
     pub fn char_at_content(&self, index: i32) -> Result<u16, TextUtilsError> {
         if let Some(value) = self.content_string.as_ref() {
             return value.java_char_at(index);
@@ -98,6 +103,7 @@ impl AbstractTextualTemplateEvent {
     }
 
     /// 返回指定 UTF-16 子序列。
+    /// 对应 Java: `AbstractTextualTemplateEvent#contentSubSequence()`。
     pub fn content_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
         if let Some(value) = self.content_string.as_ref() {
             return value.java_sub_sequence(start, end);
@@ -109,6 +115,7 @@ impl AbstractTextualTemplateEvent {
     }
 
     /// 判断非空内容是否全部为 Java whitespace。
+    /// 对应 Java: `AbstractTextualTemplateEvent#isWhitespace()`。
     pub fn is_whitespace(&self) -> Result<bool, TextUtilsError> {
         if let Some(value) = *read_lock(&self.computed_whitespace) {
             return Ok(value);
@@ -152,6 +159,7 @@ impl AbstractTextualTemplateEvent {
     }
 
     /// 将内容写出，并在序列适配器声明 `IWritableCharSequence` 能力时避免整串分配。
+    /// 对应 Java: `AbstractTextualTemplateEvent#writeContent()`。
     pub fn write_content(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
         if let Some(content) = self.content_string.as_ref() {
             return writer.write_utf16(content.as_utf16());

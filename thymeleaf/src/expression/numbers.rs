@@ -24,6 +24,7 @@ impl Numbers {
     }
 
     /// 格式化整数，可选择分组点类型。
+    /// 对应 Java: `Numbers#formatInteger()`。
     pub fn format_integer(
         &self,
         target: Option<&JavaNumber>,
@@ -41,6 +42,7 @@ impl Numbers {
     }
 
     /// 格式化定点小数。
+    /// 对应 Java: `Numbers#formatDecimal()`。
     pub fn format_decimal(
         &self,
         target: Option<&JavaNumber>,
@@ -60,6 +62,7 @@ impl Numbers {
     }
 
     /// 按当前 Locale 格式化货币。
+    /// 对应 Java: `Numbers#formatCurrency()`。
     pub fn format_currency(
         &self,
         target: Option<&JavaNumber>,
@@ -68,6 +71,7 @@ impl Numbers {
     }
 
     /// 按当前 Locale 格式化百分比。
+    /// 对应 Java: `Numbers#formatPercent()`。
     pub fn format_percent(
         &self,
         target: Option<&JavaNumber>,
@@ -83,6 +87,7 @@ impl Numbers {
     }
 
     /// 创建包含终点的整数序列。
+    /// 对应 Java: `Numbers#sequence()`。
     pub fn sequence(
         &self,
         from: i32,
@@ -211,6 +216,7 @@ impl TemplateObject for Numbers {
 
 /// `#numbers` 动态调用和格式化错误。
 #[derive(Debug)]
+/// 对应 Java 语义：`Numbers` 的 Rust 侧类型 `NumbersError`。
 pub struct NumbersError {
     message: String,
 }

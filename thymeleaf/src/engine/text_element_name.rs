@@ -15,6 +15,7 @@ pub struct TextElementName {
 }
 
 impl TextElementName {
+    /// 对应 Java: `TextElementName#forName()`。
     pub(super) fn for_name(
         prefix: Option<JavaString>,
         element_name: Option<JavaString>,

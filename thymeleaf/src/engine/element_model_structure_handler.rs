@@ -29,6 +29,7 @@ pub(crate) struct ElementModelStructureHandler {
 
 impl ElementModelStructureHandler {
     /// 创建已重置的处理器状态。
+    /// 对应 Java 语义：`ElementModelStructureHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new() -> Self {
         Self {
             set_local_variable: false,
@@ -45,6 +46,7 @@ impl ElementModelStructureHandler {
     }
 
     /// 将已收集的上下文变更应用到非空引擎上下文。
+    /// 对应 Java: `ElementModelStructureHandler#applyContextModifications()`。
     pub(crate) fn apply_context_modifications(&self, engine_context: Option<&dyn IEngineContext>) {
         let Some(engine_context) = engine_context else {
             return;

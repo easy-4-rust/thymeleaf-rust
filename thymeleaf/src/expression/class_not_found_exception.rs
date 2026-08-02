@@ -11,6 +11,7 @@ pub struct ClassNotFoundException {
 impl ClassNotFoundException {
     /// 创建指定类型名的类未找到异常。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn new(class_name: String) -> Self {
         Self { class_name }
     }

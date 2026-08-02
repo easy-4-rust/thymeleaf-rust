@@ -17,6 +17,7 @@ impl StandardAssertTagProcessor {
     pub const ATTR_NAME: &'static str = "assert";
 
     /// 创建指定模板模式和方言前缀的 `th:assert` Processor。
+    /// 对应 Java 语义：`StandardAssertTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

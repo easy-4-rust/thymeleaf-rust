@@ -30,6 +30,7 @@ impl TextLiteralExpression {
     pub const DELIMITER: u16 = b'\'' as u16;
 
     /// 创建文本字面量；外层成对单引号会移除，`\\'` 与 `\\\\` 会解转义。
+    /// 对应 Java 语义：`TextLiteralExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(value: Option<&JavaString>) -> Result<Self, ValidateError> {
         let value = value.ok_or_else(|| ValidateError::IllegalArgument {
             message: Some("Value cannot be null".to_owned()),
@@ -40,16 +41,19 @@ impl TextLiteralExpression {
     }
 
     /// 返回同一 LiteralValue 包装对象。
+    /// 对应 Java: `TextLiteralExpression#getValue()`。
     pub fn get_value(&self) -> &LiteralValue {
         self.value.as_ref()
     }
 
     /// 解析文本字面量。上游该入口始终调用构造器，不额外验证定界符。
+    /// 对应 Java: `TextLiteralExpression#parseTextLiteralExpression()`。
     pub(crate) fn parse_text_literal_expression(input: &JavaString) -> Self {
         Self::new(Some(input)).expect("non-null parser input")
     }
 
     /// 把可空字符串包装成单引号字面量，并转义其中每个单引号。
+    /// 对应 Java: `TextLiteralExpression#wrapStringIntoLiteral()`。
     pub fn wrap_string_into_literal(value: Option<&JavaString>) -> Option<JavaString> {
         let value = value?;
         let quote_count = value
@@ -70,6 +74,7 @@ impl TextLiteralExpression {
     }
 
     /// 判断指定定界符前是否存在奇数个连续反斜杠。
+    /// 对应 Java: `TextLiteralExpression#isDelimiterEscaped()`。
     pub(crate) fn is_delimiter_escaped(
         input: Option<&JavaString>,
         position: i32,

@@ -31,6 +31,7 @@ pub struct ThrottledTemplateStatus {
 impl ThrottledTemplateStatus {
     /// 从处理器共享的完成标志创建观察句柄。
     #[must_use]
+    /// 对应 Java 语义：`IThrottledTemplateProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(finished: Arc<AtomicBool>) -> Self {
         Self { finished }
     }
@@ -40,6 +41,7 @@ impl ThrottledTemplateStatus {
     /// 返回 `true` 时，创建该句柄的处理器已经完成全部事件、待处理工作和溢出输出。
     /// Acquire 读取与处理器的 Release 写入配对，保证此前结果对观察线程可见。
     #[must_use]
+    /// 对应 Java: `IThrottledTemplateProcessor#isFinished()`。
     pub fn is_finished(&self) -> bool {
         self.finished.load(Ordering::Acquire)
     }

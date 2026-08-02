@@ -23,6 +23,7 @@ impl GenericTokenExpression {
     }
 
     /// 所有码元均满足 `Token#isTokenChar` 时创建通用 Token。
+    /// 对应 Java: `GenericTokenExpression#parseGenericTokenExpression()`。
     pub fn parse_generic_token_expression(input: Option<&JavaString>) -> Option<Self> {
         let input = input?;
         for position in 0..input.len() {
@@ -35,6 +36,7 @@ impl GenericTokenExpression {
     }
 
     /// 返回 Token 保存的同一字符串。
+    /// 对应 Java 语义：Java 接口/超类方法 `getValue()` 的 Rust 移植（`GenericTokenExpression` 继承路径）。
     pub fn get_value(&self) -> &JavaString {
         self.value.as_ref()
     }

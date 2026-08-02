@@ -32,6 +32,7 @@ impl StandardConditionalCommentProcessor {
     pub const PRECEDENCE: i32 = 1100;
 
     /// 创建 HTML 条件注释 Processor。
+    /// 对应 Java 语义：`StandardConditionalCommentProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new() -> Result<Self, TemplateProcessingException> {
         let callback: CommentCallback = Box::new(|context, comment, structure_handler| {
             let Some(parsing) = StandardConditionalCommentUtils::parse_conditional_comment(Some(

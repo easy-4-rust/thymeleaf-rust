@@ -9,6 +9,7 @@ use crate::util::JavaString;
 use super::{IRawHandler, RawParseCause, RawParseException};
 
 /// Java `Reader` 的 UTF-16 读取与关闭合同。
+/// 对应 Java 语义：`RawParser` 的 Rust 侧类型 `RawReader`。
 pub trait RawReader {
     /// 向目标范围读取 Java `char`，返回读取数或 `-1`。
     fn read_utf16(&mut self, buffer: &mut [u16], offset: usize, length: usize) -> io::Result<i32>;
@@ -20,6 +21,7 @@ pub trait RawReader {
 }
 
 /// 内存 Java String 的 Reader 实现。
+/// 对应 Java 语义：`RawParser` 的 Rust 侧类型 `RawStringReader`。
 pub struct RawStringReader {
     value: JavaString,
     position: usize,
@@ -70,6 +72,7 @@ impl RawReader for RawStringReader {
 
 /// RAW parser 公开入口的运行时参数错误或 checked 解析异常。
 #[derive(Debug)]
+/// 对应 Java 语义：`RawParser` 的 Rust 侧类型 `RawParserError`。
 pub enum RawParserError {
     /// Java `IllegalArgumentException`。
     IllegalArgument(&'static str),
@@ -116,6 +119,7 @@ pub struct RawParser {
 impl RawParser {
     /// 创建具有非阻塞固定大小 buffer 池的解析器。
     #[must_use]
+    /// 对应 Java 语义：`RawParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(pool_size: usize, buffer_size: usize) -> Self {
         Self {
             pool: BufferPool::new(pool_size, buffer_size),
@@ -127,6 +131,7 @@ impl RawParser {
         clippy::result_large_err,
         reason = "公开 API 保留具体 Java 对照异常，不用 Box 改变调用方合同"
     )]
+    /// 对应 Java 语义：Java 接口/超类方法 `parseString()` 的 Rust 移植（`RawParser` 继承路径）。
     pub fn parse_string(
         &self,
         document: Option<JavaString>,
@@ -143,6 +148,7 @@ impl RawParser {
         clippy::result_large_err,
         reason = "公开 API 保留具体 Java 对照异常，不用 Box 改变调用方合同"
     )]
+    /// 对应 Java 语义：`RawParser` 的 `parse_reader` 行为（Rust 侧辅助/私有路径）。
     pub fn parse_reader(
         &self,
         reader: Option<&mut dyn RawReader>,
@@ -159,6 +165,7 @@ impl RawParser {
         clippy::result_large_err,
         reason = "解析热路径保留具体 RawParseException 的行列与原因字段"
     )]
+    /// 对应 Java: `RawParser#parseDocument()`。
     pub fn parse_document(
         &self,
         reader: &mut dyn RawReader,

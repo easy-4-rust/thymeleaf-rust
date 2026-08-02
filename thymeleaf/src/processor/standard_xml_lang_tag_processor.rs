@@ -15,6 +15,7 @@ impl StandardXmlLangTagProcessor {
     /// 目标属性名。
     pub const TARGET_ATTR_NAME: &'static str = "xml:lang";
     /// 创建 Processor。
+    /// 对应 Java 语义：`StandardXmlLangTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         dialect_prefix: Option<JavaString>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {

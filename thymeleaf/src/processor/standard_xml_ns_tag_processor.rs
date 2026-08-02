@@ -17,6 +17,7 @@ impl StandardXmlNsTagProcessor {
     pub const ATTR_NAME_PREFIX: &'static str = "xmlns:";
 
     /// 创建 Processor；属性移除由抽象基类完成。
+    /// 对应 Java 语义：`StandardXmlNsTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

@@ -72,6 +72,7 @@ impl AbstractCacheManager {
     ///
     /// 尚未访问的缓存不会仅因清理操作之外的内部探测而初始化；调用方若要严格复现
     /// Java `clearAllCaches()` 的初始化副作用，应先通过两个 `get` 方法取得缓存。
+    /// 对应 Java 语义：`AbstractCacheManager` 的 `clear_initialized_caches` 行为（Rust 侧辅助/私有路径）。
     pub fn clear_initialized_caches(&self) {
         if let Some(cache) = self.template_cache.get().and_then(Option::as_deref) {
             cache.clear();

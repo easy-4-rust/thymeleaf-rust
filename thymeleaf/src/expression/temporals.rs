@@ -23,11 +23,13 @@ pub struct Temporals {
 
 impl Temporals {
     /// 使用 Locale 与系统默认 ZoneId 创建 `#temporals`。
+    /// 对应 Java 语义：`Temporals` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(locale: JavaLocale) -> Result<Self, TemporalsError> {
         Self::with_default_zone_id(locale, default_zone())
     }
 
     /// 使用 Locale 与显式默认 ZoneId 创建 `#temporals`。
+    /// 对应 Java 语义：`Temporals` 的 `with_default_zone_id` 行为（Rust 侧辅助/私有路径）。
     pub fn with_default_zone_id(
         locale: JavaLocale,
         default_zone_id: Tz,
@@ -234,6 +236,7 @@ impl TemplateObject for Temporals {
 
 /// `#temporals` 创建、格式化或字段访问错误。
 #[derive(Debug)]
+/// 对应 Java 语义：`Temporals` 的 Rust 侧类型 `TemporalsError`。
 pub struct TemporalsError {
     message: String,
 }

@@ -14,6 +14,7 @@ pub struct Assignation {
 
 impl Assignation {
     /// 创建赋值；左侧为 null 时复现 Java 参数校验错误，右侧允许缺失。
+    /// 对应 Java 语义：`Assignation` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         left: Option<Arc<dyn IStandardExpression>>,
         right: Option<Arc<dyn IStandardExpression>>,
@@ -24,14 +25,17 @@ impl Assignation {
         Ok(Self { left, right })
     }
     /// 返回左侧表达式。
+    /// 对应 Java: `Assignation#getLeft()`。
     pub fn get_left(&self) -> &dyn IStandardExpression {
         self.left.as_ref()
     }
     /// 返回可空右侧表达式。
+    /// 对应 Java: `Assignation#getRight()`。
     pub fn get_right(&self) -> Option<&dyn IStandardExpression> {
         self.right.as_deref()
     }
     /// 返回规范字符串表示。
+    /// 对应 Java: `Assignation#getStringRepresentation()`。
     pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
         let mut units = self.left.get_string_representation()?.as_utf16().to_vec();
         if let Some(right) = &self.right {

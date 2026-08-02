@@ -35,6 +35,7 @@ impl HTMLElementDefinitionSpec {
 
 /// `ElementDefinitions` 返回的具体元素定义。
 #[derive(Clone)]
+/// 对应 Java 语义：`ElementDefinitions` 的 Rust 侧类型 `ElementDefinitionValue`。
 pub enum ElementDefinitionValue {
     /// HTML 元素定义。
     Html(Arc<HTMLElementDefinition>),
@@ -47,6 +48,7 @@ pub enum ElementDefinitionValue {
 impl ElementDefinitionValue {
     /// 返回公共元素定义视图。
     #[must_use]
+    /// 对应 Java 语义：`ElementDefinitions` 的 `as_element_definition` 行为（Rust 侧辅助/私有路径）。
     pub fn as_element_definition(&self) -> &ElementDefinition {
         match self {
             Self::Html(value) => value.as_element_definition(),
@@ -58,6 +60,7 @@ impl ElementDefinitionValue {
 
 /// 元素定义仓储的参数、Processor 配置或名称构造错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`ElementDefinitions` 的 Rust 侧类型 `ElementDefinitionsError`。
 pub enum ElementDefinitionsError {
     /// Java 公开入口参数校验失败。
     IllegalArgument(String),
@@ -149,6 +152,7 @@ impl ElementDefinitions {
 
     /// 返回按字典序排列的标准 HTML 元素名。
     #[must_use]
+    /// 对应 Java 语义：`ElementDefinitions` 的 `all_standard_html_element_names` 行为（Rust 侧辅助/私有路径）。
     pub fn all_standard_html_element_names() -> Vec<&'static str> {
         let mut values = STANDARD_HTML_ELEMENT_SPECS
             .iter()
@@ -159,6 +163,7 @@ impl ElementDefinitions {
     }
 
     /// 按模板模式解析完整元素名。
+    /// 对应 Java: `ElementDefinitions#forName()`。
     pub fn for_name(
         &self,
         template_mode: Option<TemplateMode>,
@@ -180,6 +185,7 @@ impl ElementDefinitions {
     }
 
     /// 按模板模式解析 prefix 与本地元素名。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_with_prefix(
         &self,
         template_mode: Option<TemplateMode>,
@@ -192,6 +198,7 @@ impl ElementDefinitions {
     }
 
     /// 按模板模式解析 UTF-16 buffer 子范围。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_name_buffer` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_buffer(
         &self,
         template_mode: Option<TemplateMode>,
@@ -213,6 +220,7 @@ impl ElementDefinitions {
     }
 
     /// 返回 HTML 元素定义；非标准名称使用 `NORMAL` 类型。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
         &self,
         element_name: Option<&JavaString>,
@@ -228,6 +236,7 @@ impl ElementDefinitions {
     }
 
     /// 返回带 prefix 的 HTML 元素定义。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
         &self,
         prefix: Option<&JavaString>,
@@ -244,6 +253,7 @@ impl ElementDefinitions {
     }
 
     /// 返回 XML 元素定义。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
         &self,
         element_name: Option<&JavaString>,
@@ -258,6 +268,7 @@ impl ElementDefinitions {
     }
 
     /// 返回带 prefix 的 XML 元素定义。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
         &self,
         prefix: Option<&JavaString>,
@@ -273,6 +284,7 @@ impl ElementDefinitions {
     }
 
     /// 返回 TEXT 元素定义；空名称合法。
+    /// 对应 Java: `ElementDefinitions#forTextName()`。
     pub fn for_text_name(
         &self,
         element_name: Option<&JavaString>,
@@ -281,6 +293,7 @@ impl ElementDefinitions {
     }
 
     /// 返回 JAVASCRIPT 元素定义；空名称合法。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_javascript_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_javascript_name(
         &self,
         element_name: Option<&JavaString>,
@@ -289,6 +302,7 @@ impl ElementDefinitions {
     }
 
     /// 返回 CSS 元素定义；空名称合法。
+    /// 对应 Java 语义：`ElementDefinitions` 的 `for_css_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_css_name(
         &self,
         element_name: Option<&JavaString>,

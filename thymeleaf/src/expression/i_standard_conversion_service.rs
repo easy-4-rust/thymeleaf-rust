@@ -9,6 +9,7 @@ use crate::util::{JavaString, ValidateError};
 ///
 /// 这是 `java.lang.Object` 的紧耦合 Rust 适配，只承接默认转换服务实际调用的
 /// `toString()` 行为。实现可以返回 Java null，也可以传播原始运行时异常。
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaConversionObject`。
 pub trait JavaConversionObject: Any {
     /// 执行 Java `Object#toString()` 等价调用。
     ///
@@ -27,6 +28,7 @@ pub trait JavaConversionObject: Any {
 /// `AbstractStandardConversionService#convert` 的 `instanceof String` 快路径和
 /// 字符串引用身份。
 #[derive(Clone, Copy)]
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaConversionValue`。
 pub enum JavaConversionValue<'a> {
     /// Java null。
     Null,
@@ -41,6 +43,7 @@ pub enum JavaConversionValue<'a> {
 /// 默认服务只特殊处理精确的 `String.class`，其他类型仅需保留
 /// `Class#getName()` 文本以生成完全一致的不可用转换错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaTargetClass`。
 pub enum JavaTargetClass {
     /// 精确的 `java.lang.String` 类。
     String,
@@ -54,6 +57,7 @@ impl JavaTargetClass {
     /// # 返回
     /// `java.lang.String` 或构造时保存的其他二进制类名。
     #[must_use]
+    /// 对应 Java 语义：Java 接口/超类方法 `getName()` 的 Rust 移植（`IStandardConversionService` 继承路径）。
     pub fn get_name(&self) -> &str {
         match self {
             Self::String => "java.lang.String",
@@ -66,6 +70,7 @@ impl JavaTargetClass {
 ///
 /// 借用分支供框架转换服务保留既有字符串身份；默认 `Object#toString()` 通常返回
 /// 新字符串，因此使用拥有分支。
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaStringConversionResult`。
 pub enum JavaStringConversionResult<'a> {
     /// Java null。
     Null,
@@ -79,6 +84,7 @@ pub enum JavaStringConversionResult<'a> {
 ///
 /// Java 泛型 `<T>` 和 `Class<T>` 在运行时仍通过对象引用传递。该适配保留 null、
 /// 字符串借用/拥有状态，以及扩展转换器返回其他类型时的借用或拥有对象。
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaConversionResult`。
 pub enum JavaConversionResult<'a> {
     /// Java null。
     Null,
@@ -104,6 +110,7 @@ impl<'a> From<JavaStringConversionResult<'a>> for JavaConversionResult<'a> {
 
 /// 标准表达式转换时可观察的 Java 异常。
 #[derive(Debug, Error, Eq, PartialEq)]
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `StandardConversionError`。
 pub enum StandardConversionError {
     /// `Validate.notNull(targetClass, ...)` 的参数错误。
     #[error(transparent)]
@@ -150,6 +157,7 @@ impl StandardConversionError {
     /// # 返回
     /// 可由对象或扩展转换器传播的错误。
     #[must_use]
+    /// 对应 Java 语义：`IStandardConversionService` 的 `runtime` 行为（Rust 侧辅助/私有路径）。
     pub fn runtime(exception_class_name: impl Into<String>, message: impl Into<String>) -> Self {
         Self::Runtime {
             exception_class_name: exception_class_name.into(),

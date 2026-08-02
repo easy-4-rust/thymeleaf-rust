@@ -8,12 +8,14 @@ use super::TemplateFragmentMarkupReferenceResolver;
 ///
 /// 该类型是第三方组件替换设施，不计入 Thymeleaf Java 对象分母。它保留路径层级、
 /// 属性布尔表达式、HTML id/class 简写、fragment reference 和 sibling index 语义。
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub(crate) struct MarkupSelectorEngine {
     html: bool,
     selectors: Vec<CompiledSelector>,
 }
 
 impl MarkupSelectorEngine {
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(
         html: bool,
         selectors: &[JavaString],
@@ -27,6 +29,7 @@ impl MarkupSelectorEngine {
             .collect::<Result<Vec<_>, _>>()?;
         Ok(Self { html, selectors })
     }
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn matching_element_selectors(&self, path: &[SelectorNode]) -> Vec<JavaString> {
         self.selectors
@@ -35,6 +38,7 @@ impl MarkupSelectorEngine {
             .map(|selector| selector.original.clone())
             .collect()
     }
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn matching_event_selectors(
         &self,
@@ -50,6 +54,7 @@ impl MarkupSelectorEngine {
             .map(|selector| selector.original.clone())
             .collect()
     }
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn selects_content_of(&self, path: &[SelectorNode]) -> bool {
         let mut content_path = path.to_vec();
@@ -64,6 +69,7 @@ impl MarkupSelectorEngine {
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub(crate) enum SelectorNodeType {
     Element,
     Content,
@@ -76,6 +82,7 @@ pub(crate) enum SelectorNodeType {
 }
 
 #[derive(Clone)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub(crate) struct SelectorNode {
     node_type: SelectorNodeType,
     name: String,
@@ -88,6 +95,7 @@ impl SelectorNode {
         dead_code,
         reason = "保留 AttoParser AUTO_OPEN_CLOSE 选择器节点语义；Thymeleaf HTML 解析固定使用 AUTO_CLOSE"
     )]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn synthetic_element(
         html: bool,
         name: &str,
@@ -109,6 +117,7 @@ impl SelectorNode {
             preceding_siblings,
         }
     }
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn from_tag(
         html: bool,
@@ -134,6 +143,7 @@ impl SelectorNode {
             preceding_siblings,
         }
     }
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn event(
         node_type: SelectorNodeType,
@@ -146,6 +156,7 @@ impl SelectorNode {
             preceding_siblings,
         }
     }
+/// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 
     pub(crate) fn summary(&self) -> SelectorNodeSummary {
         SelectorNodeSummary {
@@ -157,6 +168,7 @@ impl SelectorNode {
 }
 
 #[derive(Clone)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub(crate) struct SelectorNodeSummary {
     node_type: SelectorNodeType,
     name: String,

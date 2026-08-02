@@ -20,16 +20,19 @@ pub(crate) struct ExpressionParsingState {
 
 impl ExpressionParsingState {
     /// 创建空解析状态。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new() -> Self {
         Self { nodes: Vec::new() }
     }
 
     /// 返回节点数量。
+    /// 对应 Java 语义：Java 接口/超类方法 `size()` 的 Rust 移植（`ExpressionParsingState` 继承路径）。
     pub(crate) fn size(&self) -> usize {
         self.nodes.len()
     }
 
     /// 返回指定节点。
+    /// 对应 Java 语义：Java 接口/超类方法 `get()` 的 Rust 移植（`ExpressionParsingState` 继承路径）。
     pub(crate) fn get(
         &self,
         position: i32,
@@ -40,6 +43,7 @@ impl ExpressionParsingState {
     }
 
     /// 追加非空半解析文本节点。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `add_node_input` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn add_node_input(
         &mut self,
         semi_parsed_string: Option<JavaString>,
@@ -52,6 +56,7 @@ impl ExpressionParsingState {
     }
 
     /// 追加非空表达式节点。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `add_node_expression` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn add_node_expression(
         &mut self,
         parsed_expression: Option<Arc<dyn IStandardExpression>>,
@@ -65,6 +70,7 @@ impl ExpressionParsingState {
     }
 
     /// 在指定位置插入半解析文本节点。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `insert_node_input` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn insert_node_input(
         &mut self,
         position: i32,
@@ -80,6 +86,7 @@ impl ExpressionParsingState {
     }
 
     /// 在指定位置插入表达式节点。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `insert_node_expression` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn insert_node_expression(
         &mut self,
         position: i32,
@@ -95,6 +102,7 @@ impl ExpressionParsingState {
     }
 
     /// 替换指定位置的半解析文本节点。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `set_node_input` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_node_input(
         &mut self,
         position: i32,
@@ -108,6 +116,7 @@ impl ExpressionParsingState {
     }
 
     /// 替换指定位置的表达式节点。
+    /// 对应 Java 语义：`ExpressionParsingState` 的 `set_node_expression` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_node_expression(
         &mut self,
         position: i32,
@@ -121,16 +130,19 @@ impl ExpressionParsingState {
     }
 
     /// 判断根节点是否为输入字符串。
+    /// 对应 Java: `ExpressionParsingState#hasStringRoot()`。
     pub(crate) fn has_string_root(&self) -> bool {
         self.has_string_at(0)
     }
 
     /// 判断根节点是否为表达式。
+    /// 对应 Java: `ExpressionParsingState#hasExpressionRoot()`。
     pub(crate) fn has_expression_root(&self) -> bool {
         self.has_expression_at(0)
     }
 
     /// 判断给定位置存在且为输入字符串。
+    /// 对应 Java: `ExpressionParsingState#hasStringAt()`。
     pub(crate) fn has_string_at(&self, position: i32) -> bool {
         usize::try_from(position)
             .ok()
@@ -139,6 +151,7 @@ impl ExpressionParsingState {
     }
 
     /// 判断给定位置存在且为表达式。
+    /// 对应 Java: `ExpressionParsingState#hasExpressionAt()`。
     pub(crate) fn has_expression_at(&self, position: i32) -> bool {
         usize::try_from(position)
             .ok()
@@ -158,6 +171,7 @@ impl ExpressionParsingState {
 
 /// 解析状态的 Java 参数与索引错误。
 #[derive(Debug, Error, Eq, PartialEq)]
+/// 对应 Java 语义：`ExpressionParsingState` 的 Rust 侧类型 `ExpressionParsingStateError`。
 pub(crate) enum ExpressionParsingStateError {
     /// Java `IllegalArgumentException`。
     #[error("{message}")]

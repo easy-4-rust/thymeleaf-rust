@@ -7,6 +7,7 @@ use std::time::Duration;
 /// Streams 回调重新驱动节流处理器，Rust 框架适配器通过该信号等待 `feed_buffer`
 /// 或 `feeding_complete`，避免轮询和空转。
 #[derive(Clone)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct DataDrivenTemplateSignal {
     state: Arc<(Mutex<u64>, Condvar)>,
 }
@@ -14,6 +15,7 @@ pub struct DataDrivenTemplateSignal {
 impl DataDrivenTemplateSignal {
     /// 创建初始修订号为零的信号。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn new() -> Self {
         Self {
             state: Arc::new((Mutex::new(0), Condvar::new())),
@@ -22,6 +24,7 @@ impl DataDrivenTemplateSignal {
 
     /// 返回当前修订号；调用方应在尝试推进模板之前保存该值。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn revision(&self) -> u64 {
         *self
             .state
@@ -31,6 +34,7 @@ impl DataDrivenTemplateSignal {
     }
 
     /// 通知等待方已有新数据或上游已经结束。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn notify(&self) {
         let (revision, condition) = self.state.as_ref();
         let mut revision = revision
@@ -49,6 +53,7 @@ impl DataDrivenTemplateSignal {
     /// # 返回
     /// 修订号已经变化时返回 `true`，超时时返回 `false`。
     #[must_use]
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn wait_for_change(&self, previous_revision: u64, timeout: Duration) -> bool {
         let (revision, condition) = self.state.as_ref();
         let revision = revision

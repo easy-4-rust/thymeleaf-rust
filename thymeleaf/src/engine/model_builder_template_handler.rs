@@ -41,6 +41,7 @@ impl Clone for ModelBuilderTemplateHandler {
 
 impl ModelBuilderTemplateHandler {
     /// 创建容量初值为 100 的模型构建处理器。
+    /// 对应 Java 语义：`ModelBuilderTemplateHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_data: Arc<TemplateData>,
@@ -54,6 +55,7 @@ impl ModelBuilderTemplateHandler {
     }
 
     /// 返回当前已收集事件的不可变完整模板模型。
+    /// 对应 Java: `ModelBuilderTemplateHandler#getModel()`。
     pub fn get_model(&self) -> Result<TemplateModel, IModelError> {
         TemplateModel::new(
             Arc::clone(&self.configuration),

@@ -34,6 +34,7 @@ pub struct StandardModelFactory {
 
 impl StandardModelFactory {
     /// 创建绑定指定引擎配置与模板模式的标准模型工厂。
+    /// 对应 Java 语义：`StandardModelFactory` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,

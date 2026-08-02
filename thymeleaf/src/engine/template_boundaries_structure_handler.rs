@@ -83,6 +83,7 @@ impl TemplateBoundariesStructureHandler {
     }
 
     /// 以可观察回调执行 Java 固定的上下文提交顺序。
+    /// 对应 Java 语义：`TemplateBoundariesStructureHandler` 的 `apply_context_modifications_with` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn apply_context_modifications_with(
         &self,
         mut set_variables: impl FnMut(&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>),

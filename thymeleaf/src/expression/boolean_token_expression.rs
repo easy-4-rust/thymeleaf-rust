@@ -17,6 +17,7 @@ pub struct BooleanTokenExpression {
 
 impl BooleanTokenExpression {
     /// 按 Java `Boolean.valueOf(String)` 创建布尔 Token；null 字符串得到 false。
+    /// 对应 Java 语义：`BooleanTokenExpression` 的 `from_string` 行为（Rust 侧辅助/私有路径）。
     pub fn from_string(value: Option<&JavaString>) -> Self {
         let value = value.is_some_and(|value| value.to_string_lossy().eq_ignore_ascii_case("true"));
         Self { value: Some(value) }
@@ -33,6 +34,7 @@ impl BooleanTokenExpression {
     }
 
     /// 解析忽略大小写的 true/false；其他输入不匹配。
+    /// 对应 Java: `BooleanTokenExpression#parseBooleanTokenExpression()`。
     pub fn parse_boolean_token_expression(input: Option<&JavaString>) -> Option<Self> {
         let input = input?;
         let text = input.to_string_lossy();

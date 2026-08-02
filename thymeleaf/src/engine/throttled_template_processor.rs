@@ -40,6 +40,7 @@ pub struct ThrottledTemplateProcessor {
 impl ThrottledTemplateProcessor {
     /// 创建完整节流执行状态；模板上下文只在全部事件消费后释放。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`ThrottledTemplateProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         template_spec: TemplateSpec,
         context: Arc<dyn IEngineContext>,
@@ -66,6 +67,7 @@ impl ThrottledTemplateProcessor {
     }
 
     /// 创建普通或 SSE Writer 的共享状态。
+    /// 对应 Java 语义：`ThrottledTemplateProcessor` 的 `create_writer` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn create_writer(
         template_name: String,
         flow_controller: Arc<Mutex<TemplateFlowController>>,
@@ -82,6 +84,7 @@ impl ThrottledTemplateProcessor {
     }
 
     /// 创建交给 OutputTemplateHandler 的共享 Writer 代理。
+    /// 对应 Java 语义：`ThrottledTemplateProcessor` 的 `writer_proxy` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn writer_proxy(writer: Arc<Mutex<ThrottledWriter>>) -> Box<dyn JavaWriter> {
         Box::new(SharedThrottledWriter { writer })
     }
@@ -260,6 +263,7 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         self.process_internal(max_output_in_bytes)
     }
 }
+/// 对应 Java 语义：`ThrottledTemplateProcessor` 的 Rust 侧类型 `ThrottledWriter`。
 
 pub(crate) enum ThrottledWriter {
     Standard(ThrottledTemplateWriter),

@@ -23,6 +23,7 @@ type AttributeDefinitionRepository = RwLock<HashMap<JavaString, AttributeDefinit
 
 /// `AttributeDefinitions` 返回的具体属性定义。
 #[derive(Clone)]
+/// 对应 Java 语义：`AttributeDefinitions` 的 Rust 侧类型 `AttributeDefinitionValue`。
 pub enum AttributeDefinitionValue {
     /// HTML 属性定义。
     Html(Arc<HTMLAttributeDefinition>),
@@ -35,6 +36,7 @@ pub enum AttributeDefinitionValue {
 impl AttributeDefinitionValue {
     /// 返回公共属性定义视图。
     #[must_use]
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `as_attribute_definition` 行为（Rust 侧辅助/私有路径）。
     pub fn as_attribute_definition(&self) -> &AttributeDefinition {
         match self {
             Self::Html(value) => value.as_attribute_definition(),
@@ -46,6 +48,7 @@ impl AttributeDefinitionValue {
 
 /// 属性定义仓储的参数、Processor 配置或名称构造错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`AttributeDefinitions` 的 Rust 侧类型 `AttributeDefinitionsError`。
 pub enum AttributeDefinitionsError {
     /// Java 公开入口的参数校验失败。
     IllegalArgument(String),
@@ -131,6 +134,7 @@ impl AttributeDefinitions {
 
     /// 返回按字典序排列的标准 HTML 属性名。
     #[must_use]
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `all_standard_html_attribute_names` 行为（Rust 侧辅助/私有路径）。
     pub fn all_standard_html_attribute_names() -> Vec<&'static str> {
         let mut values = STANDARD_HTML_ATTRIBUTE_NAMES.to_vec();
         values.sort_unstable();
@@ -138,6 +142,7 @@ impl AttributeDefinitions {
     }
 
     /// 按模板模式解析完整属性名。
+    /// 对应 Java: `AttributeDefinitions#forName()`。
     pub fn for_name(
         &self,
         template_mode: Option<TemplateMode>,
@@ -159,6 +164,7 @@ impl AttributeDefinitions {
     }
 
     /// 按模板模式解析 prefix 与本地属性名。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_with_prefix(
         &self,
         template_mode: Option<TemplateMode>,
@@ -181,6 +187,7 @@ impl AttributeDefinitions {
     }
 
     /// 按模板模式解析 UTF-16 buffer 子范围。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_name_buffer` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_buffer(
         &self,
         template_mode: Option<TemplateMode>,
@@ -202,6 +209,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回 HTML 属性定义。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
         &self,
         attribute_name: Option<&JavaString>,
@@ -212,6 +220,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回带 prefix 的 HTML 属性定义。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
         &self,
         prefix: Option<&JavaString>,
@@ -223,6 +232,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回 XML 属性定义。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
         &self,
         attribute_name: Option<&JavaString>,
@@ -233,6 +243,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回带 prefix 的 XML 属性定义。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
         &self,
         prefix: Option<&JavaString>,
@@ -244,6 +255,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回 TEXT 属性定义。
+    /// 对应 Java: `AttributeDefinitions#forTextName()`。
     pub fn for_text_name(
         &self,
         attribute_name: Option<&JavaString>,
@@ -252,6 +264,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回 JAVASCRIPT 属性定义。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_javascript_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_javascript_name(
         &self,
         attribute_name: Option<&JavaString>,
@@ -260,6 +273,7 @@ impl AttributeDefinitions {
     }
 
     /// 返回 CSS 属性定义。
+    /// 对应 Java 语义：`AttributeDefinitions` 的 `for_css_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_css_name(
         &self,
         attribute_name: Option<&JavaString>,

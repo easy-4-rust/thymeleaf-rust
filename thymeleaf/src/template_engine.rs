@@ -55,6 +55,7 @@ impl TemplateEngine {
 
     /// 创建带标准缓存、上下文工厂、消息解析器、链接构建器和 Standard Dialect 的引擎。
     #[must_use]
+    /// 对应 Java 语义：`TemplateEngine` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new() -> Self {
         let standard_dialect: Arc<dyn IDialect> = Arc::new(StandardDialect::new());
         Self {
@@ -81,6 +82,7 @@ impl TemplateEngine {
 
     /// 判断首次配置读取或模板处理是否已完成初始化。
     #[must_use]
+    /// 对应 Java: `TemplateEngine#isInitialized()`。
     pub fn is_initialized(&self) -> bool {
         self.initialized.load(Ordering::Acquire)
     }
@@ -108,6 +110,7 @@ impl TemplateEngine {
     }
 
     /// 返回按配置顺序去重的方言快照。
+    /// 对应 Java: `TemplateEngine#getDialects()`。
     pub fn get_dialects(&self) -> Vec<Arc<dyn IDialect>> {
         let state = lock(&self.state);
         let mut dialects = Vec::new();
@@ -124,6 +127,7 @@ impl TemplateEngine {
     }
 
     /// 返回按显式或默认前缀分组的方言快照。
+    /// 对应 Java: `TemplateEngine#getDialectsByPrefix()`。
     pub fn get_dialects_by_prefix(&self) -> IndexMap<Option<JavaString>, Vec<Arc<dyn IDialect>>> {
         let state = lock(&self.state);
         let mut result = IndexMap::<Option<JavaString>, Vec<Arc<dyn IDialect>>>::new();
@@ -139,6 +143,7 @@ impl TemplateEngine {
     }
 
     /// 设置唯一方言并清除先前方言配置。
+    /// 对应 Java: `TemplateEngine#setDialect()`。
     pub fn set_dialect(
         &self,
         dialect: Arc<dyn IDialect>,
@@ -154,6 +159,7 @@ impl TemplateEngine {
     }
 
     /// 使用显式前缀增加一个方言。
+    /// 对应 Java 语义：`TemplateEngine` 的 `add_dialect_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn add_dialect_with_prefix(
         &self,
         prefix: Option<&str>,
@@ -172,6 +178,7 @@ impl TemplateEngine {
     }
 
     /// 使用方言默认前缀增加一个方言。
+    /// 对应 Java: `TemplateEngine#addDialect()`。
     pub fn add_dialect(
         &self,
         dialect: Arc<dyn IDialect>,
@@ -188,6 +195,7 @@ impl TemplateEngine {
     }
 
     /// 用全部采用默认前缀的方言替换现有方言集合。
+    /// 对应 Java: `TemplateEngine#setDialects()`。
     pub fn set_dialects(
         &self,
         dialects: Vec<Arc<dyn IDialect>>,
@@ -211,6 +219,7 @@ impl TemplateEngine {
     }
 
     /// 用调用方给定的前缀/方言映射替换现有方言集合。
+    /// 对应 Java: `TemplateEngine#setDialectsByPrefix()`。
     pub fn set_dialects_by_prefix(
         &self,
         dialects: Vec<(Option<JavaString>, Arc<dyn IDialect>)>,
@@ -235,6 +244,7 @@ impl TemplateEngine {
     }
 
     /// 追加一组采用默认前缀的方言。
+    /// 对应 Java: `TemplateEngine#setAdditionalDialects()`。
     pub fn set_additional_dialects(
         &self,
         dialects: Vec<Arc<dyn IDialect>>,
@@ -257,11 +267,13 @@ impl TemplateEngine {
     }
 
     /// 删除全部方言配置。
+    /// 对应 Java: `TemplateEngine#clearDialects()`。
     pub fn clear_dialects(&self) -> Result<(), AlreadyInitializedException> {
         self.mutate_before_initialization(|state| state.dialect_configurations.clear())
     }
 
     /// 设置唯一模板解析器。
+    /// 对应 Java: `TemplateEngine#setTemplateResolver()`。
     pub fn set_template_resolver(
         &self,
         template_resolver: Arc<dyn ITemplateResolver>,
@@ -273,6 +285,7 @@ impl TemplateEngine {
     }
 
     /// 返回模板解析器配置快照。
+    /// 对应 Java: `TemplateEngine#getTemplateResolvers()`。
     pub fn get_template_resolvers(&self) -> Vec<Arc<dyn ITemplateResolver>> {
         self.configuration.get().map_or_else(
             || lock(&self.state).template_resolvers.clone(),
@@ -281,6 +294,7 @@ impl TemplateEngine {
     }
 
     /// 替换全部模板解析器，并按对象身份去重。
+    /// 对应 Java: `TemplateEngine#setTemplateResolvers()`。
     pub fn set_template_resolvers(
         &self,
         template_resolvers: Vec<Arc<dyn ITemplateResolver>>,
@@ -300,6 +314,7 @@ impl TemplateEngine {
     }
 
     /// 按插入顺序增加模板解析器，并按对象身份去重。
+    /// 对应 Java: `TemplateEngine#addTemplateResolver()`。
     pub fn add_template_resolver(
         &self,
         template_resolver: Arc<dyn ITemplateResolver>,
@@ -316,6 +331,7 @@ impl TemplateEngine {
     }
 
     /// 设置可空缓存管理器；`None` 禁用全部引擎缓存。
+    /// 对应 Java: `TemplateEngine#setCacheManager()`。
     pub fn set_cache_manager(
         &self,
         cache_manager: Option<Arc<dyn ICacheManager>>,
@@ -324,11 +340,13 @@ impl TemplateEngine {
     }
 
     /// 返回当前缓存管理器快照。
+    /// 对应 Java: `TemplateEngine#getCacheManager()`。
     pub fn get_cache_manager(&self) -> Option<Arc<dyn ICacheManager>> {
         lock(&self.state).cache_manager.clone()
     }
 
     /// 设置引擎上下文工厂。
+    /// 对应 Java: `TemplateEngine#setEngineContextFactory()`。
     pub fn set_engine_context_factory(
         &self,
         engine_context_factory: Arc<dyn IEngineContextFactory>,
@@ -339,11 +357,13 @@ impl TemplateEngine {
     }
 
     /// 返回当前引擎上下文工厂。
+    /// 对应 Java: `TemplateEngine#getEngineContextFactory()`。
     pub fn get_engine_context_factory(&self) -> Arc<dyn IEngineContextFactory> {
         Arc::clone(&lock(&self.state).engine_context_factory)
     }
 
     /// 设置解耦模板逻辑解析器。
+    /// 对应 Java: `TemplateEngine#setDecoupledTemplateLogicResolver()`。
     pub fn set_decoupled_template_logic_resolver(
         &self,
         resolver: Arc<dyn IDecoupledTemplateLogicResolver>,
@@ -354,6 +374,7 @@ impl TemplateEngine {
     }
 
     /// 返回当前解耦模板逻辑解析器。
+    /// 对应 Java: `TemplateEngine#getDecoupledTemplateLogicResolver()`。
     pub fn get_decoupled_template_logic_resolver(
         &self,
     ) -> Arc<dyn IDecoupledTemplateLogicResolver> {
@@ -361,6 +382,7 @@ impl TemplateEngine {
     }
 
     /// 设置唯一消息解析器。
+    /// 对应 Java: `TemplateEngine#setMessageResolver()`。
     pub fn set_message_resolver(
         &self,
         message_resolver: Arc<dyn IMessageResolver>,
@@ -372,6 +394,7 @@ impl TemplateEngine {
     }
 
     /// 返回消息解析器配置快照。
+    /// 对应 Java: `TemplateEngine#getMessageResolvers()`。
     pub fn get_message_resolvers(&self) -> Vec<Arc<dyn IMessageResolver>> {
         self.configuration.get().map_or_else(
             || lock(&self.state).message_resolvers.clone(),
@@ -380,6 +403,7 @@ impl TemplateEngine {
     }
 
     /// 替换全部消息解析器，并按对象身份去重。
+    /// 对应 Java: `TemplateEngine#setMessageResolvers()`。
     pub fn set_message_resolvers(
         &self,
         message_resolvers: Vec<Arc<dyn IMessageResolver>>,
@@ -399,6 +423,7 @@ impl TemplateEngine {
     }
 
     /// 增加消息解析器，并按对象身份去重。
+    /// 对应 Java: `TemplateEngine#addMessageResolver()`。
     pub fn add_message_resolver(
         &self,
         message_resolver: Arc<dyn IMessageResolver>,
@@ -415,6 +440,7 @@ impl TemplateEngine {
     }
 
     /// 设置唯一链接构建器。
+    /// 对应 Java: `TemplateEngine#setLinkBuilder()`。
     pub fn set_link_builder(
         &self,
         link_builder: Arc<dyn ILinkBuilder>,
@@ -426,6 +452,7 @@ impl TemplateEngine {
     }
 
     /// 返回链接构建器配置快照。
+    /// 对应 Java: `TemplateEngine#getLinkBuilders()`。
     pub fn get_link_builders(&self) -> Vec<Arc<dyn ILinkBuilder>> {
         self.configuration.get().map_or_else(
             || lock(&self.state).link_builders.clone(),
@@ -434,6 +461,7 @@ impl TemplateEngine {
     }
 
     /// 替换全部链接构建器，并按对象身份去重。
+    /// 对应 Java: `TemplateEngine#setLinkBuilders()`。
     pub fn set_link_builders(
         &self,
         link_builders: Vec<Arc<dyn ILinkBuilder>>,
@@ -453,6 +481,7 @@ impl TemplateEngine {
     }
 
     /// 增加链接构建器，并按对象身份去重。
+    /// 对应 Java: `TemplateEngine#addLinkBuilder()`。
     pub fn add_link_builder(
         &self,
         link_builder: Arc<dyn ILinkBuilder>,
@@ -469,12 +498,14 @@ impl TemplateEngine {
     }
 
     /// 清空全部模板缓存；调用会触发引擎初始化。
+    /// 对应 Java: `TemplateEngine#clearTemplateCache()`。
     pub fn clear_template_cache(&self) -> TemplateEngineResult<()> {
         self.initialize()?.get_template_manager().clear_caches();
         Ok(())
     }
 
     /// 清空指定模板名称的缓存；调用会触发引擎初始化。
+    /// 对应 Java: `TemplateEngine#clearTemplateCacheFor()`。
     pub fn clear_template_cache_for(&self, template_name: &JavaString) -> TemplateEngineResult<()> {
         self.initialize()?
             .get_template_manager()
@@ -483,6 +514,7 @@ impl TemplateEngine {
     }
 
     /// 使用模板文本或名称创建 TemplateSpec 并返回完整输出。
+    /// 对应 Java 语义：`TemplateEngine` 的 `process_template` 行为（Rust 侧辅助/私有路径）。
     pub fn process_template(
         &self,
         template: &str,
@@ -560,6 +592,7 @@ impl TemplateEngine {
 
     /// 返回当前执行线程名称。
     #[must_use]
+    /// 对应 Java: `TemplateEngine#threadIndex()`。
     pub fn thread_index() -> String {
         std::thread::current()
             .name()

@@ -25,6 +25,7 @@ thread_local! {
 
 /// 属性集合修改或名称解析错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`Attributes` 的 Rust 侧类型 `AttributesError`。
 pub enum AttributesError {
     /// XML 模式不允许值为 null 的属性。
     NullValueInXml,
@@ -231,6 +232,7 @@ impl Attributes {
     ///
     /// 该入口用于 Processor 合并，不执行防御性复制。
     #[must_use]
+    /// 对应 Java 语义：`Attributes` 的 `as_attribute_slice` 行为（Rust 侧辅助/私有路径）。
     pub fn as_attribute_slice(&self) -> Option<&[Arc<Attribute>]> {
         self.attributes.as_deref()
     }
@@ -516,6 +518,7 @@ impl Attributes {
 
     /// 返回 Java `toString()` 对应的 UTF-16 属性序列。
     #[must_use]
+    /// 对应 Java 语义：`Attributes` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> JavaString {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)

@@ -31,6 +31,7 @@ impl StandardDefaultAttributesTagProcessor {
     pub const PRECEDENCE: i32 = i32::MAX;
 
     /// 创建默认属性 Processor。
+    /// 对应 Java 语义：`StandardDefaultAttributesTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

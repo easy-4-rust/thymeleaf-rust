@@ -23,6 +23,7 @@ impl MessageExpression {
     /// # 参数
     /// - `base`：消息键表达式，Java null 会被拒绝；
     /// - `parameters`：可选参数表达式序列。
+    /// 对应 Java 语义：`MessageExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         base: Option<Arc<dyn IStandardExpression>>,
         parameters: Option<Arc<ExpressionSequence>>,
@@ -34,16 +35,19 @@ impl MessageExpression {
     }
 
     /// 返回消息键表达式。
+    /// 对应 Java: `MessageExpression#getBase()`。
     pub fn get_base(&self) -> &dyn IStandardExpression {
         self.base.as_ref()
     }
 
     /// 返回可选参数序列。
+    /// 对应 Java: `MessageExpression#getParameters()`。
     pub fn get_parameters(&self) -> Option<&ExpressionSequence> {
         self.parameters.as_deref()
     }
 
     /// 判断当前是否具有至少一个参数。
+    /// 对应 Java: `MessageExpression#hasParameters()`。
     pub fn has_parameters(&self) -> bool {
         self.parameters
             .as_deref()

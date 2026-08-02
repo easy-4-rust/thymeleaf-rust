@@ -9,6 +9,7 @@ use crate::web::IWebExchange;
 ///
 /// Java `Map#keySet()` 是由原 Map 支撑的实时视图，移除名称也会删除变量。该
 /// Rust 合同保留实时查询与删除能力，同时用快照方法支持安全迭代。
+/// 对应 Java 语义：`IContext` 的 Rust 侧类型 `IContextVariableNames`。
 pub trait IContextVariableNames: Send + Sync {
     /// 返回当前变量名数量。
     ///

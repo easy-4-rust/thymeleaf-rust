@@ -26,6 +26,7 @@ impl TemplateModel {
     /// 从解析器事件队列创建不可变模板模型。
     ///
     /// 参数 `queue` 至少包含模板开始和结束事件，否则返回边界错误。
+    /// 对应 Java 语义：`TemplateModel` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_data: Arc<TemplateData>,
@@ -46,11 +47,13 @@ impl TemplateModel {
 
     /// 返回当前完整模板的解析元数据。
     #[must_use]
+    /// 对应 Java: `TemplateModel#getTemplateData()`。
     pub fn get_template_data(&self) -> &TemplateData {
         self.template_data.as_ref()
     }
 
     /// 将完整事件队列依次交给模板处理器。
+    /// 对应 Java: `TemplateModel#process()`。
     pub(crate) fn process(
         &self,
         handler: &mut dyn ITemplateHandler,
@@ -62,6 +65,7 @@ impl TemplateModel {
     }
 
     /// 从偏移量开始处理，遇到流控停止标志时暂停。
+    /// 对应 Java 语义：Java 接口/超类方法 `processThrottled()` 的 Rust 移植（`TemplateModel` 继承路径）。
     pub(crate) fn process_throttled(
         &self,
         handler: &mut dyn ITemplateHandler,

@@ -301,6 +301,7 @@ where
     /// Java 的 `SoftReference` 可在 JVM 内存压力下被 GC 清除，Rust 没有等价的自动
     /// 回收通知。本扩展方法提供确定性触发点：仅软引用模式受影响；仍被外部 `Arc`
     /// 持有的值保持可用，其余条目会在下次 get 时惰性删除。
+    /// 对应 Java 语义：`StandardCache` 的 `sacrifice_soft_references` 行为（Rust 侧辅助/私有路径）。
     pub fn sacrifice_soft_references(&self) {
         if !self.use_soft_references {
             return;

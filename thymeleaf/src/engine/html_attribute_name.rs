@@ -13,6 +13,7 @@ pub struct HTMLAttributeName {
 }
 
 impl HTMLAttributeName {
+    /// 对应 Java: `HTMLAttributeName#forName()`。
     pub(super) fn for_name(
         prefix: Option<JavaString>,
         attribute_name: Option<JavaString>,

@@ -64,6 +64,7 @@ impl StandardDialect {
 
     /// 创建使用 Java 默认组件的 Standard Dialect。
     #[must_use]
+    /// 对应 Java 语义：`StandardDialect` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new() -> Self {
         Self {
             base: AbstractProcessorDialect::new(
@@ -82,6 +83,7 @@ impl StandardDialect {
     }
 
     /// 返回变量表达式求值器；首次访问时创建 Java 默认 OGNL 求值器。
+    /// 对应 Java: `StandardDialect#getVariableExpressionEvaluator()`。
     pub fn get_variable_expression_evaluator(
         &self,
     ) -> Arc<dyn IStandardVariableExpressionEvaluator> {
@@ -91,6 +93,7 @@ impl StandardDialect {
     }
 
     /// 替换变量表达式求值器。Rust 类型系统在调用边界排除了 Java `null`。
+    /// 对应 Java: `StandardDialect#setVariableExpressionEvaluator()`。
     pub fn set_variable_expression_evaluator(
         &self,
         evaluator: Arc<dyn IStandardVariableExpressionEvaluator>,
@@ -99,6 +102,7 @@ impl StandardDialect {
     }
 
     /// 返回 Standard Expression Parser。
+    /// 对应 Java: `StandardDialect#getExpressionParser()`。
     pub fn get_expression_parser(&self) -> Arc<dyn IStandardExpressionParser> {
         get_or_initialize(&self.expression_parser, || {
             Arc::new(StandardExpressionParser::new())
@@ -106,11 +110,13 @@ impl StandardDialect {
     }
 
     /// 替换 Standard Expression Parser。
+    /// 对应 Java: `StandardDialect#setExpressionParser()`。
     pub fn set_expression_parser(&self, parser: Arc<dyn IStandardExpressionParser>) {
         set_component(&self.expression_parser, parser);
     }
 
     /// 返回 Standard Conversion Service。
+    /// 对应 Java: `StandardDialect#getConversionService()`。
     pub fn get_conversion_service(&self) -> Arc<dyn IStandardConversionService> {
         get_or_initialize(&self.conversion_service, || {
             Arc::new(StandardConversionService::new())
@@ -118,11 +124,13 @@ impl StandardDialect {
     }
 
     /// 替换 Standard Conversion Service。
+    /// 对应 Java: `StandardDialect#setConversionService()`。
     pub fn set_conversion_service(&self, conversion_service: Arc<dyn IStandardConversionService>) {
         set_component(&self.conversion_service, conversion_service);
     }
 
     /// 返回 JavaScript Serializer。
+    /// 对应 Java: `StandardDialect#getJavaScriptSerializer()`。
     pub fn get_java_script_serializer(&self) -> Arc<dyn IStandardJavaScriptSerializer> {
         get_or_initialize(&self.java_script_serializer, || {
             Arc::new(StandardJavaScriptSerializer::new(true))
@@ -130,11 +138,13 @@ impl StandardDialect {
     }
 
     /// 替换 JavaScript Serializer。
+    /// 对应 Java: `StandardDialect#setJavaScriptSerializer()`。
     pub fn set_java_script_serializer(&self, serializer: Arc<dyn IStandardJavaScriptSerializer>) {
         set_component(&self.java_script_serializer, serializer);
     }
 
     /// 返回 CSS Serializer。
+    /// 对应 Java 语义：`StandardDialect` 的 `get_css_serializer` 行为（Rust 侧辅助/私有路径）。
     pub fn get_css_serializer(&self) -> Arc<dyn IStandardCSSSerializer> {
         get_or_initialize(&self.css_serializer, || {
             Arc::new(StandardCSSSerializer::new())
@@ -142,11 +152,13 @@ impl StandardDialect {
     }
 
     /// 替换 CSS Serializer。
+    /// 对应 Java 语义：`StandardDialect` 的 `set_css_serializer` 行为（Rust 侧辅助/私有路径）。
     pub fn set_css_serializer(&self, serializer: Arc<dyn IStandardCSSSerializer>) {
         set_component(&self.css_serializer, serializer);
     }
 
     /// 创建指定实际方言前缀对应的完整标准 Processor 集合。
+    /// 对应 Java: `StandardDialect#createStandardProcessorsSet()`。
     pub fn create_standard_processors_set(
         dialect_prefix: Option<&str>,
     ) -> Result<ProcessorSet, TemplateProcessingException> {

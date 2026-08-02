@@ -18,6 +18,7 @@ pub type TemplateHandlerConstructor =
 ///
 /// 这是 Rust 运行时扩展，不计入 Thymeleaf Java 主对象分母。
 #[derive(Clone, Copy)]
+/// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub struct TemplateHandlerClass {
     name: &'static str,
     implements_template_handler: bool,
@@ -108,6 +109,7 @@ impl TemplateHandlerClass {
     /// # 错误
     ///
     /// Handler 构造函数拒绝创建实例时返回其原始动态错误。
+    /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn new_instance(
         &self,
     ) -> Result<Box<dyn ITemplateHandler>, TemplateHandlerConstructorError> {

@@ -16,6 +16,7 @@ pub struct StandardXMLInliner(AbstractStandardInliner);
 impl StandardXMLInliner {
     /// 创建 XML 模式内联器。
     #[must_use]
+    /// 对应 Java 语义：`StandardXMLInliner` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(configuration: &dyn IEngineConfiguration) -> Self {
         Self(AbstractStandardInliner::new(
             configuration,

@@ -23,6 +23,7 @@ pub struct AbstractStandardTextInlineSettingTagProcessor {
 
 impl AbstractStandardTextInlineSettingTagProcessor {
     /// 创建使用 `get_inliner` 映射字面量内联模式的 Processor。
+    /// 对应 Java 语义：`AbstractStandardTextInlineSettingTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new<F>(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

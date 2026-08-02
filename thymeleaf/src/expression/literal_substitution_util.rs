@@ -7,6 +7,7 @@ pub(crate) struct LiteralSubstitutionUtil;
 
 impl LiteralSubstitutionUtil {
     /// 执行字面量替换；不包含替换定界符时保留输入值。
+    /// 对应 Java: `LiteralSubstitutionUtil#performLiteralSubstitution()`。
     pub(crate) fn perform_literal_substitution(input: Option<&JavaString>) -> Option<JavaString> {
         let input = input?;
         let units = input.as_utf16();

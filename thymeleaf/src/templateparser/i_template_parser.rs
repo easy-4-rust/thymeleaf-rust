@@ -10,6 +10,7 @@ use thiserror::Error;
 
 /// 高层模板 Parser 的未检查参数错误或模板输入错误。
 #[derive(Debug, Error)]
+/// 对应 Java 语义：`ITemplateParser` 的 Rust 侧类型 `TemplateParserError`。
 pub enum TemplateParserError {
     /// Java `IllegalArgumentException`。
     #[error("{message}")]

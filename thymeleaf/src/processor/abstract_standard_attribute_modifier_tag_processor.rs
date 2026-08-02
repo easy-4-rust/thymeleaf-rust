@@ -17,6 +17,7 @@ pub struct AbstractStandardAttributeModifierTagProcessor {
 
 impl AbstractStandardAttributeModifierTagProcessor {
     /// 创建目标属性与匹配属性同名的修改器。
+    /// 对应 Java 语义：`AbstractStandardAttributeModifierTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,
@@ -40,6 +41,7 @@ impl AbstractStandardAttributeModifierTagProcessor {
 
     /// 创建可指定完整目标属性名的修改器。
     #[allow(clippy::too_many_arguments)]
+    /// 对应 Java 语义：`AbstractStandardAttributeModifierTagProcessor` 的 `with_target` 行为（Rust 侧辅助/私有路径）。
     pub fn with_target(
         template_mode: TemplateMode,
         dialect_prefix: Option<JavaString>,

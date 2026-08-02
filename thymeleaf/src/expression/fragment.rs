@@ -28,6 +28,7 @@ impl Fragment {
     };
 
     /// 创建 Fragment；参数 Map 使用只读包装但保留原 backing map 身份。
+    /// 对应 Java 语义：`Fragment` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_model: Option<Arc<dyn IModel>>,
         parameters: Option<Arc<RwLock<FragmentParameterMap>>>,
@@ -47,22 +48,26 @@ impl Fragment {
     }
 
     /// 返回全局 EMPTY_FRAGMENT 单例。
+    /// 对应 Java 语义：`Fragment` 的 `empty_fragment` 行为（Rust 侧辅助/私有路径）。
     pub fn empty_fragment() -> &'static Self {
         &Self::EMPTY_FRAGMENT
     }
 
     /// 返回可空模板模型。
+    /// 对应 Java: `Fragment#getTemplateModel()`。
     pub fn get_template_model(&self) -> Option<&dyn IModel> {
         self.template_model.as_deref()
     }
 
     /// 返回共享模板模型身份，供结构处理器直接插入模型而不序列化为字符串。
     #[must_use]
+    /// 对应 Java 语义：`Fragment` 的 `get_template_model_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_template_model_arc(&self) -> Option<Arc<dyn IModel>> {
         self.template_model.clone()
     }
 
     /// 返回原参数 Map 的实时只读视图。
+    /// 对应 Java: `Fragment#getParameters()`。
     pub fn get_parameters(&self) -> Option<RwLockReadGuard<'_, FragmentParameterMap>> {
         self.parameters
             .as_ref()
@@ -71,16 +76,19 @@ impl Fragment {
 
     /// 返回参数 Map 的共享身份，供 Fragment 签名重整与局部变量注入。
     #[must_use]
+    /// 对应 Java 语义：`Fragment` 的 `get_parameters_arc` 行为（Rust 侧辅助/私有路径）。
     pub fn get_parameters_arc(&self) -> Option<Arc<RwLock<FragmentParameterMap>>> {
         self.parameters.clone()
     }
 
     /// 判断构造瞬间非空参数是否为合成位置参数。
+    /// 对应 Java: `Fragment#hasSyntheticParameters()`。
     pub fn has_synthetic_parameters(&self) -> bool {
         self.synthetic_parameters
     }
 
     /// 将 Fragment 模型写入 Java Writer；EMPTY_FRAGMENT 不写任何内容。
+    /// 对应 Java: `Fragment#write()`。
     pub fn write(&self, writer: &mut dyn crate::util::JavaWriter) -> io::Result<()> {
         if let Some(template_model) = &self.template_model {
             template_model.write(writer)?;
@@ -89,6 +97,7 @@ impl Fragment {
     }
 
     /// 返回模型序列化文本。
+    /// 对应 Java 语义：`Fragment` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> io::Result<JavaString> {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)?;

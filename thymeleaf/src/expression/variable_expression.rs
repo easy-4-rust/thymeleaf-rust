@@ -25,6 +25,7 @@ impl VariableExpression {
     ///
     /// # 参数
     /// - `expression`：`${}` 内部表达式；Java null 返回参数错误。
+    /// 对应 Java 语义：`VariableExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(expression: Option<JavaString>) -> Result<Self, ValidateError> {
         Self::with_convert_to_string(expression, false)
     }
@@ -34,6 +35,7 @@ impl VariableExpression {
     /// # 参数
     /// - `expression`：`${}` 内部表达式；
     /// - `convert_to_string`：是否对应双括号 `${{...}}`。
+    /// 对应 Java 语义：`VariableExpression` 的 `with_convert_to_string` 行为（Rust 侧辅助/私有路径）。
     pub fn with_convert_to_string(
         expression: Option<JavaString>,
         convert_to_string: bool,
@@ -49,11 +51,13 @@ impl VariableExpression {
     }
 
     /// 返回定界符内部表达式。
+    /// 对应 Java 语义：`VariableExpression` 的 `get_expression_value` 行为（Rust 侧辅助/私有路径）。
     pub fn get_expression_value(&self) -> &JavaString {
         &self.expression
     }
 
     /// 解析完整 `${...}` 文本；不匹配时返回 `None`。
+    /// 对应 Java: `VariableExpression#parseVariableExpression()`。
     pub(crate) fn parse_variable_expression(input: &JavaString) -> Option<Self> {
         parse_delimited(input, b'$' as u16).and_then(|(expression, convert)| {
             Self::with_convert_to_string(Some(expression), convert).ok()
@@ -108,6 +112,7 @@ impl IStandardExpression for VariableExpression {
 }
 
 impl SimpleExpression for VariableExpression {}
+/// 对应 Java 语义：`VariableExpression` 的 `parse_delimited` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn parse_delimited(input: &JavaString, selector: u16) -> Option<(JavaString, bool)> {
     let units = input.as_utf16();
@@ -138,6 +143,7 @@ pub(crate) fn parse_delimited(input: &JavaString, selector: u16) -> Option<(Java
     }
     Some((JavaString::from_utf16(content.to_vec()), false))
 }
+/// 对应 Java 语义：`VariableExpression` 的 `build_representation` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn build_representation(
     selector: u16,
@@ -155,6 +161,7 @@ pub(crate) fn build_representation(
     units.push(b'}' as u16);
     JavaString::from_utf16(units)
 }
+/// 对应 Java 语义：`VariableExpression` 的 `execute_variable` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn execute_variable(
     context: &dyn IExpressionContext,

@@ -271,6 +271,7 @@ impl TemplateSpec {
             template_resolution_attributes,
         )
     }
+/// 对应 Java 语义：`TemplateSpec` 的 `try_new` 行为（Rust 侧辅助/私有路径）。
 
     pub(crate) fn try_new(
         template: Option<&str>,
@@ -575,6 +576,7 @@ fn is_java_whitespace(character: char) -> bool {
 fn format_selectors(selectors: &[String]) -> String {
     format!("[{}]", selectors.join(", "))
 }
+/// 对应 Java 语义：`TemplateSpec` 的 `format_attributes` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn format_attributes(attributes: &TemplateResolutionAttributes) -> String {
     let mut entries = attributes

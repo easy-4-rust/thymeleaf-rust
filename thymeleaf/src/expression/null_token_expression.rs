@@ -20,6 +20,7 @@ impl NullTokenExpression {
     }
 
     /// 忽略大小写解析 null，并复用内部规范单例。
+    /// 对应 Java: `NullTokenExpression#parseNullTokenExpression()`。
     pub fn parse_null_token_expression(input: Option<&JavaString>) -> Option<Arc<Self>> {
         let input = input?;
         input

@@ -17,6 +17,7 @@ impl TemporalCreationUtils {
     }
 
     /// 按 Java `LocalDate.of` / `LocalDateTime.of` 规则创建 temporal。
+    /// 对应 Java: `TemporalCreationUtils#create()`。
     pub fn create(&self, fields: &[i32]) -> Result<JavaTemporal, TemporalCreationError> {
         if !matches!(fields.len(), 3 | 5 | 6 | 7) {
             return Err(invalid("Temporal create requires 3, 5, 6 or 7 fields"));
@@ -37,6 +38,7 @@ impl TemporalCreationUtils {
     }
 
     /// 解析 ISO 或自定义 Java pattern 的 `LocalDate`。
+    /// 对应 Java: `TemporalCreationUtils#createDate()`。
     pub fn create_date(
         &self,
         text: &str,
@@ -49,6 +51,7 @@ impl TemporalCreationUtils {
     }
 
     /// 解析 ISO 或自定义 Java pattern 的 `LocalDateTime`。
+    /// 对应 Java: `TemporalCreationUtils#createDateTime()`。
     pub fn create_date_time(
         &self,
         text: &str,
@@ -62,11 +65,13 @@ impl TemporalCreationUtils {
 
     /// 返回系统默认时区当前 `LocalDateTime`。
     #[must_use]
+    /// 对应 Java: `TemporalCreationUtils#createNow()`。
     pub fn create_now(&self) -> JavaTemporal {
         JavaTemporal::LocalDateTime(Utc::now().with_timezone(&default_zone()).naive_local())
     }
 
     /// 返回指定 ZoneId 当前 `ZonedDateTime`。
+    /// 对应 Java: `TemporalCreationUtils#createNowForTimeZone()`。
     pub fn create_now_for_time_zone(
         &self,
         zone_id: &str,
@@ -77,11 +82,13 @@ impl TemporalCreationUtils {
 
     /// 返回系统默认时区当前 `LocalDate`。
     #[must_use]
+    /// 对应 Java: `TemporalCreationUtils#createToday()`。
     pub fn create_today(&self) -> JavaTemporal {
         JavaTemporal::LocalDate(Utc::now().with_timezone(&default_zone()).date_naive())
     }
 
     /// 返回指定 ZoneId 当天零点 `ZonedDateTime`。
+    /// 对应 Java: `TemporalCreationUtils#createTodayForTimeZone()`。
     pub fn create_today_for_time_zone(
         &self,
         zone_id: &str,
@@ -119,6 +126,7 @@ impl Default for TemporalCreationUtils {
 /// Temporal 创建或解析错误。
 #[derive(Debug, Error)]
 #[error("{message}")]
+/// 对应 Java 语义：`TemporalCreationUtils` 的 Rust 侧类型 `TemporalCreationError`。
 pub struct TemporalCreationError {
     message: String,
 }
@@ -145,6 +153,7 @@ fn default_zone() -> Tz {
         .and_then(|value| value.parse().ok())
         .unwrap_or(chrono_tz::UTC)
 }
+/// 对应 Java 语义：`TemporalCreationUtils` 的 `java_pattern` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn java_pattern(pattern: &str) -> String {
     let mut output = String::new();

@@ -69,6 +69,7 @@ pub(crate) struct TemplateModelController {
 
 impl TemplateModelController {
     /// 创建根层为正常处理的 Model controller。
+    /// 对应 Java 语义：`TemplateModelController` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,
@@ -96,6 +97,7 @@ impl TemplateModelController {
     }
 
     /// 设置可选节流流控对象。
+    /// 对应 Java: `TemplateModelController#setTemplateFlowController()`。
     pub(crate) fn set_template_flow_controller(
         &mut self,
         template_flow_controller: Option<Arc<Mutex<TemplateFlowController>>>,
@@ -109,6 +111,7 @@ impl TemplateModelController {
     }
 
     /// 从开放元素开始收集延迟 Model。
+    /// 对应 Java 语义：`TemplateModelController` 的 `start_gathering_delayed_open_model` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn start_gathering_delayed_open_model(
         &mut self,
         first_tag: Arc<dyn IOpenElementTag>,
@@ -135,6 +138,7 @@ impl TemplateModelController {
     }
 
     /// 从独立元素开始收集延迟 Model。
+    /// 对应 Java 语义：`TemplateModelController` 的 `start_gathering_delayed_standalone_model` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn start_gathering_delayed_standalone_model(
         &mut self,
         first_tag: Arc<dyn IStandaloneElementTag>,
@@ -277,6 +281,7 @@ impl TemplateModelController {
     }
 
     /// 判断当前收集对象是否已经抵达完整元素边界。
+    /// 对应 Java: `TemplateModelController#isGatheringFinished()`。
     pub(crate) fn is_gathering_finished(&self) -> bool {
         self.gathered_model
             .as_ref()
@@ -284,16 +289,19 @@ impl TemplateModelController {
     }
 
     /// 返回当前收集对象的共享身份。
+    /// 对应 Java: `TemplateModelController#getGatheredModel()`。
     pub(crate) fn get_gathered_model(&self) -> Option<Rc<RefCell<dyn IGatheringModelProcessable>>> {
         self.gathered_model.clone()
     }
 
     /// 清除已经进入处理队列的收集对象。
+    /// 对应 Java: `TemplateModelController#resetGathering()`。
     pub(crate) fn reset_gathering(&mut self) {
         self.gathered_model = None;
     }
 
     /// 同时设置 body 与 close-tag skip 状态。
+    /// 对应 Java: `TemplateModelController#skip()`。
     pub(crate) fn skip(&mut self, skip_body: SkipBody, skip_close_tag: bool) {
         self.skip_body_by_level[self.model_level] = skip_body;
         self.skip_body = skip_body;
@@ -307,6 +315,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理 Text。
+    /// 对应 Java: `TemplateModelController#shouldProcessText()`。
     pub(crate) fn should_process_text(
         &mut self,
         text: Arc<dyn IText>,
@@ -320,6 +329,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理 Comment。
+    /// 对应 Java: `TemplateModelController#shouldProcessComment()`。
     pub(crate) fn should_process_comment(
         &mut self,
         comment: Arc<dyn IComment>,
@@ -333,6 +343,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理 CDATA。
+    /// 对应 Java 语义：`TemplateModelController` 的 `should_process_cdata_section` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn should_process_cdata_section(
         &mut self,
         cdata_section: Arc<dyn ICDATASection>,
@@ -346,6 +357,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理独立元素。
+    /// 对应 Java: `TemplateModelController#shouldProcessStandaloneElement()`。
     pub(crate) fn should_process_standalone_element(
         &mut self,
         tag: Arc<dyn IStandaloneElementTag>,
@@ -370,6 +382,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理开放元素并进入下一 Model 层。
+    /// 对应 Java: `TemplateModelController#shouldProcessOpenElement()`。
     pub(crate) fn should_process_open_element(
         &mut self,
         tag: Arc<dyn IOpenElementTag>,
@@ -407,6 +420,7 @@ impl TemplateModelController {
     }
 
     /// 处理匹配关闭元素并退出一层。
+    /// 对应 Java: `TemplateModelController#shouldProcessCloseElement()`。
     pub(crate) fn should_process_close_element(
         &mut self,
         tag: Arc<dyn ICloseElementTag>,
@@ -439,6 +453,7 @@ impl TemplateModelController {
     }
 
     /// 把不匹配关闭元素按非元素事件处理。
+    /// 对应 Java: `TemplateModelController#shouldProcessUnmatchedCloseElement()`。
     pub(crate) fn should_process_unmatched_close_element(
         &mut self,
         tag: Arc<dyn ICloseElementTag>,
@@ -452,6 +467,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理 DOCTYPE。
+    /// 对应 Java: `TemplateModelController#shouldProcessDocType()`。
     pub(crate) fn should_process_doc_type(
         &mut self,
         event: Arc<dyn IDocType>,
@@ -465,6 +481,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理 XML declaration。
+    /// 对应 Java 语义：`TemplateModelController` 的 `should_process_xml_declaration` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn should_process_xml_declaration(
         &mut self,
         event: Arc<dyn IXMLDeclaration>,
@@ -478,6 +495,7 @@ impl TemplateModelController {
     }
 
     /// 根据当前 skip/收集状态处理 processing instruction。
+    /// 对应 Java: `TemplateModelController#shouldProcessProcessingInstruction()`。
     pub(crate) fn should_process_processing_instruction(
         &mut self,
         event: Arc<dyn IProcessingInstruction>,

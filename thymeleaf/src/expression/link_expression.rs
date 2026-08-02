@@ -22,6 +22,7 @@ pub struct LinkExpression {
 
 impl LinkExpression {
     /// 创建链接表达式。
+    /// 对应 Java 语义：`LinkExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         base: Option<Arc<dyn IStandardExpression>>,
         parameters: Option<Arc<AssignationSequence>>,
@@ -33,16 +34,19 @@ impl LinkExpression {
     }
 
     /// 返回链接基地址表达式。
+    /// 对应 Java: `LinkExpression#getBase()`。
     pub fn get_base(&self) -> &dyn IStandardExpression {
         self.base.as_ref()
     }
 
     /// 返回可选参数赋值序列。
+    /// 对应 Java: `LinkExpression#getParameters()`。
     pub fn get_parameters(&self) -> Option<&AssignationSequence> {
         self.parameters.as_deref()
     }
 
     /// 判断当前是否具有至少一个参数。
+    /// 对应 Java: `LinkExpression#hasParameters()`。
     pub fn has_parameters(&self) -> bool {
         self.parameters
             .as_deref()

@@ -18,6 +18,7 @@ pub struct DefaultExpression {
 
 impl DefaultExpression {
     /// 创建默认值表达式，并按 Java 顺序校验两个操作数。
+    /// 对应 Java 语义：`DefaultExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         queried_expression: Option<Arc<dyn IStandardExpression>>,
         default_expression: Option<Arc<dyn IStandardExpression>>,
@@ -36,10 +37,12 @@ impl DefaultExpression {
         })
     }
     /// 返回被查询表达式。
+    /// 对应 Java: `DefaultExpression#getQueriedExpression()`。
     pub fn get_queried_expression(&self) -> &dyn IStandardExpression {
         self.queried_expression.as_ref()
     }
     /// 返回默认表达式。
+    /// 对应 Java: `DefaultExpression#getDefaultExpression()`。
     pub fn get_default_expression(&self) -> &dyn IStandardExpression {
         self.default_expression.as_ref()
     }

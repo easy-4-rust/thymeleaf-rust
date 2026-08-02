@@ -13,6 +13,7 @@ pub struct HTMLElementName {
 }
 
 impl HTMLElementName {
+    /// 对应 Java: `HTMLElementName#forName()`。
     pub(super) fn for_name(
         prefix: Option<JavaString>,
         element_name: Option<JavaString>,

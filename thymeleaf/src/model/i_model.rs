@@ -63,6 +63,7 @@ pub trait IModel: Send + Sync {
 
 /// 模型变更或索引访问错误。
 #[derive(Clone, Debug, Eq, thiserror::Error, PartialEq)]
+/// 对应 Java 语义：`IModel` 的 Rust 侧类型 `IModelError`。
 pub enum IModelError {
     /// 不可变 TemplateModel 被要求修改。
     #[error(

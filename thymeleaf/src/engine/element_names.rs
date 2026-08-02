@@ -14,6 +14,7 @@ static TEXT_REPOSITORY: OnceLock<RwLock<ElementNamesRepository>> = OnceLock::new
 
 /// `ElementNames` 返回的具体名称子类。
 #[derive(Clone)]
+/// 对应 Java 语义：`ElementNames` 的 Rust 侧类型 `ElementNameValue`。
 pub enum ElementNameValue {
     /// HTML 名称。
     Html(Arc<HTMLElementName>),
@@ -26,6 +27,7 @@ pub enum ElementNameValue {
 impl ElementNameValue {
     /// 返回统一的 `ElementName` 基类视图。
     #[must_use]
+    /// 对应 Java 语义：`ElementNames` 的 `as_element_name` 行为（Rust 侧辅助/私有路径）。
     pub fn as_element_name(&self) -> &ElementName {
         match self {
             Self::Html(value) => value.as_element_name(),
@@ -37,6 +39,7 @@ impl ElementNameValue {
 
 /// 元素名称规范化或 repository 访问错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
+/// 对应 Java 语义：`ElementNames` 的 Rust 侧类型 `ElementNamesError`。
 pub enum ElementNamesError {
     /// 指定参数违反公开方法的 null/空规则。
     IllegalArgument(&'static str),
@@ -134,6 +137,7 @@ impl ElementNames {
     }
 
     /// 从完整 Java String 解析任意结构化模板模式的元素名。
+    /// 对应 Java: `ElementNames#forName()`。
     pub fn for_name(
         template_mode: Option<TemplateMode>,
         element_name: Option<&JavaString>,
@@ -148,6 +152,7 @@ impl ElementNames {
     }
 
     /// 从显式 prefix 与本地名解析任意结构化模板模式的元素名。
+    /// 对应 Java 语义：`ElementNames` 的 `for_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_with_prefix(
         template_mode: Option<TemplateMode>,
         prefix: Option<&JavaString>,
@@ -169,6 +174,7 @@ impl ElementNames {
     }
 
     /// 解析并缓存文本模式元素名；空字符串合法。
+    /// 对应 Java: `ElementNames#forTextName()`。
     pub fn for_text_name(
         element_name: Option<&JavaString>,
     ) -> Result<Arc<TextElementName>, ElementNamesError> {
@@ -184,6 +190,7 @@ impl ElementNames {
     }
 
     /// 解析并缓存 XML 元素名。
+    /// 对应 Java 语义：`ElementNames` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
         element_name: Option<&JavaString>,
     ) -> Result<Arc<XMLElementName>, ElementNamesError> {
@@ -196,6 +203,7 @@ impl ElementNames {
     }
 
     /// 解析并缓存 HTML 元素名。
+    /// 对应 Java 语义：`ElementNames` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
         element_name: Option<&JavaString>,
     ) -> Result<Arc<HTMLElementName>, ElementNamesError> {
@@ -209,6 +217,7 @@ impl ElementNames {
     }
 
     /// 使用显式 prefix 解析文本模式元素名。
+    /// 对应 Java 语义：`ElementNames` 的 `for_text_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_text_name_with_prefix(
         prefix: Option<&JavaString>,
         element_name: Option<&JavaString>,
@@ -237,6 +246,7 @@ impl ElementNames {
     }
 
     /// 使用显式 prefix 解析 XML 元素名。
+    /// 对应 Java 语义：`ElementNames` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
         prefix: Option<&JavaString>,
         element_name: Option<&JavaString>,
@@ -258,6 +268,7 @@ impl ElementNames {
     }
 
     /// 使用显式 prefix 解析 HTML 元素名。
+    /// 对应 Java 语义：`ElementNames` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
         prefix: Option<&JavaString>,
         element_name: Option<&JavaString>,

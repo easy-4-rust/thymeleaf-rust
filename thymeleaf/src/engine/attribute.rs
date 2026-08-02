@@ -41,6 +41,7 @@ impl Attribute {
         clippy::too_many_arguments,
         reason = "参数逐项对齐 Java Attribute 构造器，不引入失真的参数对象"
     )]
+    /// 对应 Java 语义：`Attribute` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         definition: AttributeDefinitionValue,
         complete_name: JavaString,
@@ -114,6 +115,7 @@ impl Attribute {
 
     /// 返回 Java `toString()` 对应的 UTF-16 属性表示。
     #[must_use]
+    /// 对应 Java 语义：`Attribute` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
     pub fn to_java_string(&self) -> JavaString {
         let mut writer = FastStringWriter::new();
         // 内存 Writer 的完整切片写入不可能失败；Java 版同样把此分支视为不可达。

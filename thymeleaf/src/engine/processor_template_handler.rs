@@ -73,6 +73,7 @@ pub struct ProcessorTemplateHandler {
 struct ProcessorTemplateHandlerProxy {
     state: Weak<RefCell<ProcessorTemplateHandlerState>>,
 }
+/// 对应 Java 语义：`ProcessorTemplateHandler` 的 Rust 侧类型 `ProcessorTemplateHandlerState`。
 
 pub(crate) struct ProcessorTemplateHandlerState {
     self_handler: Option<TemplateHandlerHandle>,
@@ -142,6 +143,7 @@ impl ProcessorTemplateHandler {
 
     /// 将处理器放入 Handler 链共享句柄。
     #[must_use]
+    /// 对应 Java 语义：`ProcessorTemplateHandler` 的 `into_handle` 行为（Rust 侧辅助/私有路径）。
     pub fn into_handle(self) -> TemplateHandlerHandle {
         Rc::new(RefCell::new(Box::new(self)))
     }
@@ -2223,6 +2225,7 @@ fn handle_pending_state(
         }
     }
 }
+/// 对应 Java 语义：`ProcessorTemplateHandler` 的 `perform_teardown_checks` 行为（Rust 侧辅助/私有路径）。
 
 pub(crate) fn perform_teardown_checks(
     state: &Rc<RefCell<ProcessorTemplateHandlerState>>,
