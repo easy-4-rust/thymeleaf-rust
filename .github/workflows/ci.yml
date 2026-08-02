@@ -129,3 +129,9 @@ jobs:
 
       - name: Check dependency vulnerabilities (cargo-audit)
         run: cargo audit
+
+      - name: Enforce core crate public API baseline (docs/release/api-baseline.txt)
+        # 任何未登记的公开 API 变更（增/删/改签名）都会使 diff 非空而失败；
+        # 有意的 API 变更须显式更新基线文件并在 PR 说明。
+        run: |
+          cargo public-api -p thymeleaf 2>/dev/null | diff - docs/release/api-baseline.txt
