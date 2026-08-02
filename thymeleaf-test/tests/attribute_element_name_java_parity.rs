@@ -1164,3 +1164,482 @@ fn element_names_text_string() {
     assert_eq!(text_element_to_string(&name), "{data-th-something}");
     assert!(!name.as_element_name().is_prefixed());
 }
+
+// ===========================================================================
+// 6. AttributeNamesTest#testXMLString 全序列（Java 21 逐字）
+//    toString/前缀/isPrefixed + assertSame 别名 + IllegalArgumentException
+// ===========================================================================
+
+#[test]
+fn attribute_names_xml_string_full_java_parity() {
+    // Java: forHTMLName(null, "data-something") -> {data-something}, prefix null
+    let name = AttributeNames::for_html_name(Some(&js("data-something"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Html(name)),
+        "{data-something}"
+    );
+    let name = AttributeNames::for_html_name(Some(&js("data-something"))).expect("name");
+    assert!(name.as_attribute_name().get_prefix().is_none());
+
+    // Java: forXMLName(null, "th:something") -> {th:something}
+    let name = AttributeNames::for_xml_name(Some(&js("th:something"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name.clone())),
+        "{th:something}"
+    );
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "th"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js("something"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name)),
+        "{something}"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js("SOMETHING"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name)),
+        "{SOMETHING}"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js("TH:SOMETHING"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name.clone())),
+        "{TH:SOMETHING}"
+    );
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "TH"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js(":something"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name.clone())),
+        "{:something}"
+    );
+    assert!(!name.as_attribute_name().is_prefixed());
+
+    let name = AttributeNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name.clone())),
+        "{data-th-something}"
+    );
+    assert!(!name.as_attribute_name().is_prefixed());
+
+    let name = AttributeNames::for_xml_name(Some(&js("data-something"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name)),
+        "{data-something}"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js("xml:ns"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name.clone())),
+        "{xml:ns}"
+    );
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "xml"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js("xml:space"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name)),
+        "{xml:space}"
+    );
+
+    let name = AttributeNames::for_xml_name(Some(&js("XML:SPACE"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name.clone())),
+        "{XML:SPACE}"
+    );
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "XML"
+    );
+
+    // Java: forHTMLName("xmlns:th") -> {xmlns:th}（HTML 不识别 xmlns 前缀）
+    let name = AttributeNames::for_html_name(Some(&js("xmlns:th"))).expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Html(name)),
+        "{xmlns:th}"
+    );
+    let name = AttributeNames::for_xml_name(Some(&js("xmlns:th"))).expect("name");
+    assert_eq!(
+        name.as_attribute_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "xmlns"
+    );
+
+    // Java: forXMLName("th","something") -> {th:something}
+    let name = AttributeNames::for_xml_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    assert_eq!(
+        attribute_to_string(&AttributeNameValue::Xml(name)),
+        "{th:something}"
+    );
+
+    // ---- assertSame 别名系列（XML 大小写敏感、无 HTML5 折叠） ----
+    let first = AttributeNames::for_xml_name(Some(&js("data-something"))).expect("name");
+    let second = AttributeNames::for_xml_name(Some(&js("data-something"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "data-something cached");
+
+    let first = AttributeNames::for_xml_name(Some(&js("xmlns:th"))).expect("name");
+    let second = AttributeNames::for_xml_name(Some(&js("xmlns:th"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "xmlns:th cached");
+
+    let first = AttributeNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    let second = AttributeNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "data-th-something cached");
+
+    // Java assertNotSame: data-th-something 与 th:something 不同（XML 无折叠）
+    let first = AttributeNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    let second = AttributeNames::for_xml_name(Some(&js("th:something"))).expect("name");
+    assert!(
+        !Arc::ptr_eq(&first, &second),
+        "xml data-th-something is NOT th:something"
+    );
+
+    let first = AttributeNames::for_xml_name_with_prefix(Some(&js("xmlns")), Some(&js("th")))
+        .expect("name");
+    let second = AttributeNames::for_xml_name_with_prefix(Some(&js("xmlns")), Some(&js("th")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "xmlns/th cached");
+
+    let first = AttributeNames::for_xml_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    let second = AttributeNames::for_xml_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "th/something cached");
+
+    // 空/空白/null 前缀折叠到无前缀
+    let plain = AttributeNames::for_xml_name(Some(&js("something"))).expect("name");
+    let empty = AttributeNames::for_xml_name_with_prefix(Some(&js("")), Some(&js("something")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&plain, &empty), "empty prefix aliases none");
+    let null_prefix =
+        AttributeNames::for_xml_name_with_prefix(None, Some(&js("something"))).expect("name");
+    assert!(
+        Arc::ptr_eq(&plain, &null_prefix),
+        "null prefix aliases none"
+    );
+    let blank = AttributeNames::for_xml_name_with_prefix(Some(&js("  ")), Some(&js("something")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&plain, &blank), "blank prefix aliases none");
+
+    // ---- IllegalArgumentException 系列 ----
+    assert!(
+        AttributeNames::for_xml_name(None).is_err(),
+        "forXMLName(null) rejected"
+    );
+    assert!(
+        AttributeNames::for_xml_name(Some(&js(""))).is_err(),
+        "forXMLName(\"\") rejected"
+    );
+    assert!(
+        AttributeNames::for_xml_name_with_prefix(Some(&js("t")), Some(&js(""))).is_err(),
+        "forXMLName(\"t\",\"\") rejected"
+    );
+    assert!(
+        AttributeNames::for_xml_name(Some(&js(" "))).is_err(),
+        "forXMLName(\" \") rejected"
+    );
+    assert!(
+        AttributeNames::for_xml_name_with_prefix(Some(&js("t")), Some(&js(" "))).is_err(),
+        "forXMLName(\"t\",\" \") rejected"
+    );
+}
+
+// ===========================================================================
+// 7. ElementNamesTest#testXMLString 全序列（Java 21 逐字）
+//    含 data:something 前缀（data:/xml:/xmlns: 前缀族）
+// ===========================================================================
+
+#[test]
+fn element_names_xml_string_full_java_parity() {
+    // Java: forXMLName(null, "th:something") -> {th:something}
+    let name = ElementNames::for_xml_name(Some(&js("th:something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{th:something}"
+    );
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "th"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name)),
+        "{something}"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("SOMETHING"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name)),
+        "{SOMETHING}"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("TH:SOMETHING"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{TH:SOMETHING}"
+    );
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "TH"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js(":something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{:something}"
+    );
+    assert!(!name.as_element_name().is_prefixed());
+
+    let name = ElementNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{data-th-something}"
+    );
+    assert!(!name.as_element_name().is_prefixed());
+
+    let name = ElementNames::for_xml_name(Some(&js("data-something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name)),
+        "{data-something}"
+    );
+
+    // data:something -> 前缀 data（XML 冒号分隔）
+    let name = ElementNames::for_xml_name(Some(&js("data:something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{data:something}"
+    );
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "data"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("xml:ns"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{xml:ns}"
+    );
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "xml"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("xml:space"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name)),
+        "{xml:space}"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("XML:SPACE"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{XML:SPACE}"
+    );
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "XML"
+    );
+
+    let name = ElementNames::for_xml_name(Some(&js("xmlns:th"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name.clone())),
+        "{xmlns:th}"
+    );
+    assert_eq!(
+        name.as_element_name()
+            .get_prefix()
+            .unwrap()
+            .to_string_lossy(),
+        "xmlns"
+    );
+
+    // Java: forXMLName("th","something") -> {th:something}
+    let name = ElementNames::for_xml_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Xml(name)),
+        "{th:something}"
+    );
+
+    // ---- assertSame 别名系列 ----
+    let first = ElementNames::for_xml_name(Some(&js("data-something"))).expect("name");
+    let second = ElementNames::for_xml_name(Some(&js("data-something"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "data-something cached");
+
+    let first = ElementNames::for_xml_name(Some(&js("xmlns:th"))).expect("name");
+    let second = ElementNames::for_xml_name(Some(&js("xmlns:th"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "xmlns:th cached");
+
+    let first = ElementNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    let second = ElementNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "data-th-something cached");
+
+    // Java assertNotSame: XML 下 data-th-something 与 th:something 不同
+    let first = ElementNames::for_xml_name(Some(&js("data-th-something"))).expect("name");
+    let second = ElementNames::for_xml_name(Some(&js("th:something"))).expect("name");
+    assert!(
+        !Arc::ptr_eq(&first, &second),
+        "xml data-th-something is NOT th:something"
+    );
+
+    let first =
+        ElementNames::for_xml_name_with_prefix(Some(&js("xmlns")), Some(&js("th"))).expect("name");
+    let second =
+        ElementNames::for_xml_name_with_prefix(Some(&js("xmlns")), Some(&js("th"))).expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "xmlns/th cached");
+
+    let first = ElementNames::for_xml_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    let second = ElementNames::for_xml_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&first, &second), "th/something cached");
+
+    let plain = ElementNames::for_xml_name(Some(&js("something"))).expect("name");
+    let empty = ElementNames::for_xml_name_with_prefix(Some(&js("")), Some(&js("something")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&plain, &empty), "empty prefix aliases none");
+    let null_prefix =
+        ElementNames::for_xml_name_with_prefix(None, Some(&js("something"))).expect("name");
+    assert!(
+        Arc::ptr_eq(&plain, &null_prefix),
+        "null prefix aliases none"
+    );
+    let blank = ElementNames::for_xml_name_with_prefix(Some(&js("  ")), Some(&js("something")))
+        .expect("name");
+    assert!(Arc::ptr_eq(&plain, &blank), "blank prefix aliases none");
+
+    // ---- IllegalArgumentException 系列 ----
+    assert!(
+        ElementNames::for_xml_name(None).is_err(),
+        "forXMLName(null) rejected"
+    );
+    assert!(
+        ElementNames::for_xml_name(Some(&js(""))).is_err(),
+        "forXMLName(\"\") rejected"
+    );
+    assert!(
+        ElementNames::for_xml_name_with_prefix(Some(&js("t")), Some(&js(""))).is_err(),
+        "forXMLName(\"t\",\"\") rejected"
+    );
+    assert!(
+        ElementNames::for_xml_name(Some(&js(" "))).is_err(),
+        "forXMLName(\" \") rejected"
+    );
+    assert!(
+        ElementNames::for_xml_name_with_prefix(Some(&js("t")), Some(&js(" "))).is_err(),
+        "forXMLName(\"t\",\" \") rejected"
+    );
+}
+
+// ===========================================================================
+// 8. ElementNamesTest#testHTMLString 补充别名与非法参数（Java 21 逐字）
+// ===========================================================================
+
+#[test]
+fn element_names_html_string_extra_aliases() {
+    // Java: forHTMLName("th","something") -> {th:something,th-something}
+    let name = ElementNames::for_html_name_with_prefix(Some(&js("th")), Some(&js("something")))
+        .expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Html(name)),
+        "{th:something,th-something}"
+    );
+
+    // Java: forHTMLName(null, "th:something") -> {th:something,th-something}
+    let name = ElementNames::for_html_name(Some(&js("th:something"))).expect("name");
+    assert_eq!(
+        element_to_string(&ElementNameValue::Html(name)),
+        "{th:something,th-something}"
+    );
+
+    // assertSame 补充系列
+    let plain = ElementNames::for_html_name(Some(&js("something"))).expect("name");
+    let blank_upper =
+        ElementNames::for_html_name_with_prefix(Some(&js("  ")), Some(&js("SOMETHING")))
+            .expect("name");
+    assert!(
+        Arc::ptr_eq(&plain, &blank_upper),
+        "blank prefix + uppercase aliases no prefix lowercase"
+    );
+
+    let th = ElementNames::for_html_name(Some(&js("th:something"))).expect("name");
+    let hyphen_upper = ElementNames::for_html_name(Some(&js("TH-SOMETHING"))).expect("name");
+    assert!(
+        Arc::ptr_eq(&th, &hyphen_upper),
+        "TH-SOMETHING aliases th:something"
+    );
+
+    let xmlns =
+        ElementNames::for_html_name_with_prefix(Some(&js("xmlns")), Some(&js("th"))).expect("name");
+    let upper =
+        ElementNames::for_html_name_with_prefix(Some(&js("XMLNS")), Some(&js("TH"))).expect("name");
+    assert!(Arc::ptr_eq(&xmlns, &upper), "XMLNS/TH aliases xmlns/th");
+
+    let th = ElementNames::for_html_name(Some(&js("th:something"))).expect("name");
+    let hyphen = ElementNames::for_html_name(Some(&js("th-something"))).expect("name");
+    let upper_colon = ElementNames::for_html_name(Some(&js("TH:SOMETHING"))).expect("name");
+    assert!(
+        Arc::ptr_eq(&th, &hyphen) && Arc::ptr_eq(&th, &upper_colon),
+        "th-something / TH:SOMETHING alias th:something"
+    );
+
+    // IllegalArgumentException：string 入口（Java forHTMLName 系列）
+    assert!(
+        ElementNames::for_html_name(None).is_err(),
+        "forHTMLName(null) rejected"
+    );
+    assert!(
+        ElementNames::for_html_name(Some(&js(""))).is_err(),
+        "forHTMLName(\"\") rejected"
+    );
+    assert!(
+        ElementNames::for_html_name_with_prefix(Some(&js("t")), Some(&js(""))).is_err(),
+        "forHTMLName(\"t\",\"\") rejected"
+    );
+    assert!(
+        ElementNames::for_html_name(Some(&js(" "))).is_err(),
+        "forHTMLName(\" \") rejected"
+    );
+    assert!(
+        ElementNames::for_html_name_with_prefix(Some(&js("t")), Some(&js(" "))).is_err(),
+        "forHTMLName(\"t\",\" \") rejected"
+    );
+}
