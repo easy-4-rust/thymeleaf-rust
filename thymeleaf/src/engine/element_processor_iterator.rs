@@ -201,6 +201,7 @@ mod tests {
         name: &'static str,
         precedence: i32,
         matching_attribute_name: MatchingAttributeName,
+        matching_element_name: Option<crate::element::MatchingElementName>,
     }
 
     impl IProcessor for TestElementProcessor {
@@ -223,7 +224,7 @@ mod tests {
 
     impl IElementProcessor for TestElementProcessor {
         fn get_matching_element_name(&self) -> Option<&crate::element::MatchingElementName> {
-            None
+            self.matching_element_name.as_ref()
         }
 
         fn get_matching_attribute_name(&self) -> Option<&MatchingAttributeName> {
@@ -240,8 +241,29 @@ mod tests {
         attribute: &str,
         precedence: i32,
     ) -> Arc<dyn IElementProcessor> {
+        processor_full(name, attribute, precedence, None)
+    }
+
+    /// Java `ProcessorAggregationTestDialect` 的 `N-ELEMENT-{prec}-[*]{element}-{attr}`
+    /// 规格构造：`element_name` 为 `None`（null）或元素名（`*a` → `a`）。
+    fn processor_full(
+        name: &'static str,
+        attribute: &str,
+        precedence: i32,
+        element_name: Option<&str>,
+    ) -> Arc<dyn IElementProcessor> {
         let matching_name = crate::engine::AttributeNames::for_html_name(Some(&java(attribute)))
             .expect("test attribute name");
+        let matching_element_name = element_name.map(|element| {
+            crate::element::MatchingElementName::for_element_name(
+                Some(TemplateMode::HTML),
+                Some(crate::engine::ElementNameValue::Html(
+                    crate::engine::ElementNames::for_html_name(Some(&java(element)))
+                        .expect("test element name"),
+                )),
+            )
+            .expect("test matching element name")
+        });
         Arc::new(TestElementProcessor {
             name,
             precedence,
@@ -250,6 +272,7 @@ mod tests {
                 Some(crate::engine::AttributeNameValue::Html(matching_name)),
             )
             .expect("test matching attribute name"),
+            matching_element_name,
         })
     }
 
@@ -269,9 +292,19 @@ mod tests {
         attribute_definitions: &AttributeDefinitions,
         element_definitions: &ElementDefinitions,
     ) -> Arc<OpenElementTag> {
+        tag_for(attribute_definitions, element_definitions, "element")
+    }
+
+    /// 构造带 `th:src` 属性的标签（Java `computeHtmlTag("<... th:src='hello'>")`
+    /// 的最后打开的标签；元素名由调用方指定）。
+    fn tag_for(
+        attribute_definitions: &AttributeDefinitions,
+        element_definitions: &ElementDefinitions,
+        element_name: &str,
+    ) -> Arc<OpenElementTag> {
         let element_definition = ElementDefinitionValue::Html(
             element_definitions
-                .for_html_name(Some(&java("element")))
+                .for_html_name(Some(&java(element_name)))
                 .expect("element definition"),
         );
         let src_definition = AttributeDefinitionValue::Html(
@@ -295,7 +328,7 @@ mod tests {
         Arc::new(OpenElementTag::new(
             TemplateMode::HTML,
             element_definition,
-            java("element"),
+            java(element_name),
             Some(attributes),
             false,
         ))
@@ -418,5 +451,145 @@ mod tests {
             }
             assert_golden(case, actual.join(","));
         }
+    }
+
+    /// Java `TestElementProcessor#toString` 的完整追踪：
+    /// `N-ELEMENT-{precedence}-{matchingElementName|null}-{matchingAttributeName}`
+    /// （`MatchingElementName`/`MatchingAttributeName` 的 `to_java_string` 渲染
+    /// 完整名称集，如 `{a}`、`{th:src,data-th-src}`）。
+    fn next_trace(iterator: &mut ElementProcessorIterator, tag: &OpenElementTag) -> String {
+        let Some(processor) = iterator
+            .next(
+                tag.as_engine_processable_element_tag()
+                    .expect("engine processable tag"),
+            )
+            .expect("iterator next")
+        else {
+            return "null".to_owned();
+        };
+        let element = processor
+            .get_matching_element_name()
+            .map(|name| {
+                name.to_java_string()
+                    .map(|value| value.to_string_lossy())
+                    .expect("matching element name string")
+            })
+            .unwrap_or_else(|| "null".to_owned());
+        let attribute = processor
+            .get_matching_attribute_name()
+            .map(|name| {
+                name.to_java_string()
+                    .map(|value| value.to_string_lossy())
+                    .expect("matching attribute name string")
+            })
+            .expect("test processor matches an attribute");
+        format!(
+            "N-ELEMENT-{}-{element}-{attribute}",
+            processor.get_precedence()
+        )
+    }
+
+    /// 对应 Java `testProcessorIteration05/10/11/12/13/14` —— 三处理器
+    /// （N-ELEMENT-10-src / N-ELEMENT-5-src / N-ELEMENT-2-one）在迭代中
+    /// `setAttribute`/`removeAttribute` 的动态语义：
+    /// - 05：迭代前 set `th:one`，完整遍历（one → src-5 → src-10 → null）
+    /// - 10：迭代后 set 再 remove（src-5 → one → null）
+    /// - 11/12：父级元素包围的 `<a>`（Java 重复用例）
+    /// - 13/14：匹配元素名 `*a` 的处理器（`{a}` 渲染 + 同上动态语义）
+    #[test]
+    fn preserves_java_dynamic_attribute_processor_iteration_cases_05_10_through_14() {
+        let (attribute_definitions, element_definitions) = definitions(vec![
+            processor_full("N-ELEMENT-10", "data-th-src", 10, None),
+            processor_full("N-ELEMENT-5", "data-th-src", 5, None),
+            processor_full("N-ELEMENT-2", "data-th-one", 2, None),
+        ]);
+
+        // Java 05：解析 `<a th:src='hello'>`，迭代前 setAttribute("th:one")，
+        // 完整遍历：one → src-5 → src-10 → null。
+        {
+            let mut tag = tag_for(&attribute_definitions, &element_definitions, "a");
+            tag = set_one(&tag, &attribute_definitions, "somevalue");
+            let mut iterator = ElementProcessorIterator::new();
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-2-null-{th:one,data-th-one}"
+            );
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-5-null-{th:src,data-th-src}"
+            );
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-10-null-{th:src,data-th-src}"
+            );
+            assert_eq!(next_trace(&mut iterator, &tag), "null");
+        }
+
+        // Java 10/11/12：`<a th:src='hello'>`（11/12 带父级 div），第一次 next
+        // 后 setAttribute("th:one")，再 removeAttribute("th:src")。
+        for _ in 0..3 {
+            let mut tag = tag_for(&attribute_definitions, &element_definitions, "a");
+            let mut iterator = ElementProcessorIterator::new();
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-5-null-{th:src,data-th-src}"
+            );
+            tag = set_one(&tag, &attribute_definitions, "somevalue");
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-2-null-{th:one,data-th-one}"
+            );
+            tag = tag
+                .remove_attribute(&java("data-th-src"))
+                .expect("remove src");
+            assert_eq!(next_trace(&mut iterator, &tag), "null");
+        }
+
+        // Java 13/14：`N-ELEMENT-5-*a-src`（匹配元素名 a），解析
+        // `<div class='one'><p th:src='uuuh'><a th:src='hello'>` 的最后一个标签。
+        let (attribute_definitions, element_definitions) = definitions(vec![
+            processor_full("N-ELEMENT-10", "data-th-src", 10, None),
+            processor_full("N-ELEMENT-5", "data-th-src", 5, Some("a")),
+            processor_full("N-ELEMENT-2", "data-th-one", 2, None),
+        ]);
+        for _ in 0..2 {
+            let mut tag = tag_for(&attribute_definitions, &element_definitions, "a");
+            let mut iterator = ElementProcessorIterator::new();
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-5-{a}-{th:src,data-th-src}"
+            );
+            tag = set_one(&tag, &attribute_definitions, "somevalue");
+            assert_eq!(
+                next_trace(&mut iterator, &tag),
+                "N-ELEMENT-2-null-{th:one,data-th-one}"
+            );
+            tag = tag
+                .remove_attribute(&java("data-th-src"))
+                .expect("remove src");
+            assert_eq!(next_trace(&mut iterator, &tag), "null");
+        }
+    }
+
+    /// 对应 Java `OpenElementTag#setAttribute(attributeDefinitions, null,
+    /// "th:one", "somevalue", null)`。
+    fn set_one(
+        tag: &Arc<OpenElementTag>,
+        definitions: &AttributeDefinitions,
+        value: &str,
+    ) -> Arc<OpenElementTag> {
+        let definition = AttributeDefinitionValue::Html(
+            definitions
+                .for_html_name(Some(&java("data-th-one")))
+                .expect("one definition"),
+        );
+        tag.set_attribute(
+            definitions,
+            Some(&definition),
+            java("data-th-one"),
+            Some(java(value)),
+            Some(AttributeValueQuotes::DOUBLE),
+        )
+        .expect("set one attribute")
     }
 }

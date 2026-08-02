@@ -125,12 +125,9 @@ fn manifest_pins_baseline_and_full_denominator() {
     let assets = manifest["test_asset"]["entries"]
         .as_array()
         .expect("assets");
-    // 上游五模块测试树完整镜像：3,493 thtest + 495 java + 307 其他资源 + 77 golden
-    assert_eq!(
-        assets.len(),
-        4_372,
-        "TEST_ASSET: 3,493 thtest + 495 java + 307 其他资源 + 77 golden = 4,372"
-    );
+    // 上游 .thtest 语料镜像：3,493 thtest + 77 golden（Java 源码不镜像，
+    // 测试逻辑以 Rust 1:1 复刻于 thymeleaf-test/tests/*_java_parity.rs）
+    assert_eq!(assets.len(), 3_570, "TEST_ASSET: 3,493 thtest + 77 golden");
 }
 
 #[test]

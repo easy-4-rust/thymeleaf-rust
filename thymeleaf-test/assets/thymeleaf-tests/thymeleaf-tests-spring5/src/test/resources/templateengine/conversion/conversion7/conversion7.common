@@ -1,7 +1,0 @@
-%TEMPLATE_MODE HTML
-# ------------------------------------------------------------
-%CONTEXT
-
-locale = 'en'
-
-conversion7Obj1 = new org.thymeleaf.templateengine.conversion.conversion7.Conversion7Bean()

@@ -1,5 +1,0 @@
-%TEMPLATE_MODE HTML
-# -----------------------------------------------------------
-%CONTEXT
-
-formBean01_01 = new org.thymeleaf.templateengine.escaping.model.FormBean01()

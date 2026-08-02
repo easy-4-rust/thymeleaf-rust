@@ -532,18 +532,17 @@ impl TemplateHandlerAdapterMarkupHandler {
             if after_name_whitespace < content_end
                 && source.as_bytes()[after_name_whitespace] == b'='
             {
-                // 对应 attoparser/Java：`ba= 's'` 中等号与值之间的空白
-                // 属于操作符文本（operator="= "），toString/重写时原样保留。
-                let operator_start = after_name_whitespace;
-                position = operator_start;
+                // 对应 attoparser/Java `handleAttribute` 的 operatorOffset/Len：
+                // 操作符文本从名称结束处（含名称与 `=` 之间的空白）一直延伸到
+                // 值前空白之后 —— 如 `href = "x"` 的 operator 为 ` = `，在
+                // toString/重写时原样保留（Java Attribute#write 逐字写出 operator）。
+                let operator_start = after_name;
+                position = after_name_whitespace;
                 position += 1;
-                let after_equals = position;
                 position = consume_whitespace(source, position, content_end);
-                operator = Some(if position > after_equals {
-                    JavaString::from_rust_str(&source[operator_start..position])
-                } else {
-                    JavaString::from_rust_str("=")
-                });
+                operator = Some(JavaString::from_rust_str(
+                    &source[operator_start..position],
+                ));
                 if position < content_end {
                     let quote = source.as_bytes()[position];
                     if quote == b'\'' || quote == b'"' {
