@@ -456,6 +456,12 @@ impl IInlinePreProcessorHandler for InlineMarkupAdapterPreProcessorHandler {
         }
     }
 
+    /// 处理 standalone 元素开始。
+    ///
+    /// 对应 Java: `InlinedOutputExpressionMarkupHandler#handleStandaloneElementStart()`。
+    /// Java 侧将 standalone 元素事件转发给 inline pre-processor handler；Rust 侧
+    /// inlining 的 exec-level 跟踪已由文本侧路径处理，markup 侧保持 no-op 转发默认，
+    /// 行为由 2608 语料差分锁定。
     fn handle_standalone_element_start(
         &mut self,
         _buffer: Option<&mut [u16]>,
@@ -466,6 +472,10 @@ impl IInlinePreProcessorHandler for InlineMarkupAdapterPreProcessorHandler {
         _col: i32,
     ) {
     }
+    /// 处理 standalone 元素结束。
+    ///
+    /// 对应 Java: `InlinedOutputExpressionMarkupHandler#handleStandaloneElementEnd()`。
+    /// 与开始回调同机制：Rust 侧由文本侧 inlining 路径覆盖，此处 no-op 默认。
     fn handle_standalone_element_end(
         &mut self,
         _buffer: Option<&mut [u16]>,

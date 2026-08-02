@@ -246,12 +246,12 @@ impl FastStringWriter {
 
     /// 刷新写入器。
     ///
-    /// 对应 Java: `FastStringWriter#flush()`。此内存写入器无需刷新，因此保持原样。
+    /// 对应 Java: `FastStringWriter#flush()`。此内存写入器无需刷新，因此保持原样（no-op）。
     pub const fn flush(&mut self) {}
 
     /// 关闭写入器。
     ///
-    /// 对应 Java: `FastStringWriter#close()`。Java 实现为空操作，关闭后仍可继续写入。
+    /// 对应 Java: `FastStringWriter#close()`。Java 实现为空操作（no-op），关闭后仍可继续写入。
     pub const fn close(&mut self) {}
 
     /// 返回当前内容的独立 Java 字符串快照。

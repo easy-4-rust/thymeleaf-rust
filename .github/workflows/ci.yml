@@ -69,6 +69,16 @@ jobs:
           --upstream upstream-thymeleaf
           --baseline 10f9dd2eb8cbd98515ce14b149d115e0287d0add
           --json target/migration-check.json
+      - name: Enforce generic migration layout audit (vendored, approvals-aware)
+        # strict_blockers=0 为硬门禁；来源注释警告（missing_java_source_comment）
+        # 为文档债务，阶段 1.4 清零后追加 --fail-on-warning。
+        run: >-
+          python3 scripts/audit_migration_layout.py
+          --rust-root thymeleaf
+          --java-package-root upstream-thymeleaf/lib/thymeleaf/src/main/java/org/thymeleaf
+          --retain-segments 1
+          --approvals docs/migration/layout_approvals.json
+          --require-source-comments
 
       - name: Validate fixed Java semantic baseline
         working-directory: upstream-thymeleaf

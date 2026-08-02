@@ -25,7 +25,11 @@ pub trait IPreProcessor: Send + Sync {
     fn is_attribute_definitions_aware(&self) -> bool {
         false
     }
-    /// 注入全局属性定义仓库；aware 实现需要覆盖。
+    /// 注入全局属性定义仓库。
+    ///
+    /// 对应 Java: `IAttributeDefinitionsAware#setAttributeDefinitions()`。Java 侧 awareness
+    /// 是可选标记接口：未实现它的 Processor/PreProcessor/PostProcessor 不需要仓库，
+    /// 此处空默认即等价于未实现该标记接口（no-op）。
     fn set_attribute_definitions(
         &self,
         _attribute_definitions: std::sync::Arc<crate::engine::AttributeDefinitions>,
@@ -35,7 +39,10 @@ pub trait IPreProcessor: Send + Sync {
     fn is_element_definitions_aware(&self) -> bool {
         false
     }
-    /// 注入全局元素定义仓库；aware 实现需要覆盖。
+    /// 注入全局元素定义仓库。
+    ///
+    /// 对应 Java: `IElementDefinitionsAware#setElementDefinitions()`；未实现该可选标记
+    /// 接口的对象保持 no-op 默认，与 `IAttributeDefinitionsAware` 同机制。
     fn set_element_definitions(
         &self,
         _element_definitions: std::sync::Arc<crate::engine::ElementDefinitions>,

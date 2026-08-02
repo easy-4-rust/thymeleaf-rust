@@ -30,7 +30,8 @@ pub trait ITemplateHandler {
 
     /// 设置下一次 gathering Model 首事件消费的执行快照。
     ///
-    /// 仅 `ProcessorTemplateHandler` 消费该状态；其他 Handler 保持默认忽略。
+    /// 对应 Java 引擎内部语义：gathering 状态仅 `ProcessorTemplateHandler` 消费，
+    /// 其余 Handler 保持默认忽略（no-op）。
     fn set_current_gathering_model(&mut self, _state: Option<GatheringModelExecutionState>) {}
     /// 处理模板开始。
     fn handle_template_start(

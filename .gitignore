@@ -74,6 +74,7 @@ __pycache__/
 .fastRequest
 *.http
 *.json
+!docs/migration/layout_approvals.json
 .flattened-pom.xml
 /agentdb.rvf
 /agentdb.rvf.lock

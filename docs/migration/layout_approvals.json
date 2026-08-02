@@ -1,0 +1,1042 @@
+{
+  "schema_version": 1,
+  "multiple_public_objects": {
+    "src/cache/expression_cache_key.rs": {
+      "primary_types": [
+        "ExpressionCacheKey",
+        "ExpressionCacheKeyError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/cache/standard_cache.rs": {
+      "primary_types": [
+        "StandardCacheError",
+        "StandardCache"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/cache/template_cache_key.rs": {
+      "primary_types": [
+        "TemplateCacheKey",
+        "TemplateCacheKeyError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/context/contexts.rs": {
+      "primary_types": [
+        "Contexts",
+        "ContextsError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/context/i_context.rs": {
+      "primary_types": [
+        "IContextVariableNames",
+        "IContext"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/context/identifier_sequences.rs": {
+      "primary_types": [
+        "IdentifierSequencesError",
+        "IdentifierSequences"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/context/web_engine_context.rs": {
+      "primary_types": [
+        "WebEngineContext",
+        "RequestParameterValues"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/decoupled/decoupled_injected_attribute.rs": {
+      "primary_types": [
+        "DecoupledInjectedAttributeError",
+        "DecoupledInjectedAttribute"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/dialect/abstract_dialect.rs": {
+      "primary_types": [
+        "AbstractDialect",
+        "AbstractDialectError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/dialect_configuration.rs": {
+      "primary_types": [
+        "DialectConfiguration",
+        "DialectConfigurationError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/element/element_processor_set.rs": {
+      "primary_types": [
+        "ElementProcessorSet",
+        "UnmodifiableElementProcessorSet"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/element/matching_attribute_name.rs": {
+      "primary_types": [
+        "MatchingAttributeNameError",
+        "MatchingAttributeName"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/element/matching_element_name.rs": {
+      "primary_types": [
+        "MatchingElementNameError",
+        "MatchingElementName"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/attribute_definition.rs": {
+      "primary_types": [
+        "AttributeDefinitionKind",
+        "AttributeDefinitionError",
+        "AttributeDefinition"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/attribute_definitions.rs": {
+      "primary_types": [
+        "AttributeDefinitionValue",
+        "AttributeDefinitionsError",
+        "AttributeDefinitions"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/attribute_name.rs": {
+      "primary_types": [
+        "AttributeNameKind",
+        "AttributeNameError",
+        "AttributeName"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/attribute_names.rs": {
+      "primary_types": [
+        "AttributeNameValue",
+        "AttributeNamesError",
+        "AttributeNames"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/attributes.rs": {
+      "primary_types": [
+        "AttributesError",
+        "Attributes"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/data_driven_template_iterator.rs": {
+      "primary_types": [
+        "DataDrivenTemplateIteratorError",
+        "DataDrivenTemplateIterator"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/doc_type.rs": {
+      "primary_types": [
+        "DocTypeError",
+        "DocType"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/element_definition.rs": {
+      "primary_types": [
+        "ElementDefinitionKind",
+        "ElementDefinitionError",
+        "ElementDefinition"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/element_definitions.rs": {
+      "primary_types": [
+        "ElementDefinitionValue",
+        "ElementDefinitionsError",
+        "ElementDefinitions"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/element_name.rs": {
+      "primary_types": [
+        "ElementNameKind",
+        "ElementNameError",
+        "ElementName"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/element_names.rs": {
+      "primary_types": [
+        "ElementNameValue",
+        "ElementNamesError",
+        "ElementNames"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/iteration_status_var.rs": {
+      "primary_types": [
+        "IterationStatusVarError",
+        "IterationStatusVar"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/processor_template_handler.rs": {
+      "primary_types": [
+        "ProcessorTemplateHandler",
+        "ProcessorTemplateHandlerState"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/standalone_element_tag.rs": {
+      "primary_types": [
+        "StandaloneElementTagError",
+        "StandaloneElementTag"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/template_model_controller.rs": {
+      "primary_types": [
+        "SkipBody",
+        "TemplateModelController"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/engine/throttled_template_processor.rs": {
+      "primary_types": [
+        "ThrottledTemplateProcessor",
+        "ThrottledWriter"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/calendars.rs": {
+      "primary_types": [
+        "Calendars",
+        "CalendarsError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/dates.rs": {
+      "primary_types": [
+        "Dates",
+        "DatesError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/expression_objects.rs": {
+      "primary_types": [
+        "ExpressionObjects",
+        "ExpressionObjectsError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/expression_parsing_state.rs": {
+      "primary_types": [
+        "ExpressionParsingState",
+        "ExpressionParsingStateError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/fragment_expression.rs": {
+      "primary_types": [
+        "FragmentExpression",
+        "ExecutedFragmentExpression"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/i_standard_conversion_service.rs": {
+      "primary_types": [
+        "JavaConversionObject",
+        "JavaConversionValue",
+        "JavaTargetClass",
+        "JavaStringConversionResult",
+        "JavaConversionResult",
+        "StandardConversionError",
+        "IStandardConversionService"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/native_context_property_accessor.rs": {
+      "primary_types": [
+        "NativeContextPropertyAccessor",
+        "NativeContextPropertyError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/native_expression_objects_wrapper.rs": {
+      "primary_types": [
+        "NativeExpressionObjectsWrapper",
+        "NativeExpressionObjectsWrapperError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/native_shortcut_expression.rs": {
+      "primary_types": [
+        "NativeShortcutExpression",
+        "NativeShortcutError",
+        "NativeShortcutExpressionNotApplicableError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/numbers.rs": {
+      "primary_types": [
+        "Numbers",
+        "NumbersError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/objects.rs": {
+      "primary_types": [
+        "JavaObjectArray",
+        "ObjectsError",
+        "Objects"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/ognl_runtime.rs": {
+      "primary_types": [
+        "OgnlRuntime",
+        "NoOpOgnlRuntime"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/strings.rs": {
+      "primary_types": [
+        "Strings",
+        "StringsError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/template_value.rs": {
+      "primary_types": [
+        "TemplateObject",
+        "TemplateValue"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/temporals.rs": {
+      "primary_types": [
+        "Temporals",
+        "TemporalsError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/token.rs": {
+      "primary_types": [
+        "JavaTokenStringResult",
+        "JavaTokenValue",
+        "TokenError",
+        "Token",
+        "TokenParsingTracer"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/expression/uris.rs": {
+      "primary_types": [
+        "Uris",
+        "UriExpressionError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/i_throttled_template_processor.rs": {
+      "primary_types": [
+        "ThrottledTemplateStatus",
+        "IThrottledTemplateProcessor"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/inline/abstract_standard_inliner.rs": {
+      "primary_types": [
+        "AbstractStandardInliner",
+        "StandardInlinerEscaping"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/inline/standard_inline_mode.rs": {
+      "primary_types": [
+        "StandardInlineMode",
+        "StandardInlineModeParseError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/markup/markup_selector.rs": {
+      "primary_types": [
+        "MarkupSelectorEngine",
+        "SelectorNodeType",
+        "SelectorNode",
+        "SelectorNodeSummary"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/model/i_model.rs": {
+      "primary_types": [
+        "IModel",
+        "IModelError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/processor/abstract_processor.rs": {
+      "primary_types": [
+        "AbstractProcessor",
+        "AbstractProcessorAdapter"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/processor/abstract_standard_multiple_attribute_modifier_tag_processor.rs": {
+      "primary_types": [
+        "ModificationType",
+        "AbstractStandardMultipleAttributeModifierTagProcessor"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/processor/standard_switch_tag_processor.rs": {
+      "primary_types": [
+        "SwitchStructure",
+        "StandardSwitchTagProcessor"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/raw/raw_parse_exception.rs": {
+      "primary_types": [
+        "RawParseCause",
+        "RawParseException"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/raw/raw_parser.rs": {
+      "primary_types": [
+        "RawReader",
+        "RawStringReader",
+        "RawParserError",
+        "RawParser"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/reader/block_aware_reader.rs": {
+      "primary_types": [
+        "BlockAction",
+        "BlockAwareReader"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/template_spec.rs": {
+      "primary_types": [
+        "TemplateResolutionAttributeValue",
+        "TemplateSpec",
+        "TemplateSpecError"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/templatemode/template_mode.rs": {
+      "primary_types": [
+        "TemplateMode",
+        "TemplateModeParseError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/templateparser/i_template_parser.rs": {
+      "primary_types": [
+        "TemplateParserError",
+        "ITemplateParser"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/temporal/java_temporal.rs": {
+      "primary_types": [
+        "JavaTemporalKind",
+        "JavaTemporal"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/temporal/temporal_creation_utils.rs": {
+      "primary_types": [
+        "TemporalCreationUtils",
+        "TemporalCreationError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/temporal/temporal_formatting_utils.rs": {
+      "primary_types": [
+        "TemporalFormattingUtils",
+        "TemporalFormattingError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/temporal/temporal_objects.rs": {
+      "primary_types": [
+        "TemporalObjects",
+        "TemporalError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/abstract_chained_text_handler.rs": {
+      "primary_types": [
+        "ChainedTextHandlerRuntimeError",
+        "AbstractChainedTextHandler"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/comment_processor_text_handler.rs": {
+      "primary_types": [
+        "CommentProcessorTextHandlerRuntimeError",
+        "CommentProcessorTextHandler"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/event_processor_text_handler.rs": {
+      "primary_types": [
+        "EventProcessorTextHandlerRuntimeError",
+        "EventProcessorTextHandler",
+        "StructureNamesRepository"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/parsing_locator_util.rs": {
+      "primary_types": [
+        "ParsingLocatorError",
+        "ParsingLocatorUtil"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/text_parse_exception.rs": {
+      "primary_types": [
+        "TextParseCause",
+        "TextParseException"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/text_parser.rs": {
+      "primary_types": [
+        "TextParserRuntimeError",
+        "TextParserReaderError",
+        "TextParserReader",
+        "TextParser"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/text_parsing_attribute_sequence_util.rs": {
+      "primary_types": [
+        "TextParsingAttributeSequenceError",
+        "TextParsingAttributeSequenceUtil"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/text_parsing_comment_util.rs": {
+      "primary_types": [
+        "TextParsingCommentError",
+        "TextParsingCommentUtil"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/text_parsing_element_util.rs": {
+      "primary_types": [
+        "TextParsingElementError",
+        "TextParsingElementUtil"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/text/text_parsing_util.rs": {
+      "primary_types": [
+        "TextParsingUtilError",
+        "TextParsingUtil"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/abstract_lazy_char_sequence.rs": {
+      "primary_types": [
+        "LazyCharSequenceResolver",
+        "AbstractLazyCharSequence"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/aggregate_char_sequence.rs": {
+      "primary_types": [
+        "AggregateCharSequenceError",
+        "AggregateCharSequence"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/aggregate_utils.rs": {
+      "primary_types": [
+        "JavaBigDecimal",
+        "JavaNumber",
+        "JavaAggregateObject",
+        "JavaNumberIterable",
+        "JavaNumberList",
+        "AggregateError",
+        "AggregateUtils",
+        "JavaBigDecimalArithmeticError"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/array_utils.rs": {
+      "primary_types": [
+        "JavaArrayElement",
+        "JavaArrayType",
+        "ArrayTarget",
+        "JavaArray",
+        "ArrayUtilsError",
+        "ArrayUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/char_array_wrapper_sequence.rs": {
+      "primary_types": [
+        "CharArrayWrapperSequenceError",
+        "CharArrayWrapperSequence"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/content_type_utils.rs": {
+      "primary_types": [
+        "Charset",
+        "CharsetError",
+        "ContentTypeUtils",
+        "ContentTypeError"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/date_utils.rs": {
+      "primary_types": [
+        "JavaDate",
+        "DateUtilsError",
+        "DateUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/evaluation_utils.rs": {
+      "primary_types": [
+        "JavaEvaluationValue",
+        "JavaBigDecimalResult",
+        "JavaHashCode",
+        "JavaMapEntry",
+        "JavaEvaluationElement",
+        "JavaEvaluationTarget",
+        "JavaEvaluationListType",
+        "JavaEvaluationList",
+        "JavaEvaluationArray",
+        "EvaluationError",
+        "EvaluationUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/fast_string_writer.rs": {
+      "primary_types": [
+        "FastStringWriterError",
+        "FastStringWriter"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/identity_counter.rs": {
+      "primary_types": [
+        "IdentityCounterError",
+        "IdentityCounter"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/java_string.rs": {
+      "primary_types": [
+        "JavaString",
+        "JavaStringResult"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/list_utils.rs": {
+      "primary_types": [
+        "JavaListType",
+        "ListUtilsError",
+        "JavaComparable",
+        "JavaComparator",
+        "ListView",
+        "ListTarget",
+        "JavaList",
+        "ListUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/number_utils.rs": {
+      "primary_types": [
+        "NumberUtilsError",
+        "NumberUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/pattern_spec.rs": {
+      "primary_types": [
+        "PatternSpecError",
+        "PatternSpec"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/pattern_utils.rs": {
+      "primary_types": [
+        "PatternUtilsError",
+        "StringPattern",
+        "PatternUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/set_utils.rs": {
+      "primary_types": [
+        "SetView",
+        "SetTarget",
+        "JavaSet",
+        "SetUtilsError",
+        "SetUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/standard_conditional_comment_utils.rs": {
+      "primary_types": [
+        "ConditionalCommentParsingResult",
+        "StandardConditionalCommentUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/string_utils.rs": {
+      "primary_types": [
+        "StringUtilsError",
+        "StringUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/text_utils.rs": {
+      "primary_types": [
+        "TextUtilsError",
+        "JavaCharSequence",
+        "TextUtils"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/validate.rs": {
+      "primary_types": [
+        "ValidateError",
+        "Validate"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/version_utils.rs": {
+      "primary_types": [
+        "VersionUtils",
+        "VersionQualifier",
+        "VersionSpec"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/web/i_web_request.rs": {
+      "primary_types": [
+        "IWebRequest",
+        "WebRequestError"
+      ],
+      "reason": "Rust 类型化错误族：主对象 + 其 *Error 动态错误类型（对应 Java 异常路径），同文件内聚",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/web/rendered_template.rs": {
+      "primary_types": [
+        "RenderedTemplateBody",
+        "RenderedTemplate"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    }
+  },
+  "missing_object_file": {
+    "standard/expression/OGNLContextPropertyAccessor.java": {
+      "expected_rust": "src/expression/ognl_context_property_accessor.rs",
+      "reason": "OGNL* 命名等价（Native* 实现）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "standard/expression/OGNLExpressionObjectsWrapper.java": {
+      "expected_rust": "src/expression/ognl_expression_objects_wrapper.rs",
+      "reason": "OGNL* 命名等价（Native* 实现）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "standard/expression/OGNLShortcutExpression.java": {
+      "expected_rust": "src/expression/ognl_shortcut_expression.rs",
+      "reason": "OGNL* 命名等价（Native* 实现）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "standard/expression/OGNLVariableExpressionEvaluator.java": {
+      "expected_rust": "src/expression/ognl_variable_expression_evaluator.rs",
+      "reason": "OGNL* 命名等价（Native* 实现）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "util/ClassLoaderUtils.java": {
+      "expected_rust": "src/util/class_loader_utils.rs",
+      "reason": "ClassLoaderUtils→ResourceLoaderUtils 命名等价",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/IServletWebApplication.java": {
+      "expected_rust": "src/servlet/i_servlet_web_application.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/IServletWebExchange.java": {
+      "expected_rust": "src/servlet/i_servlet_web_exchange.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/IServletWebRequest.java": {
+      "expected_rust": "src/servlet/i_servlet_web_request.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/IServletWebSession.java": {
+      "expected_rust": "src/servlet/i_servlet_web_session.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JakartaServletWebApplication.java": {
+      "expected_rust": "src/servlet/jakarta_servlet_web_application.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JakartaServletWebExchange.java": {
+      "expected_rust": "src/servlet/jakarta_servlet_web_exchange.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JakartaServletWebRequest.java": {
+      "expected_rust": "src/servlet/jakarta_servlet_web_request.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JakartaServletWebSession.java": {
+      "expected_rust": "src/servlet/jakarta_servlet_web_session.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JavaxServletWebApplication.java": {
+      "expected_rust": "src/servlet/javax_servlet_web_application.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JavaxServletWebExchange.java": {
+      "expected_rust": "src/servlet/javax_servlet_web_exchange.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JavaxServletWebRequest.java": {
+      "expected_rust": "src/servlet/javax_servlet_web_request.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    },
+    "web/servlet/JavaxServletWebSession.java": {
+      "expected_rust": "src/servlet/javax_servlet_web_session.rs",
+      "reason": "Servlet 集成对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（JAVA_ONLY_EXEMPT 批准映射，见对象级对照表 🔶）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
+    }
+  }
+}
