@@ -19,6 +19,7 @@ mod java_writer;
 mod lazy_escaping_char_sequence;
 mod lazy_processing_char_sequence;
 mod list_utils;
+mod java_string;
 mod logging_utils;
 mod map_utils;
 mod number_point_type;
@@ -75,7 +76,8 @@ pub use list_utils::{
     JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,
     ListView,
 };
-pub use logging_utils::{JavaString, JavaStringResult, LoggingUtils};
+pub use java_string::{JavaString, JavaStringResult};
+pub use logging_utils::LoggingUtils;
 pub use map_utils::MapUtils;
 pub use number_point_type::NumberPointType;
 pub use number_utils::{NumberUtils, NumberUtilsError};
