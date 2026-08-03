@@ -25,7 +25,7 @@ use thymeleaf::markup::HTMLTemplateParser;
 use thymeleaf::templateparser::ITemplateParser;
 use thymeleaf::templateresource::StringTemplateResource;
 use thymeleaf::util::JavaString;
-use thymeleaf::{IEngineConfiguration, TemplateMode};
+use thymeleaf::{IEngineConfiguration, TemplateEngine, TemplateMode};
 
 fn js(value: &str) -> JavaString {
     JavaString::from_rust_str(value)
