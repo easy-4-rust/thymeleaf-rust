@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use crate::TemplateMode;
 use crate::context::IExpressionContext;
@@ -9,7 +9,8 @@ use crate::util::{DateUtils, JavaDate, JavaString, ValidateError};
 ///
 /// 对应 Java: `org.thymeleaf.expression.ExecutionInfo`。
 pub struct ExecutionInfo {
-    context: Arc<dyn IExpressionContext>,
+    /// Context 的弱引用避免被 ExpressionObjects 缓存后形成 Arc 引用环。
+    context: Weak<dyn IExpressionContext>,
     now: JavaDate,
 }
 
@@ -26,13 +27,17 @@ impl ExecutionInfo {
             });
         }
         let now = DateUtils::create_now(None, Some(&context.get_locale()));
-        Ok(Self { context, now })
+        Ok(Self {
+            context: Arc::downgrade(&context),
+            now,
+        })
     }
 
     /// 返回当前叶模板名称。
     /// 对应 Java: `ExecutionInfo#getTemplateName()`。
     pub fn get_template_name(&self) -> Option<JavaString> {
-        self.template_context()
+        self.template_context()?
+            .as_template_context()?
             .get_template_data()
             .get_template()
             .cloned()
@@ -41,7 +46,8 @@ impl ExecutionInfo {
     /// 返回当前叶模板模式。
     /// 对应 Java: `ExecutionInfo#getTemplateMode()`。
     pub fn get_template_mode(&self) -> Option<TemplateMode> {
-        self.template_context()
+        self.template_context()?
+            .as_template_context()?
             .get_template_data()
             .get_template_mode()
     }
@@ -49,7 +55,8 @@ impl ExecutionInfo {
     /// 返回首次调用 TemplateEngine 的顶层模板名称。
     /// 对应 Java: `ExecutionInfo#getProcessedTemplateName()`。
     pub fn get_processed_template_name(&self) -> Option<JavaString> {
-        self.template_context()
+        self.template_context()?
+            .as_template_context()?
             .get_template_stack()
             .first()
             .and_then(|template_data| template_data.get_template().cloned())
@@ -58,7 +65,8 @@ impl ExecutionInfo {
     /// 返回顶层模板模式。
     /// 对应 Java: `ExecutionInfo#getProcessedTemplateMode()`。
     pub fn get_processed_template_mode(&self) -> Option<TemplateMode> {
-        self.template_context()
+        self.template_context()?
+            .as_template_context()?
             .get_template_stack()
             .first()
             .and_then(|template_data| template_data.get_template_mode())
@@ -68,7 +76,12 @@ impl ExecutionInfo {
     /// 对应 Java: `ExecutionInfo#getTemplateNames()`。
     pub fn get_template_names(&self) -> Vec<Option<JavaString>> {
         self.template_context()
-            .get_template_stack()
+            .and_then(|context| {
+                context
+                    .as_template_context()
+                    .map(|context| context.get_template_stack())
+            })
+            .unwrap_or_default()
             .into_iter()
             .map(|data| data.get_template().cloned())
             .collect()
@@ -78,7 +91,12 @@ impl ExecutionInfo {
     /// 对应 Java: `ExecutionInfo#getTemplateModes()`。
     pub fn get_template_modes(&self) -> Vec<Option<TemplateMode>> {
         self.template_context()
-            .get_template_stack()
+            .and_then(|context| {
+                context
+                    .as_template_context()
+                    .map(|context| context.get_template_stack())
+            })
+            .unwrap_or_default()
             .into_iter()
             .map(|template_data| template_data.get_template_mode())
             .collect()
@@ -87,7 +105,13 @@ impl ExecutionInfo {
     /// 返回 Context 当前模板栈的只读引用快照。
     /// 对应 Java: `ExecutionInfo#getTemplateStack()`。
     pub fn get_template_stack(&self) -> Vec<Arc<TemplateData>> {
-        self.template_context().get_template_stack()
+        self.template_context()
+            .and_then(|context| {
+                context
+                    .as_template_context()
+                    .map(|context| context.get_template_stack())
+            })
+            .unwrap_or_default()
     }
 
     /// 返回创建本对象时捕获的当前时间。
@@ -95,9 +119,9 @@ impl ExecutionInfo {
         &self.now
     }
 
-    fn template_context(&self) -> &dyn crate::context::ITemplateContext {
+    fn template_context(&self) -> Option<Arc<dyn IExpressionContext>> {
         self.context
-            .as_template_context()
-            .expect("constructor verifies template context")
+            .upgrade()
+            .filter(|context| context.as_template_context().is_some())
     }
 }

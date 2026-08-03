@@ -22,6 +22,12 @@ const HANDLER_NULL_MESSAGE: &str = "Handler cannot be null";
 const NULL_PARSE_DOCUMENT_READER_MESSAGE: &str =
     "Cannot invoke \"java.io.Reader.read(char[])\" because \"reader\" is null";
 const NULL_PARSE_DOCUMENT_HANDLER_MESSAGE: &str = "Cannot invoke \"org.thymeleaf.templateparser.text.ITextHandler.handleDocumentStart(long, int, int)\" because \"handler\" is null";
+/// 单次未消费结构允许保留的最大 UTF-16 缓冲区。16 Mi code units 约为 32 MiB；
+/// 超过该值通常意味着输入流未闭合或持续输入，不能让单个请求耗尽宿主内存。
+const MAX_UNCONSUMED_BUFFER_SIZE: i32 = 16 * 1024 * 1024;
+/// 阻塞式 Java Reader 对非零长度读取不应持续返回 0。保留短暂零读取兼容性，
+/// 同时避免异常 Reader 使解析线程空转。
+const MAX_CONSECUTIVE_ZERO_READS: usize = 1024;
 
 /// `TextParser` 直接产生的 Java 未检查异常适配。
 ///
@@ -546,6 +552,7 @@ impl TextParser {
             .map_err(reader_error_as_text_parse)?;
 
         let mut cont = buffer_content_size != -1;
+        let mut consecutive_zero_reads = usize::from(buffer_content_size == 0);
         status.offset = -1;
         status.line = 1;
         status.col = 1;
@@ -567,6 +574,7 @@ impl TextParser {
 
             if status.offset == 0 {
                 if buffer_content_size == buffer_size {
+                    self.ensure_buffer_growth_is_safe(buffer_size, status.line, status.col)?;
                     self.grow_buffer(&mut buffer_size, buffer_content_size, allocated_buffer);
                 }
                 read_offset = buffer_content_size;
@@ -590,6 +598,20 @@ impl TextParser {
                 .map_err(reader_error_as_text_parse)?;
             if read != -1 {
                 buffer_content_size = read_offset.wrapping_add(read);
+                if read == 0 {
+                    consecutive_zero_reads = consecutive_zero_reads.saturating_add(1);
+                    if consecutive_zero_reads > MAX_CONSECUTIVE_ZERO_READS {
+                        return Err(Box::new(TextParseException::with_message_at(
+                            Some(&JavaString::from_rust_str(&format!(
+                                "Text parser reader made no progress after {MAX_CONSECUTIVE_ZERO_READS} consecutive zero-length reads"
+                            ))),
+                            status.line,
+                            status.col,
+                        )));
+                    }
+                } else {
+                    consecutive_zero_reads = 0;
+                }
             } else {
                 cont = false;
             }
@@ -638,6 +660,26 @@ impl TextParser {
             last_line,
             last_col,
         )
+    }
+
+    #[inline(always)]
+    fn ensure_buffer_growth_is_safe(
+        &self,
+        buffer_size: i32,
+        line: i32,
+        col: i32,
+    ) -> Result<(), Box<TextParseException>> {
+        let next_buffer_size = i64::from(buffer_size).saturating_mul(2);
+        if buffer_size <= 0 || next_buffer_size > i64::from(MAX_UNCONSUMED_BUFFER_SIZE) {
+            return Err(Box::new(TextParseException::with_message_at(
+                Some(&JavaString::from_rust_str(&format!(
+                    "Text parser retained an unconsumed structure beyond {MAX_UNCONSUMED_BUFFER_SIZE} UTF-16 code units"
+                ))),
+                line,
+                col,
+            )));
+        }
+        Ok(())
     }
 
     #[inline(always)]
@@ -1285,11 +1327,12 @@ mod tests {
     use std::rc::Rc;
 
     use super::{
-        AllocatedBuffer, BufferPool, ITextHandler, JavaString, ParsingLocatorError,
-        StringTextParserReader, TextParseException, TextParser, TextParserReader,
-        TextParserReaderError, TextParserRuntimeError, array_unit, comment_bool_value,
-        comment_parse, count_locator, element_bool_value, element_parse, java_arraycopy,
-        java_arraycopy_within, java_string_from_range, panic_payload_to_cause, util_i32_value,
+        AllocatedBuffer, BufferPool, ITextHandler, JavaString, MAX_CONSECUTIVE_ZERO_READS,
+        MAX_UNCONSUMED_BUFFER_SIZE, ParsingLocatorError, StringTextParserReader,
+        TextParseException, TextParser, TextParserReader, TextParserReaderError,
+        TextParserRuntimeError, array_unit, comment_bool_value, comment_parse, count_locator,
+        element_bool_value, element_parse, java_arraycopy, java_arraycopy_within,
+        java_string_from_range, panic_payload_to_cause, util_i32_value,
     };
     use crate::text::{
         AbstractChainedTextHandler, AbstractTextHandler, CommentProcessorTextHandlerRuntimeError,
@@ -2247,6 +2290,41 @@ mod tests {
     #[test]
     fn java_golden_matches_streaming_parser_pool_and_failure_semantics() {
         assert_eq!(generate_golden(), JAVA_GOLDEN);
+    }
+
+    /// RUST_OBLIGATION：持续零长度读取不能让解析线程无限空转，并且仍须关闭 Reader。
+    #[test]
+    fn repeated_zero_length_reads_are_bounded() {
+        let parser = TextParser::new(0, 8, false, false);
+        let (reader, reader_state) = ScriptedReader::new(
+            java("x"),
+            1,
+            MAX_CONSECUTIVE_ZERO_READS as i32 + 1,
+            -1,
+            CloseMode::None,
+        );
+        let (handler, _) = RecordingHandler::new(false);
+
+        let error = parser
+            .parse_document(Some(Box::new(reader)), 8, Some(Box::new(handler)))
+            .expect_err("repeated zero-length reads must terminate");
+
+        assert!(error.to_string().contains("reader made no progress"));
+        assert_eq!(reader_state.borrow().close_count, 1);
+    }
+
+    /// RUST_OBLIGATION：未闭合的连续结构超过上限时必须在分配前失败，避免单请求
+    /// 以指数扩容耗尽宿主内存。
+    #[test]
+    fn unconsumed_buffer_growth_has_hard_cap() {
+        let parser = TextParser::new(0, 8, false, false);
+        let error = parser
+            .ensure_buffer_growth_is_safe(MAX_UNCONSUMED_BUFFER_SIZE / 2 + 1, 7, 9)
+            .expect_err("next growth exceeds configured cap");
+
+        assert!(error.to_string().contains("unconsumed structure"));
+        assert_eq!(error.get_line(), Some(7));
+        assert_eq!(error.get_col(), Some(9));
     }
 
     /// RUST_OBLIGATION：扩容局部异常不能越过 Java `catch (Exception)`。

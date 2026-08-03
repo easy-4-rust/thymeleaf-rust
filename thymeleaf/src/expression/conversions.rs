@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use crate::context::IExpressionContext;
 use crate::util::{JavaString, ValidateError};
@@ -12,17 +12,19 @@ use super::{
 ///
 /// 对应 Java: `org.thymeleaf.expression.Conversions`。
 pub struct Conversions {
-    context: Arc<dyn IExpressionContext>,
+    /// Context 的弱引用避免被 ExpressionObjects 缓存后形成 Arc 引用环。
+    context: Weak<dyn IExpressionContext>,
 }
 
 impl Conversions {
     /// 创建绑定表达式上下文的转换工具。
     /// 对应 Java 语义：`Conversions` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(context: Option<Arc<dyn IExpressionContext>>) -> Result<Self, ValidateError> {
+        let context = context.ok_or_else(|| ValidateError::IllegalArgument {
+            message: Some("Context cannot be null".to_owned()),
+        })?;
         Ok(Self {
-            context: context.ok_or_else(|| ValidateError::IllegalArgument {
-                message: Some("Context cannot be null".to_owned()),
-            })?,
+            context: Arc::downgrade(&context),
         })
     }
 
@@ -56,7 +58,13 @@ impl Conversions {
         target: Option<&'a TemplateValue>,
         target_class: Option<&JavaTargetClass>,
     ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
-        let service = StandardExpressions::get_conversion_service(self.context.get_configuration())
+        let context = self.context.upgrade().ok_or_else(|| {
+            StandardConversionError::runtime(
+                "org.thymeleaf.exceptions.TemplateProcessingException",
+                "Expression context is no longer available",
+            )
+        })?;
+        let service = StandardExpressions::get_conversion_service(context.get_configuration())
             .map_err(|error| {
                 StandardConversionError::runtime(
                     "org.thymeleaf.exceptions.TemplateProcessingException",
@@ -70,6 +78,6 @@ impl Conversions {
             }
             Some(value) => JavaConversionValue::Object(value),
         };
-        service.convert(Some(self.context.as_any()), value, target_class)
+        service.convert(Some(context.as_any()), value, target_class)
     }
 }

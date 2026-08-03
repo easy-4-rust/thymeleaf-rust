@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use indexmap::IndexSet;
 
@@ -12,7 +12,8 @@ use super::TemplateValue;
 ///
 /// 对应 Java: `org.thymeleaf.expression.Messages`。
 pub struct Messages {
-    context: Arc<dyn IExpressionContext>,
+    /// Context 的弱引用避免被 ExpressionObjects 缓存后形成 Arc 引用环。
+    context: Weak<dyn IExpressionContext>,
 }
 
 impl Messages {
@@ -27,7 +28,9 @@ impl Messages {
                 message: Some("Context must implement ITemplateContext".to_owned()),
             });
         }
-        Ok(Self { context })
+        Ok(Self {
+            context: Arc::downgrade(&context),
+        })
     }
 
     /// 解析消息；缺失时使用 absent-message 表示。
@@ -219,9 +222,18 @@ impl Messages {
         message_parameters: &[Option<Arc<TemplateValue>>],
         use_absent_message_representation: bool,
     ) -> MessageResolutionResult<Option<JavaString>> {
-        self.context
+        let context = self.context.upgrade().ok_or_else(|| {
+            Box::new(ValidateError::IllegalArgument {
+                message: Some("Expression context is no longer available".to_owned()),
+            }) as MessageResolutionError
+        })?;
+        context
             .as_template_context()
-            .expect("constructor verifies template context")
+            .ok_or_else(|| {
+                Box::new(ValidateError::IllegalArgument {
+                    message: Some("Context must implement ITemplateContext".to_owned()),
+                }) as MessageResolutionError
+            })?
             .get_message(
                 None,
                 message_key,

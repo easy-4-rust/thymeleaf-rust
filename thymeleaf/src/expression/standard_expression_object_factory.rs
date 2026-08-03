@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::sync::{Arc, LazyLock};
+use std::sync::{Arc, LazyLock, Weak};
 
 use crate::context::IExpressionContext;
 use crate::util::{JavaLocale, JavaString, ValidateError};
@@ -212,7 +212,9 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
             {
                 return Ok(Some(value));
             }
-            return Ok(Some(object_value(ContextExpressionObject { context })));
+            return Ok(Some(object_value(ContextExpressionObject {
+                context: Arc::downgrade(&context),
+            })));
         }
         if matches!(
             name,
@@ -220,7 +222,9 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
                 | Self::VARIABLES_EXPRESSION_OBJECT_NAME
                 | Self::CONTEXT_EXPRESSION_OBJECT_NAME
         ) {
-            return Ok(Some(object_value(ContextExpressionObject { context })));
+            return Ok(Some(object_value(ContextExpressionObject {
+                context: Arc::downgrade(&context),
+            })));
         }
         if name == Self::LOCALE_EXPRESSION_OBJECT_NAME {
             return Ok(Some(object_value(context.get_locale())));
@@ -286,7 +290,9 @@ fn object_value<T: TemplateObject + 'static>(value: T) -> Arc<TemplateValue> {
 }
 
 struct ContextExpressionObject {
-    context: Arc<dyn IExpressionContext>,
+    /// 缓存对象属于 Context；反向引用必须是弱引用，避免 Context →
+    /// ExpressionObjects → ContextExpressionObject → Context 的 Arc 环。
+    context: Weak<dyn IExpressionContext>,
 }
 
 impl TemplateObject for ContextExpressionObject {
@@ -306,14 +312,16 @@ impl TemplateObject for ContextExpressionObject {
         other
             .as_any()
             .downcast_ref::<Self>()
-            .is_some_and(|other| Arc::ptr_eq(&self.context, &other.context))
+            .is_some_and(|other| Weak::ptr_eq(&self.context, &other.context))
     }
 
     fn java_get_property(
         &self,
         property_name: &JavaString,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
-        Some(Ok(self.context.get_variable(Some(property_name))))
+        Some(Ok(self.context.upgrade().and_then(|context| {
+            context.get_variable(Some(property_name))
+        })))
     }
 }
 

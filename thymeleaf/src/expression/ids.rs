@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use crate::context::IExpressionContext;
 use crate::util::{JavaString, ValidateError};
@@ -9,7 +9,8 @@ use super::{StandardExpressionError, StandardExpressionResult, TemplateValue};
 ///
 /// 对应 Java: `org.thymeleaf.expression.Ids`。
 pub struct Ids {
-    context: Arc<dyn IExpressionContext>,
+    /// Context 的弱引用避免被 ExpressionObjects 缓存后形成 Arc 引用环。
+    context: Weak<dyn IExpressionContext>,
 }
 
 impl Ids {
@@ -24,14 +25,16 @@ impl Ids {
                 message: Some("Context must implement ITemplateContext".to_owned()),
             });
         }
-        Ok(Self { context })
+        Ok(Self {
+            context: Arc::downgrade(&context),
+        })
     }
 
     /// 返回当前序号并递增。对应 Java: `Ids#seq(Object)`。
     pub fn seq(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
         let id = id_to_string(id)?;
-        let value = self
-            .context
+        let context = self.context()?;
+        let value = context
             .as_template_context()
             .expect("constructor verifies template context")
             .get_identifier_sequences()
@@ -43,8 +46,8 @@ impl Ids {
     /// 返回下一序号但不递增。对应 Java: `Ids#next(Object)`。
     pub fn next(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
         let id = id_to_string(id)?;
-        let value = self
-            .context
+        let context = self.context()?;
+        let value = context
             .as_template_context()
             .expect("constructor verifies template context")
             .get_identifier_sequences()
@@ -56,14 +59,23 @@ impl Ids {
     /// 返回最近一次已分配序号。对应 Java: `Ids#prev(Object)`。
     pub fn prev(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
         let id = id_to_string(id)?;
-        let value = self
-            .context
+        let context = self.context()?;
+        let value = context
             .as_template_context()
             .expect("constructor verifies template context")
             .get_identifier_sequences()
             .get_previous_id_seq(Some(&id))
             .map_err(|error| Box::new(error) as StandardExpressionError)?;
         Ok(append_number(&id, value))
+    }
+
+    /// 升级 Context 的弱引用；脱离模板执行后拒绝继续使用请求级工具对象。
+    fn context(&self) -> StandardExpressionResult<Arc<dyn IExpressionContext>> {
+        self.context.upgrade().ok_or_else(|| {
+            Box::new(ValidateError::IllegalArgument {
+                message: Some("Expression context is no longer available".to_owned()),
+            }) as StandardExpressionError
+        })
     }
 }
 

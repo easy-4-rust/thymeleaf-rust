@@ -105,6 +105,53 @@ fn expression_object_cache_is_thread_safe_and_weak_context_breaks_arc_cycles() {
     );
 }
 
+/// 回归：标准方言缓存的表达式对象不得反向拥有请求 Context。
+///
+/// 这里必须使用真实 `StandardExpressionObjectFactory`，而不是不持有 Context 的测试
+/// 工厂；覆盖 `#ctx`、`#root`、`#vars`、`#conversions`、`#messages`、`#ids` 与
+/// `#execInfo` 七个会读取 Context 的可缓存对象。
+#[test]
+fn standard_expression_object_cache_does_not_retain_context() {
+    let configuration = TemplateEngine::new()
+        .get_configuration()
+        .expect("default configuration");
+    let context = EngineContext::new(
+        configuration,
+        TemplateData::new(None, None, None, Some(TemplateMode::HTML), None),
+        None,
+        JavaLocale::new(js("en"), js("US")),
+        None,
+    );
+    let weak = Arc::downgrade(&context);
+
+    for name in [
+        "ctx",
+        "root",
+        "vars",
+        "conversions",
+        "messages",
+        "ids",
+        "execInfo",
+    ] {
+        let name = js(name);
+        let value = context
+            .get_expression_objects()
+            .get_object(Some(&name))
+            .expect("standard expression object builds");
+        assert!(
+            value.is_some(),
+            "standard object {} must be available",
+            name.to_string_lossy()
+        );
+    }
+
+    drop(context);
+    assert!(
+        weak.upgrade().is_none(),
+        "cached standard expression objects must not retain their Context"
+    );
+}
+
 fn export_expression_objects(output: &mut BTreeMap<String, String>) {
     let configuration = TemplateEngine::new()
         .get_configuration()
