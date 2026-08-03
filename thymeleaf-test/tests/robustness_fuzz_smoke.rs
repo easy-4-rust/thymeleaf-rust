@@ -95,29 +95,32 @@ fn expression_rich_template(prefix: &str, middle: &str, suffix: &str) -> String 
     )
 }
 
+// 内存安全边界：fuzz 曾因 512 cases × 重型解析 + shrink 循环触发无界内存
+// （CI runner OOM、本地 95GB 冻结）。CI/常规运行收窄到 64 cases × 128 字符；
+// 深度 fuzz 仅限离线手动（PROPTEST_CASES 环境变量放大）。
 proptest! {
-    #![proptest_config(ProptestConfig { cases: 512, ..ProptestConfig::default() })]
+    #![proptest_config(ProptestConfig { cases: 64, ..ProptestConfig::default() })]
 
     #[test]
-    fn html_parser_never_panics(template in "\\PC{0,512}") {
+    fn html_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::HTML);
     }
 
     #[test]
-    fn xml_parser_never_panics(template in "\\PC{0,512}") {
+    fn xml_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::XML);
     }
 
     #[test]
-    fn text_parser_never_panics(template in "\\PC{0,512}") {
+    fn text_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::TEXT);
     }
 
     #[test]
     fn template_render_smoke_never_panics(
-        prefix in "\\PC{0,64}",
-        middle in "\\PC{0,64}",
-        suffix in "\\PC{0,64}",
+        prefix in "\\PC{0,32}",
+        middle in "\\PC{0,32}",
+        suffix in "\\PC{0,32}",
     ) {
         let template = expression_rich_template(&prefix, &middle, &suffix);
         let mut resolver = StringTemplateResolver::new();
