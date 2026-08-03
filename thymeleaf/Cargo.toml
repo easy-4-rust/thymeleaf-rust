@@ -10,6 +10,9 @@ readme = "README.md"
 keywords = ["template", "thymeleaf", "html", "ssr"]
 categories = ["template-engine", "web-programming"]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [dependencies]
 bytes = "1.10"
 chrono = "0.4.45"

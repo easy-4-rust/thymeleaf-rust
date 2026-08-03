@@ -44,3 +44,16 @@
   `AttributeNamesTest` 6/6、`ElementNamesTest` 6/6、
   `LazyContextVariableTest` 10/10 全部方法 1:1 锁定（含 setVariable null 语义、
   表示串活 exchange 感知、别名 assertSame 系列）。
+
+### Known Limitations
+
+- **html5gum tokenizer**：对病态 Unicode 输入（大量孤立代理对 / 特殊 Unicode
+  序列）有内部内存膨胀风险。HTML parser fuzz proptest 暂时排除；HTML 解析
+  鲁棒性由 2608 语料覆盖。待 html5gum 上游修复或替换 tokenizer。
+- **TemplateEngine.render smoke**：random 表达式注入（`middle` 含 `'`/`}`/`${`
+  等）让 `process_template` 某些 case 超时（>60s）。render smoke proptest
+  暂时排除；render 不 panic 由 2608 语料 + workspace 测试覆盖。待引擎侧加
+  超时守卫后恢复。
+- **API baseline CI**：`cargo public-api` 需要 nightly toolchain，CI 当前
+  stable 导致该步骤为 `continue-on-error`（alpha 阶段不阻塞）。beta/1.0 前
+  补 nightly 步骤使其成为硬门禁。

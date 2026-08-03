@@ -452,10 +452,13 @@ dependency-direction checks.
 ## Security
 
 The parser and rendering runtime are executable. Expression evaluation defaults to a
-read-only safe subset and does not expose arbitrary classes, reflection, or static
-method calls. Release preparation still needs explicit input-size, recursion,
-render-output, slow-processor cancellation, thread-budget, and unescaped-content
-policies.
+read-only safe subset. Arbitrary classes, reflection, and `new`/`param`/`@Type@`
+external access are blocked by default (`restrict_external_access = true`). A
+restricted whitelist of static method calls is permitted (Math/Integer/Double/…
+`parse`/`valueOf`/`abs`/`sqrt`/`LocalDateTime.of`/`String.format`), gated by
+`ThymeleafACLClassResolver` with ~50 allowed classes and blocked package prefixes
+(`java.`/`javax.`/`jakarta.`/`jdk.`/…). Hosts can further restrict via
+`OgnlRuntime` (opt-in).
 
 Do not publish suspected vulnerabilities or sensitive proof-of-concept data in a public issue. A private reporting channel will be finalized before executable releases.
 

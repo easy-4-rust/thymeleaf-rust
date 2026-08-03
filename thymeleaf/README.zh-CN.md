@@ -432,9 +432,12 @@ Thymeleaf 上游采用 Apache License 2.0。任何从上游调整而来的源码
 
 ## 安全
 
-Parser 和渲染 Runtime 已可执行。默认表达式求值采用只读安全子集，不开放任意 Class、
-反射或静态方法调用。发布前仍需固定输入大小、递归深度、渲染输出、慢 Processor
-取消、线程预算和未转义内容策略。
+Parser 和渲染 Runtime 已可执行。默认表达式求值采用只读安全子集：`new`/`param`/`@Type@`
+外部访问默认封禁（`restrict_external_access = true`）；任意 Class 和反射被阻断。
+一组受限的白名单静态方法调用被允许（Math/Integer/Double/… 的 `parse`/`valueOf`/
+`abs`/`sqrt`/`LocalDateTime.of`/`String.format`），由 `ThymeleafACLClassResolver` 控制
+（~50 个允许类 + `java.`/`javax.`/`jakarta.`/`jdk.` 等封禁包前缀）。宿主可通过
+`OgnlRuntime` 进一步收紧（opt-in）。
 
 请勿在公开 Issue 中披露疑似漏洞或敏感验证数据。项目会在发布可执行版本前确定私密报告渠道。
 
