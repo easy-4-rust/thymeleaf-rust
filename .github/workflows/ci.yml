@@ -142,7 +142,7 @@ jobs:
         run: cargo audit
 
       - name: Install cargo-public-api
-        uses: taiki-e/install-action@cargo-public-api
+        run: cargo install cargo-public-api --locked
 
       - name: Enforce core crate public API baseline (docs/release/api-baseline.txt)
         # 任何未登记的公开 API 变更（增/删/改签名）都会使 diff 非空而失败；
