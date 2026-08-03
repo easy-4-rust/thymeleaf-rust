@@ -135,6 +135,9 @@ jobs:
       - name: Check dependency licenses, sources, and duplicates
         uses: EmbarkStudios/cargo-deny-action@v2
 
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@cargo-audit
+
       - name: Check dependency vulnerabilities (cargo-audit)
         run: cargo audit
 
