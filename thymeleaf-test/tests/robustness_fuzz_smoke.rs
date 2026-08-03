@@ -1,4 +1,4 @@
-//! 鲁棒性 fuzz：随机输入下解析器/渲染不得 panic（阶段 3.1，proptest）。
+//! 鲁棒性 fuzz：随机输入下解析器/渲染不得 panic。
 //!
 //! - HTML/XML/TEXT 模板：`parse_standalone` 对任意 Unicode 输入（含代理对/emoji/
 //!   控制字符）必须返回 `Result`，允许 `Err` 但不允许 panic。
@@ -6,10 +6,18 @@
 //! - 资源入口为 `&str`（合法 Rust Unicode）；孤立 UTF-16 代理项由语料运行器与
 //!   `JavaString` 级差分覆盖。
 //!
-//! proptest 用例数默认 512；本地加深：
+//! proptest 用例数默认 64；本地加深：
 //! `PROPTEST_CASES=10000 cargo test -p thymeleaf-test --test robustness_fuzz_smoke`。
+//!
+//! ## 内存安全设计（OOM 根因修复）
+//!
+//! 1. **DiscardingWriter**：parse 测试只验证"不 panic"，不需要输出。用丢弃
+//!    writer 替代原来的 CapturedWriter（无界 Vec<u16>），从根本上消除
+//!    "病态输入 → 巨大 token → 无界输出缓冲"的放大面。
+//! 2. **proptest shrink 钳制**：`max_shrink_iters: 256` + `max_shrink_time: 10s`
+//!    （默认 u32::MAX / 0=禁用 → 失败 case 被无界重跑导致 OOM）。
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use proptest::prelude::*;
 
@@ -38,16 +46,12 @@ fn engine_configuration() -> Arc<dyn IEngineConfiguration> {
     }))
 }
 
-struct CapturedWriter {
-    buffer: Arc<Mutex<Vec<u16>>>,
-}
+/// 丢弃所有输出的 writer——parse 测试只验证不 panic，不需要输出。
+/// 消除原 CapturedWriter（无界 Vec<u16>）在病态输入下的内存放大。
+struct DiscardingWriter;
 
-impl thymeleaf::util::JavaWriter for CapturedWriter {
-    fn write_utf16(&mut self, characters: &[u16]) -> std::io::Result<()> {
-        self.buffer
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .extend_from_slice(characters);
+impl thymeleaf::util::JavaWriter for DiscardingWriter {
+    fn write_utf16(&mut self, _characters: &[u16]) -> std::io::Result<()> {
         Ok(())
     }
 
@@ -66,12 +70,8 @@ fn parse_template_no_panic(template: &str, mode: TemplateMode) {
         TemplateMode::HTML | TemplateMode::XML => Box::new(HTMLTemplateParser::new(2, 4096)),
         _ => Box::new(thymeleaf::text::TextTemplateParser::new(2, 4096, true)),
     };
-    let buffer = Arc::new(Mutex::new(Vec::new()));
-    let writer = CapturedWriter {
-        buffer: Arc::clone(&buffer),
-    };
     let handler: Box<dyn thymeleaf::engine::ITemplateHandler> = Box::new(
-        thymeleaf::engine::OutputTemplateHandler::new(Box::new(writer)),
+        thymeleaf::engine::OutputTemplateHandler::new(Box::new(DiscardingWriter)),
     );
     let resource = Arc::new(StringTemplateResource::new(Some(template)).expect("resource"));
     // 只关心不 panic：Err 是合法的解析失败路径。
@@ -95,32 +95,33 @@ fn expression_rich_template(prefix: &str, middle: &str, suffix: &str) -> String 
     )
 }
 
-// 内存安全边界：fuzz 曾因 512 cases × 重型解析 + shrink 循环触发无界内存
-// （CI runner OOM、本地 95GB 冻结）。CI/常规运行收窄到 64 cases × 128 字符；
-// 深度 fuzz 仅限离线手动（PROPTEST_CASES 环境变量放大）。
 proptest! {
-    #![proptest_config(ProptestConfig { cases: 64, ..ProptestConfig::default() })]
+    #![proptest_config(ProptestConfig {
+        cases: 64,
+        // shrink 钳制：默认 max_shrink_iters=u32::MAX / max_shrink_time=0（禁用），
+        // 失败 case 会被无界重跑导致 OOM。限制到 256 轮 / 10 秒——足够 shrink
+        // 出有意义的 minimal failure，又不至于在 CI runner（7GB RAM）上膨胀。
+        max_shrink_iters: 256,
+        max_shrink_time: 10_000,
+        ..ProptestConfig::default()
+    })]
 
     #[test]
-#[ignore = "fuzz 内存根因待修：CI runner OOM，仅本地 --ignored 手动"]
     fn html_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::HTML);
     }
 
     #[test]
-#[ignore = "fuzz 内存根因待修：CI runner OOM，仅本地 --ignored 手动"]
     fn xml_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::XML);
     }
 
     #[test]
-#[ignore = "fuzz 内存根因待修：CI runner OOM，仅本地 --ignored 手动"]
     fn text_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::TEXT);
     }
 
     #[test]
-#[ignore = "fuzz 内存根因待修：CI runner OOM，仅本地 --ignored 手动"]
     fn template_render_smoke_never_panics(
         prefix in "\\PC{0,32}",
         middle in "\\PC{0,32}",
