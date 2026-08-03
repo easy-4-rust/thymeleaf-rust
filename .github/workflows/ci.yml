@@ -89,12 +89,16 @@ jobs:
           --require-source-comments
           --fail-on-warning
 
-      - name: Validate fixed Java semantic baseline
+      - name: Validate fixed Java semantic baseline (core only)
+        # Spring 集成测试（spring5/6/springsecurity5/6）已从 baseline 静态清单中
+        # 移除（对象级对照表.md 范围声明：Spring 集成语义不入清单），Maven 与
+        # parity ledger 同步收窄到 tests/thymeleaf-tests-core 单模块，省 ~2 分钟
+        # 构建/运行成本。
         working-directory: upstream-thymeleaf
         run: >-
           mvn
           -pl
-          tests/thymeleaf-tests-core,tests/thymeleaf-tests-spring5,tests/thymeleaf-tests-spring6,tests/thymeleaf-tests-springsecurity5,tests/thymeleaf-tests-springsecurity6
+          tests/thymeleaf-tests-core
           -am
           test
           -DskipITs
@@ -106,10 +110,6 @@ jobs:
         run: |
           python3 scripts/generate_source_parity_inventory.py \
             --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-core/target/surefire-reports \
-            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-spring5/target/surefire-reports \
-            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-spring6/target/surefire-reports \
-            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-springsecurity5/target/surefire-reports \
-            --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-springsecurity6/target/surefire-reports \
             --output target/source_parity_inventory.json
           diff -u \
             docs/migration/baseline/source_parity_inventory.json \
