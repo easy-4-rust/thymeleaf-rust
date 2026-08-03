@@ -46,6 +46,15 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all --check
 
+      - name: Generate thtest source-test parity manifest (required at compile time)
+        # acceptance.rs 在编译期 include_str!("../source-test-parity.json")；
+        # 该文件由 *.json 忽略规则排除，CI 必须先于任何编译步骤生成。
+        run: >-
+          python3 scripts/generate_thtest_inventory.py
+          --upstream upstream-thymeleaf
+          --baseline 10f9dd2eb8cbd98515ce14b149d115e0287d0add
+          --output thymeleaf-test/source-test-parity.json
+
       - name: Run Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
