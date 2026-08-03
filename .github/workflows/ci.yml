@@ -111,7 +111,7 @@ jobs:
             --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-springsecurity5/target/surefire-reports \
             --surefire-root upstream-thymeleaf/tests/thymeleaf-tests-springsecurity6/target/surefire-reports \
             --output target/source_parity_inventory.json
-          cmp \
+          diff -u \
             docs/migration/baseline/source_parity_inventory.json \
             target/source_parity_inventory.json
           cargo test -p thymeleaf-test --test source_parity_inventory
