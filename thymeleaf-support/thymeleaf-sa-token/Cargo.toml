@@ -9,7 +9,9 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
 thymeleaf = { path = "../../thymeleaf" }
-sa-token-core = { version = "0.1.18", path = "../../../sa-token-rust/sa-token-core" }
+# sa-token-core 0.1.18 已发布 crates.io；此前 path 指向仓库外兄弟目录
+# （../../../sa-token-rust/），CI 检出树不存在该路径导致 manifest 加载失败。
+sa-token-core = "0.1.18"
 
 [dev-dependencies]
 futures-executor = "0.3.31"
