@@ -1,6 +1,7 @@
 [package]
 name = "thymeleaf-vernal"
 version.workspace = true
+publish = false
 edition.workspace = true
 rust-version.workspace = true
 description = "Vernal integration for the framework-neutral thymeleaf template engine"
