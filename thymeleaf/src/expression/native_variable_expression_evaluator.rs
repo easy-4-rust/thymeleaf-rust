@@ -3620,7 +3620,9 @@ fn ognl_processing_error(message: String, ognl_message: String) -> super::Standa
 #[cfg(test)]
 #[cfg(test)]
 mod dispatcher_direct_tests {
-    use super::*;
+    use super::{
+        ComputedExpression, invoke_java_string_method, invoke_static_method, parse_ognl_range,
+    };
     use crate::expression::TemplateValue;
     use crate::util::{JavaNumber, JavaString};
     use std::sync::Arc;

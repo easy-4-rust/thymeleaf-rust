@@ -583,8 +583,9 @@ fn contains_java_value(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateVa
 
 #[cfg(test)]
 mod invoke_direct_tests {
-    use super::*;
-    use crate::util::JavaLocale;
+    use super::Strings;
+    use crate::expression::TemplateValue;
+    use crate::util::{JavaLocale, JavaNumber, JavaString};
     use std::sync::Arc;
 
     fn strings() -> Strings {
