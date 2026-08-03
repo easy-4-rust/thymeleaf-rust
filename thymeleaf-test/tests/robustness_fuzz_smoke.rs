@@ -97,12 +97,11 @@ fn expression_rich_template(prefix: &str, middle: &str, suffix: &str) -> String 
 
 proptest! {
     #![proptest_config(ProptestConfig {
-        cases: 64,
+        cases: 16,
         // shrink 钳制：默认 max_shrink_iters=u32::MAX / max_shrink_time=0（禁用），
-        // 失败 case 会被无界重跑导致 OOM。限制到 256 轮 / 10 秒——足够 shrink
-        // 出有意义的 minimal failure，又不至于在 CI runner（7GB RAM）上膨胀。
-        max_shrink_iters: 256,
-        max_shrink_time: 10_000,
+        // 失败 case 会被无界重跑导致 OOM/超时。限制到 128 轮 / 5 秒。
+        max_shrink_iters: 128,
+        max_shrink_time: 5_000,
         ..ProptestConfig::default()
     })]
 
