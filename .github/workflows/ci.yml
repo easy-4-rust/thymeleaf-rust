@@ -141,6 +141,9 @@ jobs:
       - name: Check dependency vulnerabilities (cargo-audit)
         run: cargo audit
 
+      - name: Install cargo-public-api
+        uses: taiki-e/install-action@cargo-public-api
+
       - name: Enforce core crate public API baseline (docs/release/api-baseline.txt)
         # 任何未登记的公开 API 变更（增/删/改签名）都会使 diff 非空而失败；
         # 有意的 API 变更须显式更新基线文件并在 PR 说明。
