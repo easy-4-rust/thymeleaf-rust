@@ -15,10 +15,10 @@
     "runtime_cases": 2156,
     "missing": 0,
     "dispositions": {
-      "MAPPED": 215,
+      "MAPPED": 213,
       "MERGED": 90,
       "NOT_APPLICABLE": 1,
-      "POLICY_DIFFERENCE": 460,
+      "POLICY_DIFFERENCE": 462,
       "SPLIT": 109
     },
     "modules": {
@@ -1067,7 +1067,7 @@
           "marker": "bare_html_engine_matches_java_26_cases"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证（26 个裸 HTML 解析边界用例 1:1 移植）。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.engine.CDATASectionTest#test",
@@ -3060,7 +3060,7 @@
           "marker": "offline01_matches_java"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证（offline01.html 渲染与 result 归一化比较 1:1 移植）。"
+      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
     },
     {
       "id": "tests/thymeleaf-tests-core:org.thymeleaf.parsing.Parsing01Test#testParsing",
@@ -10810,15 +10810,15 @@
       "runtime_cases": [
         "testOfflineSpring01"
       ],
-      "disposition": "MAPPED",
+      "disposition": "POLICY_DIFFERENCE",
       "evidence": [
         {
-          "kind": "RUST_TEST",
-          "path": "thymeleaf-test/tests/offline_java_parity.rs",
-          "marker": "offline01_matches_java"
+          "kind": "CORE_SEMANTIC_EQUIVALENT",
+          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
+          "marker": "semantic_all"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证（offline01.html 渲染与 result 归一化比较 1:1 移植）。"
+      "rationale": "该测试依赖 thymeleaf-spring 专用上下文或资源；核心模板语义由共享上游语料验证，Spring API 不进入中立 crate。"
     },
     {
       "id": "tests/thymeleaf-tests-spring5:org.thymeleaf.spring.reactive.SpringReactive01Test#testEmpty",
@@ -16844,15 +16844,15 @@
       "runtime_cases": [
         "testOfflineSpring01"
       ],
-      "disposition": "MAPPED",
+      "disposition": "POLICY_DIFFERENCE",
       "evidence": [
         {
-          "kind": "RUST_TEST",
-          "path": "thymeleaf-test/tests/offline_java_parity.rs",
-          "marker": "offline01_matches_java"
+          "kind": "CORE_SEMANTIC_EQUIVALENT",
+          "path": "thymeleaf-test/tests/thtest_upstream_plain_batch.rs",
+          "marker": "semantic_all"
         }
       ],
-      "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证（offline01.html 渲染与 result 归一化比较 1:1 移植）。"
+      "rationale": "该测试依赖 thymeleaf-spring 专用上下文或资源；核心模板语义由共享上游语料验证，Spring API 不进入中立 crate。"
     },
     {
       "id": "tests/thymeleaf-tests-spring6:org.thymeleaf.spring.reactive.SpringReactive01Test#testEmpty",
