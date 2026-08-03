@@ -88,6 +88,7 @@ impl JavaLocale {
     /// # 参数
     ///
     /// - `locale`：替换 `Locale.getDefault()` 结果的值。
+    ///
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn set_default(locale: Self) {
         *write_recovering_poison(default_locale_lock()) = locale;

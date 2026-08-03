@@ -263,8 +263,8 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         self.process_internal(max_output_in_bytes)
     }
 }
-/// 对应 Java 语义：`ThrottledTemplateProcessor` 的 Rust 侧类型 `ThrottledWriter`。
 
+/// 对应 Java 语义：`ThrottledTemplateProcessor` 的 Rust 侧类型 `ThrottledWriter`。
 pub(crate) enum ThrottledWriter {
     Standard(ThrottledTemplateWriter),
     Sse(SSEThrottledTemplateWriter),

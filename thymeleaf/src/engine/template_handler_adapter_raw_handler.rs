@@ -27,6 +27,7 @@ impl TemplateHandlerAdapterRawHandler {
     /// - `template_handler`：接收转换后事件的非空 Handler；
     /// - `line_offset`、`col_offset`：嵌入模板起始偏移。
     #[must_use]
+    ///
     /// 对应 Java 语义：`TemplateHandlerAdapterRawHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_name: Option<JavaString>,

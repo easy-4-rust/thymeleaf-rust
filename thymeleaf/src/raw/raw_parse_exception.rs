@@ -131,6 +131,7 @@ impl RawParseException {
     ///
     /// - `message`：原始 Java UTF-16 消息，`None` 对应 null。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message` 行为（Rust 侧辅助/私有路径）。
     pub fn with_message(message: Option<JavaString>) -> Self {
         Self {
@@ -148,6 +149,7 @@ impl RawParseException {
     /// - `message`：调用方消息。
     /// - `cause`：可空原因。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message_and_cause` 行为（Rust 侧辅助/私有路径）。
     pub fn with_message_and_cause(
         message: Option<JavaString>,
@@ -169,6 +171,7 @@ impl RawParseException {
     ///
     /// - `cause`：可空原因；同类型原因的行列会被继承。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_cause` 行为（Rust 侧辅助/私有路径）。
     pub fn with_cause(cause: Option<RawParseCause>) -> Self {
         Self::with_message_and_cause(None, cause)
@@ -181,6 +184,7 @@ impl RawParseException {
     /// - `line`：原样保存的行号。
     /// - `col`：原样保存的列号。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_location` 行为（Rust 侧辅助/私有路径）。
     pub fn with_location(line: i32, col: i32) -> Self {
         Self {
@@ -200,6 +204,7 @@ impl RawParseException {
     /// - `line`：显式行号。
     /// - `col`：显式列号。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message_and_cause_at` 行为（Rust 侧辅助/私有路径）。
     pub fn with_message_and_cause_at(
         message: Option<&JavaString>,
@@ -223,6 +228,7 @@ impl RawParseException {
     /// - `line`：显式行号。
     /// - `col`：显式列号。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message_at` 行为（Rust 侧辅助/私有路径）。
     pub fn with_message_at(message: Option<&JavaString>, line: i32, col: i32) -> Self {
         Self::with_message_and_cause_at(message, None, line, col)
@@ -236,6 +242,7 @@ impl RawParseException {
     /// - `line`：显式行号。
     /// - `col`：显式列号。
     #[must_use]
+    ///
     /// 对应 Java 语义：`RawParseException` 的 `with_cause_at` 行为（Rust 侧辅助/私有路径）。
     pub fn with_cause_at(cause: Option<RawParseCause>, line: i32, col: i32) -> Self {
         Self {

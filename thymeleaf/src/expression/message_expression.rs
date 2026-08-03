@@ -23,6 +23,7 @@ impl MessageExpression {
     /// # 参数
     /// - `base`：消息键表达式，Java null 会被拒绝；
     /// - `parameters`：可选参数表达式序列。
+    ///
     /// 对应 Java 语义：`MessageExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         base: Option<Arc<dyn IStandardExpression>>,

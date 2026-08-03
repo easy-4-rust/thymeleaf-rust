@@ -36,8 +36,8 @@ impl<T> JavaObjectArray<T> {
             component_predicate,
         }
     }
-    /// 对应 Java 语义：`Objects` 的 `component_predicate` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`Objects` 的 `component_predicate` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn component_predicate(&self) -> Arc<ComponentPredicate<T>> {
         Arc::clone(&self.component_predicate)
     }

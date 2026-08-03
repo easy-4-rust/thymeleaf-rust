@@ -153,8 +153,8 @@ fn default_zone() -> Tz {
         .and_then(|value| value.parse().ok())
         .unwrap_or(chrono_tz::UTC)
 }
-/// 对应 Java 语义：`TemporalCreationUtils` 的 `java_pattern` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`TemporalCreationUtils` 的 `java_pattern` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn java_pattern(pattern: &str) -> String {
     let mut output = String::new();
     let mut chars = pattern.chars().peekable();

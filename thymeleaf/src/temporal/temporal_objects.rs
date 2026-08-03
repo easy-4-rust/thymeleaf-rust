@@ -25,8 +25,8 @@ pub(crate) fn java_short_zone(target: &JavaTemporal, default_zone: &Tz) -> Strin
         _ => tz_zone(*default_zone),
     }
 }
-/// 对应 Java 语义：`TemporalObjects` 的 `fixed_offset_zone` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`TemporalObjects` 的 `fixed_offset_zone` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn fixed_offset_zone(offset: &chrono::FixedOffset) -> String {
     if offset.local_minus_utc() == 0 {
         "Z".to_owned()
@@ -38,8 +38,8 @@ pub(crate) fn fixed_offset_zone(offset: &chrono::FixedOffset) -> String {
             .to_string()
     }
 }
-/// 对应 Java 语义：`TemporalObjects` 的 `tz_zone` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`TemporalObjects` 的 `tz_zone` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn tz_zone(zone: Tz) -> String {
     if zone == Tz::UTC {
         "Z".to_owned()

@@ -73,8 +73,8 @@ pub struct ProcessorTemplateHandler {
 struct ProcessorTemplateHandlerProxy {
     state: Weak<RefCell<ProcessorTemplateHandlerState>>,
 }
-/// 对应 Java 语义：`ProcessorTemplateHandler` 的 Rust 侧类型 `ProcessorTemplateHandlerState`。
 
+/// 对应 Java 语义：`ProcessorTemplateHandler` 的 Rust 侧类型 `ProcessorTemplateHandlerState`。
 pub(crate) struct ProcessorTemplateHandlerState {
     self_handler: Option<TemplateHandlerHandle>,
     next: Option<TemplateHandlerHandle>,
@@ -2225,8 +2225,8 @@ fn handle_pending_state(
         }
     }
 }
-/// 对应 Java 语义：`ProcessorTemplateHandler` 的 `perform_teardown_checks` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`ProcessorTemplateHandler` 的 `perform_teardown_checks` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn perform_teardown_checks(
     state: &Rc<RefCell<ProcessorTemplateHandlerState>>,
     event: &dyn ITemplateEnd,

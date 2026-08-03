@@ -22,8 +22,8 @@ pub struct AbstractStandardInliner {
     write_texts_to_output: bool,
     escaping: StandardInlinerEscaping,
 }
-/// 对应 Java 语义：`AbstractStandardInliner` 的 Rust 侧类型 `StandardInlinerEscaping`。
 
+/// 对应 Java 语义：`AbstractStandardInliner` 的 Rust 侧类型 `StandardInlinerEscaping`。
 pub(crate) enum StandardInlinerEscaping {
     Html,
     Xml,

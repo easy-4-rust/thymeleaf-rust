@@ -24,8 +24,8 @@ pub struct BinaryOperationExpression {
     left: Arc<dyn IStandardExpression>,
     right: Arc<dyn IStandardExpression>,
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `execute_operands` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `execute_operands` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn execute_operands(
     expression: &BinaryOperationExpression,
     context: &dyn IExpressionContext,
@@ -40,8 +40,8 @@ pub(crate) fn execute_operands(
             .execute_with_context(context, execution_context)?,
     ))
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `execute_raw_operands` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `execute_raw_operands` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn execute_raw_operands(
     expression: &BinaryOperationExpression,
     context: &dyn IExpressionContext,
@@ -56,8 +56,8 @@ pub(crate) fn execute_raw_operands(
             .execute_raw(context, execution_context)?,
     ))
 }
-/// 对应 Java 语义：Java 接口/超类方法 `evaluateAsNumber()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 
+/// 对应 Java 语义：Java 接口/超类方法 `evaluateAsNumber()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 pub(crate) fn evaluate_as_number(
     value: Option<&Arc<TemplateValue>>,
 ) -> StandardExpressionResult<Option<JavaBigDecimal>> {
@@ -69,8 +69,8 @@ pub(crate) fn evaluate_as_number(
             .map(|result| result.as_decimal().clone()),
     )
 }
-/// 对应 Java 语义：Java 接口/超类方法 `evaluateAsBoolean()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 
+/// 对应 Java 语义：Java 接口/超类方法 `evaluateAsBoolean()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 pub(crate) fn evaluate_as_boolean(
     value: Option<&Arc<TemplateValue>>,
 ) -> StandardExpressionResult<bool> {
@@ -79,21 +79,21 @@ pub(crate) fn evaluate_as_boolean(
         .unwrap_or(crate::util::JavaEvaluationValue::Null);
     Ok(EvaluationUtils::evaluate_as_boolean(&evaluation_value)?)
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `normalized_null_value` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `normalized_null_value` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn normalized_null_value(value: Option<Arc<TemplateValue>>) -> Arc<TemplateValue> {
     value.unwrap_or_else(|| Arc::new(TemplateValue::string(JavaString::from_rust_str("null"))))
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `literal_unwrapped_string` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `literal_unwrapped_string` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn literal_unwrapped_string(value: &TemplateValue) -> Option<JavaString> {
     match value {
         TemplateValue::Literal(literal) => literal.get_value().cloned(),
         _ => value.to_java_string(),
     }
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `unwrap_literal_result` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `unwrap_literal_result` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn unwrap_literal_result(
     value: Option<Arc<TemplateValue>>,
 ) -> Option<Arc<TemplateValue>> {
@@ -106,16 +106,16 @@ pub(crate) fn unwrap_literal_result(
         _ => value,
     }
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `collapse_java_null` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `collapse_java_null` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn collapse_java_null(value: Option<Arc<TemplateValue>>) -> Option<Arc<TemplateValue>> {
     match value.as_deref() {
         Some(TemplateValue::Null) => None,
         _ => value,
     }
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `java_values_equal` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `java_values_equal` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn java_values_equal(
     left: Option<&Arc<TemplateValue>>,
     right: Option<&Arc<TemplateValue>>,
@@ -141,8 +141,8 @@ pub(crate) fn java_values_equal(
     }
     Ok(left.java_equals(right.as_ref()))
 }
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `compare_java_values` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `compare_java_values` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn compare_java_values(
     left: &Arc<TemplateValue>,
     right: &Arc<TemplateValue>,

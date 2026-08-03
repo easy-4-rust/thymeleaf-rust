@@ -25,6 +25,7 @@ impl VariableExpression {
     ///
     /// # 参数
     /// - `expression`：`${}` 内部表达式；Java null 返回参数错误。
+    ///
     /// 对应 Java 语义：`VariableExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(expression: Option<JavaString>) -> Result<Self, ValidateError> {
         Self::with_convert_to_string(expression, false)
@@ -35,6 +36,7 @@ impl VariableExpression {
     /// # 参数
     /// - `expression`：`${}` 内部表达式；
     /// - `convert_to_string`：是否对应双括号 `${{...}}`。
+    ///
     /// 对应 Java 语义：`VariableExpression` 的 `with_convert_to_string` 行为（Rust 侧辅助/私有路径）。
     pub fn with_convert_to_string(
         expression: Option<JavaString>,
@@ -112,8 +114,8 @@ impl IStandardExpression for VariableExpression {
 }
 
 impl SimpleExpression for VariableExpression {}
-/// 对应 Java 语义：`VariableExpression` 的 `parse_delimited` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`VariableExpression` 的 `parse_delimited` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn parse_delimited(input: &JavaString, selector: u16) -> Option<(JavaString, bool)> {
     let units = input.as_utf16();
     let mut start = 0;
@@ -143,8 +145,8 @@ pub(crate) fn parse_delimited(input: &JavaString, selector: u16) -> Option<(Java
     }
     Some((JavaString::from_utf16(content.to_vec()), false))
 }
-/// 对应 Java 语义：`VariableExpression` 的 `build_representation` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`VariableExpression` 的 `build_representation` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn build_representation(
     selector: u16,
     expression: &JavaString,
@@ -161,8 +163,8 @@ pub(crate) fn build_representation(
     units.push(b'}' as u16);
     JavaString::from_utf16(units)
 }
-/// 对应 Java 语义：`VariableExpression` 的 `execute_variable` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`VariableExpression` 的 `execute_variable` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn execute_variable(
     context: &dyn IExpressionContext,
     expression: &dyn IStandardVariableExpression,

@@ -82,8 +82,8 @@ impl IStandardExpression for GreaterThanExpression {
 
 impl ComplexExpression for GreaterThanExpression {}
 impl super::GreaterLesserExpression for GreaterThanExpression {}
-/// 对应 Java 语义：`GreaterThanExpression` 的 `comparison_null_error` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`GreaterThanExpression` 的 `comparison_null_error` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn comparison_null_error(
     operation: &str,
     left: Option<&TemplateValue>,
@@ -95,8 +95,8 @@ pub(crate) fn comparison_null_error(
         display_value(right)
     ))))
 }
-/// 对应 Java 语义：`GreaterThanExpression` 的 `operation_error` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`GreaterThanExpression` 的 `operation_error` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn operation_error(
     operation: &str,
     expression: JavaString,

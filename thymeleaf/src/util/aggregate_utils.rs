@@ -138,8 +138,8 @@ impl JavaBigDecimal {
         }
         parse_decimal(&java_double_string(value))
     }
-    /// 对应 Java 语义：`AggregateUtils` 的 `from_f64_exact` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`AggregateUtils` 的 `from_f64_exact` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn from_f64_exact(value: f64) -> Option<Self> {
         if !value.is_finite() {
             return None;
@@ -182,8 +182,8 @@ impl JavaBigDecimal {
         }
         Some(Self::from_unscaled(unscaled, 0))
     }
-    /// 对应 Java 语义：`AggregateUtils` 的 `add_java` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`AggregateUtils` 的 `add_java` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn add_java(&self, other: &Self) -> Self {
         let result_scale = self.scale.max(other.scale);
         let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
@@ -670,15 +670,15 @@ impl AggregateUtils {
     pub fn avg_doubles(target: Option<&[f64]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Doubles), true)
     }
-    /// 对应 Java 语义：`AggregateUtils` 的 `sum_numbers` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`AggregateUtils` 的 `sum_numbers` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn sum_numbers(
         target: Option<&[Option<JavaNumber>]>,
     ) -> Result<Option<JavaBigDecimal>, AggregateError> {
         aggregate_number_array(target, false)
     }
-    /// 对应 Java 语义：`AggregateUtils` 的 `avg_numbers` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`AggregateUtils` 的 `avg_numbers` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn avg_numbers(
         target: Option<&[Option<JavaNumber>]>,
     ) -> Result<Option<JavaBigDecimal>, AggregateError> {
@@ -927,8 +927,8 @@ fn parse_decimal(value: &str) -> Result<JavaBigDecimal, AggregateError> {
         checked_scale(i64::try_from(fraction.len()).expect("fraction length fits i64") - exponent)?;
     Ok(JavaBigDecimal::from_unscaled(unscaled, scale))
 }
-/// 对应 Java 语义：`AggregateUtils` 的 `java_double_string` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`AggregateUtils` 的 `java_double_string` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn java_double_string(value: f64) -> String {
     if value.is_nan() {
         return "NaN".to_owned();

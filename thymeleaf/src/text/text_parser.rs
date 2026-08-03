@@ -145,6 +145,7 @@ impl TextParserRuntimeError {
     /// # 参数
     /// - `java_class_name`：Java 异常全限定名；
     /// - `java_message`：可空 Java UTF-16 消息。
+    ///
     /// 对应 Java 语义：`TextParser` 的 `with_java_metadata` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn with_java_metadata(

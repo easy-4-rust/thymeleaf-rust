@@ -108,6 +108,7 @@ impl WebContext {
     ///
     /// - `name`：可空变量名。
     /// - `value`：可空变量值；空值保存为显式 Java null。
+    ///
     /// 对应 Java 语义：Java 接口/超类方法 `setVariable()` 的 Rust 移植（`WebContext` 继承路径）。
     pub fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
         self.base.set_variable(name, value);
@@ -117,6 +118,7 @@ impl WebContext {
     /// # 参数
     ///
     /// - `variables`：可空变量 Map；为空时无副作用。
+    ///
     /// 对应 Java 语义：Java 接口/超类方法 `setVariables()` 的 Rust 移植（`WebContext` 继承路径）。
     pub fn set_variables(&self, variables: ContextVariableEntries<'_>) {
         self.base.set_variables(variables);
@@ -126,6 +128,7 @@ impl WebContext {
     /// # 参数
     ///
     /// - `name`：待删除的可空变量名。
+    ///
     /// 对应 Java 语义：Java 接口/超类方法 `removeVariable()` 的 Rust 移植（`WebContext` 继承路径）。
     pub fn remove_variable(&self, name: Option<&JavaString>) {
         self.base.remove_variable(name);

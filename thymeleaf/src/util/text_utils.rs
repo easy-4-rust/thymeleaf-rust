@@ -1951,8 +1951,8 @@ fn case_map(value: u16, upper: bool) -> u16 {
         value
     }
 }
-/// 对应 Java 语义：`TextUtils` 的 `java_case_fold_unit` 行为（Rust 侧辅助/私有路径）。
 
+/// 对应 Java 语义：`TextUtils` 的 `java_case_fold_unit` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn java_case_fold_unit(value: u16) -> u16 {
     java_lower(java_upper(value))
 }

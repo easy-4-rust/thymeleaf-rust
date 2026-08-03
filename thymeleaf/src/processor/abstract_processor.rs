@@ -154,13 +154,13 @@ impl<F> AbstractProcessorAdapter<F> {
             }
         }
     }
-    /// 对应 Java 语义：`AbstractProcessor` 的 `template_mode` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`AbstractProcessor` 的 `template_mode` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn template_mode(&self) -> Option<TemplateMode> {
         IProcessor::get_template_mode(&self.processor)
     }
-    /// 对应 Java 语义：`AbstractProcessor` 的 `precedence` 行为（Rust 侧辅助/私有路径）。
 
+    /// 对应 Java 语义：`AbstractProcessor` 的 `precedence` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn precedence(&self) -> i32 {
         IProcessor::get_precedence(&self.processor)
     }

@@ -187,6 +187,15 @@ def main() -> int:
                     cursor -= 1
                 indent_match = re.match(r"(\s*)", src_lines[cursor])
                 indent = indent_match.group(1)
+                # 若上方最近的 doc 行是列表项（/// - ...），先插入空 /// 分隔，
+                # 否则 rustdoc 会把注释当列表延续触发 doc_list_item_without_indentation
+                j = cursor - 1
+                while j > 0 and (src_lines[j - 1].lstrip().startswith("#[") or not src_lines[j - 1].strip()):
+                    j -= 1
+                prev_doc = src_lines[j - 1] if j > 0 else ""
+                if re.match(r"^\s*///\s+[-*]\s", prev_doc) or re.match(r"^\s*///\s+\d+\.\s", prev_doc):
+                    src_lines.insert(cursor, f"{indent}///")
+                    cursor += 1
                 src_lines.insert(cursor, f"{indent}{comment}")
             path.write_text("\n".join(src_lines) + "\n", encoding="utf-8")
             applied += len(entries)
