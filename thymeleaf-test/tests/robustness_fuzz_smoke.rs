@@ -20,6 +20,7 @@
 use std::sync::Arc;
 
 use proptest::prelude::*;
+use serial_test::serial;
 
 use thymeleaf::markup::HTMLTemplateParser;
 use thymeleaf::templateparser::ITemplateParser;
@@ -93,16 +94,19 @@ proptest! {
     })]
 
     #[test]
+    #[serial(fuzz)]
     fn html_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::HTML);
     }
 
     #[test]
+    #[serial(fuzz)]
     fn xml_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::XML);
     }
 
     #[test]
+    #[serial(fuzz)]
     fn text_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::TEXT);
     }
