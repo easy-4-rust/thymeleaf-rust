@@ -29,18 +29,12 @@ fn every_java_source_test_and_runtime_case_has_live_rust_disposition() {
 
     assert_eq!(parity_inventory["schema_version"], 1);
     assert_eq!(parity_inventory["upstream"]["baseline"], BASELINE);
-    assert_eq!(parity_inventory["summary"]["source_methods"], 413);  // 移除 spring 后
-    assert_eq!(parity_inventory["summary"]["core_source_methods"], 413);  // core unchanged
-    assert_eq!(
-        parity_inventory["summary"]["integration_source_methods"],
-        0
-    );  // Spring 集成语义不入清单
+    assert_eq!(parity_inventory["summary"]["source_methods"], 413); // 移除 spring 后
+    assert_eq!(parity_inventory["summary"]["core_source_methods"], 413); // core unchanged
+    assert_eq!(parity_inventory["summary"]["integration_source_methods"], 0); // Spring 集成语义不入清单
     assert_eq!(parity_inventory["summary"]["core_runtime_cases"], 1_154);
-    assert_eq!(
-        parity_inventory["summary"]["integration_runtime_cases"],
-        0
-    );  // Spring 集成无 runtime case
-    assert_eq!(parity_inventory["summary"]["runtime_cases"], 1_154);  // 移除 spring 后仅 core
+    assert_eq!(parity_inventory["summary"]["integration_runtime_cases"], 0); // Spring 集成无 runtime case
+    assert_eq!(parity_inventory["summary"]["runtime_cases"], 1_154); // 移除 spring 后仅 core
     assert_eq!(parity_inventory["summary"]["missing"], 0);
 
     let static_tests = static_inventory["java_tests"]
@@ -49,7 +43,7 @@ fn every_java_source_test_and_runtime_case_has_live_rust_disposition() {
     let parity_entries = parity_inventory["entries"]
         .as_array()
         .expect("parity entries must be an array");
-    assert_eq!(static_tests.len(), 413);  // 移除 spring 后
+    assert_eq!(static_tests.len(), 413); // 移除 spring 后
     assert_eq!(parity_entries.len(), static_tests.len());
 
     let expected = static_tests
@@ -130,14 +124,14 @@ fn every_java_source_test_and_runtime_case_has_live_rust_disposition() {
         }
     }
 
-    assert_eq!(core_runtime_case_count, 1_154);  // unchanged
+    assert_eq!(core_runtime_case_count, 1_154); // unchanged
     assert_eq!(
         runtime_cases_seen.len() as u64,
         parity_inventory["summary"]["runtime_cases"]
             .as_u64()
             .expect("runtime_cases summary")
     );
-    assert_eq!(dispositions.values().sum::<usize>(), 413);  // 移除 spring 后
+    assert_eq!(dispositions.values().sum::<usize>(), 413); // 移除 spring 后
 
     if let Ok(upstream) = std::env::var("THYMELEAF_UPSTREAM") {
         let upstream = Path::new(&upstream);
