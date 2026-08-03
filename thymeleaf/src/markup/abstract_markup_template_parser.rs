@@ -308,7 +308,7 @@ fn parse_html(
             Token::StartTag(tag) => {
                 let start = tag.span.start;
                 let end = tag.span.end;
-                if source[start..end].starts_with("<?") {
+                if safe_range(source, start, end).starts_with("<?") {
                     let xml_declaration = is_xml_declaration(source, start, end);
                     if should_emit_event(
                         selection,
@@ -431,7 +431,7 @@ fn parse_html(
             Token::Comment(comment) => {
                 let start = comment.span.start;
                 let end = comment.span.end;
-                if source[start..end].starts_with("<![CDATA[") {
+                if safe_range(source, start, end).starts_with("<![CDATA[") {
                     let content_start = start + "<![CDATA[".len();
                     let content_end = end.saturating_sub("]]>".len()).max(content_start);
                     if should_emit_event(
@@ -442,7 +442,7 @@ fn parse_html(
                     ) {
                         adapter.cdata(source, start, content_start, content_end, end)?;
                     }
-                } else if source[start..end].starts_with("<?") {
+                } else if safe_range(source, start, end).starts_with("<?") {
                     let xml_declaration = is_xml_declaration(source, start, end);
                     if should_emit_event(
                         selection,
@@ -461,14 +461,14 @@ fn parse_html(
                         }
                     }
                 } else {
-                    let content_start = if source[start..end].starts_with("<!--") {
+                    let content_start = if safe_range(source, start, end).starts_with("<!--") {
                         start + 4
                     } else {
                         start + 2
                     };
-                    let content_end = if source[start..end].ends_with("-->") {
+                    let content_end = if safe_range(source, start, end).ends_with("-->") {
                         end - 3
-                    } else if source[start..end].ends_with('>') {
+                    } else if safe_range(source, start, end).ends_with('>') {
                         end - 1
                     } else {
                         end
@@ -989,6 +989,31 @@ fn is_html_void(name: &str) -> bool {
     )
 }
 
+/// 把 tokenizer 派生索引钳制到 UTF-8 字符边界。
+///
+/// html5gum 对 `<?` 等自定义状态产生的 span 可能落在多字节字符中间（tokenizer
+/// 按字节推进、span 单位与 &str 字节偏移不一致）；PI/XML 声明、标签名与注释
+/// 定界符按规范均为 ASCII，钳制到边界不改变语义，仅避免 &str 切片 panic。
+fn clamp_forward(source: &str, position: usize) -> usize {
+    let mut position = position.min(source.len());
+    while position < source.len() && !source.is_char_boundary(position) {
+        position += 1;
+    }
+    position
+}
+
+fn clamp_backward(source: &str, position: usize) -> usize {
+    let mut position = position.min(source.len());
+    while position > 0 && !source.is_char_boundary(position) {
+        position -= 1;
+    }
+    position
+}
+
+fn safe_range(source: &str, start: usize, end: usize) -> &str {
+    &source[clamp_forward(source, start)..clamp_backward(source, end)]
+}
+
 fn start_tag_name(source: &str, start: usize, end: usize) -> Option<(usize, usize)> {
     let mut position = start.checked_add(1)?;
     while position < end && source.as_bytes()[position].is_ascii_whitespace() {
@@ -1038,7 +1063,7 @@ fn emit_xml_declaration(
     end: usize,
     adapter: &mut TemplateHandlerAdapterMarkupHandler,
 ) -> Result<(), TemplateParserError> {
-    let inner = source[start + 2..end.saturating_sub(2)].trim();
+    let inner = safe_range(source, start + 2, end.saturating_sub(2)).trim();
     let (keyword, rest) = split_name(inner);
     adapter.xml_declaration(
         source,
@@ -1052,12 +1077,12 @@ fn emit_xml_declaration(
 }
 
 fn is_xml_declaration(source: &str, start: usize, end: usize) -> bool {
-    let suffix = if source[start..end].ends_with("?>") {
+    let suffix = if safe_range(source, start, end).ends_with("?>") {
         2
     } else {
         1
     };
-    let inner = source[start + 2..end.saturating_sub(suffix)].trim_start();
+    let inner = safe_range(source, start + 2, end.saturating_sub(suffix)).trim_start();
     let (target, _) = split_name(inner);
     target.eq_ignore_ascii_case("xml")
 }
@@ -1068,12 +1093,12 @@ fn emit_processing_instruction(
     end: usize,
     adapter: &mut TemplateHandlerAdapterMarkupHandler,
 ) -> Result<(), TemplateParserError> {
-    let suffix = if source[start..end].ends_with("?>") {
+    let suffix = if safe_range(source, start, end).ends_with("?>") {
         2
     } else {
         1
     };
-    let inner = source[start + 2..end.saturating_sub(suffix)].trim();
+    let inner = safe_range(source, start + 2, end.saturating_sub(suffix)).trim();
     let (target, rest) = split_name(inner);
     let content = (!rest.trim().is_empty()).then(|| rest.trim());
     adapter.processing_instruction(source, start, end, target, content)
@@ -1085,7 +1110,7 @@ fn emit_doctype(
     end: usize,
     adapter: &mut TemplateHandlerAdapterMarkupHandler,
 ) -> Result<(), TemplateParserError> {
-    let inner = source[start + 2..end.saturating_sub(1)].trim();
+    let inner = safe_range(source, start + 2, end.saturating_sub(1)).trim();
     let (keyword, rest) = split_name(inner);
     let (root, remainder) = split_name(rest.trim_start());
     let upper = remainder.trim_start().to_ascii_uppercase();
@@ -1242,7 +1267,7 @@ fn parse_error(
 fn source_location(source: &str, offset: usize) -> (i32, i32) {
     let mut line = 1_i32;
     let mut col = 1_i32;
-    let mut chars = source[..offset].chars().peekable();
+    let mut chars = source[..clamp_backward(source, offset)].chars().peekable();
     while let Some(character) = chars.next() {
         match character {
             '\r' => {
