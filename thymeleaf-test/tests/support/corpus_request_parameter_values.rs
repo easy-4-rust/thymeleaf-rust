@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
-use thymeleaf::util::{JavaNumber, Utf16String};
+use thymeleaf::util::{NumberValue, Utf16String};
 
 /// 上游 Web 测试上下文中的同名请求参数值。
 ///
@@ -55,7 +55,7 @@ impl TemplateObject for CorpusRequestParameterValues {
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         (property_name == &Utf16String::from_rust_str("length")).then(|| {
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 i32::try_from(self.values.len()).unwrap_or(i32::MAX),
             )))))
         })

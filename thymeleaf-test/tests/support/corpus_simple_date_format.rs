@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use thymeleaf::expression::TemplateObject;
-use thymeleaf::util::{JavaHashCode, Utf16String};
+use thymeleaf::util::{HashCodeValue, Utf16String};
 
 /// 上游布尔求值语料使用的 `SimpleDateFormat` 夹具。
 ///

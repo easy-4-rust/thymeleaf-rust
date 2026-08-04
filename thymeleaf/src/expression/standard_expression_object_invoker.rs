@@ -4,11 +4,11 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::util::{AggregateUtils, EvaluationUtils, JavaNumber, Utf16String};
+use crate::util::{AggregateUtils, EvaluationUtils, NumberValue, Utf16String};
 
 use super::binary_operation_expression::{compare_java_values, java_values_equal};
 use super::{
-    Conversions, ExecutionInfo, Ids, JavaConversionResult, Messages, TemplateObjectMethodError,
+    ConversionResult, Conversions, ExecutionInfo, Ids, Messages, TemplateObjectMethodError,
     TemplateValue, Uris,
 };
 
@@ -218,13 +218,13 @@ fn invoke_conversions(
         .convert_by_class_name(arguments[0].as_deref(), Some(&class_name))
         .map_err(|error| invocation_error(error.to_string()))?;
     Ok(match result {
-        JavaConversionResult::Null => None,
-        JavaConversionResult::BorrowedString(value) => {
+        ConversionResult::Null => None,
+        ConversionResult::BorrowedString(value) => {
             Some(Arc::new(TemplateValue::string(value.clone())))
         }
-        JavaConversionResult::OwnedString(value) => Some(Arc::new(TemplateValue::string(value))),
-        JavaConversionResult::BorrowedObject(_) => arguments[0].clone(),
-        JavaConversionResult::OwnedObject(value) => {
+        ConversionResult::OwnedString(value) => Some(Arc::new(TemplateValue::string(value))),
+        ConversionResult::BorrowedObject(_) => arguments[0].clone(),
+        ConversionResult::OwnedObject(value) => {
             if value.is::<TemplateValue>() {
                 Some(Arc::new(
                     *value
@@ -255,7 +255,7 @@ fn invoke_bools(
             let value = arguments[0]
                 .as_deref()
                 .map(TemplateValue::to_evaluation_value)
-                .unwrap_or(crate::util::JavaEvaluationValue::Null);
+                .unwrap_or(crate::util::EvaluationValue::Null);
             let value = EvaluationUtils::evaluate_as_boolean(&value)
                 .map_err(|error| invocation_error(error.to_string()))?;
             Ok(boolean_value(if method == "isFalse" {
@@ -334,7 +334,7 @@ fn invoke_aggregates(
         AggregateUtils::avg_numbers(Some(&values))
     }
     .map_err(|error| invocation_error(error.to_string()))?;
-    Ok(result.map(|value| Arc::new(TemplateValue::Number(JavaNumber::BigDecimal(value)))))
+    Ok(result.map(|value| Arc::new(TemplateValue::Number(NumberValue::BigDecimal(value)))))
 }
 
 fn invoke_sequence(
@@ -540,13 +540,13 @@ fn convert_sequence_value(
             TemplateValue::String(_) | TemplateValue::SafeHtml(_)
         ) | (
             "toIntegerArray",
-            TemplateValue::Number(JavaNumber::Integer(_))
-        ) | ("toLongArray", TemplateValue::Number(JavaNumber::Long(_)))
+            TemplateValue::Number(NumberValue::Integer(_))
+        ) | ("toLongArray", TemplateValue::Number(NumberValue::Long(_)))
             | (
                 "toDoubleArray",
-                TemplateValue::Number(JavaNumber::Double(_))
+                TemplateValue::Number(NumberValue::Double(_))
             )
-            | ("toFloatArray", TemplateValue::Number(JavaNumber::Float(_)))
+            | ("toFloatArray", TemplateValue::Number(NumberValue::Float(_)))
             | ("toBooleanArray", TemplateValue::Boolean(_))
     );
     if compatible {
@@ -678,7 +678,7 @@ fn boolean_value(value: bool) -> Option<Arc<TemplateValue>> {
 }
 
 fn integer_value(value: i32) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+    Some(Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
 }
 
 fn method_error(

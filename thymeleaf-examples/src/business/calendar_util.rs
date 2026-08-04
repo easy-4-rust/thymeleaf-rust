@@ -5,13 +5,13 @@
 
 use chrono::{TimeZone, Utc};
 use chrono_tz::Tz;
-use thymeleaf::util::JavaDate;
+use thymeleaf::util::DateValue;
 
 /// Java `CalendarUtil#calendarFor(year, month, day, hour, minute)`。
 ///
 /// month 按 Java `Calendar.MONTH` 语义从 1 起（内部减 1）；秒与毫秒清零。
 #[must_use]
-pub fn calendar_for(year: i32, month: i32, day: i32, hour: i32, minute: i32) -> JavaDate {
+pub fn calendar_for(year: i32, month: i32, day: i32, hour: i32, minute: i32) -> DateValue {
     let instant = Utc
         .with_ymd_and_hms(
             year,
@@ -23,5 +23,5 @@ pub fn calendar_for(year: i32, month: i32, day: i32, hour: i32, minute: i32) -> 
         )
         .single()
         .expect("valid calendar date");
-    JavaDate::calendar(instant, Tz::UTC)
+    DateValue::calendar(instant, Tz::UTC)
 }

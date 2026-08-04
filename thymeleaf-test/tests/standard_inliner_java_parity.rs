@@ -153,7 +153,7 @@ fn javascript_inline_literal() {
     ctx.set_variable(
         Some(Utf16String::from_rust_str("num")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(42),
+            thymeleaf::util::NumberValue::Integer(42),
         ))),
     );
     let s = render(TemplateMode::JAVASCRIPT, "var n = [[${num}]];", &ctx);
@@ -183,7 +183,7 @@ fn css_inline_number() {
     ctx.set_variable(
         Some(Utf16String::from_rust_str("w")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(100),
+            thymeleaf::util::NumberValue::Integer(100),
         ))),
     );
     let s = render(TemplateMode::CSS, "width: [[${w}]]px;", &ctx);

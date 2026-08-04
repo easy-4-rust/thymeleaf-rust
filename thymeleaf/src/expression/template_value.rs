@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaEvaluationValue, JavaNumber, Utf16String, double_string};
+use crate::util::{EvaluationValue, NumberValue, Utf16String, double_string};
 
 use super::LiteralValue;
 
@@ -117,7 +117,7 @@ pub enum TemplateValue {
     /// Java `Boolean`。
     Boolean(bool),
     /// 具有精确 Java 包装类语义的任意 `Number`。
-    Number(JavaNumber),
+    Number(NumberValue),
     /// Java `Character` 的单个 UTF-16 代码单元。
     Character(u16),
     /// Java `String`。
@@ -158,22 +158,22 @@ impl TemplateValue {
     /// 集合、数组、宿主对象和 NoOp 保留为其他对象；SafeHtml 在 Java 中仍是 String。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn to_evaluation_value(&self) -> JavaEvaluationValue {
+    pub fn to_evaluation_value(&self) -> EvaluationValue {
         match self {
-            Self::Null => JavaEvaluationValue::Null,
-            Self::Boolean(value) => JavaEvaluationValue::Boolean(*value),
-            Self::Number(value) => JavaEvaluationValue::Number(value.clone()),
-            Self::Character(value) => JavaEvaluationValue::Character(*value),
+            Self::Null => EvaluationValue::Null,
+            Self::Boolean(value) => EvaluationValue::Boolean(*value),
+            Self::Number(value) => EvaluationValue::Number(value.clone()),
+            Self::Character(value) => EvaluationValue::Character(*value),
             Self::String(value) | Self::SafeHtml(value) => {
-                JavaEvaluationValue::String(value.as_ref().clone())
+                EvaluationValue::String(value.as_ref().clone())
             }
-            Self::Literal(value) => JavaEvaluationValue::LiteralValue(Arc::clone(value)),
-            Self::Bytes(_) => JavaEvaluationValue::Other("[B".to_owned()),
-            Self::List(_) => JavaEvaluationValue::Other("java.util.List".to_owned()),
-            Self::Map(_) => JavaEvaluationValue::Other("java.util.Map".to_owned()),
-            Self::Object(value) => JavaEvaluationValue::Other(value.java_class_name().to_owned()),
+            Self::Literal(value) => EvaluationValue::LiteralValue(Arc::clone(value)),
+            Self::Bytes(_) => EvaluationValue::Other("[B".to_owned()),
+            Self::List(_) => EvaluationValue::Other("java.util.List".to_owned()),
+            Self::Map(_) => EvaluationValue::Other("java.util.Map".to_owned()),
+            Self::Object(value) => EvaluationValue::Other(value.java_class_name().to_owned()),
             Self::NoOp => {
-                JavaEvaluationValue::Other("org.thymeleaf.standard.expression.NoOpToken".to_owned())
+                EvaluationValue::Other("org.thymeleaf.standard.expression.NoOpToken".to_owned())
             }
         }
     }
@@ -188,15 +188,15 @@ impl TemplateValue {
         let text = match self {
             Self::Null => return Some(Utf16String::from_rust_str("null")),
             Self::Boolean(value) => value.to_string(),
-            Self::Number(JavaNumber::BigDecimal(value)) => value.to_string(),
-            Self::Number(JavaNumber::BigInteger(value)) => value.to_string(),
-            Self::Number(JavaNumber::Byte(value)) => value.to_string(),
-            Self::Number(JavaNumber::Short(value)) => value.to_string(),
-            Self::Number(JavaNumber::Integer(value)) => value.to_string(),
-            Self::Number(JavaNumber::Long(value)) => value.to_string(),
-            Self::Number(JavaNumber::Float(value)) => value.to_string(),
-            Self::Number(JavaNumber::Double(value)) => double_string(*value),
-            Self::Number(JavaNumber::Other { double_value, .. }) => double_value.to_string(),
+            Self::Number(NumberValue::BigDecimal(value)) => value.to_string(),
+            Self::Number(NumberValue::BigInteger(value)) => value.to_string(),
+            Self::Number(NumberValue::Byte(value)) => value.to_string(),
+            Self::Number(NumberValue::Short(value)) => value.to_string(),
+            Self::Number(NumberValue::Integer(value)) => value.to_string(),
+            Self::Number(NumberValue::Long(value)) => value.to_string(),
+            Self::Number(NumberValue::Float(value)) => value.to_string(),
+            Self::Number(NumberValue::Double(value)) => double_string(*value),
+            Self::Number(NumberValue::Other { double_value, .. }) => double_value.to_string(),
             Self::Character(value) => {
                 return Some(Utf16String::from_utf16(vec![*value]));
             }
@@ -324,7 +324,7 @@ impl TemplateValue {
     }
 }
 
-impl super::JavaConversionObject for TemplateValue {
+impl super::ConversionObject for TemplateValue {
     fn java_to_string(
         &self,
     ) -> Result<super::Utf16StringConversionResult<'_>, super::StandardConversionError> {
@@ -340,26 +340,26 @@ impl super::JavaConversionObject for TemplateValue {
     }
 }
 
-fn java_number_equals(left: &JavaNumber, right: &JavaNumber) -> bool {
+fn java_number_equals(left: &NumberValue, right: &NumberValue) -> bool {
     match (left, right) {
-        (JavaNumber::BigDecimal(left), JavaNumber::BigDecimal(right)) => left == right,
-        (JavaNumber::BigInteger(left), JavaNumber::BigInteger(right)) => left == right,
-        (JavaNumber::Byte(left), JavaNumber::Byte(right)) => left == right,
-        (JavaNumber::Short(left), JavaNumber::Short(right)) => left == right,
-        (JavaNumber::Integer(left), JavaNumber::Integer(right)) => left == right,
-        (JavaNumber::Long(left), JavaNumber::Long(right)) => left == right,
-        (JavaNumber::Float(left), JavaNumber::Float(right)) => {
+        (NumberValue::BigDecimal(left), NumberValue::BigDecimal(right)) => left == right,
+        (NumberValue::BigInteger(left), NumberValue::BigInteger(right)) => left == right,
+        (NumberValue::Byte(left), NumberValue::Byte(right)) => left == right,
+        (NumberValue::Short(left), NumberValue::Short(right)) => left == right,
+        (NumberValue::Integer(left), NumberValue::Integer(right)) => left == right,
+        (NumberValue::Long(left), NumberValue::Long(right)) => left == right,
+        (NumberValue::Float(left), NumberValue::Float(right)) => {
             normalized_f32_bits(*left) == normalized_f32_bits(*right)
         }
-        (JavaNumber::Double(left), JavaNumber::Double(right)) => {
+        (NumberValue::Double(left), NumberValue::Double(right)) => {
             normalized_f64_bits(*left) == normalized_f64_bits(*right)
         }
         (
-            JavaNumber::Other {
+            NumberValue::Other {
                 class_name: left_class,
                 double_value: left,
             },
-            JavaNumber::Other {
+            NumberValue::Other {
                 class_name: right_class,
                 double_value: right,
             },
@@ -368,18 +368,20 @@ fn java_number_equals(left: &JavaNumber, right: &JavaNumber) -> bool {
     }
 }
 
-fn java_number_compare(left: &JavaNumber, right: &JavaNumber) -> Option<Ordering> {
+fn java_number_compare(left: &NumberValue, right: &NumberValue) -> Option<Ordering> {
     match (left, right) {
-        (JavaNumber::BigDecimal(left), JavaNumber::BigDecimal(right)) => {
+        (NumberValue::BigDecimal(left), NumberValue::BigDecimal(right)) => {
             Some(left.compare_java(right))
         }
-        (JavaNumber::BigInteger(left), JavaNumber::BigInteger(right)) => Some(left.cmp(right)),
-        (JavaNumber::Byte(left), JavaNumber::Byte(right)) => Some(left.cmp(right)),
-        (JavaNumber::Short(left), JavaNumber::Short(right)) => Some(left.cmp(right)),
-        (JavaNumber::Integer(left), JavaNumber::Integer(right)) => Some(left.cmp(right)),
-        (JavaNumber::Long(left), JavaNumber::Long(right)) => Some(left.cmp(right)),
-        (JavaNumber::Float(left), JavaNumber::Float(right)) => Some(java_f32_cmp(*left, *right)),
-        (JavaNumber::Double(left), JavaNumber::Double(right)) => Some(java_f64_cmp(*left, *right)),
+        (NumberValue::BigInteger(left), NumberValue::BigInteger(right)) => Some(left.cmp(right)),
+        (NumberValue::Byte(left), NumberValue::Byte(right)) => Some(left.cmp(right)),
+        (NumberValue::Short(left), NumberValue::Short(right)) => Some(left.cmp(right)),
+        (NumberValue::Integer(left), NumberValue::Integer(right)) => Some(left.cmp(right)),
+        (NumberValue::Long(left), NumberValue::Long(right)) => Some(left.cmp(right)),
+        (NumberValue::Float(left), NumberValue::Float(right)) => Some(java_f32_cmp(*left, *right)),
+        (NumberValue::Double(left), NumberValue::Double(right)) => {
+            Some(java_f64_cmp(*left, *right))
+        }
         _ => None,
     }
 }
@@ -470,16 +472,16 @@ impl Debug for TemplateValue {
     }
 }
 
-fn java_number_class_name(number: &JavaNumber) -> &str {
+fn java_number_class_name(number: &NumberValue) -> &str {
     match number {
-        JavaNumber::BigDecimal(_) => "java.math.BigDecimal",
-        JavaNumber::BigInteger(_) => "java.math.BigInteger",
-        JavaNumber::Byte(_) => "java.lang.Byte",
-        JavaNumber::Short(_) => "java.lang.Short",
-        JavaNumber::Integer(_) => "java.lang.Integer",
-        JavaNumber::Long(_) => "java.lang.Long",
-        JavaNumber::Float(_) => "java.lang.Float",
-        JavaNumber::Double(_) => "java.lang.Double",
-        JavaNumber::Other { class_name, .. } => class_name,
+        NumberValue::BigDecimal(_) => "java.math.BigDecimal",
+        NumberValue::BigInteger(_) => "java.math.BigInteger",
+        NumberValue::Byte(_) => "java.lang.Byte",
+        NumberValue::Short(_) => "java.lang.Short",
+        NumberValue::Integer(_) => "java.lang.Integer",
+        NumberValue::Long(_) => "java.lang.Long",
+        NumberValue::Float(_) => "java.lang.Float",
+        NumberValue::Double(_) => "java.lang.Double",
+        NumberValue::Other { class_name, .. } => class_name,
     }
 }

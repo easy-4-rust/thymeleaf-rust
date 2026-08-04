@@ -3,7 +3,7 @@ use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{
     EqualsExpression, IStandardExpression, StandardExpressions, TemplateValue,
 };
-use crate::util::{EvaluationUtils, JavaEvaluationValue, Utf16String};
+use crate::util::{EvaluationUtils, EvaluationValue, Utf16String};
 
 use super::{
     AbstractStandardConditionalVisibilityTagProcessor, StandardSwitchTagProcessor, SwitchStructure,
@@ -91,10 +91,9 @@ impl StandardCaseTagProcessor {
                     let value = equals_expression.execute(context).map_err(|error| {
                         expression_processing_error("Could not execute case expression", error)
                     })?;
-                    let evaluation_value = value.as_deref().map_or(
-                        JavaEvaluationValue::Null,
-                        TemplateValue::to_evaluation_value,
-                    );
+                    let evaluation_value = value
+                        .as_deref()
+                        .map_or(EvaluationValue::Null, TemplateValue::to_evaluation_value);
                     let visible = EvaluationUtils::evaluate_as_boolean(&evaluation_value).map_err(
                         |error| {
                             Box::new(TemplateProcessingException::with_cause(

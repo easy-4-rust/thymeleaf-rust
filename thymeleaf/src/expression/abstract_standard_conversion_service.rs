@@ -3,8 +3,8 @@ use std::any::Any;
 use crate::util::Validate;
 
 use super::{
-    IStandardConversionService, JavaConversionObject, JavaConversionResult, JavaConversionValue,
-    JavaTargetClass, StandardConversionError, Utf16StringConversionResult,
+    ConversionObject, ConversionResult, ConversionValue, IStandardConversionService,
+    StandardConversionError, TargetClass, Utf16StringConversionResult,
 };
 
 /// 标准转换服务实现使用的抽象基类契约。
@@ -33,7 +33,7 @@ pub trait AbstractStandardConversionService: Send + Sync {
     fn convert_to_string<'a>(
         &self,
         _context: Option<&dyn Any>,
-        object: &'a dyn JavaConversionObject,
+        object: &'a dyn ConversionObject,
     ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
         object.java_to_string()
     }
@@ -56,9 +56,9 @@ pub trait AbstractStandardConversionService: Send + Sync {
     fn convert_other<'a>(
         &self,
         _context: Option<&dyn Any>,
-        _object: JavaConversionValue<'a>,
-        target_class: &JavaTargetClass,
-    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
+        _object: ConversionValue<'a>,
+        target_class: &TargetClass,
+    ) -> Result<ConversionResult<'a>, StandardConversionError> {
         Err(StandardConversionError::NoAvailableConversion {
             target_class_name: target_class.get_name().to_owned(),
         })
@@ -72,21 +72,19 @@ where
     fn convert<'a>(
         &self,
         context: Option<&dyn Any>,
-        object: JavaConversionValue<'a>,
-        target_class: Option<&JavaTargetClass>,
-    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
+        object: ConversionValue<'a>,
+        target_class: Option<&TargetClass>,
+    ) -> Result<ConversionResult<'a>, StandardConversionError> {
         Validate::not_null(target_class, Some("Target class cannot be null"))?;
         let target_class = target_class.expect("validated target class");
 
         // Java 对精确 String.class 执行最常见的快路径，null 与现有 String
         // 均不会调用可覆写钩子。
-        if target_class == &JavaTargetClass::String {
+        if target_class == &TargetClass::String {
             return match object {
-                JavaConversionValue::Null => Ok(JavaConversionResult::Null),
-                JavaConversionValue::String(value) => {
-                    Ok(JavaConversionResult::BorrowedString(value))
-                }
-                JavaConversionValue::Object(value) => {
+                ConversionValue::Null => Ok(ConversionResult::Null),
+                ConversionValue::String(value) => Ok(ConversionResult::BorrowedString(value)),
+                ConversionValue::Object(value) => {
                     self.convert_to_string(context, value).map(Into::into)
                 }
             };

@@ -10,12 +10,12 @@ use thiserror::Error;
 
 use crate::expression::{TemplateObject, TemplateValue};
 
-use super::{JavaNumber, Locale, Utf16String};
+use super::{Locale, NumberValue, Utf16String};
 
 /// Java `Date`/`Calendar` 的 Rust 时间值适配。
-/// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `JavaDate`。
+/// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `DateValue`。
 #[derive(Clone, Debug)]
-pub struct JavaDate {
+pub struct DateValue {
     instant: DateTime<Utc>,
     time_zone: Option<Tz>,
     fixed_offset: Option<FixedOffset>,
@@ -23,7 +23,7 @@ pub struct JavaDate {
     calendar: bool,
 }
 
-impl JavaDate {
+impl DateValue {
     /// 从 UTC 瞬时创建 Java `Date` 等价值。
     #[must_use]
     pub const fn date(instant: DateTime<Utc>) -> Self {
@@ -48,16 +48,16 @@ impl JavaDate {
         }
     }
 
-    fn calendar_for_time_zone(instant: DateTime<Utc>, time_zone: JavaTimeZone) -> Self {
+    fn calendar_for_time_zone(instant: DateTime<Utc>, time_zone: TimeZoneValue) -> Self {
         match time_zone {
-            JavaTimeZone::Named(time_zone, zone_display_name) => Self {
+            TimeZoneValue::Named(time_zone, zone_display_name) => Self {
                 instant,
                 time_zone: Some(time_zone),
                 fixed_offset: None,
                 zone_display_name,
                 calendar: true,
             },
-            JavaTimeZone::Fixed(fixed_offset) => Self {
+            TimeZoneValue::Fixed(fixed_offset) => Self {
                 instant,
                 time_zone: None,
                 fixed_offset: Some(fixed_offset),
@@ -87,7 +87,7 @@ impl JavaDate {
     }
 }
 
-impl TemplateObject for JavaDate {
+impl TemplateObject for DateValue {
     fn java_class_name(&self) -> &str {
         if self.calendar {
             "java.util.GregorianCalendar"
@@ -121,7 +121,7 @@ impl TemplateObject for JavaDate {
     ) -> Option<Result<Option<Arc<TemplateValue>>, crate::expression::TemplateObjectPropertyError>>
     {
         (property_name.to_string_lossy() == "time").then(|| {
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Long(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Long(
                 self.time_in_millis(),
             )))))
         })
@@ -134,9 +134,9 @@ impl TemplateObject for JavaDate {
     ) -> Option<Result<Option<Arc<TemplateValue>>, crate::expression::TemplateObjectMethodError>>
     {
         match (method_name.to_string_lossy().as_str(), arguments) {
-            ("getTime", []) => Some(Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Long(
-                self.time_in_millis(),
-            )))))),
+            ("getTime", []) => Some(Ok(Some(Arc::new(TemplateValue::Number(
+                NumberValue::Long(self.time_in_millis()),
+            ))))),
             ("get", [Some(field)]) if self.calendar => {
                 let field = template_number_as_i32(field.as_ref())?;
                 let value = match field {
@@ -150,7 +150,7 @@ impl TemplateObject for JavaDate {
                     _ => return None,
                 }?;
                 Some(Ok(Some(Arc::new(TemplateValue::Number(
-                    JavaNumber::Integer(value),
+                    NumberValue::Integer(value),
                 )))))
             }
             _ => None,
@@ -160,29 +160,29 @@ impl TemplateObject for JavaDate {
 
 fn template_number_as_i32(value: &TemplateValue) -> Option<i32> {
     match value {
-        TemplateValue::Number(JavaNumber::Byte(value)) => Some(i32::from(*value)),
-        TemplateValue::Number(JavaNumber::Short(value)) => Some(i32::from(*value)),
-        TemplateValue::Number(JavaNumber::Integer(value)) => Some(*value),
-        TemplateValue::Number(JavaNumber::Long(value)) => i32::try_from(*value).ok(),
+        TemplateValue::Number(NumberValue::Byte(value)) => Some(i32::from(*value)),
+        TemplateValue::Number(NumberValue::Short(value)) => Some(i32::from(*value)),
+        TemplateValue::Number(NumberValue::Integer(value)) => Some(*value),
+        TemplateValue::Number(NumberValue::Long(value)) => i32::try_from(*value).ok(),
         _ => None,
     }
 }
 
-impl JavaDate {
-    fn effective_time_zone(&self) -> JavaTimeZone {
+impl DateValue {
+    fn effective_time_zone(&self) -> TimeZoneValue {
         if let Some(fixed_offset) = self.fixed_offset {
-            JavaTimeZone::Fixed(fixed_offset)
+            TimeZoneValue::Fixed(fixed_offset)
         } else {
-            JavaTimeZone::Named(self.time_zone.unwrap_or_else(default_time_zone), None)
+            TimeZoneValue::Named(self.time_zone.unwrap_or_else(default_time_zone), None)
         }
     }
 
     fn local_date_time(&self) -> NaiveDateTime {
         match self.effective_time_zone() {
-            JavaTimeZone::Named(time_zone, _) => {
+            TimeZoneValue::Named(time_zone, _) => {
                 self.instant.with_timezone(&time_zone).naive_local()
             }
-            JavaTimeZone::Fixed(fixed_offset) => {
+            TimeZoneValue::Fixed(fixed_offset) => {
                 self.instant.with_timezone(&fixed_offset).naive_local()
             }
         }
@@ -190,13 +190,13 @@ impl JavaDate {
 
     fn offset_seconds(&self) -> i32 {
         match self.effective_time_zone() {
-            JavaTimeZone::Named(time_zone, _) => self
+            TimeZoneValue::Named(time_zone, _) => self
                 .instant
                 .with_timezone(&time_zone)
                 .offset()
                 .fix()
                 .local_minus_utc(),
-            JavaTimeZone::Fixed(fixed_offset) => fixed_offset.local_minus_utc(),
+            TimeZoneValue::Fixed(fixed_offset) => fixed_offset.local_minus_utc(),
         }
     }
 
@@ -205,18 +205,18 @@ impl JavaDate {
             return zone_display_name.clone();
         }
         match self.effective_time_zone() {
-            JavaTimeZone::Named(time_zone, _) => self
+            TimeZoneValue::Named(time_zone, _) => self
                 .instant
                 .with_timezone(&time_zone)
                 .format("%Z")
                 .to_string(),
-            JavaTimeZone::Fixed(fixed_offset) => format_gmt_offset(fixed_offset.local_minus_utc()),
+            TimeZoneValue::Fixed(fixed_offset) => format_gmt_offset(fixed_offset.local_minus_utc()),
         }
     }
 }
 
 #[derive(Clone, Debug)]
-enum JavaTimeZone {
+enum TimeZoneValue {
     Named(Tz, Option<String>),
     Fixed(FixedOffset),
 }
@@ -252,7 +252,7 @@ impl DateUtils {
         millisecond: Option<i32>,
         time_zone: Option<&str>,
         _locale: Option<&Locale>,
-    ) -> Result<JavaDate, DateUtilsError> {
+    ) -> Result<DateValue, DateUtilsError> {
         let (Some(year), Some(month), Some(day)) = (year, month, day) else {
             return Err(invalid(format!(
                 "Cannot create Calendar/Date object with null year ({}), month ({}) or day ({})",
@@ -298,7 +298,7 @@ impl DateUtils {
             + Duration::seconds(i64::from(second.unwrap_or(0)))
             + Duration::milliseconds(i64::from(millisecond.unwrap_or(0)));
         let time_zone = parse_time_zone(time_zone);
-        Ok(JavaDate::calendar_for_time_zone(
+        Ok(DateValue::calendar_for_time_zone(
             resolve_local_datetime(&time_zone, naive),
             time_zone,
         ))
@@ -307,14 +307,14 @@ impl DateUtils {
     /// 返回指定时区的当前 Calendar。
     /// 对应 Java: `DateUtils#createNow()`。
     #[must_use]
-    pub fn create_now(time_zone: Option<&str>, _locale: Option<&Locale>) -> JavaDate {
-        JavaDate::calendar_for_time_zone(Utc::now(), parse_time_zone(time_zone))
+    pub fn create_now(time_zone: Option<&str>, _locale: Option<&Locale>) -> DateValue {
+        DateValue::calendar_for_time_zone(Utc::now(), parse_time_zone(time_zone))
     }
 
     /// 返回指定时区当天零点 Calendar。
     /// 对应 Java: `DateUtils#createToday()`。
     #[must_use]
-    pub fn create_today(time_zone: Option<&str>, locale: Option<&Locale>) -> JavaDate {
+    pub fn create_today(time_zone: Option<&str>, locale: Option<&Locale>) -> DateValue {
         let now = Self::create_now(time_zone, locale);
         let midnight = now
             .local_date_time()
@@ -322,13 +322,13 @@ impl DateUtils {
             .and_hms_opt(0, 0, 0)
             .expect("midnight");
         let time_zone = now.effective_time_zone();
-        JavaDate::calendar_for_time_zone(resolve_local_datetime(&time_zone, midnight), time_zone)
+        DateValue::calendar_for_time_zone(resolve_local_datetime(&time_zone, midnight), time_zone)
     }
 
     /// 使用 Locale 默认长日期时间格式或指定 SimpleDateFormat pattern 格式化。
     /// 对应 Java: `DateUtils#format()`。
     pub fn format(
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         pattern: Option<&Utf16String>,
         locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
@@ -352,14 +352,14 @@ impl DateUtils {
     /// 返回一个月中的日期。
     /// 对应 Java: `DateUtils#day()`。
     #[must_use]
-    pub fn day(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn day(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().day() as i32)
     }
 
     /// 返回一月为 1 的月份。
     /// 对应 Java: `DateUtils#month()`。
     #[must_use]
-    pub fn month(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn month(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().month() as i32)
     }
 
@@ -367,7 +367,7 @@ impl DateUtils {
     ///
     /// 对应 Java: `DateUtils#monthName(Object,Locale)`。
     pub fn month_name(
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("MMMM")), locale)
@@ -377,7 +377,7 @@ impl DateUtils {
     ///
     /// 对应 Java: `DateUtils#monthNameShort(Object,Locale)`。
     pub fn month_name_short(
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("MMM")), locale)
@@ -386,14 +386,14 @@ impl DateUtils {
     /// 返回年份。
     /// 对应 Java: `DateUtils#year()`。
     #[must_use]
-    pub fn year(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn year(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().year())
     }
 
     /// 返回 Java Calendar 周日为 1 的星期编号。
     /// 对应 Java: `DateUtils#dayOfWeek()`。
     #[must_use]
-    pub fn day_of_week(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn day_of_week(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| match target.local_date_time().weekday() {
             Weekday::Sun => 1,
             Weekday::Mon => 2,
@@ -409,7 +409,7 @@ impl DateUtils {
     ///
     /// 对应 Java: `DateUtils#dayOfWeekName(Object,Locale)`。
     pub fn day_of_week_name(
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("EEEE")), locale)
@@ -419,7 +419,7 @@ impl DateUtils {
     ///
     /// 对应 Java: `DateUtils#dayOfWeekNameShort(Object,Locale)`。
     pub fn day_of_week_name_short(
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("EEE")), locale)
@@ -428,28 +428,28 @@ impl DateUtils {
     /// 返回 24 小时制小时。
     /// 对应 Java: `DateUtils#hour()`。
     #[must_use]
-    pub fn hour(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn hour(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().hour() as i32)
     }
 
     /// 返回分钟。
     /// 对应 Java: `DateUtils#minute()`。
     #[must_use]
-    pub fn minute(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn minute(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().minute() as i32)
     }
 
     /// 返回秒。
     /// 对应 Java: `DateUtils#second()`。
     #[must_use]
-    pub fn second(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn second(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().second() as i32)
     }
 
     /// 返回毫秒。
     /// 对应 Java: `DateUtils#millisecond()`。
     #[must_use]
-    pub fn millisecond(target: Option<&JavaDate>) -> Option<i32> {
+    pub fn millisecond(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| target.local_date_time().and_utc().timestamp_subsec_millis() as i32)
     }
 
@@ -457,7 +457,7 @@ impl DateUtils {
     /// `ZZZ` + `insert(26, ':')`，零偏移为 `+00:00` 而非 "Z"）。
     /// 对应 Java 语义：`DateUtils` 的 `format_iso` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn format_iso(target: Option<&JavaDate>) -> Option<Utf16String> {
+    pub fn format_iso(target: Option<&DateValue>) -> Option<Utf16String> {
         target.map(|target| {
             let local = target.local_date_time();
             Utf16String::from_rust_str(&format!(
@@ -472,12 +472,12 @@ impl DateUtils {
     /// 对应 Java 语义：`DateUtils` 的 `from_template_value` 行为（Rust 侧辅助/私有路径）。
     pub fn from_template_value(
         value: Option<&TemplateValue>,
-    ) -> Result<Option<&JavaDate>, DateUtilsError> {
+    ) -> Result<Option<&DateValue>, DateUtilsError> {
         match value {
             None | Some(TemplateValue::Null) => Ok(None),
             Some(TemplateValue::Object(object)) => object
                 .as_any()
-                .downcast_ref::<JavaDate>()
+                .downcast_ref::<DateValue>()
                 .map(Some)
                 .ok_or_else(|| {
                     invalid(format!(
@@ -495,7 +495,7 @@ impl DateUtils {
     /// 包装为模板动态对象。
     /// 对应 Java 语义：`DateUtils` 的 `into_template_value` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn into_template_value(value: JavaDate) -> Arc<TemplateValue> {
+    pub fn into_template_value(value: DateValue) -> Arc<TemplateValue> {
         Arc::new(TemplateValue::Object(Arc::new(value)))
     }
 }
@@ -514,7 +514,7 @@ struct DateFormatKey {
 }
 
 impl DateFormatKey {
-    fn new(target: &JavaDate, format: Option<&Utf16String>, locale: &Locale) -> Self {
+    fn new(target: &DateValue, format: Option<&Utf16String>, locale: &Locale) -> Self {
         Self {
             format: format
                 .map(Utf16String::to_string_lossy)
@@ -535,18 +535,18 @@ fn nullable_i32(value: Option<i32>) -> String {
     value.map_or_else(|| "null".to_owned(), |value| value.to_string())
 }
 
-fn parse_time_zone(value: Option<&str>) -> JavaTimeZone {
+fn parse_time_zone(value: Option<&str>) -> TimeZoneValue {
     let Some(value) = value else {
-        return JavaTimeZone::Named(default_time_zone(), None);
+        return TimeZoneValue::Named(default_time_zone(), None);
     };
     if let Some(fixed_offset) = java_fixed_time_zone(value) {
-        return JavaTimeZone::Fixed(fixed_offset);
+        return TimeZoneValue::Fixed(fixed_offset);
     }
     if let Some((time_zone, display_name)) = java_short_time_zone(value) {
-        return JavaTimeZone::Named(time_zone, Some(display_name.to_owned()));
+        return TimeZoneValue::Named(time_zone, Some(display_name.to_owned()));
     }
     let time_zone = value.parse::<Tz>().unwrap_or(chrono_tz::UTC);
-    JavaTimeZone::Named(
+    TimeZoneValue::Named(
         // TimeZone#getTimeZone 对未知 ID 返回 GMT，而不是 JVM 默认时区。
         time_zone,
         (time_zone != chrono_tz::UTC
@@ -666,9 +666,9 @@ fn default_time_zone() -> Tz {
         .unwrap_or(chrono_tz::UTC)
 }
 
-fn resolve_local_datetime(time_zone: &JavaTimeZone, naive: NaiveDateTime) -> DateTime<Utc> {
+fn resolve_local_datetime(time_zone: &TimeZoneValue, naive: NaiveDateTime) -> DateTime<Utc> {
     match time_zone {
-        JavaTimeZone::Named(time_zone, _) => match time_zone.from_local_datetime(&naive) {
+        TimeZoneValue::Named(time_zone, _) => match time_zone.from_local_datetime(&naive) {
             LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => {
                 value.with_timezone(&Utc)
             }
@@ -684,7 +684,7 @@ fn resolve_local_datetime(time_zone: &JavaTimeZone, naive: NaiveDateTime) -> Dat
                 }
             }
         },
-        JavaTimeZone::Fixed(fixed_offset) => fixed_offset
+        TimeZoneValue::Fixed(fixed_offset) => fixed_offset
             .from_local_datetime(&naive)
             .single()
             .expect("固定时区的本地时间映射唯一")
@@ -1068,12 +1068,12 @@ pub(crate) fn template_integer(
 ) -> Result<Option<i32>, DateUtilsError> {
     match value.as_deref() {
         None | Some(TemplateValue::Null) => Ok(None),
-        Some(TemplateValue::Number(JavaNumber::Byte(value))) => Ok(Some(i32::from(*value))),
-        Some(TemplateValue::Number(JavaNumber::Short(value))) => Ok(Some(i32::from(*value))),
-        Some(TemplateValue::Number(JavaNumber::Integer(value))) => Ok(Some(*value)),
-        Some(TemplateValue::Number(JavaNumber::Long(value))) => Ok(Some(*value as i32)),
-        Some(TemplateValue::Number(JavaNumber::Float(value))) => Ok(Some(*value as i32)),
-        Some(TemplateValue::Number(JavaNumber::Double(value))) => Ok(Some(*value as i32)),
+        Some(TemplateValue::Number(NumberValue::Byte(value))) => Ok(Some(i32::from(*value))),
+        Some(TemplateValue::Number(NumberValue::Short(value))) => Ok(Some(i32::from(*value))),
+        Some(TemplateValue::Number(NumberValue::Integer(value))) => Ok(Some(*value)),
+        Some(TemplateValue::Number(NumberValue::Long(value))) => Ok(Some(*value as i32)),
+        Some(TemplateValue::Number(NumberValue::Float(value))) => Ok(Some(*value as i32)),
+        Some(TemplateValue::Number(NumberValue::Double(value))) => Ok(Some(*value as i32)),
         Some(value) => value
             .to_utf16_string()
             .and_then(|value| value.to_string_lossy().parse::<i32>().ok())

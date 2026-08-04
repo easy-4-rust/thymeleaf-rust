@@ -4,7 +4,7 @@ use std::fmt::{Display, Write};
 use std::sync::{Arc, RwLock};
 
 use thymeleaf::util::{
-    CharArrayWrapperSequence, JavaCharSequence, TextUtils, TextUtilsError, Utf16String,
+    CharArrayWrapperSequence, CharSequenceValue, TextUtils, TextUtilsError, Utf16String,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -222,7 +222,7 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
         None
     ));
     for null_index in 0..5 {
-        let values: [Option<&dyn JavaCharSequence>; 5] = [
+        let values: [Option<&dyn CharSequenceValue>; 5] = [
             (null_index != 0).then_some(&good),
             (null_index != 1).then_some(&good),
             (null_index != 2).then_some(&good),
@@ -358,7 +358,7 @@ fn cover_public_success_branches() {
     );
 
     let char_values = [Some(a.as_utf16()), Some(c.as_utf16()), Some(e.as_utf16())];
-    let sequence_values: [Option<&dyn JavaCharSequence>; 3] = [Some(&a), Some(&c), Some(&e)];
+    let sequence_values: [Option<&dyn CharSequenceValue>; 3] = [Some(&a), Some(&c), Some(&e)];
     for key in ["0", "b", "c", "d", "z"] {
         let key = java(key);
         let expected = TextUtils::binary_search_chars_values_and_chars(
@@ -687,7 +687,7 @@ fn emit_all_overloads(output: &mut String) {
         Some(value_b.as_utf16()),
         Some(value_z.as_utf16()),
     ];
-    let sequence_values: [Option<&dyn JavaCharSequence>; 4] = [
+    let sequence_values: [Option<&dyn CharSequenceValue>; 4] = [
         Some(&value_a),
         Some(&value_ab),
         Some(&value_b),
@@ -1309,7 +1309,7 @@ fn exercise_compare_failures(
 
 fn exercise_binary_failures(good: &Utf16String, chars: &[u16], length_failure: &LengthFailure) {
     let char_values = [Some(chars)];
-    let sequence_values: [Option<&dyn JavaCharSequence>; 1] = [Some(good)];
+    let sequence_values: [Option<&dyn CharSequenceValue>; 1] = [Some(good)];
     assert!(
         TextUtils::binary_search_chars_values_and_chars_range(false, None, 0, 1, Some(chars), 0, 1)
             .is_err()
@@ -1376,7 +1376,7 @@ fn exercise_binary_failures(good: &Utf16String, chars: &[u16], length_failure: &
         )
         .is_err()
     );
-    let empty_sequences: [Option<&dyn JavaCharSequence>; 0] = [];
+    let empty_sequences: [Option<&dyn CharSequenceValue>; 0] = [];
     assert!(
         TextUtils::binary_search_sequence_values_and_chars_range(
             false,
@@ -1402,7 +1402,7 @@ fn exercise_binary_failures(good: &Utf16String, chars: &[u16], length_failure: &
         )
         .is_err()
     );
-    let failing: [Option<&dyn JavaCharSequence>; 1] = [Some(length_failure)];
+    let failing: [Option<&dyn CharSequenceValue>; 1] = [Some(length_failure)];
     assert!(
         TextUtils::binary_search_sequence_values_and_chars(
             false,
@@ -1475,7 +1475,7 @@ fn exercise_binary_failures(good: &Utf16String, chars: &[u16], length_failure: &
 
 struct LengthFailure;
 
-impl JavaCharSequence for LengthFailure {
+impl CharSequenceValue for LengthFailure {
     fn java_length(&self) -> Result<i32, TextUtilsError> {
         Err(TextUtilsError::SequenceAccess {
             class_name: "example.LengthFailure".to_owned(),
@@ -1497,7 +1497,7 @@ impl JavaCharSequence for LengthFailure {
 
 struct CharFailure;
 
-impl JavaCharSequence for CharFailure {
+impl CharSequenceValue for CharFailure {
     fn java_length(&self) -> Result<i32, TextUtilsError> {
         Ok(1)
     }
@@ -1532,7 +1532,7 @@ impl ProbeSequence {
     }
 }
 
-impl JavaCharSequence for ProbeSequence {
+impl CharSequenceValue for ProbeSequence {
     fn java_length(&self) -> Result<i32, TextUtilsError> {
         self.trace.lock().expect("trace lock").push_str("L;");
         Ok(self.value.len() as i32)

@@ -18,18 +18,18 @@ use thymeleaf::model::{
     ICDATASection, IComment, IDocType, IProcessingInstruction, ITemplateEvent, IText,
     IXMLDeclaration,
 };
-use thymeleaf::util::{JavaCharSequence, Utf16String};
+use thymeleaf::util::{CharSequenceValue, Utf16String};
 
 fn js(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn sequence(value: &str) -> Arc<dyn JavaCharSequence> {
+fn sequence(value: &str) -> Arc<dyn CharSequenceValue> {
     Arc::new(Utf16String::from_rust_str(value))
 }
 
 /// 逐字符提取（对应上游 extractText 辅助方法）。
-fn extract_text(sequence: &dyn JavaCharSequence) -> String {
+fn extract_text(sequence: &dyn CharSequenceValue) -> String {
     let mut result = String::new();
     let length = sequence.java_length().expect("sequence length").max(0) as usize;
     for i in 0..length {

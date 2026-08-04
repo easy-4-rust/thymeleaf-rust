@@ -17,13 +17,13 @@ type ComponentPredicate<T> = dyn Fn(&T) -> bool + Send + Sync;
 /// 无法表达 `Number[]` 接受 `Integer`、而 `String[]` 拒绝 `Integer` 的 JVM
 /// 规则，因此本适配值同时保存组件类名和调用方提供的运行时兼容性谓词。
 #[derive(Clone)]
-pub struct JavaObjectArray<T> {
+pub struct ObjectArrayValue<T> {
     elements: Vec<Option<T>>,
     component_class_name: String,
     component_predicate: Arc<ComponentPredicate<T>>,
 }
 
-impl<T> JavaObjectArray<T> {
+impl<T> ObjectArrayValue<T> {
     /// 对应 Java 语义：`Objects` 的 `from_parts` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn from_parts(
         component_class_name: String,
@@ -162,10 +162,10 @@ impl<T> JavaObjectArray<T> {
     }
 }
 
-impl<T: Debug> Debug for JavaObjectArray<T> {
+impl<T: Debug> Debug for ObjectArrayValue<T> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter
-            .debug_struct("JavaObjectArray")
+            .debug_struct("ObjectArrayValue")
             .field("elements", &self.elements)
             .field("component_class_name", &self.component_class_name)
             .finish_non_exhaustive()
@@ -268,9 +268,9 @@ impl Objects {
     /// 实际含 null 且非 null 默认值与组件类不兼容时返回数组存储错误。
     pub fn array_null_safe<T>(
         &self,
-        target: Option<&JavaObjectArray<T>>,
+        target: Option<&ObjectArrayValue<T>>,
         default_value: Option<&T>,
-    ) -> Result<JavaObjectArray<T>, ObjectsError>
+    ) -> Result<ObjectArrayValue<T>, ObjectsError>
     where
         T: Clone,
     {
@@ -351,7 +351,7 @@ mod tests {
 
     use indexmap::IndexSet;
 
-    use super::{JavaObjectArray, Objects, ObjectsError};
+    use super::{ObjectArrayValue, Objects, ObjectsError};
     use crate::util::{ListView, SetView, ValidateError};
 
     #[test]
@@ -368,7 +368,7 @@ mod tests {
     #[test]
     fn array_result_is_independent_and_preserves_runtime_component_type() {
         let objects = Objects;
-        let source = JavaObjectArray::typed(
+        let source = ObjectArrayValue::typed(
             "java.lang.Number",
             vec![Some(1_i32), None, Some(3_i32)],
             |_| true,
@@ -376,7 +376,7 @@ mod tests {
         .expect("source");
         assert_eq!(
             format!("{source:?}"),
-            "JavaObjectArray { elements: [Some(1), None, Some(3)], component_class_name: \
+            "ObjectArrayValue { elements: [Some(1), None, Some(3)], component_class_name: \
              \"java.lang.Number\", .. }"
         );
         let mut result = objects
@@ -399,7 +399,7 @@ mod tests {
         }
 
         let accepts_text = |value: &Value| matches!(value, Value::Text(_));
-        let with_null = JavaObjectArray::typed(
+        let with_null = ObjectArrayValue::typed(
             "java.lang.String",
             vec![Some(Value::Text("one")), None],
             accepts_text,
@@ -420,7 +420,7 @@ mod tests {
         );
         assert_eq!(error.java_class_name(), "java.lang.ArrayStoreException");
 
-        let without_null = JavaObjectArray::typed(
+        let without_null = ObjectArrayValue::typed(
             "java.lang.String",
             vec![Some(Value::Text("one"))],
             accepts_text,
@@ -436,11 +436,11 @@ mod tests {
     #[test]
     fn array_adapter_enforces_store_and_index_contracts() {
         let invalid =
-            JavaObjectArray::typed("positive.Integer", vec![Some(-1)], |value| *value > 0)
+            ObjectArrayValue::typed("positive.Integer", vec![Some(-1)], |value| *value > 0)
                 .expect_err("invalid source");
         assert_eq!(invalid.java_class_name(), "java.lang.ArrayStoreException");
 
-        let mut target = JavaObjectArray::object(vec![Some("one")]);
+        let mut target = ObjectArrayValue::object(vec![Some("one")]);
         let error = target.set(1, Some("two")).expect_err("bounds");
         assert_eq!(
             error,

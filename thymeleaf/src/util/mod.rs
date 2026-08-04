@@ -45,23 +45,23 @@ pub use aggregate_char_sequence::{
 };
 pub(crate) use aggregate_utils::double_string;
 pub use aggregate_utils::{
-    AggregateError, AggregateUtils, JavaAggregateObject, JavaBigDecimal, JavaNumber,
-    JavaNumberIterable, JavaNumberList,
+    AggregateError, AggregateObjectValue, AggregateUtils, BigDecimalValue, NumberIterableValue,
+    NumberListValue, NumberValue,
 };
 pub use array_utils::{
-    ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArray, JavaArrayElement, JavaArrayType,
+    ArrayElementValue, ArrayTarget, ArrayTypeValue, ArrayUtils, ArrayUtilsError, ArrayValue,
 };
 pub use char_array_wrapper_sequence::{
     CharArrayWrapperSequence, CharArrayWrapperSequenceError, SharedCharArray,
 };
 pub use content_type_utils::{Charset, CharsetError, ContentTypeError, ContentTypeUtils};
 pub(crate) use date_utils::template_integer;
-pub use date_utils::{DateUtils, DateUtilsError, JavaDate};
+pub use date_utils::{DateUtils, DateUtilsError, DateValue};
 pub use escaped_attribute_utils::EscapedAttributeUtils;
 pub use evaluation_utils::{
-    EvaluationError, EvaluationUtils, JavaBigDecimalResult, JavaEvaluationArray,
-    JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
-    JavaEvaluationValue, JavaHashCode, JavaMapEntry,
+    BigDecimalResult, EvaluationArray, EvaluationElement, EvaluationError, EvaluationList,
+    EvaluationListType, EvaluationTarget, EvaluationUtils, EvaluationValue, HashCodeValue,
+    MapEntry,
 };
 pub use expression_utils::ExpressionUtils;
 pub use fast_string_writer::{FastStringWriter, FastStringWriterError};
@@ -71,8 +71,8 @@ pub use lazy_escaping_char_sequence::LazyEscapingCharSequence;
 pub(crate) use lazy_escaping_char_sequence::escape_text_immediately;
 pub use lazy_processing_char_sequence::LazyProcessingCharSequence;
 pub use list_utils::{
-    JavaComparable, JavaComparator, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError,
-    ListView,
+    ComparableValue, ComparatorValue, ListTarget, ListTypeValue, ListUtils, ListUtilsError,
+    ListValue, ListView,
 };
 pub use locale::Locale;
 pub use logging_utils::LoggingUtils;
@@ -85,7 +85,7 @@ pub use pattern_utils::{PatternUtils, PatternUtilsError, StringPattern};
 pub use processor_comparators::ProcessorComparators;
 pub use processor_configuration_utils::ProcessorConfigurationUtils;
 pub use resource_loader_utils::ResourceLoaderUtils;
-pub use set_utils::{JavaSet, SetTarget, SetUtils, SetUtilsError, SetView};
+pub use set_utils::{SetTarget, SetUtils, SetUtilsError, SetValue, SetView};
 pub use standard_conditional_comment_utils::{
     ConditionalCommentParsingResult, StandardConditionalCommentUtils,
 };
@@ -93,7 +93,7 @@ pub use standard_expression_utils::StandardExpressionUtils;
 pub use standard_processor_utils::StandardProcessorUtils;
 pub use string_utils::{StringUtils, StringUtilsError};
 pub use template_writer::TemplateWriter;
-pub use text_utils::{JavaCharSequence, TextUtils, TextUtilsError};
+pub use text_utils::{CharSequenceValue, TextUtils, TextUtilsError};
 pub(crate) use text_utils::{java_case_fold_unit, java_lower};
 pub use utf16_string::{Utf16String, Utf16StringResult};
 pub use validate::{Validate, ValidateError};

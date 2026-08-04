@@ -7,8 +7,8 @@ use crate::util::Utf16String;
 ///
 /// 该适配保留 `String#toString()` 返回原实例，以及自定义对象返回共享字符串的
 /// 引用身份；Java 允许覆写 `toString()` 后返回 null。
-/// 对应 Java 语义：`Token` 的 Rust 侧类型 `JavaTokenStringResult`。
-pub enum JavaTokenStringResult<'a> {
+/// 对应 Java 语义：`Token` 的 Rust 侧类型 `TokenStringResult`。
+pub enum TokenStringResult<'a> {
     /// Java null。
     Null,
     /// 借用的既有 Java 字符串。
@@ -18,8 +18,8 @@ pub enum JavaTokenStringResult<'a> {
 }
 
 /// 可被 `Token` 保存并按 Java 规则转换为字符串的值。
-/// 对应 Java 语义：`Token` 的 Rust 侧类型 `JavaTokenValue`。
-pub trait JavaTokenValue {
+/// 对应 Java 语义：`Token` 的 Rust 侧类型 `TokenValue`。
+pub trait TokenValue {
     /// 执行 Java `Object#toString()` 等价操作。
     ///
     /// # 返回
@@ -27,17 +27,17 @@ pub trait JavaTokenValue {
     ///
     /// # 错误
     /// 自定义 `toString()` 抛出的运行时异常必须保留类别和消息。
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError>;
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError>;
 }
 
-impl JavaTokenValue for Utf16String {
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
-        Ok(JavaTokenStringResult::Borrowed(self))
+impl TokenValue for Utf16String {
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+        Ok(TokenStringResult::Borrowed(self))
     }
 }
 
-impl<T: JavaTokenValue> JavaTokenValue for Arc<T> {
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
+impl<T: TokenValue> TokenValue for Arc<T> {
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         self.as_ref().java_token_to_string()
     }
 }
@@ -107,11 +107,11 @@ impl TokenError {
 /// 公开构造器对应 Java protected 构造能力，供外部自定义 token 组合使用。
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.Token`。
-pub struct Token<T: JavaTokenValue> {
+pub struct Token<T: TokenValue> {
     value: Option<T>,
 }
 
-impl<T: JavaTokenValue> Token<T> {
+impl<T: TokenValue> Token<T> {
     /// 创建保存指定可空对象的 token。对应 Java: `Token#Token(Object)`。
     ///
     /// # 参数
@@ -143,7 +143,7 @@ impl<T: JavaTokenValue> Token<T> {
     ///
     /// # 错误
     /// token 值为 null 时返回 NullPointer 类别；自定义值异常原样传播。
-    pub fn get_string_representation(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
+    pub fn get_string_representation(&self) -> Result<TokenStringResult<'_>, TokenError> {
         self.value
             .as_ref()
             .ok_or(TokenError::NullPointer)?
@@ -160,7 +160,7 @@ impl<T: JavaTokenValue> Token<T> {
     ///
     /// # 错误
     /// token 值为 null 时返回 NullPointer 类别；自定义值异常原样传播。
-    pub fn to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
+    pub fn to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         self.get_string_representation()
     }
 
@@ -327,7 +327,7 @@ const fn is_ascii_digit(value: u16) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer};
+    use super::{Token, TokenError, TokenParsingTracer, TokenStringResult, TokenValue};
     use crate::util::Utf16String;
 
     struct Probe {
@@ -340,11 +340,11 @@ mod tests {
         Error,
     }
 
-    impl JavaTokenValue for Probe {
-        fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
+    impl TokenValue for Probe {
+        fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
             match &self.result {
-                ProbeResult::Null => Ok(JavaTokenStringResult::Null),
-                ProbeResult::Value(value) => Ok(JavaTokenStringResult::Borrowed(value)),
+                ProbeResult::Null => Ok(TokenStringResult::Null),
+                ProbeResult::Value(value) => Ok(TokenStringResult::Borrowed(value)),
                 ProbeResult::Error => Err(TokenError::runtime(
                     "java.lang.IllegalStateException",
                     "boom",
@@ -360,7 +360,7 @@ mod tests {
         assert_eq!(token.get_value(), Some(&string));
         assert!(matches!(
             token.get_string_representation(),
-            Ok(JavaTokenStringResult::Borrowed(value)) if value == &string
+            Ok(TokenStringResult::Borrowed(value)) if value == &string
         ));
 
         let null_token = Token::<Utf16String>::new(None);
@@ -374,7 +374,7 @@ mod tests {
         }));
         assert_eq!(
             std::mem::discriminant(&null_result.get_string_representation().unwrap()),
-            std::mem::discriminant(&JavaTokenStringResult::Null)
+            std::mem::discriminant(&TokenStringResult::Null)
         );
         let owned_result = Token::new(Some(Probe {
             result: ProbeResult::Value(Utf16String::from_rust_str("owned")),
@@ -383,7 +383,7 @@ mod tests {
         let expected_borrowed_value = Utf16String::from_rust_str("expected");
         assert_eq!(
             std::mem::discriminant(&borrowed_result),
-            std::mem::discriminant(&JavaTokenStringResult::Borrowed(&expected_borrowed_value))
+            std::mem::discriminant(&TokenStringResult::Borrowed(&expected_borrowed_value))
         );
         let error_token = Token::new(Some(Probe {
             result: ProbeResult::Error,

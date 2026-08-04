@@ -5,7 +5,7 @@ use std::fmt::{Display, Write};
 use std::rc::Rc;
 
 use indexmap::IndexSet;
-use thymeleaf::expression::{JavaObjectArray, Maps, Objects, ObjectsError};
+use thymeleaf::expression::{Maps, ObjectArrayValue, Objects, ObjectsError};
 use thymeleaf::util::{ListView, SetView, ValidateError};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -105,7 +105,7 @@ fn map_and_object_expression_facades_match_java_golden() {
         objects.null_safe::<String>(None, None).is_none(),
     );
 
-    let source_array = JavaObjectArray::typed(
+    let source_array = ObjectArrayValue::typed(
         "java.lang.String",
         vec![
             Some(DynamicValue::Text("one".to_owned())),
@@ -117,7 +117,7 @@ fn map_and_object_expression_facades_match_java_golden() {
     .expect("source array");
     assert!(format!("{source_array:?}").contains("java.lang.String"));
     assert!(
-        JavaObjectArray::typed(
+        ObjectArrayValue::typed(
             "java.lang.String",
             vec![Some(DynamicValue::Number(1))],
             accepts_text,
@@ -159,7 +159,7 @@ fn map_and_object_expression_facades_match_java_golden() {
         format_array(result_array.as_slice()),
     );
     let null_default =
-        JavaObjectArray::typed("java.lang.String", vec![None], accepts_text).expect("array");
+        ObjectArrayValue::typed("java.lang.String", vec![None], accepts_text).expect("array");
     let null_default_result = objects
         .array_null_safe(Some(&null_default), None)
         .expect("null default");
@@ -169,7 +169,7 @@ fn map_and_object_expression_facades_match_java_golden() {
         format_array(null_default_result.as_slice()),
     );
     let incompatible_with_null =
-        JavaObjectArray::typed("java.lang.String", vec![None], accepts_text).expect("array");
+        ObjectArrayValue::typed("java.lang.String", vec![None], accepts_text).expect("array");
     let incompatible_error = objects
         .array_null_safe(
             Some(&incompatible_with_null),
@@ -181,7 +181,7 @@ fn map_and_object_expression_facades_match_java_golden() {
         "objects.array.incompatible_with_null",
         incompatible_error.java_class_name(),
     );
-    let incompatible_without_null = JavaObjectArray::typed(
+    let incompatible_without_null = ObjectArrayValue::typed(
         "java.lang.String",
         vec![Some(DynamicValue::Text("one".to_owned()))],
         accepts_text,

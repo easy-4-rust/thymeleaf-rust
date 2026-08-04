@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
-use crate::expression::JavaObjectArray;
+use crate::expression::ObjectArrayValue;
 
 use super::{Validate, ValidateError};
 
@@ -15,7 +15,7 @@ type ArrayPredicate<T> = dyn Fn(&T) -> bool + Send + Sync;
 ///
 /// 对应 Java: `java.lang.Object#getClass()` 以及
 /// `org.thymeleaf.util.ArrayUtils#toArray(Class,Object)` 的组件类推断。
-pub trait JavaArrayElement {
+pub trait ArrayElementValue {
     /// 返回 Java `Class#getName()` 形式的精确运行时类名。
     ///
     /// # 返回
@@ -34,37 +34,37 @@ pub trait JavaArrayElement {
     }
 }
 
-impl JavaArrayElement for String {
+impl ArrayElementValue for String {
     fn java_class_name(&self) -> &str {
         "java.lang.String"
     }
 }
 
-impl JavaArrayElement for i32 {
+impl ArrayElementValue for i32 {
     fn java_class_name(&self) -> &str {
         "java.lang.Integer"
     }
 }
 
-impl JavaArrayElement for i64 {
+impl ArrayElementValue for i64 {
     fn java_class_name(&self) -> &str {
         "java.lang.Long"
     }
 }
 
-impl JavaArrayElement for f64 {
+impl ArrayElementValue for f64 {
     fn java_class_name(&self) -> &str {
         "java.lang.Double"
     }
 }
 
-impl JavaArrayElement for f32 {
+impl ArrayElementValue for f32 {
     fn java_class_name(&self) -> &str {
         "java.lang.Float"
     }
 }
 
-impl JavaArrayElement for bool {
+impl ArrayElementValue for bool {
     fn java_class_name(&self) -> &str {
         "java.lang.Boolean"
     }
@@ -75,12 +75,12 @@ impl JavaArrayElement for bool {
 /// 对应 Java: `org.thymeleaf.util.ArrayUtils#copyOf(Object[],int,Class)` 的
 /// `newType` 参数。
 #[derive(Clone)]
-pub struct JavaArrayType<T> {
+pub struct ArrayTypeValue<T> {
     component_class_name: String,
     component_predicate: Arc<ArrayPredicate<T>>,
 }
 
-impl<T> JavaArrayType<T> {
+impl<T> ArrayTypeValue<T> {
     /// 创建具有运行时写入约束的引用数组类型。
     ///
     /// # 参数
@@ -122,10 +122,10 @@ impl<T> JavaArrayType<T> {
     }
 }
 
-impl<T> Debug for JavaArrayType<T> {
+impl<T> Debug for ArrayTypeValue<T> {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter
-            .debug_struct("JavaArrayType")
+            .debug_struct("ArrayTypeValue")
             .field("component_class_name", &self.component_class_name)
             .finish_non_exhaustive()
     }
@@ -137,7 +137,7 @@ impl<T> Debug for JavaArrayType<T> {
 /// `Iterable` 与其他对象，保留 JVM 分派及异常类别。
 pub enum ArrayTarget<'a, T> {
     /// Java 引用数组。
-    Reference(&'a JavaObjectArray<T>),
+    Reference(&'a ObjectArrayValue<T>),
     /// Java primitive 数组，值为 `Class#getName()`，例如 `[I`。
     PrimitiveArray {
         /// primitive 数组运行时类名。
@@ -157,23 +157,23 @@ pub enum ArrayTarget<'a, T> {
 /// `ArrayUtils#toArray` 的借用或新建数组结果。
 ///
 /// Java 在兼容引用数组输入时原样返回同一实例；`Iterable` 输入则反射创建新数组。
-/// 对应 Java 语义：`ArrayUtils` 的 Rust 侧类型 `JavaArray`。
+/// 对应 Java 语义：`ArrayUtils` 的 Rust 侧类型 `ArrayValue`。
 #[derive(Debug)]
-pub enum JavaArray<'a, T> {
+pub enum ArrayValue<'a, T> {
     /// 原数组的同一引用。
-    Borrowed(&'a JavaObjectArray<T>),
+    Borrowed(&'a ObjectArrayValue<T>),
     /// 从 `Iterable` 新建的数组。
-    Owned(JavaObjectArray<T>),
+    Owned(ObjectArrayValue<T>),
 }
 
-impl<'a, T> JavaArray<'a, T> {
+impl<'a, T> ArrayValue<'a, T> {
     /// 返回结果数组。
     ///
     /// # 返回
     /// 借用输入或持有新数组的统一只读引用。
     /// 对应 Java 语义：`ArrayUtils` 的 `as_array` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn as_array(&self) -> &JavaObjectArray<T> {
+    pub fn as_array(&self) -> &ObjectArrayValue<T> {
         match self {
             Self::Borrowed(array) => array,
             Self::Owned(array) => array,
@@ -189,7 +189,7 @@ impl<'a, T> JavaArray<'a, T> {
     /// 结果借用该数组同一实例时返回 `true`。
     /// 对应 Java 语义：`ArrayUtils` 的 `is_same_reference` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn is_same_reference(&self, target: &JavaObjectArray<T>) -> bool {
+    pub fn is_same_reference(&self, target: &ObjectArrayValue<T>) -> bool {
         matches!(self, Self::Borrowed(array) if std::ptr::eq(*array, target))
     }
 
@@ -199,7 +199,7 @@ impl<'a, T> JavaArray<'a, T> {
     /// 与当前结果等值且独立的引用数组。
     /// 对应 Java 语义：`ArrayUtils` 的 `into_owned` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn into_owned(self) -> JavaObjectArray<T>
+    pub fn into_owned(self) -> ObjectArrayValue<T>
     where
         T: Clone,
     {
@@ -299,9 +299,9 @@ impl ArrayUtils {
     /// 原引用数组或新建数组。
     pub fn to_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(None, target)
     }
@@ -315,9 +315,9 @@ impl ArrayUtils {
     /// 组件类为 `java.lang.String` 的数组。
     pub fn to_string_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(Some("java.lang.String"), target)
     }
@@ -331,9 +331,9 @@ impl ArrayUtils {
     /// 组件类为 `java.lang.Integer` 的数组。
     pub fn to_integer_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(Some("java.lang.Integer"), target)
     }
@@ -347,9 +347,9 @@ impl ArrayUtils {
     /// 组件类为 `java.lang.Long` 的数组。
     pub fn to_long_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(Some("java.lang.Long"), target)
     }
@@ -363,9 +363,9 @@ impl ArrayUtils {
     /// 组件类为 `java.lang.Double` 的数组。
     pub fn to_double_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(Some("java.lang.Double"), target)
     }
@@ -379,9 +379,9 @@ impl ArrayUtils {
     /// 组件类为 `java.lang.Float` 的数组。
     pub fn to_float_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(Some("java.lang.Float"), target)
     }
@@ -395,9 +395,9 @@ impl ArrayUtils {
     /// 组件类为 `java.lang.Boolean` 的数组。
     pub fn to_boolean_array<'a, T>(
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         Self::convert(Some("java.lang.Boolean"), target)
     }
@@ -527,10 +527,10 @@ impl ArrayUtils {
     /// # 返回
     /// 独立的目标类型数组。
     pub fn copy_of_with_type<T>(
-        original: Option<&JavaObjectArray<T>>,
+        original: Option<&ObjectArrayValue<T>>,
         new_length: i32,
-        new_type: Option<&JavaArrayType<T>>,
-    ) -> Result<JavaObjectArray<T>, ArrayUtilsError>
+        new_type: Option<&ArrayTypeValue<T>>,
+    ) -> Result<ObjectArrayValue<T>, ArrayUtilsError>
     where
         T: Clone,
     {
@@ -552,7 +552,7 @@ impl ArrayUtils {
             }
             elements[index] = element.clone();
         }
-        Ok(JavaObjectArray::from_parts(
+        Ok(ObjectArrayValue::from_parts(
             new_type.component_class_name.clone(),
             elements,
             Arc::clone(&new_type.component_predicate),
@@ -570,9 +570,9 @@ impl ArrayUtils {
     /// # 返回
     /// 独立且保留源运行时组件类的数组。
     pub fn copy_of<T>(
-        original: Option<&JavaObjectArray<T>>,
+        original: Option<&ObjectArrayValue<T>>,
         new_length: i32,
-    ) -> Result<JavaObjectArray<T>, ArrayUtilsError>
+    ) -> Result<ObjectArrayValue<T>, ArrayUtilsError>
     where
         T: Clone,
     {
@@ -583,7 +583,7 @@ impl ArrayUtils {
         let mut elements = vec![None; new_length as usize];
         let copy_length = original.len().min(elements.len());
         elements[..copy_length].clone_from_slice(&original.as_slice()[..copy_length]);
-        Ok(JavaObjectArray::from_parts(
+        Ok(ObjectArrayValue::from_parts(
             original.component_class_name().to_owned(),
             elements,
             original.component_predicate(),
@@ -663,9 +663,9 @@ impl ArrayUtils {
     fn convert<'a, T>(
         component_class_name: Option<&'static str>,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         let target = target.ok_or_else(|| ArrayUtilsError::CannotConvert {
             message: "Cannot convert null to array".to_owned(),
@@ -675,7 +675,7 @@ impl ArrayUtils {
                 if component_class_name.is_none()
                     || component_class_name == Some(array.component_class_name())
                 {
-                    return Ok(JavaArray::Borrowed(array));
+                    return Ok(ArrayValue::Borrowed(array));
                 }
                 Err(Self::incompatible_array(
                     array.component_class_name(),
@@ -724,7 +724,7 @@ impl ArrayUtils {
                         component_class_name: computed,
                     });
                 }
-                Ok(JavaArray::Owned(JavaObjectArray::from_parts(
+                Ok(ArrayValue::Owned(ObjectArrayValue::from_parts(
                     computed,
                     elements.to_vec(),
                     predicate,
@@ -754,8 +754,8 @@ impl ArrayUtils {
 
 #[cfg(test)]
 mod tests {
-    use super::{ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArrayElement, JavaArrayType};
-    use crate::expression::JavaObjectArray;
+    use super::{ArrayElementValue, ArrayTarget, ArrayTypeValue, ArrayUtils, ArrayUtilsError};
+    use crate::expression::ObjectArrayValue;
 
     #[derive(Clone, Debug, Eq, Hash, PartialEq)]
     enum Value {
@@ -763,7 +763,7 @@ mod tests {
         Number(i32),
     }
 
-    impl JavaArrayElement for Value {
+    impl ArrayElementValue for Value {
         fn java_class_name(&self) -> &str {
             match self {
                 Self::Text(_) => "java.lang.String",
@@ -774,7 +774,7 @@ mod tests {
 
     #[test]
     fn conversion_preserves_identity_and_infers_exact_component_class() {
-        let source = JavaObjectArray::typed(
+        let source = ObjectArrayValue::typed(
             "java.lang.String",
             vec![Some(Value::Text("one".to_owned()))],
             |value| matches!(value, Value::Text(_)),
@@ -829,11 +829,11 @@ mod tests {
         );
 
         let source =
-            JavaObjectArray::typed("java.lang.String", values.to_vec(), |_| true).expect("source");
+            ObjectArrayValue::typed("java.lang.String", values.to_vec(), |_| true).expect("source");
         let copied = ArrayUtils::copy_of(Some(&source), 5).expect("copy");
         assert_eq!(copied.len(), 5);
         assert_eq!(copied.component_class_name(), "java.lang.String");
-        let integer_type = JavaArrayType::typed("java.lang.Integer", |_: &String| false);
+        let integer_type = ArrayTypeValue::typed("java.lang.Integer", |_: &String| false);
         assert_eq!(
             ArrayUtils::copy_of_with_type(Some(&source), 1, Some(&integer_type))
                 .expect_err("store")
@@ -873,14 +873,14 @@ mod tests {
         assert!("text".to_owned().is_instance_of("java.lang.Object"));
         assert!(!0_i32.is_instance_of("java.lang.String"));
 
-        let array_type = JavaArrayType::<String>::object();
+        let array_type = ArrayTypeValue::<String>::object();
         assert_eq!(array_type.component_class_name(), "java.lang.Object");
         assert_eq!(
             format!("{array_type:?}"),
-            "JavaArrayType { component_class_name: \"java.lang.Object\", .. }"
+            "ArrayTypeValue { component_class_name: \"java.lang.Object\", .. }"
         );
 
-        let source = JavaObjectArray::object(vec![Some("one".to_owned())]);
+        let source = ObjectArrayValue::object(vec![Some("one".to_owned())]);
         let borrowed = ArrayUtils::to_array(Some(ArrayTarget::Reference(&source)))
             .expect("borrowed")
             .into_owned();

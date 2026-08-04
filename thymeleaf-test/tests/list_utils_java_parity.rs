@@ -6,7 +6,7 @@ use std::fmt::{Display, Write};
 
 use thymeleaf::expression::Lists;
 use thymeleaf::util::{
-    JavaComparable, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError, ListView,
+    ComparableValue, ListTarget, ListTypeValue, ListUtils, ListUtilsError, ListValue, ListView,
     ValidateError,
 };
 
@@ -15,7 +15,7 @@ const JAVA_GOLDEN: &str = include_str!("../../thymeleaf/tests/fixtures/list_util
 
 struct CustomList<T> {
     values: Vec<T>,
-    list_type: JavaListType,
+    list_type: ListTypeValue,
 }
 
 impl<T> ListView<T> for CustomList<T> {
@@ -31,7 +31,7 @@ impl<T> ListView<T> for CustomList<T> {
         Box::new(self.values.iter())
     }
 
-    fn list_type(&self) -> JavaListType {
+    fn list_type(&self) -> ListTypeValue {
         self.list_type.clone()
     }
 }
@@ -53,11 +53,11 @@ impl<T> ListView<T> for AddFailingList<T> {
         Box::new(self.values.iter())
     }
 
-    fn list_type(&self) -> JavaListType {
-        JavaListType::custom("ListUtilsGolden$AddFailingList", true)
+    fn list_type(&self) -> ListTypeValue {
+        ListTypeValue::custom("ListUtilsGolden$AddFailingList", true)
     }
 
-    fn fill_sorted(&self, _elements: Vec<T>) -> Result<JavaList<'static, T>, ListUtilsError>
+    fn fill_sorted(&self, _elements: Vec<T>) -> Result<ListValue<'static, T>, ListUtilsError>
     where
         T: 'static,
     {
@@ -74,7 +74,7 @@ enum Mixed {
     Integer(i32),
 }
 
-impl JavaComparable for Mixed {
+impl ComparableValue for Mixed {
     fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         match (self, other) {
             (Self::Text(left), Self::Text(right)) => left.java_compare_to(right),
@@ -359,7 +359,7 @@ fn list_utils_and_expression_facade_match_java_golden() {
 
     let fixed = CustomList {
         values: vec!["c".to_owned(), "a".to_owned(), "b".to_owned()],
-        list_type: JavaListType::custom("java.util.Arrays$ArrayList", false),
+        list_type: ListTypeValue::custom("java.util.Arrays$ArrayList", false),
     };
     emit_list_result(
         &mut output,
@@ -374,7 +374,7 @@ fn list_utils_and_expression_facade_match_java_golden() {
     );
     let public_list = CustomList {
         values: vec!["c".to_owned(), "a".to_owned(), "b".to_owned()],
-        list_type: JavaListType::custom("ListUtilsGolden$PublicList", true),
+        list_type: ListTypeValue::custom("ListUtilsGolden$PublicList", true),
     };
     emit_list_result(
         &mut output,
@@ -389,7 +389,7 @@ fn list_utils_and_expression_facade_match_java_golden() {
     );
     let private_list = CustomList {
         values: vec!["c".to_owned(), "a".to_owned(), "b".to_owned()],
-        list_type: JavaListType::custom("ListUtilsGolden$PrivateList", false),
+        list_type: ListTypeValue::custom("ListUtilsGolden$PrivateList", false),
     };
     emit_list_result(
         &mut output,
@@ -569,7 +569,7 @@ fn list_utils_and_expression_facade_match_java_golden() {
 fn emit_list_result<T, F>(
     output: &mut String,
     key: &str,
-    result: Result<JavaList<'_, T>, ListUtilsError>,
+    result: Result<ListValue<'_, T>, ListUtilsError>,
     render_element: F,
 ) where
     F: Fn(&T) -> String,
@@ -583,7 +583,7 @@ fn emit_list_result<T, F>(
 fn emit_list_identity<T>(
     output: &mut String,
     key: &str,
-    result: Result<JavaList<'_, T>, ListUtilsError>,
+    result: Result<ListValue<'_, T>, ListUtilsError>,
     source: &dyn ListView<T>,
 ) {
     match result {
@@ -595,7 +595,7 @@ fn emit_list_identity<T>(
 fn emit_list_type<T>(
     output: &mut String,
     key: &str,
-    result: Result<JavaList<'_, T>, ListUtilsError>,
+    result: Result<ListValue<'_, T>, ListUtilsError>,
 ) {
     match result {
         Ok(value) => emit(output, key, value.list_type().class_name()),

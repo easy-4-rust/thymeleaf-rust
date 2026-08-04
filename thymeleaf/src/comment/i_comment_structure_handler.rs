@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::model::IModel;
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 
 /// Comment Processor 的结构变更合同。
 ///
@@ -15,7 +15,7 @@ pub trait ICommentStructureHandler {
     /// 使用任意 Java `CharSequence` 设置内容，保留对象身份和延迟 Writer 输出能力。
     ///
     /// 对应 Java: `ICommentStructureHandler#setContent(CharSequence)`。
-    fn set_content_sequence(&mut self, content: Arc<dyn JavaCharSequence>);
+    fn set_content_sequence(&mut self, content: Arc<dyn CharSequenceValue>);
     /// 使用模型替换注释。对应 Java:
     /// `ICommentStructureHandler#replaceWith(IModel, boolean)`。
     fn replace_with(&mut self, model: Arc<dyn IModel>, processable: bool);

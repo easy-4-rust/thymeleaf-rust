@@ -10,7 +10,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, Locale, Utf16String};
+use thymeleaf::util::{DateValue, Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf_examples::controllers::controller_mappings::ControllerMapping;
 use thymeleaf_examples::web::gtvg_web_exchange::GtvgWebExchange;
@@ -36,8 +36,8 @@ fn build_template_engine() -> TemplateEngine {
 }
 
 /// 当前时刻 —— 对应 Java `Calendar.getInstance()`（引擎默认 UTC 时区）。
-fn now() -> JavaDate {
-    JavaDate::calendar(chrono::Utc::now(), chrono_tz::UTC)
+fn now() -> DateValue {
+    DateValue::calendar(chrono::Utc::now(), chrono_tz::UTC)
 }
 
 /// 处理单个 URL —— 对应 `GTVGFilter#process`。

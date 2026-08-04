@@ -35,7 +35,11 @@ fn num_list_var(name: &str, values: &[i64]) -> Context {
     let ctx = Context::new();
     let list = values
         .iter()
-        .map(|v| Arc::new(TemplateValue::Number(thymeleaf::util::JavaNumber::Long(*v))))
+        .map(|v| {
+            Arc::new(TemplateValue::Number(thymeleaf::util::NumberValue::Long(
+                *v,
+            )))
+        })
         .collect();
     ctx.set_variable(
         Some(js(name)),
@@ -72,7 +76,7 @@ fn numbers_format_integer_min_digits() {
     ctx.set_variable(
         Some(js("n")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(5),
+            thymeleaf::util::NumberValue::Integer(5),
         ))),
     );
     // formatInteger(target, minIntegerDigits)：补零到最少位数
@@ -86,7 +90,7 @@ fn numbers_format_integer_with_thousands() {
     ctx.set_variable(
         Some(js("n")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(12345),
+            thymeleaf::util::NumberValue::Integer(12345),
         ))),
     );
     // formatInteger(target, min, thousandsPointType)：COMMA 千位分隔
@@ -103,7 +107,7 @@ fn numbers_format_decimal() {
     ctx.set_variable(
         Some(js("n")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Double(3.14159),
+            thymeleaf::util::NumberValue::Double(3.14159),
         ))),
     );
     let s = render(

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::model::IModel;
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 
 /// Text Processor 指示引擎修改当前事件的合同。
 ///
@@ -19,7 +19,7 @@ pub trait ITextStructureHandler {
     /// 使用任意 Java `CharSequence` 设置文本并保留对象身份及延迟 Writer 输出能力。
     ///
     /// 对应 Java: `ITextStructureHandler#setText(CharSequence)`。
-    fn set_text_sequence(&mut self, text: Arc<dyn JavaCharSequence>);
+    fn set_text_sequence(&mut self, text: Arc<dyn CharSequenceValue>);
     /// 使用模型替换当前事件。对应 Java:
     /// `ITextStructureHandler#replaceWith(IModel, boolean)`。
     ///

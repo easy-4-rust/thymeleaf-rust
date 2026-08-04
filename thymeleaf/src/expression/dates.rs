@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    DateUtils, DateUtilsError, JavaDate, JavaNumber, Locale, Utf16String, template_integer,
+    DateUtils, DateUtilsError, DateValue, Locale, NumberValue, Utf16String, template_integer,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -35,7 +35,7 @@ impl Dates {
         minute: Option<i32>,
         second: Option<i32>,
         millisecond: Option<i32>,
-    ) -> Result<JavaDate, DatesError> {
+    ) -> Result<DateValue, DatesError> {
         Ok(DateUtils::create(
             year,
             month,
@@ -53,14 +53,14 @@ impl Dates {
     /// 返回当前瞬时 Date。
     #[must_use]
     /// 对应 Java: `Dates#createNow()`。
-    pub fn create_now(&self, time_zone: Option<&str>) -> JavaDate {
+    pub fn create_now(&self, time_zone: Option<&str>) -> DateValue {
         DateUtils::create_now(time_zone, Some(&self.locale)).to_date()
     }
 
     /// 返回指定时区当天零点对应的 Date 瞬时。
     #[must_use]
     /// 对应 Java: `Dates#createToday()`。
-    pub fn create_today(&self, time_zone: Option<&str>) -> JavaDate {
+    pub fn create_today(&self, time_zone: Option<&str>) -> DateValue {
         DateUtils::create_today(time_zone, Some(&self.locale)).to_date()
     }
 
@@ -68,7 +68,7 @@ impl Dates {
     /// 对应 Java: `Dates#format()`。
     pub fn format(
         &self,
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         pattern: Option<&Utf16String>,
     ) -> Result<Option<Utf16String>, DatesError> {
         Ok(DateUtils::format(target, pattern, Some(&self.locale))?)
@@ -220,9 +220,9 @@ impl From<DateUtilsError> for DatesError {
     }
 }
 
-fn date(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaDate>, DatesError> {
+fn date(value: &Option<Arc<TemplateValue>>) -> Result<Option<&DateValue>, DatesError> {
     let date = DateUtils::from_template_value(value.as_deref())?;
-    if date.is_some_and(JavaDate::is_calendar) {
+    if date.is_some_and(DateValue::is_calendar) {
         return Err(DatesError::new(
             "java.util.GregorianCalendar cannot be cast to java.util.Date",
         ));
@@ -232,7 +232,7 @@ fn date(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaDate>, DatesEr
 
 fn date_argument(
     arguments: &[Option<Arc<TemplateValue>>],
-) -> Result<Option<&JavaDate>, DatesError> {
+) -> Result<Option<&DateValue>, DatesError> {
     match arguments {
         [target] => date(target),
         _ => Err(DatesError::new("Date field method requires one argument")),
@@ -267,7 +267,7 @@ fn string_value(value: Option<Utf16String>) -> Option<Arc<TemplateValue>> {
 }
 
 fn integer_option(value: Option<i32>) -> Option<Arc<TemplateValue>> {
-    value.map(|value| Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+    value.map(|value| Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
 }
 
 fn collection_method(method_name: &str) -> Option<(bool, String)> {

@@ -38,13 +38,13 @@ fn string_value(value: &str) -> Arc<TemplateValue> {
 }
 
 fn number_value(value: i32) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(thymeleaf::util::JavaNumber::Integer(
-        value,
-    )))
+    Arc::new(TemplateValue::Number(
+        thymeleaf::util::NumberValue::Integer(value),
+    ))
 }
 
 fn double_value(value: f64) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(thymeleaf::util::JavaNumber::Double(
+    Arc::new(TemplateValue::Number(thymeleaf::util::NumberValue::Double(
         value,
     )))
 }

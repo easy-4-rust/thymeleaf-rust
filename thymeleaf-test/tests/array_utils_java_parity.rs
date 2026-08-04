@@ -2,9 +2,9 @@
 
 use std::fmt::{Display, Write};
 
-use thymeleaf::expression::{Arrays, JavaObjectArray};
+use thymeleaf::expression::{Arrays, ObjectArrayValue};
 use thymeleaf::util::{
-    ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArray, JavaArrayElement, JavaArrayType,
+    ArrayElementValue, ArrayTarget, ArrayTypeValue, ArrayUtils, ArrayUtilsError, ArrayValue,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -20,7 +20,7 @@ enum Value {
     Boolean(bool),
 }
 
-impl JavaArrayElement for Value {
+impl ArrayElementValue for Value {
     fn java_class_name(&self) -> &str {
         match self {
             Self::Text(_) => "java.lang.String",
@@ -51,7 +51,7 @@ fn array_utils_and_expression_facade_match_java_golden() {
     let mut output = String::new();
     emit(&mut output, "baseline", JAVA_BASELINE);
 
-    let strings = JavaObjectArray::typed(
+    let strings = ObjectArrayValue::typed(
         "java.lang.String",
         vec![
             Some(Value::Text("one".to_owned())),
@@ -143,7 +143,7 @@ fn array_utils_and_expression_facade_match_java_golden() {
         "to_string.reference.identity",
         result.is_same_reference(&strings),
     );
-    let integers = JavaObjectArray::typed(
+    let integers = ObjectArrayValue::typed(
         "java.lang.Integer",
         vec![Some(Value::Integer(1))],
         accepts_integer,
@@ -337,7 +337,7 @@ fn array_utils_and_expression_facade_match_java_golden() {
     emit_array(
         &mut output,
         "copy.reference.object_type",
-        &ArrayUtils::copy_of_with_type(Some(&strings), 4, Some(&JavaArrayType::object()))
+        &ArrayUtils::copy_of_with_type(Some(&strings), 4, Some(&ArrayTypeValue::object()))
             .expect("object copy"),
     );
     emit_error(
@@ -366,17 +366,17 @@ fn array_utils_and_expression_facade_match_java_golden() {
         ArrayUtils::copy_of_with_type(
             Some(&strings),
             1,
-            Some(&JavaArrayType::typed("java.lang.Integer", accepts_integer)),
+            Some(&ArrayTypeValue::typed("java.lang.Integer", accepts_integer)),
         )
         .map(|_| "unused"),
     );
     assert_eq!(
-        ArrayUtils::copy_of_with_type(Some(&strings), -1, Some(&JavaArrayType::object()),)
+        ArrayUtils::copy_of_with_type(Some(&strings), -1, Some(&ArrayTypeValue::object()),)
             .expect_err("typed negative"),
         ArrayUtilsError::NegativeArraySize { length: -1 }
     );
     assert_eq!(
-        ArrayUtils::copy_of_with_type::<Value>(None, 1, Some(&JavaArrayType::object()),)
+        ArrayUtils::copy_of_with_type::<Value>(None, 1, Some(&ArrayTypeValue::object()),)
             .expect_err("typed null original"),
         ArrayUtilsError::NullPointer
     );
@@ -525,14 +525,14 @@ fn accepts_integer(value: &Value) -> bool {
     matches!(value, Value::Integer(_))
 }
 
-fn java_array_class<T>(array: &JavaObjectArray<T>) -> String {
+fn java_array_class<T>(array: &ObjectArrayValue<T>) -> String {
     format!("[L{};", array.component_class_name())
 }
 
 fn emit_array_result<T: Display>(
     output: &mut String,
     key: &str,
-    result: Result<JavaArray<'_, T>, ArrayUtilsError>,
+    result: Result<ArrayValue<'_, T>, ArrayUtilsError>,
 ) {
     match result {
         Ok(array) => emit_array(output, key, array.as_array()),
@@ -540,7 +540,7 @@ fn emit_array_result<T: Display>(
     }
 }
 
-fn emit_array<T: Display>(output: &mut String, key: &str, array: &JavaObjectArray<T>) {
+fn emit_array<T: Display>(output: &mut String, key: &str, array: &ObjectArrayValue<T>) {
     let mut value = format!("{}:[", java_array_class(array));
     for (index, element) in array.as_slice().iter().enumerate() {
         if index > 0 {

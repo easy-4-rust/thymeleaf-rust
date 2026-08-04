@@ -21,7 +21,7 @@ impl GtvgController for ProductListController {
         &self,
         web_exchange: Arc<dyn IWebExchange>,
         template_engine: &TemplateEngine,
-        _now: thymeleaf::util::JavaDate,
+        _now: thymeleaf::util::DateValue,
     ) -> ControllerResult {
         let all_products = ProductService::find_all();
         let context = build_web_context(&web_exchange);

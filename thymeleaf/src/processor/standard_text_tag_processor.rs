@@ -4,7 +4,7 @@ use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
 use crate::util::{
-    JavaCharSequence, LazyEscapingCharSequence, Utf16String, escape_text_immediately,
+    CharSequenceValue, LazyEscapingCharSequence, Utf16String, escape_text_immediately,
 };
 
 use super::{
@@ -48,7 +48,7 @@ impl StandardTextTagProcessor {
                       structure_handler| {
                     let expression_result = expression_result
                         .filter(|value| !matches!(value.as_ref(), TemplateValue::Null));
-                    let text: Arc<dyn JavaCharSequence> = match template_mode {
+                    let text: Arc<dyn CharSequenceValue> = match template_mode {
                         TemplateMode::JAVASCRIPT | TemplateMode::CSS => Arc::new(
                             LazyEscapingCharSequence::new(
                                 Some(context.get_configuration_arc()),

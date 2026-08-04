@@ -27,7 +27,7 @@ use thymeleaf::expression::{
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
 use thymeleaf::templateresolver::{ITemplateResolver, TemplateResolution, TemplateResolverError};
 use thymeleaf::templateresource::{ITemplateResource, StringTemplateResource};
-use thymeleaf::util::{JavaDate, JavaNumber, Locale, Utf16String};
+use thymeleaf::util::{DateValue, Locale, NumberValue, Utf16String};
 use thymeleaf::{TemplateEngine, TemplateMode};
 
 const TEMPLATE: &str =
@@ -227,8 +227,8 @@ fn format_message_like_java(
                     // Java MessageFormat {0,date,pattern}：Long 毫秒 → 日期格式化
                     let pattern = parts[2..].join(",");
                     let millis = match parameter {
-                        TemplateValue::Number(JavaNumber::Long(value)) => Some(*value),
-                        TemplateValue::Number(JavaNumber::Integer(value)) => {
+                        TemplateValue::Number(NumberValue::Long(value)) => Some(*value),
+                        TemplateValue::Number(NumberValue::Integer(value)) => {
                             Some(i64::from(*value))
                         }
                         _ => None,
@@ -310,7 +310,7 @@ impl TemplateObject for TestDepartment {
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         match property_name.to_string_lossy().as_str() {
             "id" => Some(Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::Integer(self.id),
+                NumberValue::Integer(self.id),
             ))))),
             "name" => Some(Ok(Some(string_value(self.name)))),
             _ => None,
@@ -323,7 +323,7 @@ struct TestUser {
     name: &'static str,
     department: Arc<TestDepartment>,
     priority: i32,
-    creation_date: Arc<JavaDate>,
+    creation_date: Arc<DateValue>,
     coefficient: f64,
     admin: bool,
     permissions: Option<Vec<&'static str>>,
@@ -353,13 +353,13 @@ impl TemplateObject for TestUser {
                 self.department.clone(),
             ))))),
             "priority" => Some(Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::Integer(self.priority),
+                NumberValue::Integer(self.priority),
             ))))),
             "creationDate" => Some(Ok(Some(Arc::new(TemplateValue::Object(
                 self.creation_date.clone(),
             ))))),
             "coefficient" => Some(Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::Double(self.coefficient),
+                NumberValue::Double(self.coefficient),
             ))))),
             "admin" => Some(Ok(Some(Arc::new(TemplateValue::Boolean(self.admin))))),
             "permissions" => Some(Ok(Some(match &self.permissions {
@@ -395,7 +395,7 @@ fn engine() -> TemplateEngine {
     e
 }
 
-fn to_date(year: i32, month: i32, day: i32) -> Arc<JavaDate> {
+fn to_date(year: i32, month: i32, day: i32) -> Arc<DateValue> {
     Arc::new(
         thymeleaf::util::DateUtils::create(
             Some(year),
@@ -508,7 +508,7 @@ fn build_context(locale: Locale) -> Context {
 
     ctx.set_variable(
         Some(js("currentYear")),
-        Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(2011)))),
+        Some(Arc::new(TemplateValue::Number(NumberValue::Integer(2011)))),
     );
     ctx.set_variable(
         Some(js("logins")),

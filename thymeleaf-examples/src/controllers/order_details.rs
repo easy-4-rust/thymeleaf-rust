@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, Utf16String};
+use thymeleaf::util::{DateValue, Utf16String};
 use thymeleaf::web::IWebExchange;
 
 use crate::business::services::OrderService;
@@ -22,7 +22,7 @@ impl GtvgController for OrderDetailsController {
         &self,
         web_exchange: Arc<dyn IWebExchange>,
         template_engine: &TemplateEngine,
-        _now: JavaDate,
+        _now: DateValue,
     ) -> ControllerResult {
         // Java: Integer.valueOf(webExchange.getRequest().getParameterValue("orderId"))
         let order_id = web_exchange

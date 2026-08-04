@@ -8,7 +8,9 @@ use num_traits::Signed;
 
 use crate::expression::TemplateValue;
 use crate::templateresource::ITemplateResource;
-use crate::util::{JavaBigDecimal, JavaNumber, Locale, NumberPointType, NumberUtils, Utf16String};
+use crate::util::{
+    BigDecimalValue, Locale, NumberPointType, NumberUtils, NumberValue, Utf16String,
+};
 use crate::{TemplateInputException, TemplateProcessingException};
 
 use super::MessageResolutionResult;
@@ -287,7 +289,7 @@ fn format_default_parameter(
 ) -> MessageResolutionResult<Utf16String> {
     match value {
         Some(TemplateValue::Number(number)) => format_number(number, locale, NumberStyle::Default),
-        Some(TemplateValue::Object(object)) if object.as_any().is::<crate::util::JavaDate>() => {
+        Some(TemplateValue::Object(object)) if object.as_any().is::<crate::util::DateValue>() => {
             format_temporal_parameter(value, locale, "", "")
         }
         Some(value) => Ok(value
@@ -324,7 +326,7 @@ fn format_number_parameter(
 }
 
 fn format_decimal_pattern(
-    number: &JavaNumber,
+    number: &NumberValue,
     locale: &Locale,
     pattern: &str,
 ) -> MessageResolutionResult<Utf16String> {
@@ -468,15 +470,15 @@ fn numeric_pattern_bounds(pattern: &str) -> Option<(usize, usize)> {
 }
 
 fn format_fixed_decimal_number(
-    number: &JavaNumber,
+    number: &NumberValue,
     locale: &Locale,
     pattern: &DecimalSubpattern<'_>,
 ) -> MessageResolutionResult<String> {
     let mut formatted = match number {
-        JavaNumber::Double(value) if value.is_nan() => "NaN".to_owned(),
-        JavaNumber::Float(value) if value.is_nan() => "NaN".to_owned(),
-        JavaNumber::Double(value) if value.is_infinite() => "∞".to_owned(),
-        JavaNumber::Float(value) if value.is_infinite() => "∞".to_owned(),
+        NumberValue::Double(value) if value.is_nan() => "NaN".to_owned(),
+        NumberValue::Float(value) if value.is_nan() => "NaN".to_owned(),
+        NumberValue::Double(value) if value.is_infinite() => "∞".to_owned(),
+        NumberValue::Float(value) if value.is_infinite() => "∞".to_owned(),
         _ => NumberUtils::format(
             Some(number),
             Some(pattern.min_integer_digits.max(1) as i32),
@@ -506,7 +508,7 @@ fn format_fixed_decimal_number(
 }
 
 fn format_scientific_number(
-    number: &JavaNumber,
+    number: &NumberValue,
     pattern: &DecimalSubpattern<'_>,
 ) -> MessageResolutionResult<String> {
     let value = number_as_f64(number);
@@ -572,7 +574,7 @@ fn trim_optional_fraction(
 }
 
 fn decimal_affix(affix: &str, locale: &Locale) -> String {
-    let currency = NumberUtils::format_currency(Some(&JavaNumber::Integer(0)), Some(locale))
+    let currency = NumberUtils::format_currency(Some(&NumberValue::Integer(0)), Some(locale))
         .ok()
         .flatten()
         .map(|formatted| {
@@ -657,80 +659,82 @@ fn contains_unquoted(value: &str, target: char) -> bool {
     false
 }
 
-fn number_is_negative(number: &JavaNumber) -> bool {
+fn number_is_negative(number: &NumberValue) -> bool {
     match number {
-        JavaNumber::BigDecimal(value) => value.unscaled_value().is_negative(),
-        JavaNumber::BigInteger(value) => value.is_negative(),
-        JavaNumber::Byte(value) => *value < 0,
-        JavaNumber::Short(value) => *value < 0,
-        JavaNumber::Integer(value) => *value < 0,
-        JavaNumber::Long(value) => *value < 0,
-        JavaNumber::Float(value) => value.is_sign_negative(),
-        JavaNumber::Double(value) => value.is_sign_negative(),
-        JavaNumber::Other { double_value, .. } => double_value.is_sign_negative(),
+        NumberValue::BigDecimal(value) => value.unscaled_value().is_negative(),
+        NumberValue::BigInteger(value) => value.is_negative(),
+        NumberValue::Byte(value) => *value < 0,
+        NumberValue::Short(value) => *value < 0,
+        NumberValue::Integer(value) => *value < 0,
+        NumberValue::Long(value) => *value < 0,
+        NumberValue::Float(value) => value.is_sign_negative(),
+        NumberValue::Double(value) => value.is_sign_negative(),
+        NumberValue::Other { double_value, .. } => double_value.is_sign_negative(),
     }
 }
 
-fn absolute_number(number: &JavaNumber) -> JavaNumber {
+fn absolute_number(number: &NumberValue) -> NumberValue {
     match number {
-        JavaNumber::BigDecimal(value) => JavaNumber::BigDecimal(JavaBigDecimal::from_unscaled(
+        NumberValue::BigDecimal(value) => NumberValue::BigDecimal(BigDecimalValue::from_unscaled(
             value.unscaled_value().abs(),
             value.scale(),
         )),
-        JavaNumber::BigInteger(value) => JavaNumber::BigInteger(value.abs()),
-        JavaNumber::Byte(value) => JavaNumber::Integer(i32::from(*value).abs()),
-        JavaNumber::Short(value) => JavaNumber::Integer(i32::from(*value).abs()),
-        JavaNumber::Integer(value) => JavaNumber::Long(i64::from(*value).abs()),
-        JavaNumber::Long(value) => {
+        NumberValue::BigInteger(value) => NumberValue::BigInteger(value.abs()),
+        NumberValue::Byte(value) => NumberValue::Integer(i32::from(*value).abs()),
+        NumberValue::Short(value) => NumberValue::Integer(i32::from(*value).abs()),
+        NumberValue::Integer(value) => NumberValue::Long(i64::from(*value).abs()),
+        NumberValue::Long(value) => {
             if *value == i64::MIN {
-                JavaNumber::BigInteger(BigInt::from(*value).abs())
+                NumberValue::BigInteger(BigInt::from(*value).abs())
             } else {
-                JavaNumber::Long(value.abs())
+                NumberValue::Long(value.abs())
             }
         }
-        JavaNumber::Float(value) => JavaNumber::Float(value.abs()),
-        JavaNumber::Double(value) => JavaNumber::Double(value.abs()),
-        JavaNumber::Other {
+        NumberValue::Float(value) => NumberValue::Float(value.abs()),
+        NumberValue::Double(value) => NumberValue::Double(value.abs()),
+        NumberValue::Other {
             class_name,
             double_value,
-        } => JavaNumber::Other {
+        } => NumberValue::Other {
             class_name: class_name.clone(),
             double_value: double_value.abs(),
         },
     }
 }
 
-fn scale_number(number: &JavaNumber, multiplier: i32) -> JavaNumber {
+fn scale_number(number: &NumberValue, multiplier: i32) -> NumberValue {
     if multiplier == 1 {
         return number.clone();
     }
     match number_as_decimal(number) {
-        Some(value) => JavaNumber::BigDecimal(JavaBigDecimal::from_unscaled(
+        Some(value) => NumberValue::BigDecimal(BigDecimalValue::from_unscaled(
             value.unscaled_value() * BigInt::from(multiplier),
             value.scale(),
         )),
-        None => JavaNumber::Double(number_as_f64(number) * f64::from(multiplier)),
+        None => NumberValue::Double(number_as_f64(number) * f64::from(multiplier)),
     }
 }
 
-fn number_as_decimal(number: &JavaNumber) -> Option<JavaBigDecimal> {
+fn number_as_decimal(number: &NumberValue) -> Option<BigDecimalValue> {
     match number {
-        JavaNumber::BigDecimal(value) => Some(value.clone()),
-        JavaNumber::BigInteger(value) => Some(JavaBigDecimal::from_unscaled(value.clone(), 0)),
-        JavaNumber::Byte(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Short(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Integer(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Long(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Float(value) if value.is_finite() => {
-            JavaBigDecimal::parse(&value.to_string()).ok()
+        NumberValue::BigDecimal(value) => Some(value.clone()),
+        NumberValue::BigInteger(value) => Some(BigDecimalValue::from_unscaled(value.clone(), 0)),
+        NumberValue::Byte(value) => Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0)),
+        NumberValue::Short(value) => Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0)),
+        NumberValue::Integer(value) => {
+            Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0))
         }
-        JavaNumber::Double(value) if value.is_finite() => {
-            JavaBigDecimal::parse(&value.to_string()).ok()
+        NumberValue::Long(value) => Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0)),
+        NumberValue::Float(value) if value.is_finite() => {
+            BigDecimalValue::parse(&value.to_string()).ok()
         }
-        JavaNumber::Other { double_value, .. } if double_value.is_finite() => {
-            JavaBigDecimal::parse(&double_value.to_string()).ok()
+        NumberValue::Double(value) if value.is_finite() => {
+            BigDecimalValue::parse(&value.to_string()).ok()
         }
-        JavaNumber::Float(_) | JavaNumber::Double(_) | JavaNumber::Other { .. } => None,
+        NumberValue::Other { double_value, .. } if double_value.is_finite() => {
+            BigDecimalValue::parse(&double_value.to_string()).ok()
+        }
+        NumberValue::Float(_) | NumberValue::Double(_) | NumberValue::Other { .. } => None,
     }
 }
 
@@ -774,7 +778,7 @@ fn locale_uses_decimal_comma(locale: &Locale) -> bool {
 }
 
 fn format_number(
-    number: &JavaNumber,
+    number: &NumberValue,
     locale: &Locale,
     style: NumberStyle,
 ) -> MessageResolutionResult<Utf16String> {
@@ -826,11 +830,11 @@ fn format_number(
     Ok(formatted.unwrap_or_else(|| Utf16String::from_rust_str("null")))
 }
 
-fn non_finite_number_text(number: &JavaNumber) -> Option<&'static str> {
+fn non_finite_number_text(number: &NumberValue) -> Option<&'static str> {
     let value = match number {
-        JavaNumber::Float(value) => f64::from(*value),
-        JavaNumber::Double(value)
-        | JavaNumber::Other {
+        NumberValue::Float(value) => f64::from(*value),
+        NumberValue::Double(value)
+        | NumberValue::Other {
             double_value: value,
             ..
         } => *value,
@@ -878,17 +882,17 @@ fn default_fraction_digits(value: f64) -> i32 {
     })
 }
 
-fn number_as_f64(number: &JavaNumber) -> f64 {
+fn number_as_f64(number: &NumberValue) -> f64 {
     match number {
-        JavaNumber::BigDecimal(value) => value.to_string().parse().unwrap_or(f64::NAN),
-        JavaNumber::BigInteger(value) => value.to_string().parse().unwrap_or(f64::INFINITY),
-        JavaNumber::Byte(value) => f64::from(*value),
-        JavaNumber::Short(value) => f64::from(*value),
-        JavaNumber::Integer(value) => f64::from(*value),
-        JavaNumber::Long(value) => *value as f64,
-        JavaNumber::Float(value) => f64::from(*value),
-        JavaNumber::Double(value) => *value,
-        JavaNumber::Other { double_value, .. } => *double_value,
+        NumberValue::BigDecimal(value) => value.to_string().parse().unwrap_or(f64::NAN),
+        NumberValue::BigInteger(value) => value.to_string().parse().unwrap_or(f64::INFINITY),
+        NumberValue::Byte(value) => f64::from(*value),
+        NumberValue::Short(value) => f64::from(*value),
+        NumberValue::Integer(value) => f64::from(*value),
+        NumberValue::Long(value) => *value as f64,
+        NumberValue::Float(value) => f64::from(*value),
+        NumberValue::Double(value) => *value,
+        NumberValue::Other { double_value, .. } => *double_value,
     }
 }
 
@@ -982,7 +986,7 @@ fn format_temporal_parameter(
             "Cannot format given Object as a Date".to_owned(),
         )));
     };
-    let Some(date) = object.as_any().downcast_ref::<crate::util::JavaDate>() else {
+    let Some(date) = object.as_any().downcast_ref::<crate::util::DateValue>() else {
         return Err(Box::new(MessageFormatError::NumberFormatting(
             "Cannot format given Object as a Date".to_owned(),
         )));

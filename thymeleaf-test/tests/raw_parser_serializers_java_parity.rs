@@ -286,7 +286,7 @@ fn standard_processor_utils_attribute_helpers_match_java() {
         fn set_body_text(&mut self, _text: Utf16String, _processable: bool) {}
         fn set_body_sequence(
             &mut self,
-            _text: Arc<dyn thymeleaf::util::JavaCharSequence>,
+            _text: Arc<dyn thymeleaf::util::CharSequenceValue>,
             _processable: bool,
         ) {
         }

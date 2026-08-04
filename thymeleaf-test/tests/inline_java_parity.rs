@@ -14,7 +14,7 @@ use thymeleaf::expression::{IExpressionObjects, StandardExpressionResult, Templa
 use thymeleaf::inline::{IInliner, NoOpInliner};
 use thymeleaf::messageresolver::MessageResolutionResult;
 use thymeleaf::model::{ICDATASection, IComment, IModelFactory, IProcessableElementTag, IText};
-use thymeleaf::util::{JavaCharSequence, Locale, Utf16String};
+use thymeleaf::util::{CharSequenceValue, Locale, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, TemplateMode, TemplateProcessingException, TemplateResolutionAttributes,
 };
@@ -188,7 +188,7 @@ impl IInliner for ProbeInliner {
         &self,
         _context: &dyn ITemplateContext,
         _text: &dyn IText,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.text_calls.fetch_add(1, Ordering::SeqCst);
         Ok(Some(Box::new(java("TEXT"))))
     }
@@ -197,7 +197,7 @@ impl IInliner for ProbeInliner {
         &self,
         _context: &dyn ITemplateContext,
         _cdata_section: &dyn ICDATASection,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.cdata_calls.fetch_add(1, Ordering::SeqCst);
         Ok(Some(Box::new(java("CDATA"))))
     }
@@ -206,7 +206,7 @@ impl IInliner for ProbeInliner {
         &self,
         _context: &dyn ITemplateContext,
         _comment: &dyn IComment,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.comment_calls.fetch_add(1, Ordering::SeqCst);
         Ok(Some(Box::new(java("COMMENT"))))
     }
@@ -314,7 +314,7 @@ fn java(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn java_sequence(value: &str) -> Arc<dyn JavaCharSequence> {
+fn java_sequence(value: &str) -> Arc<dyn CharSequenceValue> {
     Arc::new(java(value))
 }
 
@@ -332,7 +332,7 @@ fn emit_java(output: &mut String, key: &str, value: &Utf16String) {
 fn emit_optional_sequence(
     output: &mut String,
     key: &str,
-    value: Option<Box<dyn JavaCharSequence>>,
+    value: Option<Box<dyn CharSequenceValue>>,
 ) {
     match value {
         Some(value) => emit(

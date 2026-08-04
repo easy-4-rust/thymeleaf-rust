@@ -4,8 +4,8 @@ use crate::context::IExpressionContext;
 use crate::util::{Utf16String, ValidateError};
 
 use super::{
-    JavaConversionResult, JavaConversionValue, JavaTargetClass, StandardConversionError,
-    StandardExpressions, TemplateValue,
+    ConversionResult, ConversionValue, StandardConversionError, StandardExpressions, TargetClass,
+    TemplateValue,
 };
 
 /// 在 Standard Expression 内执行类型转换。
@@ -34,7 +34,7 @@ impl Conversions {
         &'a self,
         target: Option<&'a TemplateValue>,
         class_name: Option<&Utf16String>,
-    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
+    ) -> Result<ConversionResult<'a>, StandardConversionError> {
         let class_name = class_name.ok_or_else(|| {
             StandardConversionError::Validation(ValidateError::IllegalArgument {
                 message: Some("Class name cannot be null".to_owned()),
@@ -42,11 +42,11 @@ impl Conversions {
         })?;
         let class_name = class_name.to_string_lossy();
         let target_class = if class_name == "String" || class_name == "java.lang.String" {
-            JavaTargetClass::String
+            TargetClass::String
         } else if class_name.contains('.') {
-            JavaTargetClass::Other(class_name)
+            TargetClass::Other(class_name)
         } else {
-            JavaTargetClass::Other(format!("java.lang.{class_name}"))
+            TargetClass::Other(format!("java.lang.{class_name}"))
         };
         self.convert(target, Some(&target_class))
     }
@@ -56,8 +56,8 @@ impl Conversions {
     pub fn convert<'a>(
         &'a self,
         target: Option<&'a TemplateValue>,
-        target_class: Option<&JavaTargetClass>,
-    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
+        target_class: Option<&TargetClass>,
+    ) -> Result<ConversionResult<'a>, StandardConversionError> {
         let context = self.context.upgrade().ok_or_else(|| {
             StandardConversionError::runtime(
                 "org.thymeleaf.exceptions.TemplateProcessingException",
@@ -72,11 +72,11 @@ impl Conversions {
                 )
             })?;
         let value = match target {
-            None | Some(TemplateValue::Null) => JavaConversionValue::Null,
+            None | Some(TemplateValue::Null) => ConversionValue::Null,
             Some(TemplateValue::String(value) | TemplateValue::SafeHtml(value)) => {
-                JavaConversionValue::String(value)
+                ConversionValue::String(value)
             }
-            Some(value) => JavaConversionValue::Object(value),
+            Some(value) => ConversionValue::Object(value),
         };
         service.convert(Some(context.as_any()), value, target_class)
     }

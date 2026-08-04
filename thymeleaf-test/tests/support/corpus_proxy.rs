@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use thymeleaf::util::{JavaNumber, Utf16String};
+use thymeleaf::util::{NumberValue, Utf16String};
 
 /// 上游动态代理访问限制语料的宿主代理。
 ///
@@ -28,7 +28,7 @@ impl TemplateObject for CorpusProxy {
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         (method_name.to_string_lossy() == "getValue" && arguments.is_empty()).then(|| {
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 10,
             )))))
         })

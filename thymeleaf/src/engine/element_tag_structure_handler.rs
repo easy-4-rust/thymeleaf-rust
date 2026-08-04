@@ -12,7 +12,7 @@ use crate::element::IElementTagStructureHandler;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel, IProcessableElementTag};
-use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
+use crate::util::{CharSequenceValue, Utf16String, Validate, ValidateError};
 
 use super::{
     AttributeDefinitionValue, AttributeDefinitions, AttributeNameValue, AttributesError,
@@ -50,7 +50,7 @@ const REMOVE_NORMALIZED: u8 = 2;
 /// 对应 Java: `org.thymeleaf.engine.ElementTagStructureHandler`。
 pub(crate) struct ElementTagStructureHandler {
     pub(crate) set_body_text: bool,
-    pub(crate) set_body_text_value: Option<Arc<dyn JavaCharSequence>>,
+    pub(crate) set_body_text_value: Option<Arc<dyn CharSequenceValue>>,
     pub(crate) set_body_text_processable: bool,
     pub(crate) set_body_model: bool,
     pub(crate) set_body_model_value: Option<Arc<dyn IModel>>,
@@ -397,7 +397,7 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
         self.set_body_text_processable = processable;
     }
 
-    fn set_body_sequence(&mut self, text: Arc<dyn JavaCharSequence>, processable: bool) {
+    fn set_body_sequence(&mut self, text: Arc<dyn CharSequenceValue>, processable: bool) {
         self.reset_all_but_variables_or_attributes();
         self.set_body_text = true;
         self.set_body_text_value = Some(text);

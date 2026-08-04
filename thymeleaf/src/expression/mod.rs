@@ -13,7 +13,7 @@ mod binary_operation_expression;
 mod boolean_token_expression;
 mod bools;
 mod calendars;
-mod class_not_found_exception;
+mod class_not_found_error;
 mod complex_expression;
 mod conditional_expression;
 mod conversions;
@@ -74,13 +74,13 @@ mod native_variable_expression_evaluator;
 mod negation_expression;
 mod no_op_token;
 mod no_op_token_expression;
-mod no_such_method_exception;
+mod no_such_method_error;
 mod not_equals_expression;
 mod null_token_expression;
 mod number_token_expression;
 mod numbers;
 mod objects;
-mod ognl_exception;
+mod ognl_error;
 mod ognl_runtime;
 mod or_expression;
 mod remainder_expression;
@@ -117,7 +117,7 @@ pub use binary_operation_expression::BinaryOperationExpression;
 pub use boolean_token_expression::BooleanTokenExpression;
 pub use bools::Bools;
 pub use calendars::{Calendars, CalendarsError};
-pub use class_not_found_exception::ClassNotFoundException;
+pub use class_not_found_error::ClassNotFoundError;
 pub use complex_expression::ComplexExpression;
 pub use conditional_expression::ConditionalExpression;
 pub use conversions::Conversions;
@@ -145,8 +145,8 @@ pub use greater_than_expression::GreaterThanExpression;
 pub use i_expression_object_factory::{ExpressionObjectNames, IExpressionObjectFactory};
 pub use i_expression_objects::IExpressionObjects;
 pub use i_standard_conversion_service::{
-    IStandardConversionService, JavaConversionObject, JavaConversionResult, JavaConversionValue,
-    JavaTargetClass, StandardConversionError, Utf16StringConversionResult,
+    ConversionObject, ConversionResult, ConversionValue, IStandardConversionService,
+    StandardConversionError, TargetClass, Utf16StringConversionResult,
 };
 pub use i_standard_expression::{
     IStandardExpression, StandardExpressionError, StandardExpressionResult,
@@ -180,13 +180,13 @@ pub use native_variable_expression_evaluator::NativeVariableExpressionEvaluator;
 pub use negation_expression::NegationExpression;
 pub use no_op_token::NoOpToken;
 pub use no_op_token_expression::NoOpTokenExpression;
-pub use no_such_method_exception::NoSuchMethodException;
+pub use no_such_method_error::NoSuchMethodError;
 pub use not_equals_expression::NotEqualsExpression;
 pub use null_token_expression::NullTokenExpression;
 pub use number_token_expression::NumberTokenExpression;
 pub use numbers::{Numbers, NumbersError};
-pub use objects::{JavaObjectArray, Objects, ObjectsError};
-pub use ognl_exception::OgnlException;
+pub use objects::{ObjectArrayValue, Objects, ObjectsError};
+pub use ognl_error::OgnlError;
 pub use ognl_runtime::{NoOpOgnlRuntime, OgnlRuntime, OgnlRuntimeError};
 pub use or_expression::OrExpression;
 pub use remainder_expression::RemainderExpression;
@@ -207,6 +207,6 @@ pub use template_value::{
 };
 pub use temporals::{Temporals, TemporalsError};
 pub use text_literal_expression::TextLiteralExpression;
-pub use token::{JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer};
+pub use token::{Token, TokenError, TokenParsingTracer, TokenStringResult, TokenValue};
 pub use uris::{UriExpressionError, Uris};
 pub use variable_expression::VariableExpression;

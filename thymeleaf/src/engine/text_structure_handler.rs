@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::model::IModel;
 use crate::text::ITextStructureHandler;
-use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
+use crate::util::{CharSequenceValue, Utf16String, Validate, ValidateError};
 
 /// 引擎内部 Text 结构动作状态机。
 ///
@@ -12,7 +12,7 @@ use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
 /// 对应 Java: `org.thymeleaf.engine.TextStructureHandler`。
 pub(crate) struct TextStructureHandler {
     pub(crate) set_text: bool,
-    pub(crate) set_text_value: Option<Arc<dyn JavaCharSequence>>,
+    pub(crate) set_text_value: Option<Arc<dyn CharSequenceValue>>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -42,7 +42,7 @@ impl TextStructureHandler {
     /// `"Text cannot be null"`，且处理器保持已重置状态。
     pub(crate) fn set_text_nullable(
         &mut self,
-        text: Option<Arc<dyn JavaCharSequence>>,
+        text: Option<Arc<dyn CharSequenceValue>>,
     ) -> Result<(), ValidateError> {
         self.reset();
         Validate::not_null(text.as_deref(), Some("Text cannot be null"))?;
@@ -83,7 +83,7 @@ impl ITextStructureHandler for TextStructureHandler {
             .expect("Rust non-null text boundary must satisfy Java validation");
     }
 
-    fn set_text_sequence(&mut self, text: Arc<dyn JavaCharSequence>) {
+    fn set_text_sequence(&mut self, text: Arc<dyn CharSequenceValue>) {
         self.set_text_nullable(Some(text))
             .expect("Rust non-null text boundary must satisfy Java validation");
     }

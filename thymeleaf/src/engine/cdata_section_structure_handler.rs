@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use crate::cdatasection::ICDATASectionStructureHandler;
 use crate::model::IModel;
-use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
+use crate::util::{CharSequenceValue, Utf16String, Validate, ValidateError};
 
 /// 引擎内部 CDATASection 结构动作状态机。
 ///
 /// 对应 Java: `org.thymeleaf.engine.CDATASectionStructureHandler`。
 pub(crate) struct CDATASectionStructureHandler {
     pub(crate) set_content: bool,
-    pub(crate) set_content_value: Option<Arc<dyn JavaCharSequence>>,
+    pub(crate) set_content_value: Option<Arc<dyn CharSequenceValue>>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -38,7 +38,7 @@ impl CDATASectionStructureHandler {
     /// 方法先重置，再校验非空；失败消息精确为 `"Content cannot be null"`。
     pub(crate) fn set_content_nullable(
         &mut self,
-        content: Option<Arc<dyn JavaCharSequence>>,
+        content: Option<Arc<dyn CharSequenceValue>>,
     ) -> Result<(), ValidateError> {
         self.reset();
         Validate::not_null(content.as_deref(), Some("Content cannot be null"))?;
@@ -78,7 +78,7 @@ impl ICDATASectionStructureHandler for CDATASectionStructureHandler {
             .expect("Rust non-null content boundary must satisfy Java validation");
     }
 
-    fn set_content_sequence(&mut self, content: Arc<dyn JavaCharSequence>) {
+    fn set_content_sequence(&mut self, content: Arc<dyn CharSequenceValue>) {
         self.set_content_nullable(Some(content))
             .expect("Rust non-null content boundary must satisfy Java validation");
     }

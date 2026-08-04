@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::JavaDate;
+use thymeleaf::util::DateValue;
 use thymeleaf::web::IWebExchange;
 
 use crate::business::services::ProductService;
@@ -19,7 +19,7 @@ impl GtvgController for ProductCommentsController {
         &self,
         web_exchange: Arc<dyn IWebExchange>,
         template_engine: &TemplateEngine,
-        _now: JavaDate,
+        _now: DateValue,
     ) -> ControllerResult {
         // Java: Integer.valueOf(webExchange.getRequest().getParameterValue("prodId"))
         let prod_id = web_exchange

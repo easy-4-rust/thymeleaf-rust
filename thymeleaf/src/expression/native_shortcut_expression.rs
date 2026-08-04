@@ -4,7 +4,7 @@ use thiserror::Error;
 use unicode_general_category::{GeneralCategory, get_general_category};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaNumber, Utf16String};
+use crate::util::{NumberValue, Utf16String};
 
 use super::TemplateValue;
 
@@ -156,7 +156,7 @@ fn not_applicable(property_name: String, target: &TemplateValue) -> NativeShortc
 }
 
 fn integer_value(value: usize) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::Integer(
+    Arc::new(TemplateValue::Number(NumberValue::Integer(
         i32::try_from(value).unwrap_or(i32::MAX),
     )))
 }

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use thymeleaf::context::ITemplateContext;
 use thymeleaf::expression::{Numbers, TemplateValue};
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
-use thymeleaf::util::{JavaNumber, NumberPointType, Utf16String};
+use thymeleaf::util::{NumberPointType, NumberValue, Utf16String};
 
 /// 上游测试框架的内存消息解析器。
 ///
@@ -145,11 +145,11 @@ fn format_message_like_java(
                 };
                 let value = match parameter.as_deref() {
                     Some(TemplateValue::Number(
-                        number @ (JavaNumber::Byte(_)
-                        | JavaNumber::Short(_)
-                        | JavaNumber::Integer(_)
-                        | JavaNumber::Long(_)
-                        | JavaNumber::BigInteger(_)),
+                        number @ (NumberValue::Byte(_)
+                        | NumberValue::Short(_)
+                        | NumberValue::Integer(_)
+                        | NumberValue::Long(_)
+                        | NumberValue::BigInteger(_)),
                     )) => Numbers::new(context.get_locale().clone())
                         .format_integer(Some(number), 1, Some(NumberPointType::Default))
                         .ok()

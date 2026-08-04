@@ -16,7 +16,7 @@ use thymeleaf::context::{
 use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaNumber, Locale, Utf16String};
+use thymeleaf::util::{Locale, NumberValue, Utf16String};
 use thymeleaf::{
     ITemplateEngine, TemplateEngine, TemplateMode, TemplateResolutionAttributeValue,
     TemplateResolutionAttributes,
@@ -45,7 +45,7 @@ fn string_value(value: &str) -> Option<Arc<TemplateValue>> {
 }
 
 fn integer_value(value: i32) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+    Some(Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
 }
 
 fn template_data(name: &str) -> TemplateData {

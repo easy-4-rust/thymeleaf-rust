@@ -17,12 +17,12 @@ const ARRAY_NULL_MESSAGE: &str = "Cannot aggregate on array containing nulls";
 /// 本类型分别保存任意精度 unscaled value 与 32 位 scale，因而不会把 Java 的
 /// `1`、`1.0`、`1.00` 或负 scale 科学计数法错误合并。
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct JavaBigDecimal {
+pub struct BigDecimalValue {
     unscaled_value: BigInt,
     scale: i32,
 }
 
-impl JavaBigDecimal {
+impl BigDecimalValue {
     /// 从 Java unscaled value 与 scale 创建十进制值。
     ///
     /// # 参数
@@ -240,12 +240,9 @@ impl JavaBigDecimal {
 
     /// 按 Java `BigDecimal#multiply` 语义相乘。
     /// 对应 Java 语义：`AggregateUtils` 的 `multiply_java` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn multiply_java(
-        &self,
-        other: &Self,
-    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+    pub(crate) fn multiply_java(&self, other: &Self) -> Result<Self, BigDecimalArithmeticError> {
         let scale = checked_scale(i64::from(self.scale) + i64::from(other.scale))
-            .map_err(|_| JavaBigDecimalArithmeticError::ScaleOverflow)?;
+            .map_err(|_| BigDecimalArithmeticError::ScaleOverflow)?;
         Ok(Self::from_unscaled(
             &self.unscaled_value * &other.unscaled_value,
             scale,
@@ -254,14 +251,11 @@ impl JavaBigDecimal {
 
     /// 按 Java `BigDecimal#divide` 执行精确除法。
     /// 对应 Java 语义：`AggregateUtils` 的 `divide_java` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn divide_java(
-        &self,
-        divisor: &Self,
-    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+    pub(crate) fn divide_java(&self, divisor: &Self) -> Result<Self, BigDecimalArithmeticError> {
         self.divide_exact(divisor).map_err(|error| match error {
-            DivisionError::ByZero => JavaBigDecimalArithmeticError::DivisionByZero,
-            DivisionError::NonTerminating => JavaBigDecimalArithmeticError::NonTerminating,
-            DivisionError::ScaleOverflow => JavaBigDecimalArithmeticError::ScaleOverflow,
+            DivisionError::ByZero => BigDecimalArithmeticError::DivisionByZero,
+            DivisionError::NonTerminating => BigDecimalArithmeticError::NonTerminating,
+            DivisionError::ScaleOverflow => BigDecimalArithmeticError::ScaleOverflow,
         })
     }
 
@@ -271,22 +265,20 @@ impl JavaBigDecimal {
         &self,
         divisor: &Self,
         scale: i32,
-    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+    ) -> Result<Self, BigDecimalArithmeticError> {
         if divisor.unscaled_value.is_zero() {
-            return Err(JavaBigDecimalArithmeticError::DivisionByZero);
+            return Err(BigDecimalArithmeticError::DivisionByZero);
         }
         let exponent = i64::from(divisor.scale) + i64::from(scale) - i64::from(self.scale);
         let mut numerator = self.unscaled_value.clone();
         let mut denominator = divisor.unscaled_value.clone();
         if exponent >= 0 {
             numerator *= BigInt::from(10_u8).pow(
-                u32::try_from(exponent)
-                    .map_err(|_| JavaBigDecimalArithmeticError::ScaleOverflow)?,
+                u32::try_from(exponent).map_err(|_| BigDecimalArithmeticError::ScaleOverflow)?,
             );
         } else {
             denominator *= BigInt::from(10_u8).pow(
-                u32::try_from(-exponent)
-                    .map_err(|_| JavaBigDecimalArithmeticError::ScaleOverflow)?,
+                u32::try_from(-exponent).map_err(|_| BigDecimalArithmeticError::ScaleOverflow)?,
             );
         }
         let quotient = &numerator / &denominator;
@@ -305,12 +297,9 @@ impl JavaBigDecimal {
 
     /// 按 Java `BigDecimal#remainder` 返回截断商对应的余数。
     /// 对应 Java 语义：`AggregateUtils` 的 `remainder_java` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn remainder_java(
-        &self,
-        divisor: &Self,
-    ) -> Result<Self, JavaBigDecimalArithmeticError> {
+    pub(crate) fn remainder_java(&self, divisor: &Self) -> Result<Self, BigDecimalArithmeticError> {
         if divisor.unscaled_value.is_zero() {
-            return Err(JavaBigDecimalArithmeticError::DivisionByZero);
+            return Err(BigDecimalArithmeticError::DivisionByZero);
         }
         let result_scale = self.scale.max(divisor.scale);
         let left = rescale_unscaled(&self.unscaled_value, self.scale, result_scale);
@@ -412,7 +401,7 @@ impl JavaBigDecimal {
     }
 }
 
-impl Display for JavaBigDecimal {
+impl Display for BigDecimalValue {
     /// 输出 Java `BigDecimal#toString()` 等价文本。
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(&self.to_display_string())
@@ -424,9 +413,9 @@ impl Display for JavaBigDecimal {
 /// 对应 Java: `java.lang.Number` 及 `AggregateUtils#toBigDecimal(Number)` 的
 /// `instanceof` 分派。`Other` 表示自定义 `Number` 子类，只读取其 `doubleValue()`。
 #[derive(Clone, Debug, PartialEq)]
-pub enum JavaNumber {
+pub enum NumberValue {
     /// `java.math.BigDecimal`，转换时保留同一数值表示。
-    BigDecimal(JavaBigDecimal),
+    BigDecimal(BigDecimalValue),
     /// `java.math.BigInteger`。
     BigInteger(BigInt),
     /// `java.lang.Byte`。
@@ -455,11 +444,11 @@ pub enum JavaNumber {
 /// 对应 Java: `AggregateUtils#sum(Object[])` 与 `avg(Object[])`。先完整检查 null，
 /// 再在第二遍遍历时执行 `Number` 强制转换，从而保留异常优先级。
 #[derive(Clone, Debug, PartialEq)]
-pub enum JavaAggregateObject {
+pub enum AggregateObjectValue {
     /// Java null。
     Null,
     /// 任意 Java `Number`。
-    Number(JavaNumber),
+    Number(NumberValue),
     /// 非 `Number` 对象及其运行时类名。
     Other(String),
 }
@@ -468,26 +457,26 @@ pub enum JavaAggregateObject {
 ///
 /// Java `AggregateUtils` 先由 `Validate.containsNoNulls` 遍历一次，再执行第二次聚合
 /// 遍历。本 trait 明确保留“两次调用 iterator()”的可观察行为。
-/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `JavaNumberIterable`。
-pub trait JavaNumberIterable {
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `NumberIterableValue`。
+pub trait NumberIterableValue {
     /// 创建一次新的 Java 迭代器。
     ///
     /// # 返回
     /// 元素中的 `None` 对应 Java null。
-    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&JavaNumber>> + '_>;
+    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&NumberValue>> + '_>;
 }
 
 /// 可重复遍历的 Java 数字列表适配。
 ///
 /// 对应 `Iterable<? extends Number>` 的常规集合输入；元素中的 `None` 保留 Java
 /// null，并由 `AggregateUtils` 按原异常顺序校验。
-/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `JavaNumberList`。
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `NumberListValue`。
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct JavaNumberList {
-    values: Vec<Option<JavaNumber>>,
+pub struct NumberListValue {
+    values: Vec<Option<NumberValue>>,
 }
 
-impl JavaNumberList {
+impl NumberListValue {
     /// 从数字槽位创建列表。
     ///
     /// # 参数
@@ -497,7 +486,7 @@ impl JavaNumberList {
     /// 拥有输入内容且可重复创建迭代器的列表。
     /// 对应 Java 语义：`AggregateUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn new(values: Vec<Option<JavaNumber>>) -> Self {
+    pub fn new(values: Vec<Option<NumberValue>>) -> Self {
         Self { values }
     }
 
@@ -507,13 +496,13 @@ impl JavaNumberList {
     /// 保留顺序和 null 槽位的只读视图。
     /// 对应 Java 语义：`AggregateUtils` 的 `as_slice` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn as_slice(&self) -> &[Option<JavaNumber>] {
+    pub fn as_slice(&self) -> &[Option<NumberValue>] {
         &self.values
     }
 }
 
-impl JavaNumberIterable for JavaNumberList {
-    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&JavaNumber>> + '_> {
+impl NumberIterableValue for NumberListValue {
+    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&NumberValue>> + '_> {
         Box::new(self.values.iter().map(Option::as_ref))
     }
 }
@@ -570,8 +559,8 @@ impl AggregateUtils {
     /// # 错误
     /// null 目标、null 元素或无法转换的数字返回 Java 等价错误。
     pub fn sum_iterable(
-        target: Option<&dyn JavaNumberIterable>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&dyn NumberIterableValue>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_iterable(target, ITERABLE_NULL_SUM_MESSAGE, false)
     }
 
@@ -588,38 +577,38 @@ impl AggregateUtils {
     /// # 错误
     /// null 元素优先于类型转换检查；非数字元素返回 `ClassCast`。
     pub fn sum_objects(
-        target: Option<&[JavaAggregateObject]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&[AggregateObjectValue]>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_objects(target, false)
     }
 
     /// 求 Java `byte[]` 之和。对应 Java: `AggregateUtils#sum(byte[])`。
-    pub fn sum_bytes(target: Option<&[i8]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn sum_bytes(target: Option<&[i8]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Bytes), false)
     }
 
     /// 求 Java `short[]` 之和。对应 Java: `AggregateUtils#sum(short[])`。
-    pub fn sum_shorts(target: Option<&[i16]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn sum_shorts(target: Option<&[i16]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Shorts), false)
     }
 
     /// 求 Java `int[]` 之和。对应 Java: `AggregateUtils#sum(int[])`。
-    pub fn sum_ints(target: Option<&[i32]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn sum_ints(target: Option<&[i32]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Ints), false)
     }
 
     /// 求 Java `long[]` 之和。对应 Java: `AggregateUtils#sum(long[])`。
-    pub fn sum_longs(target: Option<&[i64]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn sum_longs(target: Option<&[i64]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Longs), false)
     }
 
     /// 求 Java `float[]` 之和。对应 Java: `AggregateUtils#sum(float[])`。
-    pub fn sum_floats(target: Option<&[f32]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn sum_floats(target: Option<&[f32]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Floats), false)
     }
 
     /// 求 Java `double[]` 之和。对应 Java: `AggregateUtils#sum(double[])`。
-    pub fn sum_doubles(target: Option<&[f64]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn sum_doubles(target: Option<&[f64]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Doubles), false)
     }
 
@@ -629,68 +618,68 @@ impl AggregateUtils {
     ///
     /// Java 源码在此重载中使用数组 null 消息；该看似不一致的文本被原样保留。
     pub fn avg_iterable(
-        target: Option<&dyn JavaNumberIterable>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&dyn NumberIterableValue>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_iterable(target, ARRAY_NULL_MESSAGE, true)
     }
 
     /// 求 Java `Object[]` 数字的平均值。对应 Java: `AggregateUtils#avg(Object[])`。
     pub fn avg_objects(
-        target: Option<&[JavaAggregateObject]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&[AggregateObjectValue]>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_objects(target, true)
     }
 
     /// 求 Java `byte[]` 平均值。对应 Java: `AggregateUtils#avg(byte[])`。
-    pub fn avg_bytes(target: Option<&[i8]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn avg_bytes(target: Option<&[i8]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Bytes), true)
     }
 
     /// 求 Java `short[]` 平均值。对应 Java: `AggregateUtils#avg(short[])`。
-    pub fn avg_shorts(target: Option<&[i16]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn avg_shorts(target: Option<&[i16]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Shorts), true)
     }
 
     /// 求 Java `int[]` 平均值。对应 Java: `AggregateUtils#avg(int[])`。
-    pub fn avg_ints(target: Option<&[i32]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn avg_ints(target: Option<&[i32]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Ints), true)
     }
 
     /// 求 Java `long[]` 平均值。对应 Java: `AggregateUtils#avg(long[])`。
-    pub fn avg_longs(target: Option<&[i64]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn avg_longs(target: Option<&[i64]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Longs), true)
     }
 
     /// 求 Java `float[]` 平均值。对应 Java: `AggregateUtils#avg(float[])`。
-    pub fn avg_floats(target: Option<&[f32]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn avg_floats(target: Option<&[f32]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Floats), true)
     }
 
     /// 求 Java `double[]` 平均值。对应 Java: `AggregateUtils#avg(double[])`。
-    pub fn avg_doubles(target: Option<&[f64]>) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    pub fn avg_doubles(target: Option<&[f64]>) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_primitive(target.map(PrimitiveArray::Doubles), true)
     }
 
     /// 对应 Java 语义：`AggregateUtils` 的 `sum_numbers` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn sum_numbers(
-        target: Option<&[Option<JavaNumber>]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&[Option<NumberValue>]>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_number_array(target, false)
     }
 
     /// 对应 Java 语义：`AggregateUtils` 的 `avg_numbers` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn avg_numbers(
-        target: Option<&[Option<JavaNumber>]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&[Option<NumberValue>]>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         aggregate_number_array(target, true)
     }
 }
 
 fn aggregate_iterable(
-    target: Option<&dyn JavaNumberIterable>,
+    target: Option<&dyn NumberIterableValue>,
     null_message: &'static str,
     average: bool,
-) -> Result<Option<JavaBigDecimal>, AggregateError> {
+) -> Result<Option<BigDecimalValue>, AggregateError> {
     let target = target.ok_or(AggregateError::IllegalArgument {
         message: NULL_TARGET_MESSAGE,
     })?;
@@ -702,7 +691,7 @@ fn aggregate_iterable(
         }
     }
 
-    let mut total = JavaBigDecimal::zero();
+    let mut total = BigDecimalValue::zero();
     let mut size = 0_usize;
     for element in target.iter_java_numbers() {
         let number = element.ok_or(AggregateError::IllegalArgument {
@@ -715,22 +704,22 @@ fn aggregate_iterable(
 }
 
 fn aggregate_objects(
-    target: Option<&[JavaAggregateObject]>,
+    target: Option<&[AggregateObjectValue]>,
     average: bool,
-) -> Result<Option<JavaBigDecimal>, AggregateError> {
+) -> Result<Option<BigDecimalValue>, AggregateError> {
     let target = target.ok_or(AggregateError::IllegalArgument {
         message: NULL_TARGET_MESSAGE,
     })?;
     if target
         .iter()
-        .any(|element| matches!(element, JavaAggregateObject::Null))
+        .any(|element| matches!(element, AggregateObjectValue::Null))
     {
         return Err(AggregateError::IllegalArgument {
             message: ARRAY_NULL_MESSAGE,
         });
     }
 
-    let mut total = JavaBigDecimal::zero();
+    let mut total = BigDecimalValue::zero();
     for element in target {
         total = total.add_java(&to_big_decimal(object_number(element)?)?);
     }
@@ -738,9 +727,9 @@ fn aggregate_objects(
 }
 
 fn aggregate_number_array(
-    target: Option<&[Option<JavaNumber>]>,
+    target: Option<&[Option<NumberValue>]>,
     average: bool,
-) -> Result<Option<JavaBigDecimal>, AggregateError> {
+) -> Result<Option<BigDecimalValue>, AggregateError> {
     let target = target.ok_or(AggregateError::IllegalArgument {
         message: NULL_TARGET_MESSAGE,
     })?;
@@ -755,7 +744,7 @@ fn aggregate_number_array(
             }
         }
     }
-    let mut total = JavaBigDecimal::zero();
+    let mut total = BigDecimalValue::zero();
     for number in numbers {
         total = total.add_java(&to_big_decimal(number)?);
     }
@@ -774,45 +763,45 @@ enum PrimitiveArray<'a> {
 fn aggregate_primitive(
     target: Option<PrimitiveArray<'_>>,
     average: bool,
-) -> Result<Option<JavaBigDecimal>, AggregateError> {
+) -> Result<Option<BigDecimalValue>, AggregateError> {
     let target = target.ok_or(AggregateError::IllegalArgument {
         message: NULL_TARGET_MESSAGE,
     })?;
-    let mut total = JavaBigDecimal::zero();
+    let mut total = BigDecimalValue::zero();
     let size = match target {
         PrimitiveArray::Bytes(values) => {
             for value in values {
-                total = total.add_java(&JavaBigDecimal::from_i64(i64::from(*value)));
+                total = total.add_java(&BigDecimalValue::from_i64(i64::from(*value)));
             }
             values.len()
         }
         PrimitiveArray::Shorts(values) => {
             for value in values {
-                total = total.add_java(&JavaBigDecimal::from_i64(i64::from(*value)));
+                total = total.add_java(&BigDecimalValue::from_i64(i64::from(*value)));
             }
             values.len()
         }
         PrimitiveArray::Ints(values) => {
             for value in values {
-                total = total.add_java(&JavaBigDecimal::from_i64(i64::from(*value)));
+                total = total.add_java(&BigDecimalValue::from_i64(i64::from(*value)));
             }
             values.len()
         }
         PrimitiveArray::Longs(values) => {
             for value in values {
-                total = total.add_java(&JavaBigDecimal::from_i64(*value));
+                total = total.add_java(&BigDecimalValue::from_i64(*value));
             }
             values.len()
         }
         PrimitiveArray::Floats(values) => {
             for value in values {
-                total = total.add_java(&JavaBigDecimal::from_f64(f64::from(*value))?);
+                total = total.add_java(&BigDecimalValue::from_f64(f64::from(*value))?);
             }
             values.len()
         }
         PrimitiveArray::Doubles(values) => {
             for value in values {
-                total = total.add_java(&JavaBigDecimal::from_f64(*value)?);
+                total = total.add_java(&BigDecimalValue::from_f64(*value)?);
             }
             values.len()
         }
@@ -821,10 +810,10 @@ fn aggregate_primitive(
 }
 
 fn finish_aggregate(
-    total: JavaBigDecimal,
+    total: BigDecimalValue,
     size: usize,
     average: bool,
-) -> Result<Option<JavaBigDecimal>, AggregateError> {
+) -> Result<Option<BigDecimalValue>, AggregateError> {
     if size == 0 {
         return Ok(None);
     }
@@ -835,7 +824,7 @@ fn finish_aggregate(
     let divisor_value = i64::try_from(size).map_err(|_| AggregateError::Arithmetic {
         message: "BigDecimal divisor exceeds Java long range".to_owned(),
     })?;
-    let divisor = JavaBigDecimal::from_i64(divisor_value);
+    let divisor = BigDecimalValue::from_i64(divisor_value);
     match total.divide_exact(&divisor) {
         Ok(value) => Ok(Some(value)),
         Err(DivisionError::NonTerminating) => {
@@ -848,27 +837,27 @@ fn finish_aggregate(
     }
 }
 
-fn to_big_decimal(number: &JavaNumber) -> Result<JavaBigDecimal, AggregateError> {
+fn to_big_decimal(number: &NumberValue) -> Result<BigDecimalValue, AggregateError> {
     match number {
-        JavaNumber::BigDecimal(value) => Ok(value.clone()),
-        JavaNumber::BigInteger(value) => Ok(JavaBigDecimal::from_big_integer(value)),
-        JavaNumber::Byte(value) => Ok(JavaBigDecimal::from_i64(i64::from(*value))),
-        JavaNumber::Short(value) => Ok(JavaBigDecimal::from_i64(i64::from(*value))),
-        JavaNumber::Integer(value) => Ok(JavaBigDecimal::from_i64(i64::from(*value))),
-        JavaNumber::Long(value) => Ok(JavaBigDecimal::from_i64(*value)),
-        JavaNumber::Float(value) => JavaBigDecimal::from_f64(f64::from(*value)),
-        JavaNumber::Double(value) => JavaBigDecimal::from_f64(*value),
-        JavaNumber::Other { double_value, .. } => JavaBigDecimal::from_f64(*double_value),
+        NumberValue::BigDecimal(value) => Ok(value.clone()),
+        NumberValue::BigInteger(value) => Ok(BigDecimalValue::from_big_integer(value)),
+        NumberValue::Byte(value) => Ok(BigDecimalValue::from_i64(i64::from(*value))),
+        NumberValue::Short(value) => Ok(BigDecimalValue::from_i64(i64::from(*value))),
+        NumberValue::Integer(value) => Ok(BigDecimalValue::from_i64(i64::from(*value))),
+        NumberValue::Long(value) => Ok(BigDecimalValue::from_i64(*value)),
+        NumberValue::Float(value) => BigDecimalValue::from_f64(f64::from(*value)),
+        NumberValue::Double(value) => BigDecimalValue::from_f64(*value),
+        NumberValue::Other { double_value, .. } => BigDecimalValue::from_f64(*double_value),
     }
 }
 
-fn object_number(element: &JavaAggregateObject) -> Result<&JavaNumber, AggregateError> {
+fn object_number(element: &AggregateObjectValue) -> Result<&NumberValue, AggregateError> {
     match element {
-        JavaAggregateObject::Number(number) => Ok(number),
-        JavaAggregateObject::Other(actual_class) => Err(AggregateError::ClassCast {
+        AggregateObjectValue::Number(number) => Ok(number),
+        AggregateObjectValue::Other(actual_class) => Err(AggregateError::ClassCast {
             actual_class: actual_class.clone(),
         }),
-        JavaAggregateObject::Null => Err(AggregateError::IllegalArgument {
+        AggregateObjectValue::Null => Err(AggregateError::IllegalArgument {
             message: ARRAY_NULL_MESSAGE,
         }),
     }
@@ -889,7 +878,7 @@ fn checked_scale(scale: i64) -> Result<i32, AggregateError> {
     })
 }
 
-fn parse_decimal(value: &str) -> Result<JavaBigDecimal, AggregateError> {
+fn parse_decimal(value: &str) -> Result<BigDecimalValue, AggregateError> {
     let (mantissa, exponent) = match value.find(['e', 'E']) {
         Some(index) => {
             let exponent =
@@ -925,7 +914,7 @@ fn parse_decimal(value: &str) -> Result<JavaBigDecimal, AggregateError> {
     }
     let scale =
         checked_scale(i64::try_from(fraction.len()).expect("fraction length fits i64") - exponent)?;
-    Ok(JavaBigDecimal::from_unscaled(unscaled, scale))
+    Ok(BigDecimalValue::from_unscaled(unscaled, scale))
 }
 
 /// 对应 Java 语义：`AggregateUtils` 的 `double_string` 行为（Rust 侧辅助/私有路径）。
@@ -1014,9 +1003,9 @@ enum DivisionError {
 }
 
 /// Standard Expression 使用 Java BigDecimal 运算时的 ArithmeticException 分类。
-/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `JavaBigDecimalArithmeticError`。
+/// 对应 Java 语义：`AggregateUtils` 的 Rust 侧类型 `BigDecimalArithmeticError`。
 #[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
-pub(crate) enum JavaBigDecimalArithmeticError {
+pub(crate) enum BigDecimalArithmeticError {
     /// 除数为零。
     #[error("Division by zero")]
     DivisionByZero,
@@ -1048,8 +1037,8 @@ mod tests {
     use num_bigint::BigInt;
 
     use super::{
-        AggregateError, AggregateUtils, JavaAggregateObject, JavaBigDecimal, JavaNumber,
-        JavaNumberIterable, JavaNumberList, double_string,
+        AggregateError, AggregateObjectValue, AggregateUtils, BigDecimalValue, NumberIterableValue,
+        NumberListValue, NumberValue, double_string,
     };
 
     #[test]
@@ -1063,13 +1052,13 @@ mod tests {
             ("-0.0", "0.0", "0.0", 1),
         ];
         for (source, display, plain, scale) in values {
-            let value = JavaBigDecimal::parse(source).expect("decimal");
+            let value = BigDecimalValue::parse(source).expect("decimal");
             assert_eq!(value.to_string(), display);
             assert_eq!(value.to_plain_string(), plain);
             assert_eq!(value.scale(), scale);
             assert!(value.precision() >= 1);
         }
-        let explicit = JavaBigDecimal::from_unscaled(BigInt::from(123), 2);
+        let explicit = BigDecimalValue::from_unscaled(BigInt::from(123), 2);
         assert_eq!(explicit.unscaled_value(), &BigInt::from(123));
         assert_eq!(explicit.to_string(), "1.23");
     }
@@ -1089,18 +1078,18 @@ mod tests {
 
     #[test]
     fn sums_all_number_runtime_types_and_preserves_scale() {
-        let numbers = JavaNumberList::new(vec![
-            Some(JavaNumber::BigDecimal(
-                JavaBigDecimal::parse("1.20").expect("decimal"),
+        let numbers = NumberListValue::new(vec![
+            Some(NumberValue::BigDecimal(
+                BigDecimalValue::parse("1.20").expect("decimal"),
             )),
-            Some(JavaNumber::BigInteger(BigInt::from(2))),
-            Some(JavaNumber::Byte(3)),
-            Some(JavaNumber::Short(4)),
-            Some(JavaNumber::Integer(5)),
-            Some(JavaNumber::Long(6)),
-            Some(JavaNumber::Float(0.5)),
-            Some(JavaNumber::Double(0.25)),
-            Some(JavaNumber::Other {
+            Some(NumberValue::BigInteger(BigInt::from(2))),
+            Some(NumberValue::Byte(3)),
+            Some(NumberValue::Short(4)),
+            Some(NumberValue::Integer(5)),
+            Some(NumberValue::Long(6)),
+            Some(NumberValue::Float(0.5)),
+            Some(NumberValue::Double(0.25)),
+            Some(NumberValue::Other {
                 class_name: "example.CustomNumber".to_owned(),
                 double_value: 0.05,
             }),
@@ -1128,11 +1117,11 @@ mod tests {
             .expect("value");
         assert_eq!(negative.to_string(), "-1.3333333333");
         let scaled = AggregateUtils::avg_objects(Some(&[
-            JavaAggregateObject::Number(JavaNumber::BigDecimal(
-                JavaBigDecimal::parse("1.000000000000").expect("decimal"),
+            AggregateObjectValue::Number(NumberValue::BigDecimal(
+                BigDecimalValue::parse("1.000000000000").expect("decimal"),
             )),
-            JavaAggregateObject::Number(JavaNumber::Integer(2)),
-            JavaAggregateObject::Number(JavaNumber::Integer(2)),
+            AggregateObjectValue::Number(NumberValue::Integer(2)),
+            AggregateObjectValue::Number(NumberValue::Integer(2)),
         ]))
         .expect("average")
         .expect("value");
@@ -1148,7 +1137,7 @@ mod tests {
                 message: "Cannot aggregate on null"
             })
         );
-        let null_numbers = JavaNumberList::new(vec![Some(JavaNumber::Integer(1)), None]);
+        let null_numbers = NumberListValue::new(vec![Some(NumberValue::Integer(1)), None]);
         assert_eq!(
             AggregateUtils::sum_iterable(Some(&null_numbers)),
             Err(AggregateError::IllegalArgument {
@@ -1162,8 +1151,8 @@ mod tests {
             })
         );
         let objects = [
-            JavaAggregateObject::Other("java.lang.String".to_owned()),
-            JavaAggregateObject::Null,
+            AggregateObjectValue::Other("java.lang.String".to_owned()),
+            AggregateObjectValue::Null,
         ];
         assert_eq!(
             AggregateUtils::sum_objects(Some(&objects)),
@@ -1172,7 +1161,7 @@ mod tests {
             })
         );
         assert_eq!(
-            AggregateUtils::sum_objects(Some(&[JavaAggregateObject::Other(
+            AggregateUtils::sum_objects(Some(&[AggregateObjectValue::Other(
                 "java.lang.String".to_owned()
             )])),
             Err(AggregateError::ClassCast {
@@ -1185,7 +1174,7 @@ mod tests {
                 value: "NaN".to_owned()
             })
         );
-        let nan_numbers = JavaNumberList::new(vec![Some(JavaNumber::Double(f64::NAN))]);
+        let nan_numbers = NumberListValue::new(vec![Some(NumberValue::Double(f64::NAN))]);
         assert_eq!(
             AggregateUtils::sum_iterable(Some(&nan_numbers)),
             Err(AggregateError::NumberFormat {
@@ -1193,9 +1182,9 @@ mod tests {
             })
         );
         assert_eq!(
-            AggregateUtils::sum_objects(Some(&[JavaAggregateObject::Number(JavaNumber::Double(
-                f64::NAN
-            ))])),
+            AggregateUtils::sum_objects(Some(&[AggregateObjectValue::Number(
+                NumberValue::Double(f64::NAN)
+            )])),
             Err(AggregateError::NumberFormat {
                 value: "NaN".to_owned()
             })
@@ -1205,18 +1194,18 @@ mod tests {
     #[test]
     fn invokes_java_iterable_twice_and_handles_empty_targets() {
         struct CountingIterable {
-            values: Vec<Option<JavaNumber>>,
+            values: Vec<Option<NumberValue>>,
             iterations: Cell<usize>,
         }
-        impl JavaNumberIterable for CountingIterable {
-            fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&JavaNumber>> + '_> {
+        impl NumberIterableValue for CountingIterable {
+            fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&NumberValue>> + '_> {
                 self.iterations.set(self.iterations.get() + 1);
                 Box::new(self.values.iter().map(Option::as_ref))
             }
         }
 
         let iterable = CountingIterable {
-            values: vec![Some(JavaNumber::Integer(1))],
+            values: vec![Some(NumberValue::Integer(1))],
             iterations: Cell::new(0),
         };
         assert_eq!(
@@ -1310,21 +1299,21 @@ mod tests {
     #[test]
     fn rejects_malformed_decimal_and_covers_arithmetic_errors() {
         assert_eq!(
-            JavaBigDecimal::parse(".1")
+            BigDecimalValue::parse(".1")
                 .expect("leading point")
                 .to_string(),
             "0.1"
         );
         assert_eq!(
-            JavaBigDecimal::parse("1.")
+            BigDecimalValue::parse("1.")
                 .expect("trailing point")
                 .to_string(),
             "1"
         );
         for malformed in ["", ".", "1.2.3", "1e", "NaN"] {
-            assert!(JavaBigDecimal::parse(malformed).is_err(), "{malformed}");
+            assert!(BigDecimalValue::parse(malformed).is_err(), "{malformed}");
         }
-        assert!(JavaBigDecimal::parse("1e2147483649").is_err());
+        assert!(BigDecimalValue::parse("1e2147483649").is_err());
         assert_eq!(
             AggregateError::from(super::DivisionError::ByZero).to_string(),
             "Division by zero"
@@ -1341,72 +1330,72 @@ mod tests {
 
     #[test]
     fn covers_exact_division_rounding_and_scale_boundaries() {
-        let one = JavaBigDecimal::parse("1").expect("one");
-        let zero = JavaBigDecimal::parse("0").expect("zero");
+        let one = BigDecimalValue::parse("1").expect("one");
+        let zero = BigDecimalValue::parse("0").expect("zero");
         assert_eq!(one.divide_exact(&zero), Err(super::DivisionError::ByZero));
         assert_eq!(
-            one.divide_exact(&JavaBigDecimal::parse("-8").expect("negative divisor"))
+            one.divide_exact(&BigDecimalValue::parse("-8").expect("negative divisor"))
                 .expect("exact")
                 .to_string(),
             "-0.125"
         );
         assert_eq!(
-            one.divide_exact(&JavaBigDecimal::parse("8").expect("eight"))
+            one.divide_exact(&BigDecimalValue::parse("8").expect("eight"))
                 .expect("exact")
                 .to_string(),
             "0.125"
         );
         assert_eq!(
-            one.divide_exact(&JavaBigDecimal::parse("125").expect("one hundred twenty five"))
+            one.divide_exact(&BigDecimalValue::parse("125").expect("one hundred twenty five"))
                 .expect("exact")
                 .to_string(),
             "0.008"
         );
         assert_eq!(
-            JavaBigDecimal::from_unscaled(BigInt::from(1), i32::MAX)
-                .divide_exact(&JavaBigDecimal::from_unscaled(BigInt::from(1), i32::MIN)),
+            BigDecimalValue::from_unscaled(BigInt::from(1), i32::MAX)
+                .divide_exact(&BigDecimalValue::from_unscaled(BigInt::from(1), i32::MIN)),
             Err(super::DivisionError::ScaleOverflow)
         );
 
         assert_eq!(
-            JavaBigDecimal::parse("1")
+            BigDecimalValue::parse("1")
                 .expect("one")
                 .divide_half_up_by_positive_integer(3, 0)
                 .to_string(),
             "0"
         );
         assert_eq!(
-            JavaBigDecimal::parse("2")
+            BigDecimalValue::parse("2")
                 .expect("two")
                 .divide_half_up_by_positive_integer(3, 0)
                 .to_string(),
             "1"
         );
         assert_eq!(
-            JavaBigDecimal::parse("-1")
+            BigDecimalValue::parse("-1")
                 .expect("negative one")
                 .divide_half_up_by_positive_integer(2, 0)
                 .to_string(),
             "-1"
         );
-        assert!(super::finish_aggregate(JavaBigDecimal::zero(), usize::MAX, true).is_err());
+        assert!(super::finish_aggregate(BigDecimalValue::zero(), usize::MAX, true).is_err());
     }
 
     #[test]
     fn covers_internal_validation_and_stateful_second_iteration() {
         assert!(AggregateUtils::sum_iterable(None).is_err());
         assert_eq!(
-            super::object_number(&JavaAggregateObject::Null),
+            super::object_number(&AggregateObjectValue::Null),
             Err(AggregateError::IllegalArgument {
                 message: "Cannot aggregate on array containing nulls"
             })
         );
         struct ChangesAfterValidation {
             calls: Cell<usize>,
-            number: JavaNumber,
+            number: NumberValue,
         }
-        impl JavaNumberIterable for ChangesAfterValidation {
-            fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&JavaNumber>> + '_> {
+        impl NumberIterableValue for ChangesAfterValidation {
+            fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&NumberValue>> + '_> {
                 let call = self.calls.get();
                 self.calls.set(call + 1);
                 if call == 0 {
@@ -1418,7 +1407,7 @@ mod tests {
         }
         let iterable = ChangesAfterValidation {
             calls: Cell::new(0),
-            number: JavaNumber::Integer(1),
+            number: NumberValue::Integer(1),
         };
         assert_eq!(
             AggregateUtils::sum_iterable(Some(&iterable)),
@@ -1427,10 +1416,10 @@ mod tests {
             })
         );
 
-        let negative_scientific = JavaBigDecimal::parse("-12E+7").expect("scientific");
+        let negative_scientific = BigDecimalValue::parse("-12E+7").expect("scientific");
         assert_eq!(negative_scientific.to_string(), "-1.2E+8");
         assert_eq!(
-            JavaBigDecimal::parse("+1.5E+2")
+            BigDecimalValue::parse("+1.5E+2")
                 .expect("positive exponent")
                 .to_string(),
             "1.5E+2"
@@ -1458,20 +1447,19 @@ mod tests {
         let null_numbers = [None];
         assert!(AggregateUtils::sum_numbers(Some(&null_numbers)).is_err());
         assert!(AggregateUtils::avg_numbers(Some(&null_numbers)).is_err());
-        let nan_numbers = [Some(JavaNumber::Double(f64::NAN))];
+        let nan_numbers = [Some(NumberValue::Double(f64::NAN))];
         assert!(AggregateUtils::sum_numbers(Some(&nan_numbers)).is_err());
         assert!(AggregateUtils::avg_numbers(Some(&nan_numbers)).is_err());
 
-        let overflow_average = [
-            JavaAggregateObject::Number(JavaNumber::BigDecimal(JavaBigDecimal::from_unscaled(
-                BigInt::from(1),
-                i32::MAX,
-            ))),
-            JavaAggregateObject::Number(JavaNumber::BigDecimal(JavaBigDecimal::from_unscaled(
-                BigInt::from(0),
-                i32::MAX,
-            ))),
-        ];
+        let overflow_average =
+            [
+                AggregateObjectValue::Number(NumberValue::BigDecimal(
+                    BigDecimalValue::from_unscaled(BigInt::from(1), i32::MAX),
+                )),
+                AggregateObjectValue::Number(NumberValue::BigDecimal(
+                    BigDecimalValue::from_unscaled(BigInt::from(0), i32::MAX),
+                )),
+            ];
         assert_eq!(
             AggregateUtils::avg_objects(Some(&overflow_average)),
             Err(AggregateError::Arithmetic {

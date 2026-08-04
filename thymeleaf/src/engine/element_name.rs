@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use crate::util::{JavaHashCode, Utf16String};
+use crate::util::{HashCodeValue, Utf16String};
 
 /// `ElementName` 的具体 Java 子类标识。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -179,7 +179,7 @@ fn arrays_hash_code(names: &[Option<Utf16String>]) -> i32 {
     names.iter().fold(1_i32, |result, name| {
         result
             .wrapping_mul(31)
-            .wrapping_add(name.as_ref().map_or(0, JavaHashCode::java_hash_code))
+            .wrapping_add(name.as_ref().map_or(0, HashCodeValue::java_hash_code))
     })
 }
 

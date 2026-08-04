@@ -59,7 +59,7 @@ impl TemplateObject for Person {
         match name.as_str() {
             "name" => Some(Ok(Some(Arc::new(TemplateValue::string(self.name.clone()))))),
             "age" => Some(Ok(Some(Arc::new(TemplateValue::Number(
-                thymeleaf::util::JavaNumber::Long(self.age),
+                thymeleaf::util::NumberValue::Long(self.age),
             ))))),
             _ => None,
         }
@@ -214,13 +214,13 @@ fn arithmetic_with_variables() {
     ctx.set_variable(
         Some(js("a")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(7),
+            thymeleaf::util::NumberValue::Integer(7),
         ))),
     );
     ctx.set_variable(
         Some(js("b")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(3),
+            thymeleaf::util::NumberValue::Integer(3),
         ))),
     );
     let s = render("<p th:text=\"${a + b}\">x</p>", &ctx);

@@ -4,7 +4,7 @@ use crate::engine::{AttributeNameValue, TemplateData};
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel};
-use crate::util::JavaCharSequence;
+use crate::util::CharSequenceValue;
 use crate::util::Utf16String;
 
 /// ElementTag Processor 声明标签、正文、上下文和迭代变更的完整合同。
@@ -50,7 +50,7 @@ pub trait IElementTagStructureHandler {
     ///
     /// 对应 Java: `IElementTagStructureHandler#setBody(CharSequence, boolean)`；该入口
     /// 保留 LazyEscapingCharSequence 的直接 Writer 输出能力。
-    fn set_body_sequence(&mut self, text: Arc<dyn JavaCharSequence>, processable: bool);
+    fn set_body_sequence(&mut self, text: Arc<dyn CharSequenceValue>, processable: bool);
     /// 使用模型设置正文。
     fn set_body_model(&mut self, model: Arc<dyn IModel>, processable: bool);
     /// 在元素之前插入模型。

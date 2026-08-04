@@ -1,7 +1,7 @@
 use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
-use crate::util::{EvaluationUtils, JavaEvaluationValue, Utf16String};
+use crate::util::{EvaluationUtils, EvaluationValue, Utf16String};
 
 use super::{
     AbstractStandardExpressionAttributeTagProcessor, delegate_standard_element_tag_processor,
@@ -67,10 +67,9 @@ impl StandardConditionalFixedValueTagProcessor {
                       _attribute_value,
                       expression_result,
                       structure_handler| {
-                    let value = expression_result.as_deref().map_or(
-                        JavaEvaluationValue::Null,
-                        TemplateValue::to_evaluation_value,
-                    );
+                    let value = expression_result
+                        .as_deref()
+                        .map_or(EvaluationValue::Null, TemplateValue::to_evaluation_value);
                     if EvaluationUtils::evaluate_as_boolean(&value).map_err(|error| {
                         Box::new(TemplateProcessingException::with_cause(
                             Some("Could not evaluate fixed-value conditional attribute".to_owned()),

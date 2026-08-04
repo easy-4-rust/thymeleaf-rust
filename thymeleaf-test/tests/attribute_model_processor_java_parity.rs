@@ -162,7 +162,7 @@ fn attribute_value_with_expression() {
     ctx.set_variable(
         Some(js("w")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(50),
+            thymeleaf::util::NumberValue::Integer(50),
         ))),
     );
     let s = render(

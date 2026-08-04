@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaNumber, Utf16String, ValidateError};
+use crate::util::{NumberValue, Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
@@ -60,7 +60,7 @@ impl IStandardExpression for RemainderExpression {
         ) {
             let result = left_number.remainder_java(&right_number)?;
             return Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::BigDecimal(result),
+                NumberValue::BigDecimal(result),
             ))));
         }
         // 保留上游历史消息中的 "division" 用词。

@@ -15,7 +15,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::messageresolver::{IMessageResolver, StandardMessageResolver};
 use thymeleaf::templateresource::TemplateResourceError;
-use thymeleaf::util::{JavaBigDecimal, JavaDate, JavaNumber, Locale, Utf16String};
+use thymeleaf::util::{BigDecimalValue, DateValue, Locale, NumberValue, Utf16String};
 use thymeleaf::{ITemplateEngine, ITemplateResource, TemplateEngine};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -892,32 +892,32 @@ fn string(value: &str) -> Option<Arc<TemplateValue>> {
 }
 
 fn integer(value: i32) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+    Some(Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
 }
 
 fn double(value: f64) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::Double(value))))
+    Some(Arc::new(TemplateValue::Number(NumberValue::Double(value))))
 }
 
 fn long(value: i64) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::Long(value))))
+    Some(Arc::new(TemplateValue::Number(NumberValue::Long(value))))
 }
 
 fn big_integer(value: &str) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::BigInteger(
+    Some(Arc::new(TemplateValue::Number(NumberValue::BigInteger(
         value.parse::<BigInt>().expect("valid big integer"),
     ))))
 }
 
 fn big_decimal(value: &str) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::BigDecimal(
-        JavaBigDecimal::parse(value).expect("valid big decimal"),
+    Some(Arc::new(TemplateValue::Number(NumberValue::BigDecimal(
+        BigDecimalValue::parse(value).expect("valid big decimal"),
     ))))
 }
 
 fn date(epoch_millis: i64) -> Option<Arc<TemplateValue>> {
     let instant = chrono::DateTime::from_timestamp_millis(epoch_millis).expect("valid epoch");
-    Some(Arc::new(TemplateValue::Object(Arc::new(JavaDate::date(
+    Some(Arc::new(TemplateValue::Object(Arc::new(DateValue::date(
         instant,
     )))))
 }

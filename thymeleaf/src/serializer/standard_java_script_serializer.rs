@@ -1,7 +1,7 @@
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
 use crate::temporal::TemporalValue;
-use crate::util::{JavaDate, ResourceLoaderUtils, TemplateWriter, Utf16String};
+use crate::util::{DateValue, ResourceLoaderUtils, TemplateWriter, Utf16String};
 
 use super::IStandardJavaScriptSerializer;
 
@@ -122,9 +122,9 @@ impl Jackson3StandardJavaScriptSerializer {
 struct JacksonThymeleafISO8601DateFormat;
 
 impl JacksonThymeleafISO8601DateFormat {
-    fn format(date: &JavaDate) -> Utf16String {
+    fn format(date: &DateValue) -> Utf16String {
         crate::util::DateUtils::format_iso(Some(date))
-            .expect("non-null JavaDate always has an ISO representation")
+            .expect("non-null DateValue always has an ISO representation")
     }
 
     /// 保留上游“日期格式器只允许写出”的合同。
@@ -135,7 +135,7 @@ impl JacksonThymeleafISO8601DateFormat {
     fn parse(
         _source: &Utf16String,
         _position: i32,
-    ) -> Result<JavaDate, TemplateProcessingException> {
+    ) -> Result<DateValue, TemplateProcessingException> {
         Err(TemplateProcessingException::new(Some(
             "JacksonThymeleafISO8601DateFormat should never be asked for a 'parse' operation"
                 .to_owned(),
@@ -265,7 +265,7 @@ fn write_value(
         }
         TemplateValue::NoOp => write_json_string(writer, &[u16::from(b'_')], escape_all_slashes),
         TemplateValue::Object(value) => {
-            if let Some(date) = value.as_any().downcast_ref::<JavaDate>() {
+            if let Some(date) = value.as_any().downcast_ref::<DateValue>() {
                 let formatted = JacksonThymeleafISO8601DateFormat::format(date);
                 write_json_string(writer, formatted.as_utf16(), escape_all_slashes)
             } else if let Some(temporal) = value.as_any().downcast_ref::<TemporalValue>() {

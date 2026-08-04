@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use thymeleaf::expression::{OgnlRuntime, OgnlRuntimeError, TemplateValue};
-use thymeleaf::util::{JavaNumber, Utf16String};
+use thymeleaf::util::{NumberValue, Utf16String};
 
 use super::corpus_byte_array_input_stream::CorpusByteArrayInputStream;
 use super::corpus_optional::CorpusOptional;
@@ -153,7 +153,7 @@ impl OgnlRuntime for CorpusOgnlRuntime {
             ("org.thymeleaf.templateengine.features.expression.ExpContainer2", []) => {
                 Some(Ok(Some(map_value(vec![(
                     "value",
-                    Arc::new(TemplateValue::Number(JavaNumber::Integer(1979))),
+                    Arc::new(TemplateValue::Number(NumberValue::Integer(1979))),
                 )]))))
             }
             ("org.thymeleaf.templateengine.features.expression.ExpBean1", []) => {

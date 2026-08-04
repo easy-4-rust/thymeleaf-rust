@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use thymeleaf::expression::{
-    AbstractStandardConversionService, JavaConversionObject, StandardConversionError,
+    AbstractStandardConversionService, ConversionObject, StandardConversionError,
     Utf16StringConversionResult,
 };
 use thymeleaf::util::Utf16String;
@@ -19,7 +19,7 @@ impl AbstractStandardConversionService for TestStandardConversionService4 {
     fn convert_to_string<'a>(
         &self,
         _context: Option<&dyn Any>,
-        object: &'a dyn JavaConversionObject,
+        object: &'a dyn ConversionObject,
     ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
         let converted = match object.java_to_string()? {
             Utf16StringConversionResult::Null => "null".to_owned(),

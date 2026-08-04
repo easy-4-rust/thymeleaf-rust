@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use crate::util::{ArrayTarget, ArrayUtils, ArrayUtilsError, JavaArray, JavaArrayElement};
+use crate::util::{ArrayElementValue, ArrayTarget, ArrayUtils, ArrayUtilsError, ArrayValue};
 
 /// Thymeleaf 标准表达式中的数组工具对象。
 ///
@@ -32,9 +32,9 @@ impl Arrays {
     pub fn to_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_array(target)
     }
@@ -49,9 +49,9 @@ impl Arrays {
     pub fn to_string_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_string_array(target)
     }
@@ -66,9 +66,9 @@ impl Arrays {
     pub fn to_integer_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_integer_array(target)
     }
@@ -83,9 +83,9 @@ impl Arrays {
     pub fn to_long_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_long_array(target)
     }
@@ -100,9 +100,9 @@ impl Arrays {
     pub fn to_double_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_double_array(target)
     }
@@ -117,9 +117,9 @@ impl Arrays {
     pub fn to_float_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_float_array(target)
     }
@@ -134,9 +134,9 @@ impl Arrays {
     pub fn to_boolean_array<'a, T>(
         &self,
         target: Option<ArrayTarget<'a, T>>,
-    ) -> Result<JavaArray<'a, T>, ArrayUtilsError>
+    ) -> Result<ArrayValue<'a, T>, ArrayUtilsError>
     where
-        T: Clone + JavaArrayElement + 'static,
+        T: Clone + ArrayElementValue + 'static,
     {
         ArrayUtils::to_boolean_array(target)
     }
@@ -229,12 +229,12 @@ impl Arrays {
 #[cfg(test)]
 mod tests {
     use super::Arrays;
-    use crate::util::{ArrayTarget, JavaArrayElement};
+    use crate::util::{ArrayElementValue, ArrayTarget};
 
     #[derive(Clone)]
     struct Text(String);
 
-    impl JavaArrayElement for Text {
+    impl ArrayElementValue for Text {
         fn java_class_name(&self) -> &str {
             "java.lang.String"
         }

@@ -6,17 +6,17 @@
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::{DateUtils, JavaBigDecimal, JavaDate, JavaNumber, Utf16String};
+use thymeleaf::util::{BigDecimalValue, DateUtils, DateValue, NumberValue, Utf16String};
 
 /// 构造 Java `Integer` 模板值。
 fn num(value: i32) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+    Arc::new(TemplateValue::Number(NumberValue::Integer(value)))
 }
 
 /// 构造 Java `BigDecimal` 模板值（保持十进制字面量与 scale）。
 fn decimal(value: &str) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::BigDecimal(
-        JavaBigDecimal::parse(value).expect("valid decimal"),
+    Arc::new(TemplateValue::Number(NumberValue::BigDecimal(
+        BigDecimalValue::parse(value).expect("valid decimal"),
     )))
 }
 
@@ -31,7 +31,7 @@ fn boolean(value: bool) -> Arc<TemplateValue> {
 }
 
 /// 构造 Java `Calendar` 模板值（保留时区语义的 Calendar 对象）。
-fn calendar(value: JavaDate) -> Arc<TemplateValue> {
+fn calendar(value: DateValue) -> Arc<TemplateValue> {
     DateUtils::into_template_value(value)
 }
 
@@ -120,7 +120,7 @@ impl TemplateObject for Product {
 pub struct Customer {
     pub id: i32,
     pub name: String,
-    pub customer_since: JavaDate,
+    pub customer_since: DateValue,
 }
 
 impl TemplateObject for Customer {
@@ -152,7 +152,7 @@ impl TemplateObject for Customer {
 #[derive(Clone, Debug)]
 pub struct Order {
     pub id: i32,
-    pub date: JavaDate,
+    pub date: DateValue,
     pub customer: Customer,
     pub order_lines: Vec<OrderLine>,
 }

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
-use crate::util::{JavaNumber, Utf16String};
+use crate::util::{NumberValue, Utf16String};
 
 /// 迭代状态访问时产生的 Java 运行时错误。
 ///
@@ -200,7 +200,7 @@ impl TemplateObject for IterationStatusVar {
 }
 
 fn integer_value(value: i32) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+    Arc::new(TemplateValue::Number(NumberValue::Integer(value)))
 }
 
 fn boolean_value(value: bool) -> Arc<TemplateValue> {

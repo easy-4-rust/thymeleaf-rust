@@ -6,8 +6,8 @@ use std::fmt::Write;
 use num_bigint::BigInt;
 use thymeleaf::expression::Aggregates;
 use thymeleaf::util::{
-    AggregateError, AggregateUtils, JavaAggregateObject, JavaBigDecimal, JavaNumber,
-    JavaNumberIterable, JavaNumberList,
+    AggregateError, AggregateObjectValue, AggregateUtils, BigDecimalValue, NumberIterableValue,
+    NumberListValue, NumberValue,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -16,42 +16,42 @@ const JAVA_GOLDEN: &str = include_str!("../../thymeleaf/tests/fixtures/aggregate
 #[test]
 fn aggregate_utils_and_facade_match_java_golden() {
     // 在非 test cfg 的核心库实例中覆盖 Java BigDecimal 的无整数部分语法边界。
-    assert!(JavaBigDecimal::parse(".").is_err());
-    assert!(JavaBigDecimal::parse("1E+").is_err());
-    assert!(JavaBigDecimal::parse("0.0E-2147483648").is_err());
+    assert!(BigDecimalValue::parse(".").is_err());
+    assert!(BigDecimalValue::parse("1E+").is_err());
+    assert!(BigDecimalValue::parse("0.0E-2147483648").is_err());
     assert_eq!(
-        JavaBigDecimal::parse(".1")
+        BigDecimalValue::parse(".1")
             .expect("Java accepts a decimal without an integer part")
             .to_plain_string(),
         "0.1"
     );
     assert_eq!(
-        JavaBigDecimal::parse("1E+7")
+        BigDecimalValue::parse("1E+7")
             .expect("positive scientific exponent")
             .to_string(),
         "1E+7"
     );
     assert_eq!(
-        JavaBigDecimal::parse("12E+7")
+        BigDecimalValue::parse("12E+7")
             .expect("multi-digit scientific mantissa")
             .to_string(),
         "1.2E+8"
     );
     let changing_iterable = ChangesAfterValidation {
         iterator_calls: Cell::new(0),
-        number: JavaNumber::Integer(1),
+        number: NumberValue::Integer(1),
         second_number: None,
     };
     assert!(AggregateUtils::sum_iterable(Some(&changing_iterable)).is_err());
     let changing_to_nan = ChangesAfterValidation {
         iterator_calls: Cell::new(0),
-        number: JavaNumber::Integer(1),
-        second_number: Some(JavaNumber::Double(f64::NAN)),
+        number: NumberValue::Integer(1),
+        second_number: Some(NumberValue::Double(f64::NAN)),
     };
     assert!(AggregateUtils::sum_iterable(Some(&changing_to_nan)).is_err());
     assert!(AggregateUtils::sum_bytes(None).is_err());
     assert!(
-        AggregateUtils::sum_objects(Some(&[JavaAggregateObject::Number(JavaNumber::Double(
+        AggregateUtils::sum_objects(Some(&[AggregateObjectValue::Number(NumberValue::Double(
             f64::NAN
         ))]))
         .is_err()
@@ -65,12 +65,12 @@ fn aggregate_utils_and_facade_match_java_golden() {
 
 struct ChangesAfterValidation {
     iterator_calls: Cell<usize>,
-    number: JavaNumber,
-    second_number: Option<JavaNumber>,
+    number: NumberValue,
+    second_number: Option<NumberValue>,
 }
 
-impl JavaNumberIterable for ChangesAfterValidation {
-    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&JavaNumber>> + '_> {
+impl NumberIterableValue for ChangesAfterValidation {
+    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&NumberValue>> + '_> {
         let iterator_call = self.iterator_calls.get();
         self.iterator_calls.set(iterator_call + 1);
         if iterator_call == 0 {
@@ -87,13 +87,13 @@ fn emit_utility_cases(output: &mut String) {
         "util.sum.iterable.null",
         AggregateUtils::sum_iterable(None),
     );
-    let empty_numbers = JavaNumberList::new(Vec::new());
+    let empty_numbers = NumberListValue::new(Vec::new());
     emit_outcome(
         output,
         "util.sum.iterable.empty",
         AggregateUtils::sum_iterable(Some(&empty_numbers)),
     );
-    let null_numbers = JavaNumberList::new(vec![Some(JavaNumber::Integer(1)), None]);
+    let null_numbers = NumberListValue::new(vec![Some(NumberValue::Integer(1)), None]);
     emit_outcome(
         output,
         "util.sum.iterable.null_element",
@@ -106,9 +106,9 @@ fn emit_utility_cases(output: &mut String) {
     );
 
     let counting = CountingNumbers::new(vec![
-        Some(JavaNumber::Integer(1)),
-        Some(JavaNumber::Integer(2)),
-        Some(JavaNumber::Integer(3)),
+        Some(NumberValue::Integer(1)),
+        Some(NumberValue::Integer(2)),
+        Some(NumberValue::Integer(3)),
     ]);
     emit_outcome(
         output,
@@ -135,38 +135,38 @@ fn emit_utility_cases(output: &mut String) {
         output,
         "util.sum.objects.null_element",
         AggregateUtils::sum_objects(Some(&[
-            JavaAggregateObject::Number(JavaNumber::Integer(1)),
-            JavaAggregateObject::Null,
+            AggregateObjectValue::Number(NumberValue::Integer(1)),
+            AggregateObjectValue::Null,
         ])),
     );
     emit_outcome(
         output,
         "util.sum.objects.null_priority",
         AggregateUtils::sum_objects(Some(&[
-            JavaAggregateObject::Other("java.lang.String".to_owned()),
-            JavaAggregateObject::Null,
+            AggregateObjectValue::Other("java.lang.String".to_owned()),
+            AggregateObjectValue::Null,
         ])),
     );
     emit_outcome(
         output,
         "util.sum.objects.class_cast",
-        AggregateUtils::sum_objects(Some(&[JavaAggregateObject::Other(
+        AggregateUtils::sum_objects(Some(&[AggregateObjectValue::Other(
             "java.lang.String".to_owned(),
         )])),
     );
 
     let mixed = [
-        JavaAggregateObject::Number(JavaNumber::BigDecimal(
-            JavaBigDecimal::parse("1.20").expect("decimal"),
+        AggregateObjectValue::Number(NumberValue::BigDecimal(
+            BigDecimalValue::parse("1.20").expect("decimal"),
         )),
-        JavaAggregateObject::Number(JavaNumber::BigInteger(BigInt::from(2))),
-        JavaAggregateObject::Number(JavaNumber::Byte(3)),
-        JavaAggregateObject::Number(JavaNumber::Short(4)),
-        JavaAggregateObject::Number(JavaNumber::Integer(5)),
-        JavaAggregateObject::Number(JavaNumber::Long(6)),
-        JavaAggregateObject::Number(JavaNumber::Float(0.5)),
-        JavaAggregateObject::Number(JavaNumber::Double(0.25)),
-        JavaAggregateObject::Number(JavaNumber::Other {
+        AggregateObjectValue::Number(NumberValue::BigInteger(BigInt::from(2))),
+        AggregateObjectValue::Number(NumberValue::Byte(3)),
+        AggregateObjectValue::Number(NumberValue::Short(4)),
+        AggregateObjectValue::Number(NumberValue::Integer(5)),
+        AggregateObjectValue::Number(NumberValue::Long(6)),
+        AggregateObjectValue::Number(NumberValue::Float(0.5)),
+        AggregateObjectValue::Number(NumberValue::Double(0.25)),
+        AggregateObjectValue::Number(NumberValue::Other {
             class_name: "AggregateUtilsGolden$1".to_owned(),
             double_value: 0.05,
         }),
@@ -274,11 +274,11 @@ fn emit_utility_cases(output: &mut String) {
         output,
         "util.avg.scale_12",
         AggregateUtils::avg_objects(Some(&[
-            JavaAggregateObject::Number(JavaNumber::BigDecimal(
-                JavaBigDecimal::parse("1.000000000000").expect("decimal"),
+            AggregateObjectValue::Number(NumberValue::BigDecimal(
+                BigDecimalValue::parse("1.000000000000").expect("decimal"),
             )),
-            JavaAggregateObject::Number(JavaNumber::Integer(2)),
-            JavaAggregateObject::Number(JavaNumber::Integer(2)),
+            AggregateObjectValue::Number(NumberValue::Integer(2)),
+            AggregateObjectValue::Number(NumberValue::Integer(2)),
         ])),
     );
     emit_outcome(
@@ -291,8 +291,8 @@ fn emit_utility_cases(output: &mut String) {
 
 fn emit_facade_cases(output: &mut String) {
     let aggregates = Aggregates::new();
-    let numbers = [Some(JavaNumber::Integer(1)), Some(JavaNumber::Integer(2))];
-    let iterable_numbers = JavaNumberList::new(numbers.to_vec());
+    let numbers = [Some(NumberValue::Integer(1)), Some(NumberValue::Integer(2))];
+    let iterable_numbers = NumberListValue::new(numbers.to_vec());
     assert_eq!(iterable_numbers.as_slice(), numbers);
     emit_outcome(
         output,
@@ -487,12 +487,12 @@ fn emit_doubles(output: &mut String, key: &str, values: &[f64]) {
 fn emit_outcome(
     output: &mut String,
     key: &str,
-    result: Result<Option<JavaBigDecimal>, AggregateError>,
+    result: Result<Option<BigDecimalValue>, AggregateError>,
 ) {
     emit(output, key, describe_outcome(result));
 }
 
-fn describe_outcome(result: Result<Option<JavaBigDecimal>, AggregateError>) -> String {
+fn describe_outcome(result: Result<Option<BigDecimalValue>, AggregateError>) -> String {
     match result {
         Ok(None) => "OK:null".to_owned(),
         Ok(Some(decimal)) => format!(
@@ -561,12 +561,12 @@ fn emit(output: &mut String, key: &str, value: impl std::fmt::Display) {
 }
 
 struct CountingNumbers {
-    values: Vec<Option<JavaNumber>>,
+    values: Vec<Option<NumberValue>>,
     iterator_calls: Cell<usize>,
 }
 
 impl CountingNumbers {
-    fn new(values: Vec<Option<JavaNumber>>) -> Self {
+    fn new(values: Vec<Option<NumberValue>>) -> Self {
         Self {
             values,
             iterator_calls: Cell::new(0),
@@ -574,8 +574,8 @@ impl CountingNumbers {
     }
 }
 
-impl JavaNumberIterable for CountingNumbers {
-    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&JavaNumber>> + '_> {
+impl NumberIterableValue for CountingNumbers {
+    fn iter_java_numbers(&self) -> Box<dyn Iterator<Item = Option<&NumberValue>> + '_> {
         self.iterator_calls.set(self.iterator_calls.get() + 1);
         Box::new(self.values.iter().map(Option::as_ref))
     }

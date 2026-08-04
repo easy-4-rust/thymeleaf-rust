@@ -10,7 +10,7 @@ use crate::expression::{
 use crate::model::{ICDATASection, IComment, IModel, IText};
 use crate::serializer::{IStandardCSSSerializer, IStandardJavaScriptSerializer};
 use crate::util::{
-    EscapedAttributeUtils, JavaCharSequence, LazyProcessingCharSequence, TemplateWriter,
+    CharSequenceValue, EscapedAttributeUtils, LazyProcessingCharSequence, TemplateWriter,
     Utf16String,
 };
 use crate::{IEngineConfiguration, TemplateMode};
@@ -55,7 +55,7 @@ impl AbstractStandardInliner {
         &self,
         context: &dyn ITemplateContext,
         text: &dyn IText,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         if context.get_template_mode() != self.template_mode {
             let content = text
                 .get_text()
@@ -82,7 +82,7 @@ impl AbstractStandardInliner {
             text.get_line(),
             text.get_col(),
         )
-        .map(|value| Some(Box::new(value) as Box<dyn JavaCharSequence>))
+        .map(|value| Some(Box::new(value) as Box<dyn CharSequenceValue>))
     }
 
     /// 对 CDATA 执行 Standard inline。
@@ -91,7 +91,7 @@ impl AbstractStandardInliner {
         &self,
         context: &dyn ITemplateContext,
         cdata_section: &dyn ICDATASection,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         if context.get_template_mode() != self.template_mode {
             let content = cdata_section
                 .get_content()
@@ -118,7 +118,7 @@ impl AbstractStandardInliner {
             cdata_section.get_line(),
             cdata_section.get_col(),
         )
-        .map(|value| Some(Box::new(value) as Box<dyn JavaCharSequence>))
+        .map(|value| Some(Box::new(value) as Box<dyn CharSequenceValue>))
     }
 
     /// 对 Comment 执行 Standard inline。
@@ -127,7 +127,7 @@ impl AbstractStandardInliner {
         &self,
         context: &dyn ITemplateContext,
         comment: &dyn IComment,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         if context.get_template_mode() != self.template_mode {
             let content = comment
                 .get_content()
@@ -154,7 +154,7 @@ impl AbstractStandardInliner {
             comment.get_line(),
             comment.get_col(),
         )
-        .map(|value| Some(Box::new(value) as Box<dyn JavaCharSequence>))
+        .map(|value| Some(Box::new(value) as Box<dyn CharSequenceValue>))
     }
 
     fn inline_switch_template_mode(
@@ -164,7 +164,7 @@ impl AbstractStandardInliner {
         line: i32,
         col: i32,
         allow_lazy: bool,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         let model = context
             .get_configuration()
             .get_template_manager()

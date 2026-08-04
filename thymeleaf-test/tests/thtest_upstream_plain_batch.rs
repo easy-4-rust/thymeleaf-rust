@@ -22,8 +22,8 @@ use thymeleaf::exceptions::{
     TemplateAssertionException, TemplateInputException, TemplateProcessingException,
 };
 use thymeleaf::expression::{
-    ClassNotFoundException, IStandardExpression, NativeVariableExpressionEvaluator,
-    NoSuchMethodException, OgnlException, VariableExpression,
+    ClassNotFoundError, IStandardExpression, NativeVariableExpressionEvaluator, NoSuchMethodError,
+    OgnlError, VariableExpression,
 };
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::text::TextParserReaderError;
@@ -1043,9 +1043,9 @@ fn error_chain_matches_class(expected_class: &str, error: &(dyn Error + 'static)
                 || error.is::<TemplateProcessingException>()
                 || error.is::<ExceptionLazyContextVariableError>()
         }
-        "java.lang.ClassNotFoundException" => error.is::<ClassNotFoundException>(),
-        "java.lang.NoSuchMethodException" => error.is::<NoSuchMethodException>(),
-        "ognl.OgnlException" => error.is::<OgnlException>(),
+        "java.lang.ClassNotFoundException" => error.is::<ClassNotFoundError>(),
+        "java.lang.NoSuchMethodException" => error.is::<NoSuchMethodError>(),
+        "ognl.OgnlException" => error.is::<OgnlError>(),
         _ => false,
     };
     current_matches
@@ -1069,11 +1069,11 @@ fn error_chain(error: &(dyn Error + 'static)) -> Vec<(String, String)> {
                 "java.io.IOException"
             } else if let Some(error) = error.downcast_ref::<TextParserReaderError>() {
                 error.java_class_name()
-            } else if error.is::<OgnlException>() {
+            } else if error.is::<OgnlError>() {
                 "ognl.OgnlException"
-            } else if error.is::<ClassNotFoundException>() {
+            } else if error.is::<ClassNotFoundError>() {
                 "java.lang.ClassNotFoundException"
-            } else if error.is::<NoSuchMethodException>() {
+            } else if error.is::<NoSuchMethodError>() {
                 "java.lang.NoSuchMethodException"
             } else if error.is::<ExceptionLazyContextVariableError>() {
                 "java.lang.RuntimeException"

@@ -4,11 +4,11 @@ use std::fmt::Write;
 use std::sync::Arc;
 
 use num_bigint::BigInt;
-use thymeleaf::expression::{Bools, JavaObjectArray, LiteralValue};
+use thymeleaf::expression::{Bools, LiteralValue, ObjectArrayValue};
 use thymeleaf::util::{
-    EvaluationError, EvaluationUtils, JavaBigDecimal, JavaBigDecimalResult, JavaEvaluationArray,
-    JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
-    JavaEvaluationValue, JavaHashCode, JavaMapEntry, JavaNumber, Utf16String,
+    BigDecimalResult, BigDecimalValue, EvaluationArray, EvaluationElement, EvaluationError,
+    EvaluationList, EvaluationListType, EvaluationTarget, EvaluationUtils, EvaluationValue,
+    HashCodeValue, MapEntry, NumberValue, Utf16String,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -29,18 +29,16 @@ fn evaluation_utils_and_bools_match_java_golden() {
 
 fn cover_public_adapter_contracts() {
     let decimal_value = decimal("1.0");
-    let borrowed_source =
-        JavaEvaluationValue::Number(JavaNumber::BigDecimal(decimal_value.clone()));
+    let borrowed_source = EvaluationValue::Number(NumberValue::BigDecimal(decimal_value.clone()));
     let borrowed = EvaluationUtils::evaluate_as_number(&borrowed_source)
         .expect("decimal conversion")
         .expect("decimal result");
     assert!(!borrowed.is_borrowed_from(&decimal_value));
-    let JavaEvaluationValue::Number(JavaNumber::BigDecimal(source_decimal)) = &borrowed_source
-    else {
+    let EvaluationValue::Number(NumberValue::BigDecimal(source_decimal)) = &borrowed_source else {
         panic!("decimal source")
     };
     assert!(borrowed.is_borrowed_from(source_decimal));
-    let owned_source = number(JavaNumber::Integer(1));
+    let owned_source = number(NumberValue::Integer(1));
     let owned = EvaluationUtils::evaluate_as_number(&owned_source)
         .expect("integer conversion")
         .expect("integer result");
@@ -50,7 +48,7 @@ fn cover_public_adapter_contracts() {
     assert_eq!("Aa".to_owned().java_hash_code(), 2_112);
     assert_eq!(Utf16String::from_rust_str("Aa").java_hash_code(), 2_112);
 
-    let mut null_entry = JavaMapEntry::<String>::new(None, None);
+    let mut null_entry = MapEntry::<String>::new(None, None);
     assert_eq!(null_entry.get_key(), None);
     assert_eq!(null_entry.get_value(), None);
     assert_eq!(null_entry.to_string(), "null=null");
@@ -62,14 +60,14 @@ fn cover_public_adapter_contracts() {
         unsupported.java_class_name(),
         "java.lang.UnsupportedOperationException"
     );
-    let first = JavaMapEntry::new(Some("a".to_owned()), Some("1".to_owned()));
-    let same = JavaMapEntry::raw(
+    let first = MapEntry::new(Some("a".to_owned()), Some("1".to_owned()));
+    let same = MapEntry::raw(
         "different.Entry",
         Some("a".to_owned()),
         Some("1".to_owned()),
     );
-    let different_key = JavaMapEntry::new(Some("b".to_owned()), Some("1".to_owned()));
-    let different_value = JavaMapEntry::new(Some("a".to_owned()), Some("2".to_owned()));
+    let different_key = MapEntry::new(Some("b".to_owned()), Some("1".to_owned()));
+    let different_value = MapEntry::new(Some("a".to_owned()), Some("2".to_owned()));
     assert_eq!(first, same);
     assert_ne!(first, different_key);
     assert_ne!(first, different_value);
@@ -79,18 +77,18 @@ fn cover_public_adapter_contracts() {
 
     let empty = EvaluationUtils::evaluate_as_list::<String>(None);
     assert!(empty.is_empty());
-    let reference = JavaObjectArray::object(vec![Some("x".to_owned())]);
+    let reference = ObjectArrayValue::object(vec![Some("x".to_owned())]);
     let borrowed_array =
-        EvaluationUtils::evaluate_as_array(Some(JavaEvaluationTarget::ReferenceArray(&reference)))
+        EvaluationUtils::evaluate_as_array(Some(EvaluationTarget::ReferenceArray(&reference)))
             .expect("reference array");
     assert!(borrowed_array.as_owned_array().is_none());
 
     for value in [
-        JavaEvaluationValue::Number(JavaNumber::Byte(1)),
-        JavaEvaluationValue::Number(JavaNumber::Short(1)),
-        JavaEvaluationValue::Number(JavaNumber::Long(1)),
-        JavaEvaluationValue::Number(JavaNumber::Float(1.0)),
-        JavaEvaluationValue::Number(JavaNumber::Other {
+        EvaluationValue::Number(NumberValue::Byte(1)),
+        EvaluationValue::Number(NumberValue::Short(1)),
+        EvaluationValue::Number(NumberValue::Long(1)),
+        EvaluationValue::Number(NumberValue::Float(1.0)),
+        EvaluationValue::Number(NumberValue::Other {
             class_name: "CustomNumber".to_owned(),
             double_value: 1.0,
         }),
@@ -98,10 +96,10 @@ fn cover_public_adapter_contracts() {
         assert!(EvaluationUtils::evaluate_as_boolean(&value).expect("boolean number"));
     }
     for value in [
-        JavaEvaluationValue::Number(JavaNumber::Double(f64::from_bits(1))),
-        JavaEvaluationValue::Number(JavaNumber::Double(-0.1)),
-        JavaEvaluationValue::Number(JavaNumber::Double(2_f64.powi(60))),
-        JavaEvaluationValue::Number(JavaNumber::Double(-2_f64.powi(60))),
+        EvaluationValue::Number(NumberValue::Double(f64::from_bits(1))),
+        EvaluationValue::Number(NumberValue::Double(-0.1)),
+        EvaluationValue::Number(NumberValue::Double(2_f64.powi(60))),
+        EvaluationValue::Number(NumberValue::Double(-2_f64.powi(60))),
     ] {
         assert!(
             EvaluationUtils::evaluate_as_number(&value)
@@ -114,25 +112,24 @@ fn cover_public_adapter_contracts() {
             .expect("signed number")
             .is_some()
     );
-    let malformed =
-        JavaEvaluationValue::String(Utf16String::from_utf16(vec![u16::from(b'1'), 0xD800]));
+    let malformed = EvaluationValue::String(Utf16String::from_utf16(vec![u16::from(b'1'), 0xD800]));
     assert!(
         EvaluationUtils::evaluate_as_number(&malformed)
             .expect("invalid string becomes null")
             .is_none()
     );
-    assert!(EvaluationUtils::evaluate_as_number(&number(JavaNumber::Float(f32::NAN))).is_err());
+    assert!(EvaluationUtils::evaluate_as_number(&number(NumberValue::Float(f32::NAN))).is_err());
     assert!(EvaluationUtils::evaluate_as_boolean(&string("     ")).expect("blank is true"));
     assert!(
         EvaluationUtils::evaluate_as_boolean(&string("fałse")).expect("non-ASCII token is true")
     );
 
     for result in [
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Shorts(&[1]))),
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Longs(&[1]))),
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Floats(&[1.0]))),
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Doubles(&[1.0]))),
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Characters(&[
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Shorts(&[1]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Longs(&[1]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Floats(&[1.0]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Doubles(&[1.0]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Characters(&[
             u16::from(b'x'),
         ]))),
     ] {
@@ -140,8 +137,8 @@ fn cover_public_adapter_contracts() {
     }
 
     let all_true = [
-        JavaEvaluationValue::Boolean(true),
-        JavaEvaluationValue::Other("java.lang.Object".to_owned()),
+        EvaluationValue::Boolean(true),
+        EvaluationValue::Other("java.lang.Object".to_owned()),
     ];
     assert!(Bools::new().array_and(Some(&all_true)).expect("all true"));
     let bools = Bools::new();
@@ -162,7 +159,7 @@ fn cover_public_adapter_contracts() {
     assert!(bools.array_or(Some(&invalid)).is_err());
 }
 
-fn assert_display_failure(entry: &JavaMapEntry<String>, fail_on: usize) {
+fn assert_display_failure(entry: &MapEntry<String>, fail_on: usize) {
     let mut writer = FailingWriter { calls: 0, fail_on };
     assert!(write!(&mut writer, "{entry}").is_err());
 }
@@ -184,44 +181,40 @@ impl std::fmt::Write for FailingWriter {
 }
 
 fn emit_boolean_cases(output: &mut String) {
-    emit_boolean(output, "bool.null", JavaEvaluationValue::Null);
-    emit_boolean(output, "bool.false", JavaEvaluationValue::Boolean(false));
-    emit_boolean(output, "bool.true", JavaEvaluationValue::Boolean(true));
+    emit_boolean(output, "bool.null", EvaluationValue::Null);
+    emit_boolean(output, "bool.false", EvaluationValue::Boolean(false));
+    emit_boolean(output, "bool.true", EvaluationValue::Boolean(true));
     emit_boolean(
         output,
         "bool.big_decimal.zero_scale",
-        number(JavaNumber::BigDecimal(decimal("0.000"))),
+        number(NumberValue::BigDecimal(decimal("0.000"))),
     );
     emit_boolean(
         output,
         "bool.big_decimal.nonzero",
-        number(JavaNumber::BigDecimal(decimal("-0.01"))),
+        number(NumberValue::BigDecimal(decimal("-0.01"))),
     );
     emit_boolean(
         output,
         "bool.big_integer.zero",
-        number(JavaNumber::BigInteger(BigInt::from(0))),
+        number(NumberValue::BigInteger(BigInt::from(0))),
     );
-    emit_boolean(output, "bool.integer.zero", number(JavaNumber::Integer(0)));
+    emit_boolean(output, "bool.integer.zero", number(NumberValue::Integer(0)));
     emit_boolean(
         output,
         "bool.double.negative_zero",
-        number(JavaNumber::Double(-0.0)),
+        number(NumberValue::Double(-0.0)),
     );
     emit_boolean(
         output,
         "bool.double.nan",
-        number(JavaNumber::Double(f64::NAN)),
+        number(NumberValue::Double(f64::NAN)),
     );
-    emit_boolean(
-        output,
-        "bool.character.zero",
-        JavaEvaluationValue::Character(0),
-    );
+    emit_boolean(output, "bool.character.zero", EvaluationValue::Character(0));
     emit_boolean(
         output,
         "bool.character.value",
-        JavaEvaluationValue::Character(u16::from(b'x')),
+        EvaluationValue::Character(u16::from(b'x')),
     );
     emit_boolean(output, "bool.string.false", string(" \tFALSE\r\n"));
     emit_boolean(output, "bool.string.off", string("OfF"));
@@ -233,53 +226,53 @@ fn emit_boolean_cases(output: &mut String) {
     emit_boolean(
         output,
         "bool.empty_list",
-        JavaEvaluationValue::Other("java.util.ArrayList".to_owned()),
+        EvaluationValue::Other("java.util.ArrayList".to_owned()),
     );
     emit_boolean(
         output,
         "bool.empty_array",
-        JavaEvaluationValue::Other("[Ljava.lang.Object;".to_owned()),
+        EvaluationValue::Other("[Ljava.lang.Object;".to_owned()),
     );
     emit_boolean(
         output,
         "bool.other",
-        JavaEvaluationValue::Other("java.lang.Class".to_owned()),
+        EvaluationValue::Other("java.lang.Class".to_owned()),
     );
 }
 
 fn emit_number_cases(output: &mut String) {
-    emit_number(output, "number.null", JavaEvaluationValue::Null);
+    emit_number(output, "number.null", EvaluationValue::Null);
     emit_number(
         output,
         "number.decimal",
-        number(JavaNumber::BigDecimal(decimal("1.20"))),
+        number(NumberValue::BigDecimal(decimal("1.20"))),
     );
     emit_number(
         output,
         "number.big_integer",
-        number(JavaNumber::BigInteger(BigInt::from(123))),
+        number(NumberValue::BigInteger(BigInt::from(123))),
     );
-    emit_number(output, "number.byte", number(JavaNumber::Byte(-2)));
-    emit_number(output, "number.short", number(JavaNumber::Short(-3)));
-    emit_number(output, "number.integer", number(JavaNumber::Integer(-4)));
-    emit_number(output, "number.long", number(JavaNumber::Long(i64::MIN)));
-    emit_number(output, "number.float", number(JavaNumber::Float(0.1)));
-    emit_number(output, "number.double", number(JavaNumber::Double(0.1)));
+    emit_number(output, "number.byte", number(NumberValue::Byte(-2)));
+    emit_number(output, "number.short", number(NumberValue::Short(-3)));
+    emit_number(output, "number.integer", number(NumberValue::Integer(-4)));
+    emit_number(output, "number.long", number(NumberValue::Long(i64::MIN)));
+    emit_number(output, "number.float", number(NumberValue::Float(0.1)));
+    emit_number(output, "number.double", number(NumberValue::Double(0.1)));
     emit_number(
         output,
         "number.negative_zero",
-        number(JavaNumber::Double(-0.0)),
+        number(NumberValue::Double(-0.0)),
     );
-    emit_number(output, "number.nan", number(JavaNumber::Double(f64::NAN)));
+    emit_number(output, "number.nan", number(NumberValue::Double(f64::NAN)));
     emit_number(
         output,
         "number.infinity",
-        number(JavaNumber::Double(f64::INFINITY)),
+        number(NumberValue::Double(f64::INFINITY)),
     );
     emit_number(
         output,
         "number.custom",
-        number(JavaNumber::Other {
+        number(NumberValue::Other {
             class_name: "EvaluationUtilsGolden$1".to_owned(),
             double_value: 7.0,
         }),
@@ -299,7 +292,7 @@ fn emit_number_cases(output: &mut String) {
     emit_number(
         output,
         "number.other",
-        JavaEvaluationValue::Other("java.lang.Class".to_owned()),
+        EvaluationValue::Other("java.lang.Class".to_owned()),
     );
     emit_number_matrix(output);
 }
@@ -311,7 +304,7 @@ fn emit_collection_cases(output: &mut String) {
         output,
         "list.empty_iterable",
         describe_list(&EvaluationUtils::evaluate_as_list(Some(
-            JavaEvaluationTarget::Iterable(&[]),
+            EvaluationTarget::Iterable(&[]),
         ))),
     );
     let iterable = [Some("a".to_owned()), None, Some("b".to_owned())];
@@ -319,37 +312,37 @@ fn emit_collection_cases(output: &mut String) {
         output,
         "list.iterable",
         describe_list(&EvaluationUtils::evaluate_as_list(Some(
-            JavaEvaluationTarget::Iterable(&iterable),
+            EvaluationTarget::Iterable(&iterable),
         ))),
     );
 
-    let raw_a = Arc::new(JavaMapEntry::raw(
+    let raw_a = Arc::new(MapEntry::raw(
         "java.util.LinkedHashMap$Entry",
         Some("a".to_owned()),
         Some("1".to_owned()),
     ));
-    let raw_b = Arc::new(JavaMapEntry::raw(
+    let raw_b = Arc::new(MapEntry::raw(
         "java.util.LinkedHashMap$Entry",
         Some("b".to_owned()),
         None,
     ));
     let entries = [Arc::clone(&raw_a), Arc::clone(&raw_b)];
-    let map_list = EvaluationUtils::evaluate_as_list(Some(JavaEvaluationTarget::Map(&entries)));
+    let map_list = EvaluationUtils::evaluate_as_list(Some(EvaluationTarget::Map(&entries)));
     emit(output, "list.map", describe_list(&map_list));
     let fresh_entry = matches!(
         map_list.as_slice().first(),
-        Some(Some(JavaEvaluationElement::MapEntry(entry))) if !Arc::ptr_eq(entry, &raw_a)
+        Some(Some(EvaluationElement::MapEntry(entry))) if !Arc::ptr_eq(entry, &raw_a)
     );
     emit(output, "list.map.fresh_entry", fresh_entry);
     let entry_hash = match map_list.as_slice().first() {
-        Some(Some(JavaEvaluationElement::MapEntry(entry))) => entry.java_hash_code(),
+        Some(Some(EvaluationElement::MapEntry(entry))) => entry.java_hash_code(),
         _ => panic!("map list must contain entry"),
     };
     emit(output, "list.map.entry_hash", entry_hash);
 
     emit_primitive_lists(output);
     let reference =
-        JavaObjectArray::typed("java.lang.String", vec![Some("a".to_owned()), None], |_| {
+        ObjectArrayValue::typed("java.lang.String", vec![Some("a".to_owned()), None], |_| {
             true
         })
         .expect("valid reference array");
@@ -357,7 +350,7 @@ fn emit_collection_cases(output: &mut String) {
         output,
         "list.reference",
         describe_list(&EvaluationUtils::evaluate_as_list(Some(
-            JavaEvaluationTarget::ReferenceArray(&reference),
+            EvaluationTarget::ReferenceArray(&reference),
         ))),
     );
     let scalar = "a".to_owned();
@@ -365,7 +358,7 @@ fn emit_collection_cases(output: &mut String) {
         output,
         "list.scalar",
         describe_list(&EvaluationUtils::evaluate_as_list(Some(
-            JavaEvaluationTarget::Other(&scalar),
+            EvaluationTarget::Other(&scalar),
         ))),
     );
 
@@ -373,46 +366,45 @@ fn emit_collection_cases(output: &mut String) {
     emit(output, "array.null", describe_array(&null_array));
     let array_iterable = [Some("a".to_owned()), None];
     let iterable_array =
-        EvaluationUtils::evaluate_as_array(Some(JavaEvaluationTarget::Iterable(&array_iterable)))
+        EvaluationUtils::evaluate_as_array(Some(EvaluationTarget::Iterable(&array_iterable)))
             .expect("iterable array");
     emit(output, "array.iterable", describe_array(&iterable_array));
-    let map_array = EvaluationUtils::evaluate_as_array(Some(JavaEvaluationTarget::Map(&entries)))
+    let map_array = EvaluationUtils::evaluate_as_array(Some(EvaluationTarget::Map(&entries)))
         .expect("map array");
     emit(output, "array.map", describe_array(&map_array));
     let raw_entry = match map_array
         .as_owned_array()
         .and_then(|array| array.as_slice().first())
     {
-        Some(Some(JavaEvaluationElement::MapEntry(entry))) => Arc::ptr_eq(entry, &raw_a),
+        Some(Some(EvaluationElement::MapEntry(entry))) => Arc::ptr_eq(entry, &raw_a),
         _ => false,
     };
     emit(output, "array.map.raw_entry", raw_entry);
     let reference_array =
-        EvaluationUtils::evaluate_as_array(Some(JavaEvaluationTarget::ReferenceArray(&reference)))
+        EvaluationUtils::evaluate_as_array(Some(EvaluationTarget::ReferenceArray(&reference)))
             .expect("reference array");
     emit(
         output,
         "array.reference",
         describe_borrowed_array(&reference_array),
     );
-    let scalar_array =
-        EvaluationUtils::evaluate_as_array(Some(JavaEvaluationTarget::Other(&scalar)))
-            .expect("scalar array");
+    let scalar_array = EvaluationUtils::evaluate_as_array(Some(EvaluationTarget::Other(&scalar)))
+        .expect("scalar array");
     emit(output, "array.scalar", describe_array(&scalar_array));
     emit_array_error(
         output,
         "array.primitive.bytes",
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Bytes(&[1]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Bytes(&[1]))),
     );
     emit_array_error(
         output,
         "array.primitive.ints",
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Integers(&[1]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Integers(&[1]))),
     );
     emit_array_error(
         output,
         "array.primitive.booleans",
-        EvaluationUtils::evaluate_as_array::<String>(Some(JavaEvaluationTarget::Booleans(&[true]))),
+        EvaluationUtils::evaluate_as_array::<String>(Some(EvaluationTarget::Booleans(&[true]))),
     );
 }
 
@@ -421,56 +413,56 @@ fn emit_primitive_lists(output: &mut String) {
         output,
         "list.bytes",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Bytes(&[-1, 2]),
+            EvaluationTarget::Bytes(&[-1, 2]),
         ))),
     );
     emit(
         output,
         "list.shorts",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Shorts(&[-2, 3]),
+            EvaluationTarget::Shorts(&[-2, 3]),
         ))),
     );
     emit(
         output,
         "list.ints",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Integers(&[-3, 4]),
+            EvaluationTarget::Integers(&[-3, 4]),
         ))),
     );
     emit(
         output,
         "list.longs",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Longs(&[-4, 5]),
+            EvaluationTarget::Longs(&[-4, 5]),
         ))),
     );
     emit(
         output,
         "list.floats",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Floats(&[-0.0, 0.5]),
+            EvaluationTarget::Floats(&[-0.0, 0.5]),
         ))),
     );
     emit(
         output,
         "list.doubles",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Doubles(&[-0.0, 0.5]),
+            EvaluationTarget::Doubles(&[-0.0, 0.5]),
         ))),
     );
     emit(
         output,
         "list.booleans",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Booleans(&[false, true]),
+            EvaluationTarget::Booleans(&[false, true]),
         ))),
     );
     emit(
         output,
         "list.characters",
         describe_list(&EvaluationUtils::evaluate_as_list::<String>(Some(
-            JavaEvaluationTarget::Characters(&[0, u16::from(b'x')]),
+            EvaluationTarget::Characters(&[0, u16::from(b'x')]),
         ))),
     );
 }
@@ -478,9 +470,9 @@ fn emit_primitive_lists(output: &mut String) {
 fn emit_bools_cases(output: &mut String) {
     let bools = Bools::new();
     let values = [
-        JavaEvaluationValue::Null,
+        EvaluationValue::Null,
         string("false"),
-        number(JavaNumber::Integer(1)),
+        number(NumberValue::Integer(1)),
         string("no"),
     ];
     emit_result(output, "bools.is_true", bools.is_true(&string("yes")));
@@ -536,13 +528,13 @@ fn emit_bools_cases(output: &mut String) {
     emit_result(output, "bools.empty_and", bools.array_and(Some(&[])));
     emit_result(output, "bools.empty_or", bools.array_or(Some(&[])));
     emit_result(output, "bools.null_array", bools.array_and(None));
-    let short_and = [JavaEvaluationValue::Boolean(false), literal(None)];
+    let short_and = [EvaluationValue::Boolean(false), literal(None)];
     emit_result(
         output,
         "bools.short_circuit_and",
         bools.array_and(Some(&short_and)),
     );
-    let short_or = [JavaEvaluationValue::Boolean(true), literal(None)];
+    let short_or = [EvaluationValue::Boolean(true), literal(None)];
     emit_result(
         output,
         "bools.short_circuit_or",
@@ -550,11 +542,11 @@ fn emit_bools_cases(output: &mut String) {
     );
 }
 
-fn emit_boolean(output: &mut String, key: &str, value: JavaEvaluationValue) {
+fn emit_boolean(output: &mut String, key: &str, value: EvaluationValue) {
     emit_result(output, key, EvaluationUtils::evaluate_as_boolean(&value));
 }
 
-fn emit_number(output: &mut String, key: &str, value: JavaEvaluationValue) {
+fn emit_number(output: &mut String, key: &str, value: EvaluationValue) {
     emit(output, key, describe_number_outcome(&value));
 }
 
@@ -590,7 +582,7 @@ fn emit_number_matrix(output: &mut String) {
 }
 
 fn hash_number_outcome(mut hash: u64, bits: u64) -> u64 {
-    let value = number(JavaNumber::Double(f64::from_bits(bits)));
+    let value = number(NumberValue::Double(f64::from_bits(bits)));
     let text = format!("{bits:x}:{}", describe_number_outcome(&value));
     for unit in text.encode_utf16() {
         hash ^= u64::from(unit);
@@ -599,14 +591,14 @@ fn hash_number_outcome(mut hash: u64, bits: u64) -> u64 {
     hash
 }
 
-fn describe_number_outcome(value: &JavaEvaluationValue) -> String {
+fn describe_number_outcome(value: &EvaluationValue) -> String {
     match EvaluationUtils::evaluate_as_number(value) {
         Ok(result) => {
             let description = result.map_or_else(
                 || "null".to_owned(),
                 |result| {
                     let decimal = result.as_decimal();
-                    let same = matches!(result, JavaBigDecimalResult::Borrowed(_));
+                    let same = matches!(result, BigDecimalResult::Borrowed(_));
                     format!(
                         "{}|scale={}|unscaled={}|same={same}",
                         decimal,
@@ -621,10 +613,10 @@ fn describe_number_outcome(value: &JavaEvaluationValue) -> String {
     }
 }
 
-fn describe_list(values: &JavaEvaluationList<String>) -> String {
+fn describe_list(values: &EvaluationList<String>) -> String {
     let class_name = match values.list_type() {
-        JavaEvaluationListType::EmptyList => "java.util.Collections$EmptyList",
-        JavaEvaluationListType::UnmodifiableRandomAccessList => {
+        EvaluationListType::EmptyList => "java.util.Collections$EmptyList",
+        EvaluationListType::UnmodifiableRandomAccessList => {
             "java.util.Collections$UnmodifiableRandomAccessList"
         }
     };
@@ -640,7 +632,7 @@ fn describe_list(values: &JavaEvaluationList<String>) -> String {
     )
 }
 
-fn describe_array(values: &JavaEvaluationArray<'_, String>) -> String {
+fn describe_array(values: &EvaluationArray<'_, String>) -> String {
     let array = values.as_owned_array().expect("owned Object[]");
     let elements = array
         .as_slice()
@@ -651,8 +643,8 @@ fn describe_array(values: &JavaEvaluationArray<'_, String>) -> String {
     format!("[Ljava.lang.Object;|{}|same=false|{elements}", array.len())
 }
 
-fn describe_borrowed_array(values: &JavaEvaluationArray<'_, String>) -> String {
-    let JavaEvaluationArray::Borrowed(array) = values else {
+fn describe_borrowed_array(values: &EvaluationArray<'_, String>) -> String {
+    let EvaluationArray::Borrowed(array) = values else {
         panic!("expected borrowed reference array");
     };
     let elements = array
@@ -671,25 +663,25 @@ fn describe_borrowed_array(values: &JavaEvaluationArray<'_, String>) -> String {
     )
 }
 
-fn describe_element(value: &Option<JavaEvaluationElement<String>>) -> String {
+fn describe_element(value: &Option<EvaluationElement<String>>) -> String {
     match value {
         None => "null".to_owned(),
-        Some(JavaEvaluationElement::Object(value)) => format!("java.lang.String:{value}"),
-        Some(JavaEvaluationElement::Byte(value)) => format!("java.lang.Byte:{value}"),
-        Some(JavaEvaluationElement::Short(value)) => format!("java.lang.Short:{value}"),
-        Some(JavaEvaluationElement::Integer(value)) => format!("java.lang.Integer:{value}"),
-        Some(JavaEvaluationElement::Long(value)) => format!("java.lang.Long:{value}"),
-        Some(JavaEvaluationElement::Float(value)) => {
+        Some(EvaluationElement::Object(value)) => format!("java.lang.String:{value}"),
+        Some(EvaluationElement::Byte(value)) => format!("java.lang.Byte:{value}"),
+        Some(EvaluationElement::Short(value)) => format!("java.lang.Short:{value}"),
+        Some(EvaluationElement::Integer(value)) => format!("java.lang.Integer:{value}"),
+        Some(EvaluationElement::Long(value)) => format!("java.lang.Long:{value}"),
+        Some(EvaluationElement::Float(value)) => {
             format!("java.lang.Float:{}", java_float(*value))
         }
-        Some(JavaEvaluationElement::Double(value)) => {
+        Some(EvaluationElement::Double(value)) => {
             format!("java.lang.Double:{}", java_double(*value))
         }
-        Some(JavaEvaluationElement::Boolean(value)) => format!("java.lang.Boolean:{value}"),
-        Some(JavaEvaluationElement::Character(value)) => {
+        Some(EvaluationElement::Boolean(value)) => format!("java.lang.Boolean:{value}"),
+        Some(EvaluationElement::Character(value)) => {
             format!("java.lang.Character:{value:x}")
         }
-        Some(JavaEvaluationElement::MapEntry(value)) => {
+        Some(EvaluationElement::MapEntry(value)) => {
             format!("{}:{value}", value.java_class_name())
         }
     }
@@ -698,7 +690,7 @@ fn describe_element(value: &Option<JavaEvaluationElement<String>>) -> String {
 fn emit_array_error<T>(
     output: &mut String,
     key: &str,
-    result: Result<JavaEvaluationArray<'_, T>, EvaluationError>,
+    result: Result<EvaluationArray<'_, T>, EvaluationError>,
 ) {
     match result {
         Ok(_) => emit(output, key, "OK:unexpected"),
@@ -754,20 +746,20 @@ fn java_double(value: f64) -> String {
     }
 }
 
-fn decimal(value: &str) -> JavaBigDecimal {
-    JavaBigDecimal::parse(value).expect("valid Java BigDecimal")
+fn decimal(value: &str) -> BigDecimalValue {
+    BigDecimalValue::parse(value).expect("valid Java BigDecimal")
 }
 
-fn number(value: JavaNumber) -> JavaEvaluationValue {
-    JavaEvaluationValue::Number(value)
+fn number(value: NumberValue) -> EvaluationValue {
+    EvaluationValue::Number(value)
 }
 
-fn string(value: &str) -> JavaEvaluationValue {
-    JavaEvaluationValue::String(Utf16String::from_rust_str(value))
+fn string(value: &str) -> EvaluationValue {
+    EvaluationValue::String(Utf16String::from_rust_str(value))
 }
 
-fn literal(value: Option<&str>) -> JavaEvaluationValue {
-    JavaEvaluationValue::LiteralValue(Arc::new(LiteralValue::new(
+fn literal(value: Option<&str>) -> EvaluationValue {
+    EvaluationValue::LiteralValue(Arc::new(LiteralValue::new(
         value.map(Utf16String::from_rust_str),
     )))
 }

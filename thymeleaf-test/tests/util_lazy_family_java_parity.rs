@@ -27,7 +27,7 @@ use thymeleaf::element::AbstractAttributeTagProcessor;
 use thymeleaf::processor::IProcessor;
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::util::{
-    FastStringWriter, IWritableCharSequence, JavaCharSequence, LazyEscapingCharSequence,
+    CharSequenceValue, FastStringWriter, IWritableCharSequence, LazyEscapingCharSequence,
     LazyProcessingCharSequence, ProcessorComparators, ProcessorConfigurationUtils,
     ResourceLoaderUtils, Utf16String,
 };

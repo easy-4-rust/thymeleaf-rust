@@ -88,7 +88,7 @@ impl ResourceLoaderUtils {
     /// 对应 Java: `ClassLoaderUtils#loadClass(String)`。
     ///
     /// # 错误
-    /// 未注册该名称时返回 `NotFound`，等价于 Java `ClassNotFoundException`。
+    /// 未注册该名称时返回 `NotFound`，等价于 Java `ClassNotFoundError`。
     pub fn load_class(class_name: &str) -> io::Result<String> {
         Self::find_class(class_name).ok_or_else(|| {
             io::Error::new(

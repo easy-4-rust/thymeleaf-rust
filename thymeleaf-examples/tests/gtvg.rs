@@ -9,7 +9,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, Locale, Utf16String};
+use thymeleaf::util::{DateValue, Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf_examples::business::calendar_util::calendar_for;
 use thymeleaf_examples::controllers::GtvgController;
@@ -24,7 +24,7 @@ use thymeleaf_examples::web::gtvg_web_request::GtvgWebRequest;
 
 /// 固定“今天”：2011-11-11（与上游语料 gtvg/home.thtest 的
 /// `today = #calendars.create(2011,11,11)` 一致）。
-fn fixed_today() -> JavaDate {
+fn fixed_today() -> DateValue {
     calendar_for(2011, 11, 11, 0, 0)
 }
 

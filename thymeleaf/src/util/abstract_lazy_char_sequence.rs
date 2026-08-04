@@ -2,7 +2,7 @@ use std::io;
 use std::sync::RwLock;
 
 use super::{
-    IWritableCharSequence, JavaCharSequence, JavaHashCode, TemplateWriter, TextUtilsError,
+    CharSequenceValue, HashCodeValue, IWritableCharSequence, TemplateWriter, TextUtilsError,
     Utf16String,
 };
 
@@ -82,7 +82,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     }
 }
 
-impl<R: LazyCharSequenceResolver> JavaCharSequence for AbstractLazyCharSequence<R> {
+impl<R: LazyCharSequenceResolver> CharSequenceValue for AbstractLazyCharSequence<R> {
     fn java_length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.get_text().ok_or(TextUtilsError::NullPointer)?.len() as i32)
     }

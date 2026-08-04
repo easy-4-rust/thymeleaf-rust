@@ -14,7 +14,7 @@ use std::sync::Arc;
 use thymeleaf::TemplateEngine;
 use thymeleaf::context::WebContext;
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::{JavaDate, Utf16String};
+use thymeleaf::util::{DateValue, Utf16String};
 use thymeleaf::web::IWebExchange;
 
 /// 控制器处理结果：渲染出的完整 HTML（对应 Java `Writer` 输出）。
@@ -61,7 +61,7 @@ pub trait GtvgController: Send + Sync {
         &self,
         web_exchange: Arc<dyn IWebExchange>,
         template_engine: &TemplateEngine,
-        now: JavaDate,
+        now: DateValue,
     ) -> ControllerResult;
 }
 

@@ -6,7 +6,7 @@ use crate::element::{
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{AssignationUtils, StandardExpressionExecutionContext, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::{EscapedAttributeUtils, EvaluationUtils, JavaEvaluationValue, Utf16String};
+use crate::util::{EscapedAttributeUtils, EvaluationUtils, EvaluationValue, Utf16String};
 
 use super::{
     IProcessor, StandardAttributeCallback, StandardConditionalFixedValueTagProcessor,
@@ -135,10 +135,9 @@ impl AbstractStandardMultipleAttributeModifierTagProcessor {
                                     .eq(name.encode_utf16())
                             })
                     {
-                        let evaluation_value = right_value.as_deref().map_or(
-                            JavaEvaluationValue::Null,
-                            TemplateValue::to_evaluation_value,
-                        );
+                        let evaluation_value = right_value
+                            .as_deref()
+                            .map_or(EvaluationValue::Null, TemplateValue::to_evaluation_value);
                         if EvaluationUtils::evaluate_as_boolean(&evaluation_value).map_err(
                             |error| {
                                 Box::new(TemplateProcessingException::with_cause(

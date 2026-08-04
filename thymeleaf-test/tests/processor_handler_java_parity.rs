@@ -52,7 +52,7 @@ fn ctx_num(name: &str, val: i64) -> Context {
     c.set_variable(
         Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Long(val),
+            thymeleaf::util::NumberValue::Long(val),
         ))),
     );
     c

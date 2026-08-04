@@ -1526,7 +1526,7 @@ fn reset_model_slot(
 
 fn add_text_to_model(
     model: Option<&mut Model>,
-    value: Arc<dyn crate::util::JavaCharSequence>,
+    value: Arc<dyn crate::util::CharSequenceValue>,
 ) -> Result<(), Box<dyn TemplateEngineException>> {
     let text: Arc<dyn ITemplateEvent> = Arc::new(Text::new(Some(value)));
     model

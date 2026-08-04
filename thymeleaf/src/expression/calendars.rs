@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    DateUtils, DateUtilsError, JavaDate, JavaNumber, Locale, Utf16String, template_integer,
+    DateUtils, DateUtilsError, DateValue, Locale, NumberValue, Utf16String, template_integer,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -36,7 +36,7 @@ impl Calendars {
         second: Option<i32>,
         millisecond: Option<i32>,
         time_zone: Option<&str>,
-    ) -> Result<JavaDate, CalendarsError> {
+    ) -> Result<DateValue, CalendarsError> {
         Ok(DateUtils::create(
             year,
             month,
@@ -53,14 +53,14 @@ impl Calendars {
     /// 返回指定时区的当前 Calendar。
     #[must_use]
     /// 对应 Java: `Calendars#createNow()`。
-    pub fn create_now(&self, time_zone: Option<&str>) -> JavaDate {
+    pub fn create_now(&self, time_zone: Option<&str>) -> DateValue {
         DateUtils::create_now(time_zone, Some(&self.locale))
     }
 
     /// 返回指定时区当天零点 Calendar。
     #[must_use]
     /// 对应 Java: `Calendars#createToday()`。
-    pub fn create_today(&self, time_zone: Option<&str>) -> JavaDate {
+    pub fn create_today(&self, time_zone: Option<&str>) -> DateValue {
         DateUtils::create_today(time_zone, Some(&self.locale))
     }
 
@@ -68,7 +68,7 @@ impl Calendars {
     /// 对应 Java: `Calendars#format()`。
     pub fn format(
         &self,
-        target: Option<&JavaDate>,
+        target: Option<&DateValue>,
         pattern: Option<&Utf16String>,
     ) -> Result<Option<Utf16String>, CalendarsError> {
         Ok(DateUtils::format(target, pattern, Some(&self.locale))?)
@@ -257,7 +257,7 @@ impl From<DateUtilsError> for CalendarsError {
     }
 }
 
-fn calendar(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaDate>, CalendarsError> {
+fn calendar(value: &Option<Arc<TemplateValue>>) -> Result<Option<&DateValue>, CalendarsError> {
     let calendar = DateUtils::from_template_value(value.as_deref())?;
     if calendar.is_some_and(|value| !value.is_calendar()) {
         return Err(CalendarsError::new(
@@ -269,7 +269,7 @@ fn calendar(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaDate>, Cal
 
 fn calendar_argument(
     arguments: &[Option<Arc<TemplateValue>>],
-) -> Result<Option<&JavaDate>, CalendarsError> {
+) -> Result<Option<&DateValue>, CalendarsError> {
     match arguments {
         [target] => calendar(target),
         _ => Err(CalendarsError::new(
@@ -298,7 +298,7 @@ fn string_value(value: Option<Utf16String>) -> Option<Arc<TemplateValue>> {
 }
 
 fn integer_option(value: Option<i32>) -> Option<Arc<TemplateValue>> {
-    value.map(|value| Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+    value.map(|value| Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
 }
 
 fn collection_method(method_name: &str) -> Option<(bool, String)> {

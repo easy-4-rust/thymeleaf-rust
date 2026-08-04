@@ -428,7 +428,7 @@ impl TemplateSpec {
     ///
     /// # 错误
     /// 比较执行到空 `outputContentType` 时返回
-    /// `TemplateSpecError::JavaEqualsNullOutputContentType`。
+    /// `TemplateSpecError::EqualsNullOutputContentType`。
     pub fn equals_java(&self, other: Option<&dyn Any>) -> Result<bool, TemplateSpecError> {
         let Some(other) = other else {
             return Ok(false);
@@ -446,7 +446,7 @@ impl TemplateSpec {
             return Ok(false);
         }
         let Some(output_content_type) = &self.output_content_type else {
-            return Err(TemplateSpecError::JavaEqualsNullOutputContentType);
+            return Err(TemplateSpecError::EqualsNullOutputContentType);
         };
         if Some(output_content_type) != that.output_content_type.as_ref() {
             return Ok(false);
@@ -524,7 +524,7 @@ pub enum TemplateSpecError {
     MalformedOutputContentType,
     /// Java `equals` 在空输出内容类型上调用实例方法。
     #[error("Cannot invoke \"String.equals(Object)\" because \"this.outputContentType\" is null")]
-    JavaEqualsNullOutputContentType,
+    EqualsNullOutputContentType,
 }
 
 impl From<crate::util::ContentTypeError> for TemplateSpecError {
@@ -887,10 +887,10 @@ mod tests {
         );
         assert_eq!(
             without_content_type.equals_java(Some(&same_fields)),
-            Err(TemplateSpecError::JavaEqualsNullOutputContentType)
+            Err(TemplateSpecError::EqualsNullOutputContentType)
         );
         assert_eq!(
-            TemplateSpecError::JavaEqualsNullOutputContentType.to_string(),
+            TemplateSpecError::EqualsNullOutputContentType.to_string(),
             "Cannot invoke \"String.equals(Object)\" because \"this.outputContentType\" is null"
         );
 

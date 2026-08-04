@@ -1,6 +1,6 @@
 use std::hash::Hash;
 
-use crate::util::{JavaSet, SetTarget, SetUtils, SetUtilsError, SetView, ValidateError};
+use crate::util::{SetTarget, SetUtils, SetUtilsError, SetValue, SetView, ValidateError};
 
 /// Thymeleaf 标准表达式中的集合操作对象。
 ///
@@ -38,7 +38,7 @@ impl Sets {
     pub fn to_set<'a, T>(
         &self,
         target: Option<SetTarget<'a, T>>,
-    ) -> Result<JavaSet<'a, T>, SetUtilsError>
+    ) -> Result<SetValue<'a, T>, SetUtilsError>
     where
         T: Clone + Eq + Hash,
     {

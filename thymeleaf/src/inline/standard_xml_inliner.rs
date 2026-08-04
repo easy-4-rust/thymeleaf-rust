@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use crate::context::ITemplateContext;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{AbstractStandardInliner, IInliner, StandardInlinerEscaping};
@@ -36,7 +36,7 @@ impl IInliner for StandardXMLInliner {
         &self,
         context: &dyn ITemplateContext,
         text: &dyn IText,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.0.inline_text(context, text)
     }
 
@@ -44,7 +44,7 @@ impl IInliner for StandardXMLInliner {
         &self,
         context: &dyn ITemplateContext,
         value: &dyn ICDATASection,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.0.inline_cdata_section(context, value)
     }
 
@@ -52,7 +52,7 @@ impl IInliner for StandardXMLInliner {
         &self,
         context: &dyn ITemplateContext,
         value: &dyn IComment,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.0.inline_comment(context, value)
     }
 }

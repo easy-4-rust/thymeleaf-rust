@@ -1,7 +1,7 @@
 use std::io;
 use std::sync::{Arc, RwLock};
 
-use crate::util::{JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
+use crate::util::{CharSequenceValue, TemplateWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTemplateEvent, engine_event_utils::compute_inlineable};
 
@@ -10,7 +10,7 @@ use super::{AbstractTemplateEvent, engine_event_utils::compute_inlineable};
 /// 对应 Java: `org.thymeleaf.engine.AbstractTextualTemplateEvent`。
 pub struct AbstractTextualTemplateEvent {
     template_event: AbstractTemplateEvent,
-    content: Option<Arc<dyn JavaCharSequence>>,
+    content: Option<Arc<dyn CharSequenceValue>>,
     content_string: Option<Utf16String>,
     content_length: i32,
     computed_content_string: RwLock<Option<Utf16String>>,
@@ -23,7 +23,7 @@ impl AbstractTextualTemplateEvent {
     /// 创建不带位置的文本事件。
     #[must_use]
     /// 对应 Java 语义：`AbstractTextualTemplateEvent` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(content: Option<Arc<dyn JavaCharSequence>>) -> Self {
+    pub fn new(content: Option<Arc<dyn CharSequenceValue>>) -> Self {
         Self::with_location(content, None, -1, -1)
     }
 
@@ -31,7 +31,7 @@ impl AbstractTextualTemplateEvent {
     #[must_use]
     /// 对应 Java 语义：`AbstractTextualTemplateEvent` 的 `with_location` 行为（Rust 侧辅助/私有路径）。
     pub fn with_location(
-        content: Option<Arc<dyn JavaCharSequence>>,
+        content: Option<Arc<dyn CharSequenceValue>>,
         template_name: Option<Utf16String>,
         line: i32,
         col: i32,
@@ -186,7 +186,9 @@ impl AbstractTextualTemplateEvent {
     }
 }
 
-fn sequence(event: &AbstractTextualTemplateEvent) -> Result<&dyn JavaCharSequence, TextUtilsError> {
+fn sequence(
+    event: &AbstractTextualTemplateEvent,
+) -> Result<&dyn CharSequenceValue, TextUtilsError> {
     event.content.as_deref().ok_or(TextUtilsError::NullPointer)
 }
 

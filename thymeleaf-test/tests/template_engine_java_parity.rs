@@ -1059,7 +1059,7 @@ fn th_text_with_number_variable() {
     ctx.set_variable(
         Some(Utf16String::from_rust_str("count")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(42),
+            thymeleaf::util::NumberValue::Integer(42),
         ))),
     );
     let input = "<p th:text=\"${count}\">x</p>";
@@ -1107,7 +1107,7 @@ fn th_if_with_zero_number_is_false() {
     ctx.set_variable(
         Some(Utf16String::from_rust_str("count")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(0),
+            thymeleaf::util::NumberValue::Integer(0),
         ))),
     );
     let input = "<p th:if=\"${count}\">should not appear</p><span>ok</span>";

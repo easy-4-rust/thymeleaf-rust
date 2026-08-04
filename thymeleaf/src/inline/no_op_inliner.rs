@@ -3,7 +3,7 @@ use std::sync::{Arc, OnceLock};
 use crate::context::ITemplateContext;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 
 use super::IInliner;
 
@@ -61,7 +61,7 @@ impl NoOpInliner {
         &self,
         _context: Option<&dyn ITemplateContext>,
         _text: Option<&dyn IText>,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         // 不执行任何操作；正常引擎处理链不应调用 NoOp 内联方法。
         Ok(None)
     }
@@ -80,7 +80,7 @@ impl NoOpInliner {
         &self,
         _context: Option<&dyn ITemplateContext>,
         _cdata_section: Option<&dyn ICDATASection>,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         // 不执行任何操作；正常引擎处理链不应调用 NoOp 内联方法。
         Ok(None)
     }
@@ -99,7 +99,7 @@ impl NoOpInliner {
         &self,
         _context: Option<&dyn ITemplateContext>,
         _comment: Option<&dyn IComment>,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         // 不执行任何操作；正常引擎处理链不应调用 NoOp 内联方法。
         Ok(None)
     }
@@ -121,7 +121,7 @@ impl IInliner for NoOpInliner {
         &self,
         context: &dyn ITemplateContext,
         text: &dyn IText,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.inline_text_nullable(Some(context), Some(text))
     }
 
@@ -130,7 +130,7 @@ impl IInliner for NoOpInliner {
         &self,
         context: &dyn ITemplateContext,
         cdata_section: &dyn ICDATASection,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.inline_cdata_section_nullable(Some(context), Some(cdata_section))
     }
 
@@ -139,7 +139,7 @@ impl IInliner for NoOpInliner {
         &self,
         context: &dyn ITemplateContext,
         comment: &dyn IComment,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>> {
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>> {
         self.inline_comment_nullable(Some(context), Some(comment))
     }
 }

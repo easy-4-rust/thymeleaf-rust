@@ -5,7 +5,7 @@ use std::{any::Any, sync::Arc};
 use thiserror::Error;
 
 use crate::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use crate::util::{JavaNumber, Utf16String};
+use crate::util::{NumberValue, Utf16String};
 
 /// Thymeleaf 支持的模板解析与输出模式。
 ///
@@ -156,7 +156,7 @@ impl TemplateObject for TemplateMode {
             "isText" => TemplateValue::Boolean(self.is_text()),
             "isCaseSensitive" => TemplateValue::Boolean(self.is_case_sensitive()),
             "name" | "toString" => TemplateValue::string(self.to_utf16_string()),
-            "ordinal" => TemplateValue::Number(JavaNumber::Integer(match self {
+            "ordinal" => TemplateValue::Number(NumberValue::Integer(match self {
                 Self::HTML => 0,
                 Self::XML => 1,
                 Self::TEXT => 2,

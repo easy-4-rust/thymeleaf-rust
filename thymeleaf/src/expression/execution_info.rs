@@ -3,7 +3,7 @@ use std::sync::{Arc, Weak};
 use crate::TemplateMode;
 use crate::context::IExpressionContext;
 use crate::engine::TemplateData;
-use crate::util::{DateUtils, JavaDate, Utf16String, ValidateError};
+use crate::util::{DateUtils, DateValue, Utf16String, ValidateError};
 
 /// 暴露当前模板、顶层模板、模板栈及求值开始时间。
 ///
@@ -11,7 +11,7 @@ use crate::util::{DateUtils, JavaDate, Utf16String, ValidateError};
 pub struct ExecutionInfo {
     /// Context 的弱引用避免被 ExpressionObjects 缓存后形成 Arc 引用环。
     context: Weak<dyn IExpressionContext>,
-    now: JavaDate,
+    now: DateValue,
 }
 
 impl ExecutionInfo {
@@ -115,7 +115,7 @@ impl ExecutionInfo {
     }
 
     /// 返回创建本对象时捕获的当前时间。
-    pub const fn get_now(&self) -> &JavaDate {
+    pub const fn get_now(&self) -> &DateValue {
         &self.now
     }
 

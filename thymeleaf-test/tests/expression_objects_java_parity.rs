@@ -245,15 +245,15 @@ fn maps_size() {
 fn aggregates_sum() {
     let ctx = Context::new();
     let list = vec![
-        Arc::new(TemplateValue::Number(thymeleaf::util::JavaNumber::Integer(
-            1,
-        ))),
-        Arc::new(TemplateValue::Number(thymeleaf::util::JavaNumber::Integer(
-            2,
-        ))),
-        Arc::new(TemplateValue::Number(thymeleaf::util::JavaNumber::Integer(
-            3,
-        ))),
+        Arc::new(TemplateValue::Number(
+            thymeleaf::util::NumberValue::Integer(1),
+        )),
+        Arc::new(TemplateValue::Number(
+            thymeleaf::util::NumberValue::Integer(2),
+        )),
+        Arc::new(TemplateValue::Number(
+            thymeleaf::util::NumberValue::Integer(3),
+        )),
     ];
     ctx.set_variable(
         Some(Utf16String::from_rust_str("nums")),

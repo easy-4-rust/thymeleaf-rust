@@ -4,11 +4,11 @@ use std::fmt::{Display, Formatter};
 ///
 /// 对应 Java: `java.lang.ClassNotFoundException`。
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ClassNotFoundException {
+pub struct ClassNotFoundError {
     class_name: String,
 }
 
-impl ClassNotFoundException {
+impl ClassNotFoundError {
     /// 创建指定类型名的类未找到异常。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
@@ -17,10 +17,10 @@ impl ClassNotFoundException {
     }
 }
 
-impl Display for ClassNotFoundException {
+impl Display for ClassNotFoundError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(&self.class_name)
     }
 }
 
-impl std::error::Error for ClassNotFoundException {}
+impl std::error::Error for ClassNotFoundError {}

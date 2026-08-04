@@ -62,7 +62,7 @@ impl ControllerMapping {
         &self,
         web_exchange: Arc<dyn IWebExchange>,
         template_engine: &TemplateEngine,
-        now: thymeleaf::util::JavaDate,
+        now: thymeleaf::util::DateValue,
     ) -> ControllerResult {
         match self {
             Self::Home => HomeController.process(web_exchange, template_engine, now),

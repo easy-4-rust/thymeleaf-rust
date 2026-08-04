@@ -12,7 +12,7 @@ use thymeleaf::expression::{
     ExpressionObjectNames, IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult,
     TemplateValue,
 };
-use thymeleaf::util::{JavaNumber, Locale, Utf16String, ValidateError};
+use thymeleaf::util::{Locale, NumberValue, Utf16String, ValidateError};
 use thymeleaf::{IEngineConfiguration, ITemplateEngine, TemplateEngine};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -523,7 +523,7 @@ fn string_value(value: &str) -> Arc<TemplateValue> {
 }
 
 fn int_value(value: i32) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+    Arc::new(TemplateValue::Number(NumberValue::Integer(value)))
 }
 
 struct ProbeDialect {

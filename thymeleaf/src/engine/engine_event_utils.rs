@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::context::ITemplateContext;
 use crate::expression::{IStandardExpression, StandardExpressionResult, StandardExpressions};
 use crate::model::{ICDATASection, IComment, IProcessableElementTag, IText};
-use crate::util::{JavaCharSequence, TextUtilsError, Utf16String};
+use crate::util::{CharSequenceValue, TextUtilsError, Utf16String};
 
 use super::AttributeName;
 
@@ -116,7 +116,7 @@ fn parse_attribute_expression(
         .parse_expression(context, Some(attribute_value))
 }
 
-fn compute_whitespace(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+fn compute_whitespace(text: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
     let mut remaining = text.java_length()?;
     if remaining == 0 {
         return Ok(false);
@@ -135,7 +135,7 @@ fn compute_whitespace(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsErro
 /// 逐行对应 Java `AbstractTextualTemplateEvent#computeInlineable()`
 /// （事件版本：右向左扫描，后遇到的闭包覆盖前者，仅在 `n > 0` 时
 /// 识别闭包并跳过其前一个字符）。
-pub(crate) fn compute_inlineable(text: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+pub(crate) fn compute_inlineable(text: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
     let mut remaining = text.java_length()?;
     if remaining == 0 {
         return Ok(false);

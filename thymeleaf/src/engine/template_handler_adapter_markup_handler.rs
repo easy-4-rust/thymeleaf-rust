@@ -6,7 +6,7 @@ use crate::decoupled::DecoupledInjectedAttribute;
 use crate::exceptions::TemplateInputException;
 use crate::model::AttributeValueQuotes;
 use crate::templateparser::TemplateParserError;
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 
 use super::{
     Attribute, Attributes, CDATASection, CloseElementTag, Comment, DocType, ITemplateHandler,
@@ -109,7 +109,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         end: usize,
     ) -> Result<(), TemplateParserError> {
         let (line, col) = self.location(source, start);
-        let content: Arc<dyn JavaCharSequence> = Arc::new(Utf16String::from_rust_str(
+        let content: Arc<dyn CharSequenceValue> = Arc::new(Utf16String::from_rust_str(
             &source[content_start..content_end],
         ));
         self.template_handler
@@ -135,7 +135,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         end: usize,
     ) -> Result<(), TemplateParserError> {
         let (line, col) = self.location(source, start);
-        let content: Arc<dyn JavaCharSequence> = Arc::new(Utf16String::from_rust_str(
+        let content: Arc<dyn CharSequenceValue> = Arc::new(Utf16String::from_rust_str(
             &source[content_start..content_end],
         ));
         self.template_handler

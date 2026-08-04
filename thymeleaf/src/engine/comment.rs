@@ -3,7 +3,7 @@ use std::io;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::model::{IComment, IModelVisitor, ITemplateEvent};
-use crate::util::{JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
+use crate::util::{CharSequenceValue, TemplateWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTextualTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -25,7 +25,7 @@ impl Comment {
     ///
     /// 对应 Java: `Comment#Comment(CharSequence)`。
     #[must_use]
-    pub fn new(content: Option<Arc<dyn JavaCharSequence>>) -> Self {
+    pub fn new(content: Option<Arc<dyn CharSequenceValue>>) -> Self {
         Self::with_boundaries(
             Utf16String::from_rust_str(COMMENT_PREFIX),
             content,
@@ -39,7 +39,7 @@ impl Comment {
     #[must_use]
     pub fn with_boundaries(
         prefix: Utf16String,
-        content: Option<Arc<dyn JavaCharSequence>>,
+        content: Option<Arc<dyn CharSequenceValue>>,
         suffix: Utf16String,
     ) -> Self {
         Self {
@@ -55,7 +55,7 @@ impl Comment {
     /// 对应 Java: `Comment#Comment(CharSequence,String,int,int)`。
     #[must_use]
     pub fn with_location(
-        content: Option<Arc<dyn JavaCharSequence>>,
+        content: Option<Arc<dyn CharSequenceValue>>,
         template_name: Option<Utf16String>,
         line: i32,
         col: i32,
@@ -76,7 +76,7 @@ impl Comment {
     #[must_use]
     pub fn with_boundaries_and_location(
         prefix: Utf16String,
-        content: Option<Arc<dyn JavaCharSequence>>,
+        content: Option<Arc<dyn CharSequenceValue>>,
         suffix: Utf16String,
         template_name: Option<Utf16String>,
         line: i32,
@@ -123,7 +123,7 @@ impl Comment {
     }
 }
 
-impl JavaCharSequence for Comment {
+impl CharSequenceValue for Comment {
     fn java_sequence_class_name(&self) -> &str {
         "org.thymeleaf.engine.Comment"
     }

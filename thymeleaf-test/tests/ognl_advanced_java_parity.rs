@@ -41,7 +41,7 @@ fn num_var(name: &str, value: i64) -> Context {
     ctx.set_variable(
         Some(js(name)),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Long(value),
+            thymeleaf::util::NumberValue::Long(value),
         ))),
     );
     ctx

@@ -269,22 +269,22 @@ fn wrap_io(error: io::Error) -> RawParseException {
 
 fn wrap_java_runtime(class_name: &'static str, message: &'static str) -> RawParseException {
     RawParseException::with_cause(Some(RawParseCause::with_java_metadata(
-        Box::new(JavaRuntimeError(message)),
+        Box::new(RuntimeError(message)),
         class_name,
         Some(Utf16String::from_rust_str(message)),
     )))
 }
 
 #[derive(Debug)]
-struct JavaRuntimeError(&'static str);
+struct RuntimeError(&'static str);
 
-impl Display for JavaRuntimeError {
+impl Display for RuntimeError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(self.0)
     }
 }
 
-impl Error for JavaRuntimeError {}
+impl Error for RuntimeError {}
 
 struct BufferPool {
     buffers: Mutex<Vec<Vec<u16>>>,

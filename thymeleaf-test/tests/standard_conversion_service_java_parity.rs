@@ -5,9 +5,9 @@ use std::fmt::Write;
 use std::ptr;
 
 use thymeleaf::expression::{
-    AbstractStandardConversionService, IStandardConversionService, JavaConversionObject,
-    JavaConversionResult, JavaConversionValue, JavaTargetClass, NoOpToken, StandardConversionError,
-    StandardConversionService, Utf16StringConversionResult,
+    AbstractStandardConversionService, ConversionObject, ConversionResult, ConversionValue,
+    IStandardConversionService, NoOpToken, StandardConversionError, StandardConversionService,
+    TargetClass, Utf16StringConversionResult,
 };
 use thymeleaf::util::Utf16String;
 
@@ -37,31 +37,31 @@ fn cover_public_adapter_contracts() {
         created
             .convert(
                 Some(&context as &dyn Any),
-                JavaConversionValue::String(&source),
-                Some(&JavaTargetClass::String),
+                ConversionValue::String(&source),
+                Some(&TargetClass::String),
             )
             .expect("string conversion"),
-        JavaConversionResult::BorrowedString(value) if ptr::eq(value, &source)
+        ConversionResult::BorrowedString(value) if ptr::eq(value, &source)
     ));
     assert_eq!(
-        JavaTargetClass::Other("example.Target".to_owned()).to_string(),
+        TargetClass::Other("example.Target".to_owned()).to_string(),
         "example.Target"
     );
-    assert_eq!(JavaTargetClass::String.get_name(), "java.lang.String");
+    assert_eq!(TargetClass::String.get_name(), "java.lang.String");
 
-    let borrowed: JavaConversionResult<'_> = Utf16StringConversionResult::Borrowed(&source).into();
+    let borrowed: ConversionResult<'_> = Utf16StringConversionResult::Borrowed(&source).into();
     assert!(matches!(
         borrowed,
-        JavaConversionResult::BorrowedString(value) if ptr::eq(value, &source)
+        ConversionResult::BorrowedString(value) if ptr::eq(value, &source)
     ));
-    let owned: JavaConversionResult<'_> =
+    let owned: ConversionResult<'_> =
         Utf16StringConversionResult::Owned(Utf16String::from_rust_str("owned")).into();
-    assert!(matches!(owned, JavaConversionResult::OwnedString(_)));
-    let null: JavaConversionResult<'_> = Utf16StringConversionResult::Null.into();
-    assert!(matches!(null, JavaConversionResult::Null));
+    assert!(matches!(owned, ConversionResult::OwnedString(_)));
+    let null: ConversionResult<'_> = Utf16StringConversionResult::Null.into();
+    assert!(matches!(null, ConversionResult::Null));
 
     let borrowed_number = 9_i32;
-    let borrowed_object = JavaConversionResult::BorrowedObject(&borrowed_number);
+    let borrowed_object = ConversionResult::BorrowedObject(&borrowed_number);
     assert_eq!(describe_result(borrowed_object), "9");
 
     let runtime = StandardConversionError::runtime("example.Exception", "failure");
@@ -70,8 +70,8 @@ fn cover_public_adapter_contracts() {
 
     let unavailable = match service.convert(
         None,
-        JavaConversionValue::Null,
-        Some(&JavaTargetClass::Other("example.Target".to_owned())),
+        ConversionValue::Null,
+        Some(&TargetClass::Other("example.Target".to_owned())),
     ) {
         Ok(_) => panic!("default other conversion must fail"),
         Err(error) => error,
@@ -103,22 +103,18 @@ fn emit_default_service_cases(output: &mut String) {
     let object = ToStringProbe::value("object");
     let null_object = ToStringProbe::null();
     let throwing_object = ToStringProbe::throwing();
-    let integer_target = JavaTargetClass::Other("java.lang.Integer".to_owned());
-    let array_target = JavaTargetClass::Other("[I".to_owned());
+    let integer_target = TargetClass::Other("java.lang.Integer".to_owned());
+    let array_target = TargetClass::Other("[I".to_owned());
 
     emit_outcome(
         output,
         "default.targetNull",
-        service.convert(None, JavaConversionValue::String(&source), None),
+        service.convert(None, ConversionValue::String(&source), None),
     );
     emit_conversion(
         output,
         "default.stringNull",
-        service.convert(
-            None,
-            JavaConversionValue::Null,
-            Some(&JavaTargetClass::String),
-        ),
+        service.convert(None, ConversionValue::Null, Some(&TargetClass::String)),
     );
     emit(
         output,
@@ -126,10 +122,10 @@ fn emit_default_service_cases(output: &mut String) {
         matches!(
             service.convert(
                 None,
-                JavaConversionValue::String(&source),
-                Some(&JavaTargetClass::String),
+                ConversionValue::String(&source),
+                Some(&TargetClass::String),
             ),
-            Ok(JavaConversionResult::BorrowedString(value)) if ptr::eq(value, &source)
+            Ok(ConversionResult::BorrowedString(value)) if ptr::eq(value, &source)
         ),
     );
     emit_conversion(
@@ -137,8 +133,8 @@ fn emit_default_service_cases(output: &mut String) {
         "default.objectString",
         service.convert(
             None,
-            JavaConversionValue::Object(&object),
-            Some(&JavaTargetClass::String),
+            ConversionValue::Object(&object),
+            Some(&TargetClass::String),
         ),
     );
     let borrowing_object = BorrowingProbe {
@@ -150,10 +146,10 @@ fn emit_default_service_cases(output: &mut String) {
         matches!(
             service.convert(
                 None,
-                JavaConversionValue::Object(&borrowing_object),
-                Some(&JavaTargetClass::String),
+                ConversionValue::Object(&borrowing_object),
+                Some(&TargetClass::String),
             ),
-            Ok(JavaConversionResult::BorrowedString(value))
+            Ok(ConversionResult::BorrowedString(value))
                 if ptr::eq(value, &borrowing_object.value)
         ),
     );
@@ -162,8 +158,8 @@ fn emit_default_service_cases(output: &mut String) {
         "default.objectNull",
         service.convert(
             None,
-            JavaConversionValue::Object(&null_object),
-            Some(&JavaTargetClass::String),
+            ConversionValue::Object(&null_object),
+            Some(&TargetClass::String),
         ),
     );
     emit_outcome(
@@ -171,32 +167,28 @@ fn emit_default_service_cases(output: &mut String) {
         "default.objectError",
         service.convert(
             None,
-            JavaConversionValue::Object(&throwing_object),
-            Some(&JavaTargetClass::String),
+            ConversionValue::Object(&throwing_object),
+            Some(&TargetClass::String),
         ),
     );
     emit_outcome(
         output,
         "default.otherNull",
-        service.convert(None, JavaConversionValue::Null, Some(&integer_target)),
+        service.convert(None, ConversionValue::Null, Some(&integer_target)),
     );
     emit_outcome(
         output,
         "default.otherObject",
         service.convert(
             None,
-            JavaConversionValue::Object(&object),
+            ConversionValue::Object(&object),
             Some(&integer_target),
         ),
     );
     emit_outcome(
         output,
         "default.arrayTarget",
-        service.convert(
-            None,
-            JavaConversionValue::String(&source),
-            Some(&array_target),
-        ),
+        service.convert(None, ConversionValue::String(&source), Some(&array_target)),
     );
 }
 
@@ -211,8 +203,8 @@ fn emit_custom_service_cases(output: &mut String) {
         "custom.stringNull",
         service.convert(
             Some(&context as &dyn Any),
-            JavaConversionValue::Null,
-            Some(&JavaTargetClass::String),
+            ConversionValue::Null,
+            Some(&TargetClass::String),
         ),
     );
     emit(
@@ -221,10 +213,10 @@ fn emit_custom_service_cases(output: &mut String) {
         matches!(
             service.convert(
                 Some(&context as &dyn Any),
-                JavaConversionValue::String(&source),
-                Some(&JavaTargetClass::String),
+                ConversionValue::String(&source),
+                Some(&TargetClass::String),
             ),
-            Ok(JavaConversionResult::BorrowedString(value)) if ptr::eq(value, &source)
+            Ok(ConversionResult::BorrowedString(value)) if ptr::eq(value, &source)
         ),
     );
     emit_conversion(
@@ -232,8 +224,8 @@ fn emit_custom_service_cases(output: &mut String) {
         "custom.objectContext",
         service.convert(
             Some(&context as &dyn Any),
-            JavaConversionValue::Object(&object),
-            Some(&JavaTargetClass::String),
+            ConversionValue::Object(&object),
+            Some(&TargetClass::String),
         ),
     );
     emit_conversion(
@@ -241,8 +233,8 @@ fn emit_custom_service_cases(output: &mut String) {
         "custom.objectNullContext",
         service.convert(
             None,
-            JavaConversionValue::Object(&object),
-            Some(&JavaTargetClass::String),
+            ConversionValue::Object(&object),
+            Some(&TargetClass::String),
         ),
     );
     emit_conversion(
@@ -250,8 +242,8 @@ fn emit_custom_service_cases(output: &mut String) {
         "custom.otherNull",
         service.convert(
             Some(&context as &dyn Any),
-            JavaConversionValue::Null,
-            Some(&JavaTargetClass::Other("java.lang.Integer".to_owned())),
+            ConversionValue::Null,
+            Some(&TargetClass::Other("java.lang.Integer".to_owned())),
         ),
     );
     emit_conversion(
@@ -259,8 +251,8 @@ fn emit_custom_service_cases(output: &mut String) {
         "custom.otherObject",
         service.convert(
             Some(&context as &dyn Any),
-            JavaConversionValue::Object(&object),
-            Some(&JavaTargetClass::Other("java.lang.Integer".to_owned())),
+            ConversionValue::Object(&object),
+            Some(&TargetClass::Other("java.lang.Integer".to_owned())),
         ),
     );
 }
@@ -290,7 +282,7 @@ impl ToStringProbe {
     }
 }
 
-impl JavaConversionObject for ToStringProbe {
+impl ConversionObject for ToStringProbe {
     fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
         match &self.result {
             Ok(Some(value)) => Ok(Utf16StringConversionResult::Owned(value.clone())),
@@ -311,7 +303,7 @@ struct BorrowingProbe {
     value: Utf16String,
 }
 
-impl JavaConversionObject for BorrowingProbe {
+impl ConversionObject for BorrowingProbe {
     fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
         Ok(Utf16StringConversionResult::Borrowed(&self.value))
     }
@@ -323,7 +315,7 @@ impl AbstractStandardConversionService for CustomService {
     fn convert_to_string<'a>(
         &self,
         context: Option<&dyn Any>,
-        object: &'a dyn JavaConversionObject,
+        object: &'a dyn ConversionObject,
     ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
         let value = match object.java_to_string()? {
             Utf16StringConversionResult::Null => "null".to_owned(),
@@ -343,16 +335,16 @@ impl AbstractStandardConversionService for CustomService {
     fn convert_other<'a>(
         &self,
         _context: Option<&dyn Any>,
-        object: JavaConversionValue<'a>,
-        target_class: &JavaTargetClass,
-    ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
-        if target_class == &JavaTargetClass::Other("java.lang.Integer".to_owned()) {
-            let value = if matches!(object, JavaConversionValue::Null) {
+        object: ConversionValue<'a>,
+        target_class: &TargetClass,
+    ) -> Result<ConversionResult<'a>, StandardConversionError> {
+        if target_class == &TargetClass::Other("java.lang.Integer".to_owned()) {
+            let value = if matches!(object, ConversionValue::Null) {
                 7_i32
             } else {
                 8_i32
             };
-            return Ok(JavaConversionResult::OwnedObject(Box::new(value)));
+            return Ok(ConversionResult::OwnedObject(Box::new(value)));
         }
         Err(StandardConversionError::NoAvailableConversion {
             target_class_name: target_class.get_name().to_owned(),
@@ -363,7 +355,7 @@ impl AbstractStandardConversionService for CustomService {
 fn emit_conversion(
     output: &mut String,
     key: &str,
-    result: Result<JavaConversionResult<'_>, StandardConversionError>,
+    result: Result<ConversionResult<'_>, StandardConversionError>,
 ) {
     match result {
         Ok(value) => emit(output, key, describe_result(value)),
@@ -374,7 +366,7 @@ fn emit_conversion(
 fn emit_outcome(
     output: &mut String,
     key: &str,
-    result: Result<JavaConversionResult<'_>, StandardConversionError>,
+    result: Result<ConversionResult<'_>, StandardConversionError>,
 ) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", describe_result(value))),
@@ -394,16 +386,16 @@ fn emit_error(output: &mut String, key: &str, error: &StandardConversionError) {
     );
 }
 
-fn describe_result(result: JavaConversionResult<'_>) -> String {
+fn describe_result(result: ConversionResult<'_>) -> String {
     match result {
-        JavaConversionResult::Null => "null".to_owned(),
-        JavaConversionResult::BorrowedString(value) => value.to_string_lossy(),
-        JavaConversionResult::OwnedString(value) => value.to_string_lossy(),
-        JavaConversionResult::BorrowedObject(value) => value
+        ConversionResult::Null => "null".to_owned(),
+        ConversionResult::BorrowedString(value) => value.to_string_lossy(),
+        ConversionResult::OwnedString(value) => value.to_string_lossy(),
+        ConversionResult::BorrowedObject(value) => value
             .downcast_ref::<i32>()
             .expect("borrowed i32 result")
             .to_string(),
-        JavaConversionResult::OwnedObject(value) => value
+        ConversionResult::OwnedObject(value) => value
             .downcast::<i32>()
             .expect("owned i32 result")
             .to_string(),

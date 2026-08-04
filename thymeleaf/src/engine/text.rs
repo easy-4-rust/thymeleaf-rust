@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, ITemplateEvent, IText};
-use crate::util::{JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
+use crate::util::{CharSequenceValue, TemplateWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTextualTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -19,7 +19,7 @@ impl Text {
     ///
     /// 对应 Java: `Text#Text(CharSequence)`。
     #[must_use]
-    pub fn new(text: Option<Arc<dyn JavaCharSequence>>) -> Self {
+    pub fn new(text: Option<Arc<dyn CharSequenceValue>>) -> Self {
         Self {
             textual_event: AbstractTextualTemplateEvent::new(text),
         }
@@ -30,7 +30,7 @@ impl Text {
     /// 对应 Java: `Text#Text(CharSequence,String,int,int)`。
     #[must_use]
     pub fn with_location(
-        text: Option<Arc<dyn JavaCharSequence>>,
+        text: Option<Arc<dyn CharSequenceValue>>,
         template_name: Option<Utf16String>,
         line: i32,
         col: i32,
@@ -58,7 +58,7 @@ impl Text {
     }
 }
 
-impl JavaCharSequence for Text {
+impl CharSequenceValue for Text {
     fn java_sequence_class_name(&self) -> &str {
         "org.thymeleaf.engine.Text"
     }

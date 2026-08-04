@@ -4,7 +4,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use crate::context::ITemplateContext;
 use crate::model::IModel;
 
-use super::{IWritableCharSequence, JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
+use super::{
+    CharSequenceValue, IWritableCharSequence, TemplateWriter, TextUtilsError, Utf16String,
+};
 
 /// 延迟执行 TemplateModel 并直接写入最终输出的字符序列。
 ///
@@ -66,7 +68,7 @@ impl LazyProcessingCharSequence {
     }
 }
 
-impl JavaCharSequence for LazyProcessingCharSequence {
+impl CharSequenceValue for LazyProcessingCharSequence {
     fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }

@@ -1,7 +1,7 @@
 use crate::context::ITemplateContext;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 
 /// 文本类模板节点的内联处理合同。
 ///
@@ -42,7 +42,7 @@ pub trait IInliner: Send + Sync {
         &self,
         context: &dyn ITemplateContext,
         text: &dyn IText,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>>;
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>>;
 
     /// 对 CDATA section 节点执行内联。
     ///
@@ -61,7 +61,7 @@ pub trait IInliner: Send + Sync {
         &self,
         context: &dyn ITemplateContext,
         cdata_section: &dyn ICDATASection,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>>;
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>>;
 
     /// 对注释节点执行内联。
     ///
@@ -80,5 +80,5 @@ pub trait IInliner: Send + Sync {
         &self,
         context: &dyn ITemplateContext,
         comment: &dyn IComment,
-    ) -> StandardExpressionResult<Option<Box<dyn JavaCharSequence>>>;
+    ) -> StandardExpressionResult<Option<Box<dyn CharSequenceValue>>>;
 }

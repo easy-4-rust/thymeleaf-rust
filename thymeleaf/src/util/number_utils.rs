@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use num_bigint::BigInt;
 
-use super::{JavaBigDecimal, JavaNumber, Locale, NumberPointType, Utf16String};
+use super::{BigDecimalValue, Locale, NumberPointType, NumberValue, Utf16String};
 
 /// 数字格式化与序列生成错误。
 /// 对应 Java 语义：`NumberUtils` 的 Rust 侧类型 `NumberUtilsError`。
@@ -25,7 +25,7 @@ impl NumberUtils {
     /// 使用指定整数、小数位和分隔符规则格式化数字。
     /// 对应 Java: `NumberUtils#format()`。
     pub fn format(
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
         min_integer_digits: Option<i32>,
         thousands_point_type: Option<NumberPointType>,
         fraction_digits: Option<i32>,
@@ -144,7 +144,7 @@ impl NumberUtils {
     /// 按 Locale 货币格式格式化数字。
     /// 对应 Java: `NumberUtils#formatCurrency()`。
     pub fn format_currency(
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
         locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let locale = locale.ok_or_else(|| invalid("Locale cannot be null"))?;
@@ -172,7 +172,7 @@ impl NumberUtils {
     /// 把数字乘以一百并按 Locale 百分号格式输出。
     /// 对应 Java: `NumberUtils#formatPercent()`。
     pub fn format_percent(
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
         min_integer_digits: Option<i32>,
         fraction_digits: Option<i32>,
         locale: Option<&Locale>,
@@ -183,9 +183,9 @@ impl NumberUtils {
             return Ok(None);
         };
         let percent = number_as_decimal(target).map_or_else(
-            || JavaNumber::Double(number_as_f64(target) * 100.0),
+            || NumberValue::Double(number_as_f64(target) * 100.0),
             |value| {
-                JavaNumber::BigDecimal(JavaBigDecimal::from_unscaled(
+                NumberValue::BigDecimal(BigDecimalValue::from_unscaled(
                     value.unscaled_value().clone() * BigInt::from(100_u8),
                     value.scale(),
                 ))
@@ -222,32 +222,34 @@ fn invalid(message: impl Into<String>) -> NumberUtilsError {
     }
 }
 
-fn number_as_f64(number: &JavaNumber) -> f64 {
+fn number_as_f64(number: &NumberValue) -> f64 {
     match number {
-        JavaNumber::BigDecimal(value) => value.to_string().parse().unwrap_or(f64::NAN),
-        JavaNumber::BigInteger(value) => value.to_string().parse().unwrap_or(f64::INFINITY),
-        JavaNumber::Byte(value) => f64::from(*value),
-        JavaNumber::Short(value) => f64::from(*value),
-        JavaNumber::Integer(value) => f64::from(*value),
-        JavaNumber::Long(value) => *value as f64,
-        JavaNumber::Float(value) => f64::from(*value),
-        JavaNumber::Double(value) => *value,
-        JavaNumber::Other { double_value, .. } => *double_value,
+        NumberValue::BigDecimal(value) => value.to_string().parse().unwrap_or(f64::NAN),
+        NumberValue::BigInteger(value) => value.to_string().parse().unwrap_or(f64::INFINITY),
+        NumberValue::Byte(value) => f64::from(*value),
+        NumberValue::Short(value) => f64::from(*value),
+        NumberValue::Integer(value) => f64::from(*value),
+        NumberValue::Long(value) => *value as f64,
+        NumberValue::Float(value) => f64::from(*value),
+        NumberValue::Double(value) => *value,
+        NumberValue::Other { double_value, .. } => *double_value,
     }
 }
 
-fn number_as_decimal(number: &JavaNumber) -> Option<JavaBigDecimal> {
+fn number_as_decimal(number: &NumberValue) -> Option<BigDecimalValue> {
     match number {
-        JavaNumber::BigDecimal(value) => Some(value.clone()),
-        JavaNumber::BigInteger(value) => Some(JavaBigDecimal::from_unscaled(value.clone(), 0)),
-        JavaNumber::Byte(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Short(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Integer(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Long(value) => Some(JavaBigDecimal::from_unscaled(BigInt::from(*value), 0)),
-        JavaNumber::Float(value) => JavaBigDecimal::parse(&value.to_string()).ok(),
-        JavaNumber::Double(value) => JavaBigDecimal::parse(&value.to_string()).ok(),
-        JavaNumber::Other { double_value, .. } => {
-            JavaBigDecimal::parse(&double_value.to_string()).ok()
+        NumberValue::BigDecimal(value) => Some(value.clone()),
+        NumberValue::BigInteger(value) => Some(BigDecimalValue::from_unscaled(value.clone(), 0)),
+        NumberValue::Byte(value) => Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0)),
+        NumberValue::Short(value) => Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0)),
+        NumberValue::Integer(value) => {
+            Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0))
+        }
+        NumberValue::Long(value) => Some(BigDecimalValue::from_unscaled(BigInt::from(*value), 0)),
+        NumberValue::Float(value) => BigDecimalValue::parse(&value.to_string()).ok(),
+        NumberValue::Double(value) => BigDecimalValue::parse(&value.to_string()).ok(),
+        NumberValue::Other { double_value, .. } => {
+            BigDecimalValue::parse(&double_value.to_string()).ok()
         }
     }
 }

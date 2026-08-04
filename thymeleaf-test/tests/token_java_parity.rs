@@ -4,9 +4,7 @@ use std::fmt::Write;
 use std::ptr;
 use std::sync::Arc;
 
-use thymeleaf::expression::{
-    JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer,
-};
+use thymeleaf::expression::{Token, TokenError, TokenParsingTracer, TokenStringResult, TokenValue};
 use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -32,7 +30,7 @@ fn cover_public_adapter_contracts() {
     let owned = Token::new(Some(OwnedProbe));
     assert!(matches!(
         owned.get_string_representation(),
-        Ok(JavaTokenStringResult::Owned(value))
+        Ok(TokenStringResult::Owned(value))
             if value == Utf16String::from_rust_str("owned")
     ));
 
@@ -71,7 +69,7 @@ fn emit_value_cases(output: &mut String) {
         "value.stringRepresentationIdentity",
         matches!(
             string_token.get_string_representation(),
-            Ok(JavaTokenStringResult::Borrowed(value))
+            Ok(TokenStringResult::Borrowed(value))
                 if ptr::eq(value, source.as_ref())
         ),
     );
@@ -80,7 +78,7 @@ fn emit_value_cases(output: &mut String) {
         "value.toStringIdentity",
         matches!(
             string_token.to_string(),
-            Ok(JavaTokenStringResult::Borrowed(value))
+            Ok(TokenStringResult::Borrowed(value))
                 if ptr::eq(value, source.as_ref())
         ),
     );
@@ -97,7 +95,7 @@ fn emit_value_cases(output: &mut String) {
         "value.sharedRepresentationIdentity",
         matches!(
             object_token.get_string_representation(),
-            Ok(JavaTokenStringResult::Borrowed(value))
+            Ok(TokenStringResult::Borrowed(value))
                 if ptr::eq(
                     value,
                     &shared_probe.shared
@@ -109,7 +107,7 @@ fn emit_value_cases(output: &mut String) {
         "value.sharedToStringIdentity",
         matches!(
             object_token.to_string(),
-            Ok(JavaTokenStringResult::Borrowed(value))
+            Ok(TokenStringResult::Borrowed(value))
                 if ptr::eq(
                     value,
                     &shared_probe.shared
@@ -132,7 +130,7 @@ fn emit_value_cases(output: &mut String) {
         output,
         "value.nullToStringResult",
         match null_string_token.to_string() {
-            Ok(JavaTokenStringResult::Null) => "null",
+            Ok(TokenStringResult::Null) => "null",
             _ => "unexpected",
         },
     );
@@ -325,24 +323,24 @@ struct SharedStringProbe {
     shared: Utf16String,
 }
 
-impl JavaTokenValue for SharedStringProbe {
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
-        Ok(JavaTokenStringResult::Borrowed(&self.shared))
+impl TokenValue for SharedStringProbe {
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+        Ok(TokenStringResult::Borrowed(&self.shared))
     }
 }
 
 struct NullStringProbe;
 
-impl JavaTokenValue for NullStringProbe {
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
-        Ok(JavaTokenStringResult::Null)
+impl TokenValue for NullStringProbe {
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+        Ok(TokenStringResult::Null)
     }
 }
 
 struct ThrowingProbe;
 
-impl JavaTokenValue for ThrowingProbe {
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
+impl TokenValue for ThrowingProbe {
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         Err(TokenError::runtime(
             "java.lang.IllegalStateException",
             "boom",
@@ -352,9 +350,9 @@ impl JavaTokenValue for ThrowingProbe {
 
 struct OwnedProbe;
 
-impl JavaTokenValue for OwnedProbe {
-    fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
-        Ok(JavaTokenStringResult::Owned(Utf16String::from_rust_str(
+impl TokenValue for OwnedProbe {
+    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+        Ok(TokenStringResult::Owned(Utf16String::from_rust_str(
             "owned",
         )))
     }
@@ -370,7 +368,7 @@ fn emit_boolean_outcome(output: &mut String, key: &str, result: Result<bool, Tok
 fn emit_class_outcome(
     output: &mut String,
     key: &str,
-    result: Result<JavaTokenStringResult<'_>, TokenError>,
+    result: Result<TokenStringResult<'_>, TokenError>,
 ) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", describe_string_result(value))),
@@ -378,11 +376,7 @@ fn emit_class_outcome(
     }
 }
 
-fn emit_outcome(
-    output: &mut String,
-    key: &str,
-    result: Result<JavaTokenStringResult<'_>, TokenError>,
-) {
+fn emit_outcome(output: &mut String, key: &str, result: Result<TokenStringResult<'_>, TokenError>) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", describe_string_result(value))),
         Err(error) => emit(
@@ -393,11 +387,11 @@ fn emit_outcome(
     }
 }
 
-fn describe_string_result(result: JavaTokenStringResult<'_>) -> String {
+fn describe_string_result(result: TokenStringResult<'_>) -> String {
     match result {
-        JavaTokenStringResult::Null => "null".to_owned(),
-        JavaTokenStringResult::Borrowed(value) => value.to_string_lossy(),
-        JavaTokenStringResult::Owned(value) => value.to_string_lossy(),
+        TokenStringResult::Null => "null".to_owned(),
+        TokenStringResult::Borrowed(value) => value.to_string_lossy(),
+        TokenStringResult::Owned(value) => value.to_string_lossy(),
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::util::{
-    JavaComparable, JavaComparator, JavaList, ListTarget, ListUtils, ListUtilsError, ListView,
+    ComparableValue, ComparatorValue, ListTarget, ListUtils, ListUtilsError, ListValue, ListView,
     ValidateError,
 };
 
@@ -38,7 +38,7 @@ impl Lists {
     pub fn to_list<'a, T>(
         &self,
         target: Option<ListTarget<'a, T>>,
-    ) -> Result<JavaList<'a, T>, ListUtilsError>
+    ) -> Result<ListValue<'a, T>, ListUtilsError>
     where
         T: Clone,
     {
@@ -163,9 +163,9 @@ impl Lists {
     pub fn sort<T>(
         &self,
         list: Option<&dyn ListView<T>>,
-    ) -> Result<JavaList<'static, T>, ListUtilsError>
+    ) -> Result<ListValue<'static, T>, ListUtilsError>
     where
-        T: Clone + JavaComparable + 'static,
+        T: Clone + ComparableValue + 'static,
     {
         ListUtils::sort(list)
     }
@@ -186,10 +186,10 @@ impl Lists {
     pub fn sort_with_comparator<T>(
         &self,
         list: Option<&dyn ListView<T>>,
-        comparator: Option<&mut dyn JavaComparator<T>>,
-    ) -> Result<JavaList<'static, T>, ListUtilsError>
+        comparator: Option<&mut dyn ComparatorValue<T>>,
+    ) -> Result<ListValue<'static, T>, ListUtilsError>
     where
-        T: Clone + JavaComparable + 'static,
+        T: Clone + ComparableValue + 'static,
     {
         ListUtils::sort_with_comparator(list, comparator)
     }
@@ -209,8 +209,8 @@ impl Lists {
     pub fn sort_with_required_comparator<T>(
         &self,
         list: Option<&dyn ListView<T>>,
-        comparator: &mut dyn JavaComparator<T>,
-    ) -> Result<JavaList<'static, T>, ListUtilsError>
+        comparator: &mut dyn ComparatorValue<T>,
+    ) -> Result<ListValue<'static, T>, ListUtilsError>
     where
         T: Clone + 'static,
     {
@@ -223,7 +223,7 @@ mod tests {
     use std::cmp::Ordering;
 
     use super::Lists;
-    use crate::util::{JavaListType, ListTarget, ListView};
+    use crate::util::{ListTarget, ListTypeValue, ListView};
 
     #[test]
     fn delegates_every_java_operation_to_list_utils() {
@@ -266,7 +266,7 @@ mod tests {
                 .sort_with_required_comparator(Some(sortable_view), &mut same)
                 .unwrap()
                 .list_type(),
-            JavaListType::ArrayList
+            ListTypeValue::ArrayList
         );
         assert!(Lists.is_empty(None::<&dyn ListView<Option<String>>>));
     }

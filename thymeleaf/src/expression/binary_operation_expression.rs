@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{EvaluationUtils, JavaBigDecimal, Utf16String, ValidateError};
+use crate::util::{BigDecimalValue, EvaluationUtils, Utf16String, ValidateError};
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -60,7 +60,7 @@ pub(crate) fn execute_raw_operands(
 /// 对应 Java 语义：Java 接口/超类方法 `evaluateAsNumber()` 的 Rust 移植（`BinaryOperationExpression` 继承路径）。
 pub(crate) fn evaluate_as_number(
     value: Option<&Arc<TemplateValue>>,
-) -> StandardExpressionResult<Option<JavaBigDecimal>> {
+) -> StandardExpressionResult<Option<BigDecimalValue>> {
     let Some(value) = value else {
         return Ok(None);
     };
@@ -76,7 +76,7 @@ pub(crate) fn evaluate_as_boolean(
 ) -> StandardExpressionResult<bool> {
     let evaluation_value = value
         .map(|value| value.to_evaluation_value())
-        .unwrap_or(crate::util::JavaEvaluationValue::Null);
+        .unwrap_or(crate::util::EvaluationValue::Null);
     Ok(EvaluationUtils::evaluate_as_boolean(&evaluation_value)?)
 }
 

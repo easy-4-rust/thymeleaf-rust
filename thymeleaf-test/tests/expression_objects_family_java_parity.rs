@@ -12,7 +12,7 @@ use std::sync::Arc;
 use thymeleaf::context::Context;
 use thymeleaf::expression::{Numbers, Strings, TemplateValue, Uris};
 use thymeleaf::templateresolver::{ITemplateResolver, StringTemplateResolver};
-use thymeleaf::util::{JavaNumber, Locale, Utf16String};
+use thymeleaf::util::{Locale, NumberValue, Utf16String};
 use thymeleaf::{TemplateEngine, TemplateMode};
 
 fn js(value: &str) -> Utf16String {
@@ -182,7 +182,7 @@ fn numbers_methods_match_java() {
     let numbers = Numbers::new(us());
 
     // Java: formatInteger(value, minIntegerDigits, thousandsPointType)
-    let big = JavaNumber::Integer(1_234_567);
+    let big = NumberValue::Integer(1_234_567);
     assert_eq!(
         numbers
             .format_integer(Some(&big), 3, Some(NumberPointType::Comma))
@@ -193,7 +193,7 @@ fn numbers_methods_match_java() {
     );
     assert_eq!(
         numbers
-            .format_integer(Some(&JavaNumber::Integer(1234)), 8, None)
+            .format_integer(Some(&NumberValue::Integer(1234)), 8, None)
             .expect("format integer")
             .expect("value")
             .to_string_lossy(),
@@ -205,7 +205,7 @@ fn numbers_methods_match_java() {
     assert_eq!(
         numbers
             .format_decimal(
-                Some(&JavaNumber::Double(1234.567)),
+                Some(&NumberValue::Double(1234.567)),
                 1,
                 NumberPointType::Comma,
                 2,
@@ -335,11 +335,11 @@ fn expression_objects_with_context_vars_match_java() {
     );
     context.set_variable(
         Some(js("from")),
-        Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(2)))),
+        Some(Arc::new(TemplateValue::Number(NumberValue::Integer(2)))),
     );
     context.set_variable(
         Some(js("to")),
-        Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(4)))),
+        Some(Arc::new(TemplateValue::Number(NumberValue::Integer(4)))),
     );
 
     assert_eq!(

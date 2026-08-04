@@ -9,8 +9,8 @@ use crate::util::{Utf16String, ValidateError};
 ///
 /// 这是 `java.lang.Object` 的紧耦合 Rust 适配，只承接默认转换服务实际调用的
 /// `toString()` 行为。实现可以返回 Java null，也可以传播原始运行时异常。
-/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaConversionObject`。
-pub trait JavaConversionObject: Any {
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `ConversionObject`。
+pub trait ConversionObject: Any {
     /// 执行 Java `Object#toString()` 等价调用。
     ///
     /// # 返回
@@ -28,14 +28,14 @@ pub trait JavaConversionObject: Any {
 /// `AbstractStandardConversionService#convert` 的 `instanceof String` 快路径和
 /// 字符串引用身份。
 #[derive(Clone, Copy)]
-/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaConversionValue`。
-pub enum JavaConversionValue<'a> {
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `ConversionValue`。
+pub enum ConversionValue<'a> {
     /// Java null。
     Null,
     /// `java.lang.String` 的借用。
     String(&'a Utf16String),
     /// 其他 Java 对象的动态借用。
-    Object(&'a dyn JavaConversionObject),
+    Object(&'a dyn ConversionObject),
 }
 
 /// Java `Class<T>` 目标类型适配。
@@ -43,15 +43,15 @@ pub enum JavaConversionValue<'a> {
 /// 默认服务只特殊处理精确的 `String.class`，其他类型仅需保留
 /// `Class#getName()` 文本以生成完全一致的不可用转换错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
-/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaTargetClass`。
-pub enum JavaTargetClass {
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `TargetClass`。
+pub enum TargetClass {
     /// 精确的 `java.lang.String` 类。
     String,
     /// 其他目标类及其 Java 二进制名称。
     Other(String),
 }
 
-impl JavaTargetClass {
+impl TargetClass {
     /// 返回 Java `Class#getName()`。
     ///
     /// # 返回
@@ -84,8 +84,8 @@ pub enum Utf16StringConversionResult<'a> {
 ///
 /// Java 泛型 `<T>` 和 `Class<T>` 在运行时仍通过对象引用传递。该适配保留 null、
 /// 字符串借用/拥有状态，以及扩展转换器返回其他类型时的借用或拥有对象。
-/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaConversionResult`。
-pub enum JavaConversionResult<'a> {
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `ConversionResult`。
+pub enum ConversionResult<'a> {
     /// Java null。
     Null,
     /// 原字符串的同一引用。
@@ -98,7 +98,7 @@ pub enum JavaConversionResult<'a> {
     OwnedObject(Box<dyn Any>),
 }
 
-impl<'a> From<Utf16StringConversionResult<'a>> for JavaConversionResult<'a> {
+impl<'a> From<Utf16StringConversionResult<'a>> for ConversionResult<'a> {
     fn from(result: Utf16StringConversionResult<'a>) -> Self {
         match result {
             Utf16StringConversionResult::Null => Self::Null,
@@ -192,12 +192,12 @@ pub trait IStandardConversionService: Send + Sync {
     fn convert<'a>(
         &self,
         context: Option<&dyn Any>,
-        object: JavaConversionValue<'a>,
-        target_class: Option<&JavaTargetClass>,
-    ) -> Result<JavaConversionResult<'a>, StandardConversionError>;
+        object: ConversionValue<'a>,
+        target_class: Option<&TargetClass>,
+    ) -> Result<ConversionResult<'a>, StandardConversionError>;
 }
 
-impl Display for JavaTargetClass {
+impl Display for TargetClass {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(self.get_name())
     }

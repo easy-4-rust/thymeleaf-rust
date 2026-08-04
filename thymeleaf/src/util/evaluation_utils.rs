@@ -6,9 +6,9 @@ use num_bigint::BigInt;
 use num_traits::Zero;
 use thiserror::Error;
 
-use crate::expression::{JavaObjectArray, LiteralValue};
+use crate::expression::{LiteralValue, ObjectArrayValue};
 
-use super::{JavaBigDecimal, JavaNumber, Utf16String, ValidateError};
+use super::{BigDecimalValue, NumberValue, Utf16String, ValidateError};
 
 const JAVA_BMP_DECIMAL_ZEROES: &[u16] = &[
     0x0030, 0x0660, 0x06F0, 0x07C0, 0x0966, 0x09E6, 0x0A66, 0x0AE6, 0x0B66, 0x0BE6, 0x0C66, 0x0CE6,
@@ -23,13 +23,13 @@ const JAVA_BMP_DECIMAL_ZEROES: &[u16] = &[
 /// `org.thymeleaf.util.EvaluationUtils#evaluateAsBoolean` 与
 /// `EvaluationUtils#evaluateAsNumber` 中的 `instanceof` 分派。
 #[derive(Clone, Debug, PartialEq)]
-pub enum JavaEvaluationValue {
+pub enum EvaluationValue {
     /// Java null。
     Null,
     /// `java.lang.Boolean`。
     Boolean(bool),
     /// 任意 `java.lang.Number`。
-    Number(JavaNumber),
+    Number(NumberValue),
     /// `java.lang.Character` 的 UTF-16 代码单元。
     Character(u16),
     /// `java.lang.String`。
@@ -45,21 +45,21 @@ pub enum JavaEvaluationValue {
 /// 对应 Java 方法对 `BigDecimal` 输入返回同一实例，而对其他支持的数字类型创建
 /// 新对象的身份语义。
 #[derive(Debug)]
-pub enum JavaBigDecimalResult<'a> {
+pub enum BigDecimalResult<'a> {
     /// 原 `BigDecimal` 的同一引用。
-    Borrowed(&'a JavaBigDecimal),
+    Borrowed(&'a BigDecimalValue),
     /// 新创建的 `BigDecimal`。
-    Owned(JavaBigDecimal),
+    Owned(BigDecimalValue),
 }
 
-impl<'a> JavaBigDecimalResult<'a> {
+impl<'a> BigDecimalResult<'a> {
     /// 返回统一的 `BigDecimal` 只读引用。
     ///
     /// # 返回
     /// 借用或拥有分支中的十进制值。
     /// 对应 Java 语义：`EvaluationUtils` 的 `as_decimal` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn as_decimal(&self) -> &JavaBigDecimal {
+    pub fn as_decimal(&self) -> &BigDecimalValue {
         match self {
             Self::Borrowed(value) => value,
             Self::Owned(value) => value,
@@ -75,7 +75,7 @@ impl<'a> JavaBigDecimalResult<'a> {
     /// 结果直接借用该实例时返回 `true`。
     /// 对应 Java 语义：`EvaluationUtils` 的 `is_borrowed_from` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn is_borrowed_from(&self, source: &JavaBigDecimal) -> bool {
+    pub fn is_borrowed_from(&self, source: &BigDecimalValue) -> bool {
         matches!(self, Self::Borrowed(value) if ptr::eq(*value, source))
     }
 }
@@ -84,7 +84,7 @@ impl<'a> JavaBigDecimalResult<'a> {
 ///
 /// 对应 Java: `java.lang.Object#hashCode()`；用于精确复现嵌套
 /// `EvaluationUtils.MapEntry#hashCode()` 的 31 倍组合算法。
-pub trait JavaHashCode {
+pub trait HashCodeValue {
     /// 返回 Java 有符号 32 位哈希。
     ///
     /// # 返回
@@ -92,13 +92,13 @@ pub trait JavaHashCode {
     fn java_hash_code(&self) -> i32;
 }
 
-impl JavaHashCode for i32 {
+impl HashCodeValue for i32 {
     fn java_hash_code(&self) -> i32 {
         *self
     }
 }
 
-impl JavaHashCode for String {
+impl HashCodeValue for String {
     fn java_hash_code(&self) -> i32 {
         self.encode_utf16().fold(0_i32, |hash, unit| {
             hash.wrapping_mul(31).wrapping_add(i32::from(unit))
@@ -106,7 +106,7 @@ impl JavaHashCode for String {
     }
 }
 
-impl JavaHashCode for Utf16String {
+impl HashCodeValue for Utf16String {
     fn java_hash_code(&self) -> i32 {
         self.as_utf16().iter().fold(0_i32, |hash, unit| {
             hash.wrapping_mul(31).wrapping_add(i32::from(*unit))
@@ -119,19 +119,19 @@ impl JavaHashCode for Utf16String {
 /// 对应 Java: `org.thymeleaf.util.EvaluationUtils.MapEntry`。该嵌套对象避免
 /// `EnumMap` 迭代器复用条目对象，并保留非标准的 31 倍哈希算法。
 #[derive(Clone, Debug)]
-pub struct JavaMapEntry<T> {
+pub struct MapEntry<T> {
     entry_key: Option<T>,
     entry_value: Option<T>,
     class_name: String,
 }
 
-impl<T: PartialEq> PartialEq for JavaMapEntry<T> {
+impl<T: PartialEq> PartialEq for MapEntry<T> {
     fn eq(&self, other: &Self) -> bool {
         self.entry_key == other.entry_key && self.entry_value == other.entry_value
     }
 }
 
-impl<T> JavaMapEntry<T> {
+impl<T> MapEntry<T> {
     /// 从可空键和值创建不可变条目。
     ///
     /// 对应 Java: `EvaluationUtils.MapEntry#MapEntry(Object,Object)`。
@@ -212,7 +212,7 @@ impl<T> JavaMapEntry<T> {
     }
 }
 
-impl<T: JavaHashCode> JavaMapEntry<T> {
+impl<T: HashCodeValue> MapEntry<T> {
     /// 返回上游条目的非标准哈希。对应 Java: `MapEntry#hashCode()`。
     ///
     /// # 返回
@@ -222,16 +222,16 @@ impl<T: JavaHashCode> JavaMapEntry<T> {
         let key_hash = self
             .entry_key
             .as_ref()
-            .map_or(0, JavaHashCode::java_hash_code);
+            .map_or(0, HashCodeValue::java_hash_code);
         let value_hash = self
             .entry_value
             .as_ref()
-            .map_or(0, JavaHashCode::java_hash_code);
+            .map_or(0, HashCodeValue::java_hash_code);
         key_hash.wrapping_mul(31).wrapping_add(value_hash)
     }
 }
 
-impl<T: Display> Display for JavaMapEntry<T> {
+impl<T: Display> Display for MapEntry<T> {
     /// 输出 Java `key=value` 文本，其中 null 使用字面量 `null`。
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.entry_key {
@@ -250,7 +250,7 @@ impl<T: Display> Display for JavaMapEntry<T> {
 ///
 /// 对应 Java primitive array 的装箱结果、普通对象引用及 Map 条目。
 #[derive(Clone, Debug, PartialEq)]
-pub enum JavaEvaluationElement<T> {
+pub enum EvaluationElement<T> {
     /// 普通 Java 引用对象。
     Object(T),
     /// `java.lang.Byte`。
@@ -270,17 +270,17 @@ pub enum JavaEvaluationElement<T> {
     /// `java.lang.Character`。
     Character(u16),
     /// Java `Map.Entry`。
-    MapEntry(Arc<JavaMapEntry<T>>),
+    MapEntry(Arc<MapEntry<T>>),
 }
 
 /// `evaluateAsList` 输入的 Java 运行时分类。
 ///
 /// 对应 Java 的 `Iterable`、`Map`、八种 primitive array、引用数组和标量分支。
-pub enum JavaEvaluationTarget<'a, T> {
+pub enum EvaluationTarget<'a, T> {
     /// Java `Iterable<?>`，按迭代顺序保存可空对象。
     Iterable(&'a [Option<T>]),
     /// Java `Map<?,?>` 的稳定迭代条目；`Arc` 保存原条目身份。
-    Map(&'a [Arc<JavaMapEntry<T>>]),
+    Map(&'a [Arc<MapEntry<T>>]),
     /// `byte[]`。
     Bytes(&'a [i8]),
     /// `short[]`。
@@ -298,15 +298,15 @@ pub enum JavaEvaluationTarget<'a, T> {
     /// `char[]`。
     Characters(&'a [u16]),
     /// Java 引用数组。
-    ReferenceArray(&'a JavaObjectArray<T>),
+    ReferenceArray(&'a ObjectArrayValue<T>),
     /// 其他标量对象。
     Other(&'a T),
 }
 
 /// `evaluateAsList` 返回的具体 Java 列表类别。
-/// 对应 Java 语义：`EvaluationUtils` 的 Rust 侧类型 `JavaEvaluationListType`。
+/// 对应 Java 语义：`EvaluationUtils` 的 Rust 侧类型 `EvaluationListType`。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum JavaEvaluationListType {
+pub enum EvaluationListType {
     /// null 输入返回的 `java.util.Collections$EmptyList`。
     EmptyList,
     /// 非 null 输入返回的 `java.util.Collections$UnmodifiableRandomAccessList`。
@@ -318,18 +318,18 @@ pub enum JavaEvaluationListType {
 /// 对应 Java: `Collections.emptyList()` 或
 /// `Collections.unmodifiableList(ArrayList)`。
 #[derive(Clone, Debug, PartialEq)]
-pub struct JavaEvaluationList<T> {
-    list_type: JavaEvaluationListType,
-    elements: Vec<Option<JavaEvaluationElement<T>>>,
+pub struct EvaluationList<T> {
+    list_type: EvaluationListType,
+    elements: Vec<Option<EvaluationElement<T>>>,
 }
 
-impl<T> JavaEvaluationList<T> {
+impl<T> EvaluationList<T> {
     /// 返回具体 Java 列表类别。
     ///
     /// # 返回
     /// null 与非 null 输入对应的运行时包装类型。
     #[must_use]
-    pub const fn list_type(&self) -> JavaEvaluationListType {
+    pub const fn list_type(&self) -> EvaluationListType {
         self.list_type
     }
 
@@ -338,7 +338,7 @@ impl<T> JavaEvaluationList<T> {
     /// # 返回
     /// 只读元素切片；外层 `None` 对应 Java null。
     #[must_use]
-    pub fn as_slice(&self) -> &[Option<JavaEvaluationElement<T>>] {
+    pub fn as_slice(&self) -> &[Option<EvaluationElement<T>>] {
         &self.elements
     }
 
@@ -367,14 +367,14 @@ impl<T> JavaEvaluationList<T> {
 ///
 /// 对应 Java 对引用数组原样返回同一实例，其他受支持输入新建 `Object[]`。
 #[derive(Debug)]
-pub enum JavaEvaluationArray<'a, T> {
+pub enum EvaluationArray<'a, T> {
     /// 原引用数组的同一实例。
-    Borrowed(&'a JavaObjectArray<T>),
+    Borrowed(&'a ObjectArrayValue<T>),
     /// 新建的 `java.lang.Object[]`。
-    Owned(JavaObjectArray<JavaEvaluationElement<T>>),
+    Owned(ObjectArrayValue<EvaluationElement<T>>),
 }
 
-impl<'a, T> JavaEvaluationArray<'a, T> {
+impl<'a, T> EvaluationArray<'a, T> {
     /// 判断结果是否为指定引用数组的同一实例。
     ///
     /// # 参数
@@ -384,7 +384,7 @@ impl<'a, T> JavaEvaluationArray<'a, T> {
     /// 借用分支指向该数组时返回 `true`。
     /// 对应 Java 语义：`EvaluationUtils` 的 `is_borrowed_from` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn is_borrowed_from(&self, source: &JavaObjectArray<T>) -> bool {
+    pub fn is_borrowed_from(&self, source: &ObjectArrayValue<T>) -> bool {
         matches!(self, Self::Borrowed(value) if ptr::eq(*value, source))
     }
 
@@ -394,7 +394,7 @@ impl<'a, T> JavaEvaluationArray<'a, T> {
     /// 仅 Owned 分支中的数组引用。
     /// 对应 Java 语义：`EvaluationUtils` 的 `as_owned_array` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn as_owned_array(&self) -> Option<&JavaObjectArray<JavaEvaluationElement<T>>> {
+    pub fn as_owned_array(&self) -> Option<&ObjectArrayValue<EvaluationElement<T>>> {
         match self {
             Self::Borrowed(_) => None,
             Self::Owned(value) => Some(value),
@@ -465,18 +465,18 @@ impl EvaluationUtils {
     ///
     /// # 错误
     /// `LiteralValue` 内部为 null 时返回 Java `NullPointerException` 等价错误。
-    pub fn evaluate_as_boolean(condition: &JavaEvaluationValue) -> Result<bool, EvaluationError> {
+    pub fn evaluate_as_boolean(condition: &EvaluationValue) -> Result<bool, EvaluationError> {
         match condition {
-            JavaEvaluationValue::Null => Ok(false),
-            JavaEvaluationValue::Boolean(value) => Ok(*value),
-            JavaEvaluationValue::Number(number) => Ok(number_is_non_zero(number)),
-            JavaEvaluationValue::Character(value) => Ok(*value != 0),
-            JavaEvaluationValue::String(value) => Ok(string_is_true(value)),
-            JavaEvaluationValue::LiteralValue(value) => value
+            EvaluationValue::Null => Ok(false),
+            EvaluationValue::Boolean(value) => Ok(*value),
+            EvaluationValue::Number(number) => Ok(number_is_non_zero(number)),
+            EvaluationValue::Character(value) => Ok(*value != 0),
+            EvaluationValue::String(value) => Ok(string_is_true(value)),
+            EvaluationValue::LiteralValue(value) => value
                 .get_value()
                 .map(string_is_true)
                 .ok_or(EvaluationError::NullPointer),
-            JavaEvaluationValue::Other(_) => Ok(true),
+            EvaluationValue::Other(_) => Ok(true),
         }
     }
 
@@ -494,12 +494,12 @@ impl EvaluationUtils {
     /// # 错误
     /// Float/Double 为 NaN 或无穷时返回 `NumberFormatException` 等价错误。
     pub fn evaluate_as_number(
-        object: &JavaEvaluationValue,
-    ) -> Result<Option<JavaBigDecimalResult<'_>>, EvaluationError> {
+        object: &EvaluationValue,
+    ) -> Result<Option<BigDecimalResult<'_>>, EvaluationError> {
         match object {
-            JavaEvaluationValue::Number(number) => number_as_decimal(number),
-            JavaEvaluationValue::String(value) if !value.is_empty() => {
-                Ok(parse_java_big_decimal(value).map(JavaBigDecimalResult::Owned))
+            EvaluationValue::Number(number) => number_as_decimal(number),
+            EvaluationValue::String(value) if !value.is_empty() => {
+                Ok(parse_java_big_decimal(value).map(BigDecimalResult::Owned))
             }
             _ => Ok(None),
         }
@@ -515,49 +515,46 @@ impl EvaluationUtils {
     /// # 返回
     /// null 返回共享空列表语义；Map 使用新条目快照；primitive array 逐项装箱。
     #[must_use]
-    pub fn evaluate_as_list<T: Clone>(
-        value: Option<JavaEvaluationTarget<'_, T>>,
-    ) -> JavaEvaluationList<T> {
+    pub fn evaluate_as_list<T: Clone>(value: Option<EvaluationTarget<'_, T>>) -> EvaluationList<T> {
         let Some(value) = value else {
-            return JavaEvaluationList {
-                list_type: JavaEvaluationListType::EmptyList,
+            return EvaluationList {
+                list_type: EvaluationListType::EmptyList,
                 elements: Vec::new(),
             };
         };
         let elements = match value {
-            JavaEvaluationTarget::Iterable(values) => values
+            EvaluationTarget::Iterable(values) => values
                 .iter()
-                .map(|value| value.clone().map(JavaEvaluationElement::Object))
+                .map(|value| value.clone().map(EvaluationElement::Object))
                 .collect(),
-            JavaEvaluationTarget::Map(entries) => entries
+            EvaluationTarget::Map(entries) => entries
                 .iter()
                 .map(|entry| {
-                    Some(JavaEvaluationElement::MapEntry(Arc::new(
-                        JavaMapEntry::new(entry.entry_key.clone(), entry.entry_value.clone()),
-                    )))
+                    Some(EvaluationElement::MapEntry(Arc::new(MapEntry::new(
+                        entry.entry_key.clone(),
+                        entry.entry_value.clone(),
+                    ))))
                 })
                 .collect(),
-            JavaEvaluationTarget::Bytes(values) => boxed(values, JavaEvaluationElement::Byte),
-            JavaEvaluationTarget::Shorts(values) => boxed(values, JavaEvaluationElement::Short),
-            JavaEvaluationTarget::Integers(values) => boxed(values, JavaEvaluationElement::Integer),
-            JavaEvaluationTarget::Longs(values) => boxed(values, JavaEvaluationElement::Long),
-            JavaEvaluationTarget::Floats(values) => boxed(values, JavaEvaluationElement::Float),
-            JavaEvaluationTarget::Doubles(values) => boxed(values, JavaEvaluationElement::Double),
-            JavaEvaluationTarget::Booleans(values) => boxed(values, JavaEvaluationElement::Boolean),
-            JavaEvaluationTarget::Characters(values) => {
-                boxed(values, JavaEvaluationElement::Character)
-            }
-            JavaEvaluationTarget::ReferenceArray(values) => values
+            EvaluationTarget::Bytes(values) => boxed(values, EvaluationElement::Byte),
+            EvaluationTarget::Shorts(values) => boxed(values, EvaluationElement::Short),
+            EvaluationTarget::Integers(values) => boxed(values, EvaluationElement::Integer),
+            EvaluationTarget::Longs(values) => boxed(values, EvaluationElement::Long),
+            EvaluationTarget::Floats(values) => boxed(values, EvaluationElement::Float),
+            EvaluationTarget::Doubles(values) => boxed(values, EvaluationElement::Double),
+            EvaluationTarget::Booleans(values) => boxed(values, EvaluationElement::Boolean),
+            EvaluationTarget::Characters(values) => boxed(values, EvaluationElement::Character),
+            EvaluationTarget::ReferenceArray(values) => values
                 .as_slice()
                 .iter()
-                .map(|value| value.clone().map(JavaEvaluationElement::Object))
+                .map(|value| value.clone().map(EvaluationElement::Object))
                 .collect(),
-            JavaEvaluationTarget::Other(value) => {
-                vec![Some(JavaEvaluationElement::Object(value.clone()))]
+            EvaluationTarget::Other(value) => {
+                vec![Some(EvaluationElement::Object(value.clone()))]
             }
         };
-        JavaEvaluationList {
-            list_type: JavaEvaluationListType::UnmodifiableRandomAccessList,
+        EvaluationList {
+            list_type: EvaluationListType::UnmodifiableRandomAccessList,
             elements,
         }
     }
@@ -575,61 +572,55 @@ impl EvaluationUtils {
     /// # 错误
     /// 任意 primitive array 都按 Java 强制转换规则返回 `ClassCastException`。
     pub fn evaluate_as_array<T: Clone>(
-        value: Option<JavaEvaluationTarget<'_, T>>,
-    ) -> Result<JavaEvaluationArray<'_, T>, EvaluationError> {
+        value: Option<EvaluationTarget<'_, T>>,
+    ) -> Result<EvaluationArray<'_, T>, EvaluationError> {
         let Some(value) = value else {
-            return Ok(JavaEvaluationArray::Owned(JavaObjectArray::object(vec![
-                None,
-            ])));
+            return Ok(EvaluationArray::Owned(ObjectArrayValue::object(vec![None])));
         };
         match value {
-            JavaEvaluationTarget::ReferenceArray(values) => {
-                Ok(JavaEvaluationArray::Borrowed(values))
-            }
-            JavaEvaluationTarget::Bytes(_) => Err(class_cast("[B")),
-            JavaEvaluationTarget::Shorts(_) => Err(class_cast("[S")),
-            JavaEvaluationTarget::Integers(_) => Err(class_cast("[I")),
-            JavaEvaluationTarget::Longs(_) => Err(class_cast("[J")),
-            JavaEvaluationTarget::Floats(_) => Err(class_cast("[F")),
-            JavaEvaluationTarget::Doubles(_) => Err(class_cast("[D")),
-            JavaEvaluationTarget::Booleans(_) => Err(class_cast("[Z")),
-            JavaEvaluationTarget::Characters(_) => Err(class_cast("[C")),
-            JavaEvaluationTarget::Iterable(values) => {
-                Ok(JavaEvaluationArray::Owned(JavaObjectArray::object(
+            EvaluationTarget::ReferenceArray(values) => Ok(EvaluationArray::Borrowed(values)),
+            EvaluationTarget::Bytes(_) => Err(class_cast("[B")),
+            EvaluationTarget::Shorts(_) => Err(class_cast("[S")),
+            EvaluationTarget::Integers(_) => Err(class_cast("[I")),
+            EvaluationTarget::Longs(_) => Err(class_cast("[J")),
+            EvaluationTarget::Floats(_) => Err(class_cast("[F")),
+            EvaluationTarget::Doubles(_) => Err(class_cast("[D")),
+            EvaluationTarget::Booleans(_) => Err(class_cast("[Z")),
+            EvaluationTarget::Characters(_) => Err(class_cast("[C")),
+            EvaluationTarget::Iterable(values) => {
+                Ok(EvaluationArray::Owned(ObjectArrayValue::object(
                     values
                         .iter()
-                        .map(|value| value.clone().map(JavaEvaluationElement::Object))
+                        .map(|value| value.clone().map(EvaluationElement::Object))
                         .collect(),
                 )))
             }
-            JavaEvaluationTarget::Map(entries) => {
-                Ok(JavaEvaluationArray::Owned(JavaObjectArray::object(
-                    entries
-                        .iter()
-                        .map(|entry| Some(JavaEvaluationElement::MapEntry(Arc::clone(entry))))
-                        .collect(),
-                )))
-            }
-            JavaEvaluationTarget::Other(value) => {
-                Ok(JavaEvaluationArray::Owned(JavaObjectArray::object(vec![
-                    Some(JavaEvaluationElement::Object(value.clone())),
+            EvaluationTarget::Map(entries) => Ok(EvaluationArray::Owned(ObjectArrayValue::object(
+                entries
+                    .iter()
+                    .map(|entry| Some(EvaluationElement::MapEntry(Arc::clone(entry))))
+                    .collect(),
+            ))),
+            EvaluationTarget::Other(value) => {
+                Ok(EvaluationArray::Owned(ObjectArrayValue::object(vec![
+                    Some(EvaluationElement::Object(value.clone())),
                 ])))
             }
         }
     }
 }
 
-fn number_is_non_zero(number: &JavaNumber) -> bool {
+fn number_is_non_zero(number: &NumberValue) -> bool {
     match number {
-        JavaNumber::BigDecimal(value) => !value.unscaled_value().is_zero(),
-        JavaNumber::BigInteger(value) => !value.is_zero(),
-        JavaNumber::Byte(value) => *value != 0,
-        JavaNumber::Short(value) => *value != 0,
-        JavaNumber::Integer(value) => *value != 0,
-        JavaNumber::Long(value) => *value != 0,
-        JavaNumber::Float(value) => f64::from(*value) != 0.0,
-        JavaNumber::Double(value) => *value != 0.0,
-        JavaNumber::Other { double_value, .. } => *double_value != 0.0,
+        NumberValue::BigDecimal(value) => !value.unscaled_value().is_zero(),
+        NumberValue::BigInteger(value) => !value.is_zero(),
+        NumberValue::Byte(value) => *value != 0,
+        NumberValue::Short(value) => *value != 0,
+        NumberValue::Integer(value) => *value != 0,
+        NumberValue::Long(value) => *value != 0,
+        NumberValue::Float(value) => f64::from(*value) != 0.0,
+        NumberValue::Double(value) => *value != 0.0,
+        NumberValue::Other { double_value, .. } => *double_value != 0.0,
     }
 }
 
@@ -656,26 +647,26 @@ fn equals_ascii_ignore_case(value: &[u16], expected: &[u8]) -> bool {
 }
 
 fn number_as_decimal(
-    number: &JavaNumber,
-) -> Result<Option<JavaBigDecimalResult<'_>>, EvaluationError> {
+    number: &NumberValue,
+) -> Result<Option<BigDecimalResult<'_>>, EvaluationError> {
     let result = match number {
-        JavaNumber::BigDecimal(value) => return Ok(Some(JavaBigDecimalResult::Borrowed(value))),
-        JavaNumber::BigInteger(value) => JavaBigDecimal::from_unscaled(value.clone(), 0),
-        JavaNumber::Byte(value) => JavaBigDecimal::from_unscaled(BigInt::from(*value), 0),
-        JavaNumber::Short(value) => JavaBigDecimal::from_unscaled(BigInt::from(*value), 0),
-        JavaNumber::Integer(value) => JavaBigDecimal::from_unscaled(BigInt::from(*value), 0),
-        JavaNumber::Long(value) => JavaBigDecimal::from_unscaled(BigInt::from(*value), 0),
-        JavaNumber::Float(value) => JavaBigDecimal::from_f64_exact(f64::from(*value))
+        NumberValue::BigDecimal(value) => return Ok(Some(BigDecimalResult::Borrowed(value))),
+        NumberValue::BigInteger(value) => BigDecimalValue::from_unscaled(value.clone(), 0),
+        NumberValue::Byte(value) => BigDecimalValue::from_unscaled(BigInt::from(*value), 0),
+        NumberValue::Short(value) => BigDecimalValue::from_unscaled(BigInt::from(*value), 0),
+        NumberValue::Integer(value) => BigDecimalValue::from_unscaled(BigInt::from(*value), 0),
+        NumberValue::Long(value) => BigDecimalValue::from_unscaled(BigInt::from(*value), 0),
+        NumberValue::Float(value) => BigDecimalValue::from_f64_exact(f64::from(*value))
             .ok_or(EvaluationError::NumberFormat)?,
-        JavaNumber::Double(value) => {
-            JavaBigDecimal::from_f64_exact(*value).ok_or(EvaluationError::NumberFormat)?
+        NumberValue::Double(value) => {
+            BigDecimalValue::from_f64_exact(*value).ok_or(EvaluationError::NumberFormat)?
         }
-        JavaNumber::Other { .. } => return Ok(None),
+        NumberValue::Other { .. } => return Ok(None),
     };
-    Ok(Some(JavaBigDecimalResult::Owned(result)))
+    Ok(Some(BigDecimalResult::Owned(result)))
 }
 
-fn parse_java_big_decimal(value: &Utf16String) -> Option<JavaBigDecimal> {
+fn parse_java_big_decimal(value: &Utf16String) -> Option<BigDecimalValue> {
     let units = value.as_utf16();
     // 公共入口已经按 Java `String#length() > 0` 完成该前置检查。
     let first = units[0];
@@ -696,7 +687,7 @@ fn parse_java_big_decimal(value: &Utf16String) -> Option<JavaBigDecimal> {
             ascii.push(char::from(b'0' + java_decimal_digit(*unit)?));
         }
     }
-    JavaBigDecimal::parse(&ascii).ok()
+    BigDecimalValue::parse(&ascii).ok()
 }
 
 fn java_trim(units: &[u16]) -> &[u16] {
@@ -724,8 +715,8 @@ fn java_decimal_digit(unit: u16) -> Option<u8> {
 
 fn boxed<T: Copy, U>(
     values: &[T],
-    constructor: impl Fn(T) -> JavaEvaluationElement<U>,
-) -> Vec<Option<JavaEvaluationElement<U>>> {
+    constructor: impl Fn(T) -> EvaluationElement<U>,
+) -> Vec<Option<EvaluationElement<U>>> {
     values
         .iter()
         .copied()

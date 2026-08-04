@@ -32,7 +32,7 @@ use thymeleaf::model::{
     IText, IXMLDeclaration,
 };
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::{FastStringWriter, JavaCharSequence, Utf16String};
+use thymeleaf::util::{CharSequenceValue, FastStringWriter, Utf16String};
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
 fn js(value: &str) -> Utf16String {

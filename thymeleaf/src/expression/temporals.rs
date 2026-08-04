@@ -9,7 +9,7 @@ use crate::temporal::{
     TemporalCreationUtils, TemporalFormattingError, TemporalFormattingUtils, TemporalObjects,
     TemporalValue,
 };
-use crate::util::{JavaNumber, Locale, Utf16String, template_integer};
+use crate::util::{Locale, NumberValue, Utf16String, template_integer};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -151,7 +151,7 @@ impl Temporals {
     ) -> Result<Option<Arc<TemplateValue>>, TemporalsError> {
         Ok(method(&self.formatting, temporal_argument(arguments)?)
             .map_err(error)?
-            .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))))
+            .map(|value| Arc::new(TemplateValue::Number(NumberValue::Integer(value)))))
     }
 
     fn named(

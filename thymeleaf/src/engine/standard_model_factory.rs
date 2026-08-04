@@ -8,7 +8,7 @@ use crate::model::{
     IModelFactory, IOpenElementTag, IProcessableElementTag, IProcessingInstruction,
     IStandaloneElementTag, ITemplateEvent, IText, IXMLDeclaration,
 };
-use crate::util::{JavaCharSequence, Utf16String};
+use crate::util::{CharSequenceValue, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
@@ -150,7 +150,7 @@ impl IModelFactory for StandardModelFactory {
         content: Utf16String,
     ) -> Result<Arc<dyn ICDATASection>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("CDATASection")?;
-        let content: Arc<dyn JavaCharSequence> = Arc::new(content);
+        let content: Arc<dyn CharSequenceValue> = Arc::new(content);
         Ok(Arc::new(CDATASection::new(Some(content))))
     }
 
@@ -159,7 +159,7 @@ impl IModelFactory for StandardModelFactory {
         content: Utf16String,
     ) -> Result<Arc<dyn IComment>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("Comment")?;
-        let content: Arc<dyn JavaCharSequence> = Arc::new(content);
+        let content: Arc<dyn CharSequenceValue> = Arc::new(content);
         Ok(Arc::new(Comment::new(Some(content))))
     }
 
@@ -214,7 +214,7 @@ impl IModelFactory for StandardModelFactory {
     }
 
     fn create_text(&self, text: Utf16String) -> Arc<dyn IText> {
-        let text: Arc<dyn JavaCharSequence> = Arc::new(text);
+        let text: Arc<dyn CharSequenceValue> = Arc::new(text);
         Arc::new(Text::new(Some(text)))
     }
 

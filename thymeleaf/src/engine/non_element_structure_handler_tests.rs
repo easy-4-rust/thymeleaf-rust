@@ -16,7 +16,7 @@ use crate::processinginstruction::IProcessingInstructionStructureHandler;
 use crate::processor::AbstractProcessorAdapter;
 use crate::templateboundaries::ITemplateBoundariesStructureHandler;
 use crate::text::ITextStructureHandler;
-use crate::util::{JavaCharSequence, TemplateWriter, Utf16String, ValidateError};
+use crate::util::{CharSequenceValue, TemplateWriter, Utf16String, ValidateError};
 use crate::xmldeclaration::IXMLDeclarationStructureHandler;
 
 use super::Text;
@@ -52,7 +52,7 @@ fn emit_text(output: &mut String) {
     let mut handler = TextStructureHandler::new();
     emit(output, "text.new", text_state(&handler));
 
-    let sequence: Arc<dyn JavaCharSequence> = Arc::new(Utf16String::from_rust_str("alpha"));
+    let sequence: Arc<dyn CharSequenceValue> = Arc::new(Utf16String::from_rust_str("alpha"));
     handler.set_text_sequence(Arc::clone(&sequence));
     let stored = handler
         .set_text_value

@@ -1,4 +1,4 @@
-use super::{JavaCharSequence, TextUtilsError};
+use super::{CharSequenceValue, TextUtilsError};
 
 /// IE 条件注释解析结果。
 ///
@@ -115,7 +115,7 @@ impl StandardConditionalCommentUtils {
     /// `text` 为 `None` 时返回 Java `NullPointerException` 等价错误；自定义
     /// `CharSequence` 的 length/charAt 异常原样传播。
     pub fn parse_conditional_comment(
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
     ) -> Result<Option<ConditionalCommentParsingResult>, TextUtilsError> {
         let text = text.ok_or(TextUtilsError::NullPointer)?;
         let len = text.java_length()?;

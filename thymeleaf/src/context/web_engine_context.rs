@@ -12,7 +12,7 @@ use crate::expression::{
 };
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::{JavaNumber, Locale, Utf16String};
+use crate::util::{Locale, NumberValue, Utf16String};
 use crate::web::IWebExchange;
 use crate::{IEngineConfiguration, TemplateMode, TemplateResolutionAttributes};
 
@@ -700,7 +700,7 @@ impl TemplateObject for ApplicationAttributeMap {
 impl NoOpMapImpl for ApplicationAttributeMap {}
 
 fn integer_value(value: i32) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+    Arc::new(TemplateValue::Number(NumberValue::Integer(value)))
 }
 
 /// 请求参数值的只读 List 视图。

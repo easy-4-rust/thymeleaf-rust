@@ -20,7 +20,7 @@ use std::sync::{Arc, Mutex};
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
 use thymeleaf::serializer::{IStandardJavaScriptSerializer, StandardJavaScriptSerializer};
-use thymeleaf::util::{DateUtils, JavaNumber, TemplateWriter, Utf16String};
+use thymeleaf::util::{DateUtils, NumberValue, TemplateWriter, Utf16String};
 use thymeleaf::{ITemplateResolver, TemplateEngine};
 
 // ===========================================================================
@@ -36,7 +36,7 @@ fn string_value(value: &str) -> Arc<TemplateValue> {
 }
 
 fn integer_value(value: i32) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Number(JavaNumber::Integer(value)))
+    Arc::new(TemplateValue::Number(NumberValue::Integer(value)))
 }
 
 /// Java record `PersonRecord(String name, int age)` 的 Rust 等价 Map。
@@ -123,7 +123,7 @@ impl TemplateObject for SomeObjectB {
             (js("two"), Some(integer_value(1231))),
             (
                 js("three"),
-                Some(Arc::new(TemplateValue::Number(JavaNumber::Float(1231.12)))),
+                Some(Arc::new(TemplateValue::Number(NumberValue::Float(1231.12)))),
             ),
             (js("four"), Some(Arc::new(TemplateValue::Boolean(true)))),
         ])
@@ -355,7 +355,7 @@ fn script_inline_collection_variable() {
 }
 
 // ===========================================================================
-// JavaDate 序列化偏移形态（Java 21 实测）：JacksonThymeleafISO8601DateFormat
+// DateValue 序列化偏移形态（Java 21 实测）：JacksonThymeleafISO8601DateFormat
 // ===========================================================================
 
 #[test]

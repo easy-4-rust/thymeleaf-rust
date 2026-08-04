@@ -1,11 +1,11 @@
-use crate::util::{JavaCharSequence, TextUtilsError, Utf16String};
+use crate::util::{CharSequenceValue, TextUtilsError, Utf16String};
 
 use super::ITemplateEvent;
 
 /// 包含 `<!--` 与 `-->` 边界的不可变注释事件。
 ///
 /// 对应 Java: `org.thymeleaf.model.IComment`。
-pub trait IComment: ITemplateEvent + JavaCharSequence {
+pub trait IComment: ITemplateEvent + CharSequenceValue {
     /// 返回引擎内建 Comment，供 Processor 保留 parser 原始前后缀。
     fn as_engine_comment(&self) -> Option<&crate::engine::Comment> {
         None

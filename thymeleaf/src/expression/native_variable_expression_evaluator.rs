@@ -9,19 +9,18 @@ use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::temporal::TemporalCreationUtils;
 use crate::util::StandardExpressionUtils;
-use crate::util::{ExpressionUtils, JavaBigDecimal, JavaNumber, Utf16String};
+use crate::util::{BigDecimalValue, ExpressionUtils, NumberValue, Utf16String};
 
 use super::{
-    AdditionExpression, AndExpression, ClassNotFoundException, ConditionalExpression,
-    DefaultExpression, DivisionExpression, EqualsExpression, GreaterOrEqualToExpression,
-    GreaterThanExpression, IStandardExpression, IStandardVariableExpression,
-    IStandardVariableExpressionEvaluator, JavaConversionResult, JavaConversionValue,
-    JavaTargetClass, LessOrEqualToExpression, LessThanExpression, LiteralValue, MinusExpression,
-    MultiplicationExpression, NativeExpressionObjectsWrapper, NativeShortcutExpression,
-    NegationExpression, NoOpOgnlRuntime, NoSuchMethodException, NotEqualsExpression, OgnlException,
-    OgnlRuntime, OrExpression, RemainderExpression, StandardExpressionExecutionContext,
-    StandardExpressionResult, StandardExpressions, SubtractionExpression, TemplateObject,
-    TemplateValue,
+    AdditionExpression, AndExpression, ClassNotFoundError, ConditionalExpression, ConversionResult,
+    ConversionValue, DefaultExpression, DivisionExpression, EqualsExpression,
+    GreaterOrEqualToExpression, GreaterThanExpression, IStandardExpression,
+    IStandardVariableExpression, IStandardVariableExpressionEvaluator, LessOrEqualToExpression,
+    LessThanExpression, LiteralValue, MinusExpression, MultiplicationExpression,
+    NativeExpressionObjectsWrapper, NativeShortcutExpression, NegationExpression, NoOpOgnlRuntime,
+    NoSuchMethodError, NotEqualsExpression, OgnlError, OgnlRuntime, OrExpression,
+    RemainderExpression, StandardExpressionExecutionContext, StandardExpressionResult,
+    StandardExpressions, SubtractionExpression, TargetClass, TemplateObject, TemplateValue,
     binary_operation_expression::{evaluate_as_boolean, evaluate_as_number},
     iterator_value::IteratorValue,
     map_entry_value::MapEntryValue,
@@ -322,7 +321,7 @@ impl ThymeleafDefaultClassResolver {
         if !class_name.contains('.') {
             return Err(processing_error_with_cause(
                 format!("Class not found: {class_name}"),
-                ClassNotFoundException::new(class_name.to_owned()),
+                ClassNotFoundError::new(class_name.to_owned()),
             ));
         }
         Ok(class_name)
@@ -463,7 +462,7 @@ enum OgnlLiteral {
     Float(f32),
     Double(f64),
     BigInteger(num_bigint::BigInt),
-    BigDecimal(JavaBigDecimal),
+    BigDecimal(BigDecimalValue),
     String(Utf16String),
 }
 
@@ -473,19 +472,19 @@ impl OgnlLiteral {
             Self::Null => None,
             Self::Boolean(value) => Some(Arc::new(TemplateValue::Boolean(*value))),
             Self::Character(value) => Some(Arc::new(TemplateValue::Character(*value))),
-            Self::Integer(value) => {
-                Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(*value))))
-            }
-            Self::Long(value) => Some(Arc::new(TemplateValue::Number(JavaNumber::Long(*value)))),
-            Self::Float(value) => Some(Arc::new(TemplateValue::Number(JavaNumber::Float(*value)))),
+            Self::Integer(value) => Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
+                *value,
+            )))),
+            Self::Long(value) => Some(Arc::new(TemplateValue::Number(NumberValue::Long(*value)))),
+            Self::Float(value) => Some(Arc::new(TemplateValue::Number(NumberValue::Float(*value)))),
             Self::Double(value) => {
-                Some(Arc::new(TemplateValue::Number(JavaNumber::Double(*value))))
+                Some(Arc::new(TemplateValue::Number(NumberValue::Double(*value))))
             }
             Self::BigInteger(value) => Some(Arc::new(TemplateValue::Number(
-                JavaNumber::BigInteger(value.clone()),
+                NumberValue::BigInteger(value.clone()),
             ))),
             Self::BigDecimal(value) => Some(Arc::new(TemplateValue::Number(
-                JavaNumber::BigDecimal(value.clone()),
+                NumberValue::BigDecimal(value.clone()),
             ))),
             Self::String(value) => Some(Arc::new(TemplateValue::string(value.clone()))),
         }
@@ -905,7 +904,7 @@ fn parse_literal(source: &Utf16String) -> Option<OgnlLiteral> {
         return Some(OgnlLiteral::BigInteger(value));
     }
     if matches!(suffix, Some('b')) {
-        return JavaBigDecimal::parse(number)
+        return BigDecimalValue::parse(number)
             .ok()
             .map(OgnlLiteral::BigDecimal);
     }
@@ -1602,7 +1601,7 @@ fn evaluate_navigation_steps(
                     .ok_or_else(|| processing_error(format!("index {index} is out of bounds")))?,
                 TemplateValue::Bytes(values) => values
                     .get(*index)
-                    .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Byte(*value))))
+                    .map(|value| Arc::new(TemplateValue::Number(NumberValue::Byte(*value))))
                     .ok_or_else(|| processing_error(format!("index {index} is out of bounds")))?,
                 TemplateValue::String(value) | TemplateValue::SafeHtml(value) => value
                     .as_utf16()
@@ -1638,7 +1637,7 @@ fn evaluate_dynamic_subscript(
         TemplateValue::List(values) => values.as_ref().clone(),
         TemplateValue::Bytes(values) => values
             .iter()
-            .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Byte(*value))))
+            .map(|value| Arc::new(TemplateValue::Number(NumberValue::Byte(*value))))
             .collect(),
         TemplateValue::String(value) | TemplateValue::SafeHtml(value) => value
             .as_utf16()
@@ -1677,7 +1676,7 @@ fn iterable_values(target: &TemplateValue) -> Option<Vec<Arc<TemplateValue>>> {
         TemplateValue::Bytes(values) => Some(
             values
                 .iter()
-                .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Byte(*value))))
+                .map(|value| Arc::new(TemplateValue::Number(NumberValue::Byte(*value))))
                 .collect(),
         ),
         TemplateValue::Object(value) => value.java_iterable_values(),
@@ -1890,7 +1889,7 @@ fn evaluate_native_binary(
             ((left as u64) >> u32::try_from(right & 0x3f).unwrap_or_default()) as i64
         }
     };
-    Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Long(
+    Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Long(
         value,
     )))))
 }
@@ -1911,8 +1910,8 @@ fn evaluate_ognl_division(
         && is_integral_number(left_number)
         && is_integral_number(right_number)
     {
-        if matches!(left_number, JavaNumber::BigInteger(_))
-            || matches!(right_number, JavaNumber::BigInteger(_))
+        if matches!(left_number, NumberValue::BigInteger(_))
+            || matches!(right_number, NumberValue::BigInteger(_))
         {
             let dividend = integral_bigint(left_number);
             let divisor = integral_bigint(right_number);
@@ -1920,7 +1919,7 @@ fn evaluate_ognl_division(
                 return Err(processing_error("Division by zero".to_owned()));
             }
             return Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::BigInteger(dividend / divisor),
+                NumberValue::BigInteger(dividend / divisor),
             ))));
         }
         let divisor = numeric_i64(right.as_ref())?;
@@ -1928,12 +1927,12 @@ fn evaluate_ognl_division(
             return Err(processing_error("Division by zero".to_owned()));
         }
         let quotient = numeric_i64(left.as_ref())? / divisor;
-        let result = if matches!(left_number, JavaNumber::Long(_))
-            || matches!(right_number, JavaNumber::Long(_))
+        let result = if matches!(left_number, NumberValue::Long(_))
+            || matches!(right_number, NumberValue::Long(_))
         {
-            JavaNumber::Long(quotient)
+            NumberValue::Long(quotient)
         } else {
-            JavaNumber::Integer(i32::try_from(quotient).map_err(|error| {
+            NumberValue::Integer(i32::try_from(quotient).map_err(|error| {
                 processing_error(format!("Integer division result is out of range: {error}"))
             })?)
         };
@@ -1952,28 +1951,28 @@ fn evaluate_ognl_division(
         }
     };
     Ok(Some(Arc::new(TemplateValue::Number(
-        JavaNumber::BigDecimal(result),
+        NumberValue::BigDecimal(result),
     ))))
 }
 
-fn is_integral_number(number: &JavaNumber) -> bool {
+fn is_integral_number(number: &NumberValue) -> bool {
     matches!(
         number,
-        JavaNumber::BigInteger(_)
-            | JavaNumber::Byte(_)
-            | JavaNumber::Short(_)
-            | JavaNumber::Integer(_)
-            | JavaNumber::Long(_)
+        NumberValue::BigInteger(_)
+            | NumberValue::Byte(_)
+            | NumberValue::Short(_)
+            | NumberValue::Integer(_)
+            | NumberValue::Long(_)
     )
 }
 
-fn integral_bigint(number: &JavaNumber) -> BigInt {
+fn integral_bigint(number: &NumberValue) -> BigInt {
     match number {
-        JavaNumber::BigInteger(value) => value.clone(),
-        JavaNumber::Byte(value) => BigInt::from(*value),
-        JavaNumber::Short(value) => BigInt::from(*value),
-        JavaNumber::Integer(value) => BigInt::from(*value),
-        JavaNumber::Long(value) => BigInt::from(*value),
+        NumberValue::BigInteger(value) => value.clone(),
+        NumberValue::Byte(value) => BigInt::from(*value),
+        NumberValue::Short(value) => BigInt::from(*value),
+        NumberValue::Integer(value) => BigInt::from(*value),
+        NumberValue::Long(value) => BigInt::from(*value),
         _ => unreachable!("caller verifies the integral number family"),
     }
 }
@@ -1987,7 +1986,7 @@ fn evaluate_bit_negate(
     let value =
         evaluate_computed_expression(context, value, use_selection_as_root, expression_context)?
             .unwrap_or_else(|| Arc::new(TemplateValue::Null));
-    Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Long(
+    Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Long(
         !numeric_i64(value.as_ref())?,
     )))))
 }
@@ -2068,41 +2067,41 @@ fn ognl_list_index(value: &TemplateValue) -> Option<usize> {
     }
 }
 
-fn truncated_i64(number: &JavaNumber) -> Option<i64> {
+fn truncated_i64(number: &NumberValue) -> Option<i64> {
     match number {
-        JavaNumber::Byte(value) => Some(i64::from(*value)),
-        JavaNumber::Short(value) => Some(i64::from(*value)),
-        JavaNumber::Integer(value) => Some(i64::from(*value)),
-        JavaNumber::Long(value) => Some(*value),
-        JavaNumber::Float(value) => Some(*value as i64),
-        JavaNumber::Double(value) => Some(*value as i64),
-        JavaNumber::BigDecimal(value) => {
+        NumberValue::Byte(value) => Some(i64::from(*value)),
+        NumberValue::Short(value) => Some(i64::from(*value)),
+        NumberValue::Integer(value) => Some(i64::from(*value)),
+        NumberValue::Long(value) => Some(*value),
+        NumberValue::Float(value) => Some(*value as i64),
+        NumberValue::Double(value) => Some(*value as i64),
+        NumberValue::BigDecimal(value) => {
             let divisor = BigInt::from(10_u32).pow(u32::try_from(value.scale()).unwrap_or(0));
             (value.unscaled_value() / divisor).to_string().parse().ok()
         }
-        JavaNumber::BigInteger(value) => value.to_string().parse().ok(),
-        JavaNumber::Other { double_value, .. } => Some(*double_value as i64),
+        NumberValue::BigInteger(value) => value.to_string().parse().ok(),
+        NumberValue::Other { double_value, .. } => Some(*double_value as i64),
     }
 }
 
 fn numeric_i64(value: &TemplateValue) -> StandardExpressionResult<i64> {
     match value {
-        TemplateValue::Number(JavaNumber::Byte(value)) => Ok(i64::from(*value)),
-        TemplateValue::Number(JavaNumber::Short(value)) => Ok(i64::from(*value)),
-        TemplateValue::Number(JavaNumber::Integer(value)) => Ok(i64::from(*value)),
-        TemplateValue::Number(JavaNumber::Long(value)) => Ok(*value),
-        TemplateValue::Number(JavaNumber::Float(value)) => Ok(*value as i64),
-        TemplateValue::Number(JavaNumber::Double(value))
-        | TemplateValue::Number(JavaNumber::Other {
+        TemplateValue::Number(NumberValue::Byte(value)) => Ok(i64::from(*value)),
+        TemplateValue::Number(NumberValue::Short(value)) => Ok(i64::from(*value)),
+        TemplateValue::Number(NumberValue::Integer(value)) => Ok(i64::from(*value)),
+        TemplateValue::Number(NumberValue::Long(value)) => Ok(*value),
+        TemplateValue::Number(NumberValue::Float(value)) => Ok(*value as i64),
+        TemplateValue::Number(NumberValue::Double(value))
+        | TemplateValue::Number(NumberValue::Other {
             double_value: value,
             ..
         }) => Ok(*value as i64),
-        TemplateValue::Number(JavaNumber::BigInteger(value)) => {
+        TemplateValue::Number(NumberValue::BigInteger(value)) => {
             value.to_string().parse().map_err(|error| {
                 processing_error(format!("Value cannot be represented as long: {error}"))
             })
         }
-        TemplateValue::Number(JavaNumber::BigDecimal(value)) => value
+        TemplateValue::Number(NumberValue::BigDecimal(value)) => value
             .to_string()
             .parse::<f64>()
             .map(|value| value as i64)
@@ -2182,7 +2181,7 @@ fn evaluate_inclusion(
         TemplateValue::Map(entries) => entries.iter().any(|(_, value)| value.java_equals(&left)),
         TemplateValue::Bytes(values) => values
             .iter()
-            .any(|value| TemplateValue::Number(JavaNumber::Byte(*value)).java_equals(&left)),
+            .any(|value| TemplateValue::Number(NumberValue::Byte(*value)).java_equals(&left)),
         TemplateValue::Object(value) => value
             .java_iterable_values()
             .is_some_and(|values| values.iter().any(|value| value.java_equals(&left))),
@@ -2278,10 +2277,10 @@ fn evaluate_constructor(
                 let text = value.to_utf16_string().ok_or_else(|| {
                     processing_error("BigDecimal constructor argument cannot be null".to_owned())
                 })?;
-                let value = JavaBigDecimal::parse(&text.to_string_lossy())
+                let value = BigDecimalValue::parse(&text.to_string_lossy())
                     .map_err(|error| processing_error(format!("Invalid BigDecimal: {error}")))?;
                 Ok(Some(Arc::new(TemplateValue::Number(
-                    JavaNumber::BigDecimal(value),
+                    NumberValue::BigDecimal(value),
                 ))))
             }
             ("java.math.BigInteger", [Some(value)]) => {
@@ -2293,7 +2292,7 @@ fn evaluate_constructor(
                     .parse()
                     .map_err(|error| processing_error(format!("Invalid BigInteger: {error}")))?;
                 Ok(Some(Arc::new(TemplateValue::Number(
-                    JavaNumber::BigInteger(value),
+                    NumberValue::BigInteger(value),
                 ))))
             }
             ("java.util.ArrayList" | "java.util.LinkedList", []) => {
@@ -2339,32 +2338,34 @@ fn read_static_field(
         return Ok(Some(java_class_value(type_name)));
     }
     let value = match (type_name, member) {
-        ("java.lang.Math", "PI") => TemplateValue::Number(JavaNumber::Double(std::f64::consts::PI)),
-        ("java.lang.Math", "E") => TemplateValue::Number(JavaNumber::Double(std::f64::consts::E)),
+        ("java.lang.Math", "PI") => {
+            TemplateValue::Number(NumberValue::Double(std::f64::consts::PI))
+        }
+        ("java.lang.Math", "E") => TemplateValue::Number(NumberValue::Double(std::f64::consts::E)),
         ("java.lang.Boolean", "TRUE") => TemplateValue::Boolean(true),
         ("java.lang.Boolean", "FALSE") => TemplateValue::Boolean(false),
-        ("java.lang.Integer", "MAX_VALUE") => TemplateValue::Number(JavaNumber::Integer(i32::MAX)),
-        ("java.lang.Integer", "MIN_VALUE") => TemplateValue::Number(JavaNumber::Integer(i32::MIN)),
-        ("java.lang.Long", "MAX_VALUE") => TemplateValue::Number(JavaNumber::Long(i64::MAX)),
-        ("java.lang.Long", "MIN_VALUE") => TemplateValue::Number(JavaNumber::Long(i64::MIN)),
+        ("java.lang.Integer", "MAX_VALUE") => TemplateValue::Number(NumberValue::Integer(i32::MAX)),
+        ("java.lang.Integer", "MIN_VALUE") => TemplateValue::Number(NumberValue::Integer(i32::MIN)),
+        ("java.lang.Long", "MAX_VALUE") => TemplateValue::Number(NumberValue::Long(i64::MAX)),
+        ("java.lang.Long", "MIN_VALUE") => TemplateValue::Number(NumberValue::Long(i64::MIN)),
         ("java.math.BigInteger", "ZERO") | ("java.math.BigDecimal", "ZERO") => {
-            TemplateValue::Number(JavaNumber::Integer(0))
+            TemplateValue::Number(NumberValue::Integer(0))
         }
         ("java.math.BigInteger", "ONE") | ("java.math.BigDecimal", "ONE") => {
-            TemplateValue::Number(JavaNumber::Integer(1))
+            TemplateValue::Number(NumberValue::Integer(1))
         }
         ("java.math.BigInteger", "TEN") | ("java.math.BigDecimal", "TEN") => {
-            TemplateValue::Number(JavaNumber::Integer(10))
+            TemplateValue::Number(NumberValue::Integer(10))
         }
-        ("java.util.Calendar", "HOUR_OF_DAY") => TemplateValue::Number(JavaNumber::Integer(11)),
-        ("java.util.Calendar", "MINUTE") => TemplateValue::Number(JavaNumber::Integer(12)),
-        ("java.util.Calendar", "SECOND") => TemplateValue::Number(JavaNumber::Integer(13)),
-        ("java.util.Calendar", "MILLISECOND") => TemplateValue::Number(JavaNumber::Integer(14)),
+        ("java.util.Calendar", "HOUR_OF_DAY") => TemplateValue::Number(NumberValue::Integer(11)),
+        ("java.util.Calendar", "MINUTE") => TemplateValue::Number(NumberValue::Integer(12)),
+        ("java.util.Calendar", "SECOND") => TemplateValue::Number(NumberValue::Integer(13)),
+        ("java.util.Calendar", "MILLISECOND") => TemplateValue::Number(NumberValue::Integer(14)),
         ("java.util.Calendar", "DAY_OF_MONTH" | "DATE") => {
-            TemplateValue::Number(JavaNumber::Integer(5))
+            TemplateValue::Number(NumberValue::Integer(5))
         }
-        ("java.util.Calendar", "MONTH") => TemplateValue::Number(JavaNumber::Integer(2)),
-        ("java.util.Calendar", "YEAR") => TemplateValue::Number(JavaNumber::Integer(1)),
+        ("java.util.Calendar", "MONTH") => TemplateValue::Number(NumberValue::Integer(2)),
+        ("java.util.Calendar", "YEAR") => TemplateValue::Number(NumberValue::Integer(1)),
         ("org.thymeleaf.TemplateEngine", "TIMER_LOGGER_NAME") => TemplateValue::string(
             Utf16String::from_rust_str("org.thymeleaf.TemplateEngine.TIMER"),
         ),
@@ -2415,7 +2416,7 @@ fn invoke_static_method(
             number_result(numeric_f64(left)?.max(numeric_f64(right)?))
         }
         ("java.lang.Math", "round", [Some(value)]) => Ok(Some(Arc::new(TemplateValue::Number(
-            JavaNumber::Long(numeric_f64(value)?.round() as i64),
+            NumberValue::Long(numeric_f64(value)?.round() as i64),
         )))),
         ("java.lang.Integer", "parseInt" | "valueOf", [Some(value)]) => {
             let value = required_utf16_string(value, "Integer text cannot be null")?;
@@ -2423,7 +2424,7 @@ fn invoke_static_method(
                 .to_string_lossy()
                 .parse::<i32>()
                 .map_err(|error| processing_error(error.to_string()))?;
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 parsed,
             )))))
         }
@@ -2433,7 +2434,7 @@ fn invoke_static_method(
                 .to_string_lossy()
                 .parse::<i8>()
                 .map_err(|error| processing_error(error.to_string()))?;
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Byte(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Byte(
                 parsed,
             )))))
         }
@@ -2443,7 +2444,7 @@ fn invoke_static_method(
                 .to_string_lossy()
                 .parse::<i16>()
                 .map_err(|error| processing_error(error.to_string()))?;
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Short(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Short(
                 parsed,
             )))))
         }
@@ -2453,7 +2454,7 @@ fn invoke_static_method(
                 .to_string_lossy()
                 .parse::<i64>()
                 .map_err(|error| processing_error(error.to_string()))?;
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Long(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Long(
                 parsed,
             )))))
         }
@@ -2519,21 +2520,21 @@ fn invoke_static_method(
 
 fn numeric_f64(value: &TemplateValue) -> StandardExpressionResult<f64> {
     match value {
-        TemplateValue::Number(JavaNumber::Byte(value)) => Ok(f64::from(*value)),
-        TemplateValue::Number(JavaNumber::Short(value)) => Ok(f64::from(*value)),
-        TemplateValue::Number(JavaNumber::Integer(value)) => Ok(f64::from(*value)),
-        TemplateValue::Number(JavaNumber::Long(value)) => Ok(*value as f64),
-        TemplateValue::Number(JavaNumber::Float(value)) => Ok(f64::from(*value)),
-        TemplateValue::Number(JavaNumber::Double(value))
-        | TemplateValue::Number(JavaNumber::Other {
+        TemplateValue::Number(NumberValue::Byte(value)) => Ok(f64::from(*value)),
+        TemplateValue::Number(NumberValue::Short(value)) => Ok(f64::from(*value)),
+        TemplateValue::Number(NumberValue::Integer(value)) => Ok(f64::from(*value)),
+        TemplateValue::Number(NumberValue::Long(value)) => Ok(*value as f64),
+        TemplateValue::Number(NumberValue::Float(value)) => Ok(f64::from(*value)),
+        TemplateValue::Number(NumberValue::Double(value))
+        | TemplateValue::Number(NumberValue::Other {
             double_value: value,
             ..
         }) => Ok(*value),
-        TemplateValue::Number(JavaNumber::BigInteger(value)) => value
+        TemplateValue::Number(NumberValue::BigInteger(value)) => value
             .to_string()
             .parse()
             .map_err(|error: std::num::ParseFloatError| processing_error(error.to_string())),
-        TemplateValue::Number(JavaNumber::BigDecimal(value)) => value
+        TemplateValue::Number(NumberValue::BigDecimal(value)) => value
             .to_string()
             .parse()
             .map_err(|error: std::num::ParseFloatError| processing_error(error.to_string())),
@@ -2545,7 +2546,7 @@ fn numeric_f64(value: &TemplateValue) -> StandardExpressionResult<f64> {
 }
 
 fn number_result(value: f64) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
-    Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Double(
+    Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Double(
         value,
     )))))
 }
@@ -2649,7 +2650,7 @@ fn invoke_dynamic_method(
                         name.to_string_lossy(),
                         value.java_class_name()
                     ),
-                    NoSuchMethodException::new(format!(
+                    NoSuchMethodError::new(format!(
                         "{}.{}",
                         value.java_class_name(),
                         name.to_string_lossy()
@@ -2688,7 +2689,7 @@ fn invoke_java_map_method(
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let name = name.to_string_lossy();
     match (name.as_str(), arguments) {
-        ("size", []) => Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+        ("size", []) => Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
             i32::try_from(entries.len()).unwrap_or(i32::MAX),
         ))))),
         ("isEmpty", []) => Ok(Some(Arc::new(TemplateValue::Boolean(entries.is_empty())))),
@@ -2748,7 +2749,7 @@ fn invoke_utf16_string_method(
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let name = name.to_string_lossy();
     match (name.as_str(), arguments) {
-        ("length", []) => Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+        ("length", []) => Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
             i32::try_from(value.len()).unwrap_or(i32::MAX),
         ))))),
         ("isEmpty", []) => Ok(Some(Arc::new(TemplateValue::Boolean(value.is_empty())))),
@@ -2822,7 +2823,7 @@ fn invoke_utf16_string_method(
                 } else {
                     i32::try_from(value.len()).unwrap_or(i32::MAX)
                 };
-                return Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+                return Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                     index,
                 )))));
             }
@@ -2839,7 +2840,7 @@ fn invoke_utf16_string_method(
             }
             .and_then(|index| i32::try_from(index).ok())
             .unwrap_or(-1);
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 index,
             )))))
         }
@@ -2888,7 +2889,7 @@ fn invoke_java_list_method(
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let name = name.to_string_lossy();
     match (name.as_str(), arguments) {
-        ("size", []) => Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+        ("size", []) => Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
             i32::try_from(values.len()).unwrap_or(i32::MAX),
         ))))),
         ("isEmpty", []) => Ok(Some(Arc::new(TemplateValue::Boolean(values.is_empty())))),
@@ -2900,8 +2901,8 @@ fn invoke_java_list_method(
         ))))),
         ("get", [Some(index)]) => {
             let index = match index.as_ref() {
-                TemplateValue::Number(JavaNumber::Integer(index)) => usize::try_from(*index).ok(),
-                TemplateValue::Number(JavaNumber::Long(index)) => usize::try_from(*index).ok(),
+                TemplateValue::Number(NumberValue::Integer(index)) => usize::try_from(*index).ok(),
+                TemplateValue::Number(NumberValue::Long(index)) => usize::try_from(*index).ok(),
                 _ => None,
             }
             .ok_or_else(|| processing_error("List.get index is not an integer".to_owned()))?;
@@ -2929,7 +2930,7 @@ fn invoke_java_list_method(
             }
             .and_then(|index| i32::try_from(index).ok())
             .unwrap_or(-1);
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 index,
             )))))
         }
@@ -2963,10 +2964,10 @@ fn required_utf16_string(
 
 fn integer_argument(value: &TemplateValue, message: &str) -> StandardExpressionResult<i64> {
     match value {
-        TemplateValue::Number(JavaNumber::Byte(value)) => Ok(i64::from(*value)),
-        TemplateValue::Number(JavaNumber::Short(value)) => Ok(i64::from(*value)),
-        TemplateValue::Number(JavaNumber::Integer(value)) => Ok(i64::from(*value)),
-        TemplateValue::Number(JavaNumber::Long(value)) => Ok(*value),
+        TemplateValue::Number(NumberValue::Byte(value)) => Ok(i64::from(*value)),
+        TemplateValue::Number(NumberValue::Short(value)) => Ok(i64::from(*value)),
+        TemplateValue::Number(NumberValue::Integer(value)) => Ok(i64::from(*value)),
+        TemplateValue::Number(NumberValue::Long(value)) => Ok(*value),
         _ => Err(processing_error(message.to_owned())),
     }
 }
@@ -3019,7 +3020,7 @@ fn read_dynamic_property(
     }
     match target {
         TemplateValue::Map(entries) => match name.to_string_lossy().as_str() {
-            "size" => Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            "size" => Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 i32::try_from(entries.len()).unwrap_or(i32::MAX),
             ))))),
             "isEmpty" | "empty" => Ok(Some(Arc::new(TemplateValue::Boolean(entries.is_empty())))),
@@ -3039,7 +3040,7 @@ fn read_dynamic_property(
             })),
         },
         TemplateValue::List(values) => match name.to_string_lossy().as_str() {
-            "size" | "length" => Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            "size" | "length" => Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 i32::try_from(values.len()).unwrap_or(i32::MAX),
             ))))),
             "isEmpty" | "empty" => Ok(Some(Arc::new(TemplateValue::Boolean(values.is_empty())))),
@@ -3050,13 +3051,13 @@ fn read_dynamic_property(
             ))),
         },
         TemplateValue::Bytes(values) if name == &Utf16String::from_rust_str("length") => {
-            Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 i32::try_from(values.len()).unwrap_or(i32::MAX),
             )))))
         }
         TemplateValue::String(value) | TemplateValue::SafeHtml(value) => {
             match name.to_string_lossy().as_str() {
-                "length" => Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+                "length" => Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                     i32::try_from(value.len()).unwrap_or(i32::MAX),
                 ))))),
                 "isEmpty" | "empty" => Ok(Some(Arc::new(TemplateValue::Boolean(value.is_empty())))),
@@ -3116,26 +3117,26 @@ fn convert_to_string(
     };
     let service = StandardExpressions::get_conversion_service(context.get_configuration())?;
     let conversion_value = match value.as_ref() {
-        TemplateValue::Null => JavaConversionValue::Null,
+        TemplateValue::Null => ConversionValue::Null,
         TemplateValue::String(string) | TemplateValue::SafeHtml(string) => {
-            JavaConversionValue::String(string)
+            ConversionValue::String(string)
         }
-        object => JavaConversionValue::Object(object),
+        object => ConversionValue::Object(object),
     };
     let converted = service
         .convert(
             Some(context.as_any()),
             conversion_value,
-            Some(&JavaTargetClass::String),
+            Some(&TargetClass::String),
         )
         .map_err(|error| Box::new(error) as super::StandardExpressionError)?;
     Ok(match converted {
-        JavaConversionResult::Null => None,
-        JavaConversionResult::BorrowedString(value) => {
+        ConversionResult::Null => None,
+        ConversionResult::BorrowedString(value) => {
             Some(Arc::new(TemplateValue::string(value.clone())))
         }
-        JavaConversionResult::OwnedString(value) => Some(Arc::new(TemplateValue::string(value))),
-        JavaConversionResult::BorrowedObject(_) | JavaConversionResult::OwnedObject(_) => {
+        ConversionResult::OwnedString(value) => Some(Arc::new(TemplateValue::string(value))),
+        ConversionResult::BorrowedObject(_) | ConversionResult::OwnedObject(_) => {
             return Err(processing_error(
                 "Conversion service returned a non-String value for String.class".to_owned(),
             ));
@@ -3609,7 +3610,7 @@ where
 fn ognl_processing_error(message: String, ognl_message: String) -> super::StandardExpressionError {
     Box::new(TemplateProcessingException::with_cause(
         Some(message),
-        OgnlException::new(ognl_message),
+        OgnlError::new(ognl_message),
     ))
 }
 
@@ -3624,7 +3625,7 @@ mod dispatcher_direct_tests {
         ComputedExpression, invoke_static_method, invoke_utf16_string_method, parse_ognl_range,
     };
     use crate::expression::TemplateValue;
-    use crate::util::{JavaNumber, Utf16String};
+    use crate::util::{NumberValue, Utf16String};
     use std::sync::Arc;
 
     fn js(value: &str) -> Utf16String {
@@ -3671,7 +3672,7 @@ mod dispatcher_direct_tests {
         let result = invoke_utf16_string_method(
             &target,
             &js("charAt"),
-            &[Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
+            &[Some(Arc::new(TemplateValue::Number(NumberValue::Integer(
                 1,
             ))))],
         )
@@ -3686,7 +3687,7 @@ mod dispatcher_direct_tests {
 
     #[test]
     fn invoke_static_method_dispatch_matches_java() {
-        let number = |value: i64| Some(Arc::new(TemplateValue::Number(JavaNumber::Long(value))));
+        let number = |value: i64| Some(Arc::new(TemplateValue::Number(NumberValue::Long(value))));
         // Java Math 静态方法返回 double：sqrt(16.0)=4.0、ceil(7.0)=7.0
         let result = invoke_static_method("java.lang.Math", "sqrt", &[number(16)])
             .expect("sqrt ok")
@@ -3697,7 +3698,7 @@ mod dispatcher_direct_tests {
             .expect("non-null");
         assert_eq!(text(&result), "7.0");
         // abs 用 double 输入（Java Math.abs(double) 返回 double）
-        let double = Some(Arc::new(TemplateValue::Number(JavaNumber::Double(-5.5))));
+        let double = Some(Arc::new(TemplateValue::Number(NumberValue::Double(-5.5))));
         let result = invoke_static_method("java.lang.Math", "abs", &[double])
             .expect("abs ok")
             .expect("non-null");

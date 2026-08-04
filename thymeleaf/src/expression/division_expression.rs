@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaNumber, Utf16String, ValidateError};
+use crate::util::{NumberValue, Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
@@ -66,7 +66,7 @@ impl IStandardExpression for DivisionExpression {
                 }
             };
             return Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::BigDecimal(result),
+                NumberValue::BigDecimal(result),
             ))));
         }
         Err(Box::new(TemplateProcessingException::new(Some(format!(

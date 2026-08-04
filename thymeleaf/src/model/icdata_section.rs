@@ -1,11 +1,11 @@
-use crate::util::{JavaCharSequence, TextUtilsError, Utf16String};
+use crate::util::{CharSequenceValue, TextUtilsError, Utf16String};
 
 use super::ITemplateEvent;
 
 /// 包含 `<![CDATA[` 与 `]]>` 边界的不可变 CDATA 事件。
 ///
 /// 对应 Java: `org.thymeleaf.model.ICDATASection`。
-pub trait ICDATASection: ITemplateEvent + JavaCharSequence {
+pub trait ICDATASection: ITemplateEvent + CharSequenceValue {
     /// 返回引擎内建 CDATA，供 Processor 保留 parser 原始前后缀。
     fn as_engine_cdata_section(&self) -> Option<&crate::engine::CDATASection> {
         None

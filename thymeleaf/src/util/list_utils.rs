@@ -13,7 +13,7 @@ use super::{Validate, ValidateError};
 ///
 /// 对应 Java: `org.thymeleaf.util.ListUtils#fillNewList` 中的 `Class<? extends List>`。
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub enum JavaListType {
+pub enum ListTypeValue {
     /// `java.util.ArrayList`。
     ArrayList,
     /// `java.util.LinkedList`。
@@ -27,7 +27,7 @@ pub enum JavaListType {
     },
 }
 
-impl JavaListType {
+impl ListTypeValue {
     /// 创建自定义 Java 列表类型描述。
     ///
     /// # 参数
@@ -146,7 +146,7 @@ impl ListUtilsError {
 /// `Option<T>` 显式保留 Java null 在自然排序中抛 `NullPointerException` 的边界。
 ///
 /// 对应 Java: `java.lang.Comparable`，由 `org.thymeleaf.util.ListUtils#sort(List)` 使用。
-pub trait JavaComparable {
+pub trait ComparableValue {
     /// 执行 Java `Comparable#compareTo`。
     ///
     /// # 参数
@@ -163,7 +163,7 @@ pub trait JavaComparable {
 macro_rules! impl_java_comparable_ord {
     ($($type:ty),+ $(,)?) => {
         $(
-            impl JavaComparable for $type {
+            impl ComparableValue for $type {
                 fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
                     Ok(self.cmp(other))
                 }
@@ -174,27 +174,27 @@ macro_rules! impl_java_comparable_ord {
 
 impl_java_comparable_ord!(bool, i8, i16, i32, i64, u16);
 
-impl JavaComparable for String {
+impl ComparableValue for String {
     fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         Ok(self.encode_utf16().cmp(other.encode_utf16()))
     }
 }
 
-impl JavaComparable for f32 {
+impl ComparableValue for f32 {
     fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         Ok(java_f32_compare(*self, *other))
     }
 }
 
-impl JavaComparable for f64 {
+impl ComparableValue for f64 {
     fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         Ok(java_f64_compare(*self, *other))
     }
 }
 
-impl<T> JavaComparable for Option<T>
+impl<T> ComparableValue for Option<T>
 where
-    T: JavaComparable,
+    T: ComparableValue,
 {
     fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         match (self, other) {
@@ -208,7 +208,7 @@ where
 ///
 /// 对应 Java: `java.util.Comparator`，由
 /// `org.thymeleaf.util.ListUtils#sort(List, Comparator)` 使用。
-pub trait JavaComparator<T> {
+pub trait ComparatorValue<T> {
     /// 比较两个列表元素。
     ///
     /// # 参数
@@ -223,7 +223,7 @@ pub trait JavaComparator<T> {
     fn compare(&mut self, left: &T, right: &T) -> Result<Ordering, ListUtilsError>;
 }
 
-impl<T, F> JavaComparator<T> for F
+impl<T, F> ComparatorValue<T> for F
 where
     F: FnMut(&T, &T) -> Result<Ordering, ListUtilsError>,
 {
@@ -272,7 +272,7 @@ pub trait ListView<T> {
     ///
     /// # 返回
     /// 用于排序结果反射构造的类型描述。
-    fn list_type(&self) -> JavaListType;
+    fn list_type(&self) -> ListTypeValue;
 
     /// 复制 `List#toArray()` 的元素快照。
     ///
@@ -302,7 +302,7 @@ pub trait ListView<T> {
     ///
     /// # 错误
     /// 新列表的 `add` 操作失败时原样返回运行时错误。
-    fn fill_sorted(&self, elements: Vec<T>) -> Result<JavaList<'static, T>, ListUtilsError>
+    fn fill_sorted(&self, elements: Vec<T>) -> Result<ListValue<'static, T>, ListUtilsError>
     where
         T: 'static,
     {
@@ -323,8 +323,8 @@ impl<T> ListView<T> for Vec<T> {
         Box::new(self.as_slice().iter())
     }
 
-    fn list_type(&self) -> JavaListType {
-        JavaListType::ArrayList
+    fn list_type(&self) -> ListTypeValue {
+        ListTypeValue::ArrayList
     }
 }
 
@@ -341,8 +341,8 @@ impl<T> ListView<T> for LinkedList<T> {
         Box::new(LinkedList::iter(self))
     }
 
-    fn list_type(&self) -> JavaListType {
-        JavaListType::LinkedList
+    fn list_type(&self) -> ListTypeValue {
+        ListTypeValue::LinkedList
     }
 }
 
@@ -365,35 +365,35 @@ pub enum ListTarget<'a, T> {
 /// Java 列表结果的借用身份或独立存储。
 ///
 /// 对应 Java: `org.thymeleaf.util.ListUtils#toList` 与 `#sort` 返回的 `List<?>`。
-enum JavaListStorage<'a, T> {
+enum ListStorage<'a, T> {
     Borrowed(&'a dyn ListView<T>),
     Owned {
         elements: Vec<T>,
-        list_type: JavaListType,
+        list_type: ListTypeValue,
     },
 }
 
 /// `ListUtils` 返回的列表值。
 ///
 /// 对应 Java `List<?>`。借用分支保留已有列表身份，拥有分支保留顺序、重复项和
-/// 运行时列表类型。Rust 不依赖 JVM 反射，但通过 [`JavaListType`] 保留排序结果
+/// 运行时列表类型。Rust 不依赖 JVM 反射，但通过 [`ListTypeValue`] 保留排序结果
 /// “同类型构造或回退 ArrayList”的可观察合同。
 ///
 /// 对应 Java: `java.util.List` 返回值，来源为 `org.thymeleaf.util.ListUtils`。
-pub struct JavaList<'a, T> {
-    storage: JavaListStorage<'a, T>,
+pub struct ListValue<'a, T> {
+    storage: ListStorage<'a, T>,
 }
 
-impl<'a, T> JavaList<'a, T> {
+impl<'a, T> ListValue<'a, T> {
     fn borrowed(target: &'a dyn ListView<T>) -> Self {
         Self {
-            storage: JavaListStorage::Borrowed(target),
+            storage: ListStorage::Borrowed(target),
         }
     }
 
-    fn owned(elements: Vec<T>, list_type: JavaListType) -> Self {
+    fn owned(elements: Vec<T>, list_type: ListTypeValue) -> Self {
         Self {
-            storage: JavaListStorage::Owned {
+            storage: ListStorage::Owned {
                 elements,
                 list_type,
             },
@@ -408,8 +408,8 @@ impl<'a, T> JavaList<'a, T> {
     #[must_use]
     pub fn len(&self) -> usize {
         match &self.storage {
-            JavaListStorage::Borrowed(target) => target.len(),
-            JavaListStorage::Owned { elements, .. } => elements.len(),
+            ListStorage::Borrowed(target) => target.len(),
+            ListStorage::Owned { elements, .. } => elements.len(),
         }
     }
 
@@ -434,8 +434,8 @@ impl<'a, T> JavaList<'a, T> {
     #[must_use]
     pub fn get(&self, index: usize) -> Option<&T> {
         match &self.storage {
-            JavaListStorage::Borrowed(target) => target.get(index),
-            JavaListStorage::Owned { elements, .. } => elements.get(index),
+            ListStorage::Borrowed(target) => target.get(index),
+            ListStorage::Owned { elements, .. } => elements.get(index),
         }
     }
 
@@ -446,8 +446,8 @@ impl<'a, T> JavaList<'a, T> {
     /// 对应 Java 语义：`ListUtils` 的 `iter` 行为（Rust 侧辅助/私有路径）。
     pub fn iter(&self) -> Box<dyn Iterator<Item = &T> + '_> {
         match &self.storage {
-            JavaListStorage::Borrowed(target) => target.iter(),
-            JavaListStorage::Owned { elements, .. } => Box::new(elements.iter()),
+            ListStorage::Borrowed(target) => target.iter(),
+            ListStorage::Owned { elements, .. } => Box::new(elements.iter()),
         }
     }
 
@@ -473,10 +473,10 @@ impl<'a, T> JavaList<'a, T> {
     /// Java 类型描述。
     /// 对应 Java 语义：`ListUtils` 的 `list_type` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn list_type(&self) -> JavaListType {
+    pub fn list_type(&self) -> ListTypeValue {
         match &self.storage {
-            JavaListStorage::Borrowed(target) => target.list_type(),
-            JavaListStorage::Owned { list_type, .. } => list_type.clone(),
+            ListStorage::Borrowed(target) => target.list_type(),
+            ListStorage::Owned { list_type, .. } => list_type.clone(),
         }
     }
 
@@ -491,27 +491,27 @@ impl<'a, T> JavaList<'a, T> {
     #[must_use]
     pub fn is_borrowed_from(&self, target: &dyn ListView<T>) -> bool {
         match self.storage {
-            JavaListStorage::Borrowed(source) => ptr::eq(source, target),
-            JavaListStorage::Owned { .. } => false,
+            ListStorage::Borrowed(source) => ptr::eq(source, target),
+            ListStorage::Owned { .. } => false,
         }
     }
 }
 
-impl<T> ListView<T> for JavaList<'_, T> {
+impl<T> ListView<T> for ListValue<'_, T> {
     fn len(&self) -> usize {
-        JavaList::len(self)
+        ListValue::len(self)
     }
 
     fn get(&self, index: usize) -> Option<&T> {
-        JavaList::get(self, index)
+        ListValue::get(self, index)
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &T> + '_> {
-        JavaList::iter(self)
+        ListValue::iter(self)
     }
 
-    fn list_type(&self) -> JavaListType {
-        JavaList::list_type(self)
+    fn list_type(&self) -> ListTypeValue {
+        ListValue::list_type(self)
     }
 }
 
@@ -538,18 +538,18 @@ impl ListUtils {
     /// null、primitive array 或不支持类型返回对应 Java 异常类别。
     pub fn to_list<'a, T>(
         target: Option<ListTarget<'a, T>>,
-    ) -> Result<JavaList<'a, T>, ListUtilsError>
+    ) -> Result<ListValue<'a, T>, ListUtilsError>
     where
         T: Clone,
     {
         Validate::not_null(target.as_ref(), Some("Cannot convert null to list"))?;
         match target.expect("validated target") {
-            ListTarget::List(target) => Ok(JavaList::borrowed(target)),
+            ListTarget::List(target) => Ok(ListValue::borrowed(target)),
             ListTarget::Array(target) => {
-                Ok(JavaList::owned(target.to_vec(), JavaListType::ArrayList))
+                Ok(ListValue::owned(target.to_vec(), ListTypeValue::ArrayList))
             }
             ListTarget::Iterable(target) => {
-                Ok(JavaList::owned(target.collect(), JavaListType::ArrayList))
+                Ok(ListValue::owned(target.collect(), ListTypeValue::ArrayList))
             }
             ListTarget::PrimitiveArray(class_name) => Err(ListUtilsError::ClassCast {
                 class_name: class_name.to_owned(),
@@ -695,9 +695,9 @@ impl ListUtils {
     ///
     /// # 错误
     /// null 列表、`toArray()`、null 元素或自然比较失败时返回对应错误。
-    pub fn sort<T>(list: Option<&dyn ListView<T>>) -> Result<JavaList<'static, T>, ListUtilsError>
+    pub fn sort<T>(list: Option<&dyn ListView<T>>) -> Result<ListValue<'static, T>, ListUtilsError>
     where
-        T: Clone + JavaComparable + 'static,
+        T: Clone + ComparableValue + 'static,
     {
         Self::sort_with_comparator(list, None)
     }
@@ -717,10 +717,10 @@ impl ListUtils {
     /// 传播列表快照、自然比较或 Comparator 错误。
     pub fn sort_with_comparator<T>(
         list: Option<&dyn ListView<T>>,
-        comparator: Option<&mut dyn JavaComparator<T>>,
-    ) -> Result<JavaList<'static, T>, ListUtilsError>
+        comparator: Option<&mut dyn ComparatorValue<T>>,
+    ) -> Result<ListValue<'static, T>, ListUtilsError>
     where
-        T: Clone + JavaComparable + 'static,
+        T: Clone + ComparableValue + 'static,
     {
         Validate::not_null(list, Some("Cannot execute list sort: list is null"))?;
         let list = list.expect("validated list");
@@ -735,7 +735,7 @@ impl ListUtils {
         sorted.and_then(|elements| list.fill_sorted(elements))
     }
 
-    /// 使用非 null Comparator 排序不实现 [`JavaComparable`] 的元素。
+    /// 使用非 null Comparator 排序不实现 [`ComparableValue`] 的元素。
     ///
     /// 这是 Java `<T>` Comparator 重载在 Rust 静态类型系统中的完整入口。
     ///
@@ -751,8 +751,8 @@ impl ListUtils {
     /// 对应 Java 语义：`ListUtils` 的 `sort_with_required_comparator` 行为（Rust 侧辅助/私有路径）。
     pub fn sort_with_required_comparator<T>(
         list: Option<&dyn ListView<T>>,
-        comparator: &mut dyn JavaComparator<T>,
-    ) -> Result<JavaList<'static, T>, ListUtilsError>
+        comparator: &mut dyn ComparatorValue<T>,
+    ) -> Result<ListValue<'static, T>, ListUtilsError>
     where
         T: Clone + 'static,
     {
@@ -763,13 +763,13 @@ impl ListUtils {
     }
 }
 
-fn fill_new_list<T>(elements: Vec<T>, list_type: &JavaListType) -> JavaList<'static, T> {
-    JavaList::owned(elements, list_type.sorted_result_type())
+fn fill_new_list<T>(elements: Vec<T>, list_type: &ListTypeValue) -> ListValue<'static, T> {
+    ListValue::owned(elements, list_type.sorted_result_type())
 }
 
 fn stable_sort<T>(
     mut elements: Vec<T>,
-    comparator: &mut dyn JavaComparator<T>,
+    comparator: &mut dyn ComparatorValue<T>,
 ) -> Result<Vec<T>, ListUtilsError> {
     if elements.len() < 2 {
         return Ok(elements);
@@ -783,7 +783,7 @@ fn stable_sort<T>(
 fn merge<T>(
     left: Vec<T>,
     right: Vec<T>,
-    comparator: &mut dyn JavaComparator<T>,
+    comparator: &mut dyn ComparatorValue<T>,
 ) -> Result<Vec<T>, ListUtilsError> {
     let capacity = left.len().saturating_add(right.len());
     let mut left = VecDeque::from(left);
@@ -853,7 +853,7 @@ mod tests {
     use std::collections::LinkedList;
 
     use super::{
-        JavaComparable, JavaList, JavaListType, ListTarget, ListUtils, ListUtilsError, ListView,
+        ComparableValue, ListTarget, ListTypeValue, ListUtils, ListUtilsError, ListValue, ListView,
     };
     use crate::util::ValidateError;
 
@@ -865,7 +865,7 @@ mod tests {
 
     struct CustomList<T> {
         values: Vec<T>,
-        list_type: JavaListType,
+        list_type: ListTypeValue,
         snapshot_error: Option<(&'static str, &'static str)>,
     }
 
@@ -886,7 +886,7 @@ mod tests {
             Box::new(self.values.iter())
         }
 
-        fn list_type(&self) -> JavaListType {
+        fn list_type(&self) -> ListTypeValue {
             self.list_type.clone()
         }
 
@@ -914,11 +914,11 @@ mod tests {
             Box::new(self.values.iter())
         }
 
-        fn list_type(&self) -> JavaListType {
-            JavaListType::custom("example.AddFailingList", true)
+        fn list_type(&self) -> ListTypeValue {
+            ListTypeValue::custom("example.AddFailingList", true)
         }
 
-        fn fill_sorted(&self, _elements: Vec<T>) -> Result<JavaList<'static, T>, ListUtilsError>
+        fn fill_sorted(&self, _elements: Vec<T>) -> Result<ListValue<'static, T>, ListUtilsError>
         where
             T: 'static,
         {
@@ -936,7 +936,7 @@ mod tests {
         let borrowed = ListUtils::to_list(Some(ListTarget::List(view))).unwrap();
         assert!(borrowed.is_borrowed_from(view));
         assert_eq!(borrowed.len(), 3);
-        assert_eq!(borrowed.list_type(), JavaListType::ArrayList);
+        assert_eq!(borrowed.list_type(), ListTypeValue::ArrayList);
         assert_eq!(borrowed.get(1), Some(&None));
         assert_eq!(borrowed.get(10), None);
 
@@ -1087,11 +1087,11 @@ mod tests {
             source.iter().map(String::as_str).collect::<Vec<_>>(),
             vec!["c", "a", "b"]
         );
-        assert_eq!(sorted.list_type(), JavaListType::LinkedList);
+        assert_eq!(sorted.list_type(), ListTypeValue::LinkedList);
 
         let constructible = CustomList {
             values: vec!["b".to_owned(), "a".to_owned()],
-            list_type: JavaListType::custom("example.PublicList", true),
+            list_type: ListTypeValue::custom("example.PublicList", true),
             snapshot_error: None,
         };
         assert_eq!(constructible.len(), 2);
@@ -1100,16 +1100,16 @@ mod tests {
         let sorted = ListUtils::sort(Some(&constructible as &dyn ListView<String>)).unwrap();
         assert_eq!(
             sorted.list_type(),
-            JavaListType::custom("example.PublicList", true)
+            ListTypeValue::custom("example.PublicList", true)
         );
 
         let fallback = CustomList {
             values: vec!["b".to_owned(), "a".to_owned()],
-            list_type: JavaListType::custom("example.PrivateList", false),
+            list_type: ListTypeValue::custom("example.PrivateList", false),
             snapshot_error: None,
         };
         let sorted = ListUtils::sort(Some(&fallback as &dyn ListView<String>)).unwrap();
-        assert_eq!(sorted.list_type(), JavaListType::ArrayList);
+        assert_eq!(sorted.list_type(), ListTypeValue::ArrayList);
         assert_eq!(fallback.list_type.class_name(), "example.PrivateList");
 
         let add_failing = AddFailingList {
@@ -1119,7 +1119,7 @@ mod tests {
         assert_eq!(add_failing.get(1), Some(&"a".to_owned()));
         assert_eq!(
             add_failing.list_type(),
-            JavaListType::custom("example.AddFailingList", true)
+            ListTypeValue::custom("example.AddFailingList", true)
         );
         assert_eq!(
             ListUtils::sort(Some(&add_failing as &dyn ListView<String>))
@@ -1160,13 +1160,13 @@ mod tests {
                     id: "second",
                 },
             ],
-            list_type: JavaListType::ArrayList,
+            list_type: ListTypeValue::ArrayList,
             snapshot_error: None,
         };
         assert_eq!(items.len(), 3);
         assert_eq!(items.get(1).map(|item| item.id), Some("middle"));
         assert_eq!(items.iter().count(), 3);
-        assert_eq!(items.list_type(), JavaListType::ArrayList);
+        assert_eq!(items.list_type(), ListTypeValue::ArrayList);
         let item_view: &dyn ListView<Item> = &items;
         let mut by_key = |left: &Item, right: &Item| Ok(left.key.cmp(&right.key));
         let sorted =
@@ -1182,7 +1182,7 @@ mod tests {
         );
         let snapshot_failing = CustomList {
             values: Vec::<Item>::new(),
-            list_type: JavaListType::ArrayList,
+            list_type: ListTypeValue::ArrayList,
             snapshot_error: Some(("java.lang.IllegalStateException", "toArray failed")),
         };
         assert!(
@@ -1272,7 +1272,7 @@ mod tests {
 
         let failing = CustomList {
             values: vec!["b".to_owned(), "a".to_owned()],
-            list_type: JavaListType::custom("example.FailingList", true),
+            list_type: ListTypeValue::custom("example.FailingList", true),
             snapshot_error: Some(("java.lang.IllegalStateException", "toArray failed")),
         };
         assert_eq!(
@@ -1383,13 +1383,13 @@ mod tests {
 
     #[test]
     fn java_list_delegates_list_view_operations() {
-        let list = JavaList::owned(vec![Some("one".to_owned()), None], JavaListType::ArrayList);
+        let list = ListValue::owned(vec![Some("one".to_owned()), None], ListTypeValue::ArrayList);
         let view: &dyn ListView<Option<String>> = &list;
         assert_eq!(view.len(), 2);
         assert!(!view.is_empty());
         assert_eq!(view.get(1), Some(&None));
         assert_eq!(view.iter().count(), 2);
-        assert_eq!(view.list_type(), JavaListType::ArrayList);
+        assert_eq!(view.list_type(), ListTypeValue::ArrayList);
         assert!(list.contains(&None));
     }
 }

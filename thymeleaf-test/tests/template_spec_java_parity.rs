@@ -433,7 +433,7 @@ fn emit_constructor_error(
                 | TemplateSpecError::ModeAndContentTypeConflict
                 | TemplateSpecError::NullOrEmptyTemplateSelector => "IllegalArgumentException",
                 TemplateSpecError::MalformedOutputContentType => "ArrayIndexOutOfBoundsException",
-                TemplateSpecError::JavaEqualsNullOutputContentType => "NullPointerException",
+                TemplateSpecError::EqualsNullOutputContentType => "NullPointerException",
             };
             emit(output, key, &format!("{class}:{error}"));
         }

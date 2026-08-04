@@ -135,7 +135,7 @@ fn th_switch_with_expression_cases() {
     ctx.set_variable(
         Some(js("m")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(2),
+            thymeleaf::util::NumberValue::Integer(2),
         ))),
     );
     let s = render(
@@ -154,7 +154,7 @@ fn th_switch_numeric_default() {
     ctx.set_variable(
         Some(js("m")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(9),
+            thymeleaf::util::NumberValue::Integer(9),
         ))),
     );
     let s = render(
@@ -256,7 +256,7 @@ fn th_inline_javascript_mode() {
     ctx.set_variable(
         Some(js("count")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(7),
+            thymeleaf::util::NumberValue::Integer(7),
         ))),
     );
     let s = render(
@@ -336,7 +336,7 @@ fn attribute_value_expression() {
     ctx.set_variable(
         Some(js("w")),
         Some(Arc::new(TemplateValue::Number(
-            thymeleaf::util::JavaNumber::Integer(50),
+            thymeleaf::util::NumberValue::Integer(50),
         ))),
     );
     let s = render(

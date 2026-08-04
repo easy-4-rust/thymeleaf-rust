@@ -9,7 +9,7 @@ use num_bigint::BigInt;
 use thymeleaf::context::{ExpressionContext, IExpressionContext, WebExpressionContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::linkbuilder::{AbstractLinkBuilder, ILinkBuilder, StandardLinkBuilder};
-use thymeleaf::util::{JavaBigDecimal, JavaNumber, Locale, Utf16String, ValidateError};
+use thymeleaf::util::{BigDecimalValue, Locale, NumberValue, Utf16String, ValidateError};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateProcessingException,
@@ -377,14 +377,14 @@ fn export_query_parameters(output: &mut String, context: &dyn IExpressionContext
     let numbers = map(
         "n",
         list_value(vec![
-            Some(Arc::new(TemplateValue::Number(JavaNumber::Long(i64::MAX)))),
-            Some(Arc::new(TemplateValue::Number(JavaNumber::BigInteger(
+            Some(Arc::new(TemplateValue::Number(NumberValue::Long(i64::MAX)))),
+            Some(Arc::new(TemplateValue::Number(NumberValue::BigInteger(
                 "123456789012345678901234567890"
                     .parse::<BigInt>()
                     .expect("big integer"),
             )))),
-            Some(Arc::new(TemplateValue::Number(JavaNumber::BigDecimal(
-                JavaBigDecimal::parse("1.2300").expect("big decimal"),
+            Some(Arc::new(TemplateValue::Number(NumberValue::BigDecimal(
+                BigDecimalValue::parse("1.2300").expect("big decimal"),
             )))),
             Some(Arc::new(TemplateValue::Boolean(true))),
         ]),

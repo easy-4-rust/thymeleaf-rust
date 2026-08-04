@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    JavaNumber, Locale, NumberPointType, NumberUtils, NumberUtilsError, Utf16String,
+    Locale, NumberPointType, NumberUtils, NumberUtilsError, NumberValue, Utf16String,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -27,7 +27,7 @@ impl Numbers {
     /// 对应 Java: `Numbers#formatInteger()`。
     pub fn format_integer(
         &self,
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
         min_integer_digits: i32,
         thousands_point_type: Option<NumberPointType>,
     ) -> Result<Option<Utf16String>, NumbersError> {
@@ -45,7 +45,7 @@ impl Numbers {
     /// 对应 Java: `Numbers#formatDecimal()`。
     pub fn format_decimal(
         &self,
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
         min_integer_digits: i32,
         thousands_point_type: NumberPointType,
         decimal_digits: i32,
@@ -65,7 +65,7 @@ impl Numbers {
     /// 对应 Java: `Numbers#formatCurrency()`。
     pub fn format_currency(
         &self,
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
     ) -> Result<Option<Utf16String>, NumbersError> {
         Ok(NumberUtils::format_currency(target, Some(&self.locale))?)
     }
@@ -74,7 +74,7 @@ impl Numbers {
     /// 对应 Java: `Numbers#formatPercent()`。
     pub fn format_percent(
         &self,
-        target: Option<&JavaNumber>,
+        target: Option<&NumberValue>,
         min_integer_digits: i32,
         decimal_digits: i32,
     ) -> Result<Option<Utf16String>, NumbersError> {
@@ -243,7 +243,7 @@ impl From<NumberUtilsError> for NumbersError {
     }
 }
 
-fn number(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaNumber>, NumbersError> {
+fn number(value: &Option<Arc<TemplateValue>>) -> Result<Option<&NumberValue>, NumbersError> {
     match value.as_deref() {
         None | Some(TemplateValue::Null) => Ok(None),
         Some(TemplateValue::Number(number)) => Ok(Some(number)),
@@ -256,10 +256,10 @@ fn number(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaNumber>, Num
 
 fn integer(value: &Option<Arc<TemplateValue>>) -> Result<i32, NumbersError> {
     match number(value)? {
-        Some(JavaNumber::Byte(value)) => Ok(i32::from(*value)),
-        Some(JavaNumber::Short(value)) => Ok(i32::from(*value)),
-        Some(JavaNumber::Integer(value)) => Ok(*value),
-        Some(JavaNumber::Long(value)) => i32::try_from(*value)
+        Some(NumberValue::Byte(value)) => Ok(i32::from(*value)),
+        Some(NumberValue::Short(value)) => Ok(i32::from(*value)),
+        Some(NumberValue::Integer(value)) => Ok(*value),
+        Some(NumberValue::Long(value)) => i32::try_from(*value)
             .map_err(|_| NumbersError::new("Number is outside Java Integer range")),
         Some(_) => Err(NumbersError::new("Number is not an integer")),
         None => Err(NumbersError::new("Integer argument cannot be null")),
@@ -294,7 +294,7 @@ fn sequence_value(values: Vec<i32>) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::List(Arc::new(
         values
             .into_iter()
-            .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+            .map(|value| Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
             .collect(),
     )))
 }

@@ -5,7 +5,7 @@ use std::fmt::{Display, Write};
 
 use indexmap::IndexSet;
 use thymeleaf::expression::Sets;
-use thymeleaf::util::{JavaSet, SetTarget, SetUtils, SetUtilsError, SetView, ValidateError};
+use thymeleaf::util::{SetTarget, SetUtils, SetUtilsError, SetValue, SetView, ValidateError};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str = include_str!("../../thymeleaf/tests/fixtures/set_utils_golden.txt");
@@ -295,7 +295,7 @@ fn set_utils_and_expression_facade_match_java_golden() {
 fn emit_set_result(
     output: &mut String,
     key: &str,
-    result: Result<JavaSet<'_, Option<String>>, SetUtilsError>,
+    result: Result<SetValue<'_, Option<String>>, SetUtilsError>,
 ) {
     match result {
         Ok(value) => emit(output, key, render_set(&value)),
@@ -306,7 +306,7 @@ fn emit_set_result(
 fn emit_set_identity(
     output: &mut String,
     key: &str,
-    result: Result<JavaSet<'_, Option<String>>, SetUtilsError>,
+    result: Result<SetValue<'_, Option<String>>, SetUtilsError>,
     source: &dyn SetView<Option<String>>,
 ) {
     match result {

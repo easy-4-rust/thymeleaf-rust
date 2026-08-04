@@ -114,7 +114,7 @@ pub enum SetTarget<'a, T> {
     Unsupported(&'a str),
 }
 
-enum JavaSetStorage<'a, T> {
+enum SetStorage<'a, T> {
     Borrowed(&'a dyn SetView<T>),
     Owned(IndexSet<T>),
 }
@@ -131,20 +131,20 @@ enum JavaSetStorage<'a, T> {
 /// let mut singleton = SetUtils::singleton_set("one");
 /// singleton.insert("two");
 /// ```
-pub struct JavaSet<'a, T> {
-    storage: JavaSetStorage<'a, T>,
+pub struct SetValue<'a, T> {
+    storage: SetStorage<'a, T>,
 }
 
-impl<'a, T> JavaSet<'a, T> {
+impl<'a, T> SetValue<'a, T> {
     fn borrowed(target: &'a dyn SetView<T>) -> Self {
         Self {
-            storage: JavaSetStorage::Borrowed(target),
+            storage: SetStorage::Borrowed(target),
         }
     }
 
     fn owned(target: IndexSet<T>) -> Self {
         Self {
-            storage: JavaSetStorage::Owned(target),
+            storage: SetStorage::Owned(target),
         }
     }
 
@@ -156,8 +156,8 @@ impl<'a, T> JavaSet<'a, T> {
     #[must_use]
     pub fn len(&self) -> usize {
         match &self.storage {
-            JavaSetStorage::Borrowed(target) => target.len(),
-            JavaSetStorage::Owned(target) => target.len(),
+            SetStorage::Borrowed(target) => target.len(),
+            SetStorage::Owned(target) => target.len(),
         }
     }
 
@@ -185,8 +185,8 @@ impl<'a, T> JavaSet<'a, T> {
         T: Eq + Hash,
     {
         match &self.storage {
-            JavaSetStorage::Borrowed(target) => target.contains(element),
-            JavaSetStorage::Owned(target) => target.contains(element),
+            SetStorage::Borrowed(target) => target.contains(element),
+            SetStorage::Owned(target) => target.contains(element),
         }
     }
 
@@ -200,8 +200,8 @@ impl<'a, T> JavaSet<'a, T> {
         T: Eq + Hash,
     {
         match &self.storage {
-            JavaSetStorage::Borrowed(target) => target.iter(),
-            JavaSetStorage::Owned(target) => Box::new(target.iter()),
+            SetStorage::Borrowed(target) => target.iter(),
+            SetStorage::Owned(target) => Box::new(target.iter()),
         }
     }
 
@@ -219,26 +219,26 @@ impl<'a, T> JavaSet<'a, T> {
     #[must_use]
     pub fn is_borrowed_from(&self, target: &dyn SetView<T>) -> bool {
         match self.storage {
-            JavaSetStorage::Borrowed(source) => ptr::eq(source, target),
-            JavaSetStorage::Owned(_) => false,
+            SetStorage::Borrowed(source) => ptr::eq(source, target),
+            SetStorage::Owned(_) => false,
         }
     }
 }
 
-impl<T> SetView<T> for JavaSet<'_, T>
+impl<T> SetView<T> for SetValue<'_, T>
 where
     T: Eq + Hash,
 {
     fn len(&self) -> usize {
-        JavaSet::len(self)
+        SetValue::len(self)
     }
 
     fn contains(&self, element: &T) -> bool {
-        JavaSet::contains(self, element)
+        SetValue::contains(self, element)
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &T> + '_> {
-        JavaSet::iter(self)
+        SetValue::iter(self)
     }
 }
 
@@ -291,15 +291,15 @@ impl SetUtils {
     ///
     /// # 错误
     /// null 输入或不支持的运行时类型返回与 Java 相同类别和消息的类型化错误。
-    pub fn to_set<'a, T>(target: Option<SetTarget<'a, T>>) -> Result<JavaSet<'a, T>, SetUtilsError>
+    pub fn to_set<'a, T>(target: Option<SetTarget<'a, T>>) -> Result<SetValue<'a, T>, SetUtilsError>
     where
         T: Clone + Eq + Hash,
     {
         Validate::not_null(target.as_ref(), Some("Cannot convert null to set"))?;
         match target.expect("validated target") {
-            SetTarget::Set(target) => Ok(JavaSet::borrowed(target)),
-            SetTarget::Array(target) => Ok(JavaSet::owned(target.iter().cloned().collect())),
-            SetTarget::Iterable(target) => Ok(JavaSet::owned(target.collect())),
+            SetTarget::Set(target) => Ok(SetValue::borrowed(target)),
+            SetTarget::Array(target) => Ok(SetValue::owned(target.iter().cloned().collect())),
+            SetTarget::Iterable(target) => Ok(SetValue::owned(target.collect())),
             SetTarget::PrimitiveArray(class_name) => Err(SetUtilsError::ClassCast {
                 class_name: class_name.to_owned(),
             }),
@@ -439,13 +439,13 @@ impl SetUtils {
     /// # 返回
     /// 不暴露修改入口的单元素集合。
     #[must_use]
-    pub fn singleton_set<T>(element: T) -> JavaSet<'static, T>
+    pub fn singleton_set<T>(element: T) -> SetValue<'static, T>
     where
         T: Eq + Hash,
     {
         let mut target = IndexSet::with_capacity(1);
         target.insert(element);
-        JavaSet::owned(target)
+        SetValue::owned(target)
     }
 }
 
@@ -459,7 +459,7 @@ mod tests {
 
     use indexmap::IndexSet;
 
-    use super::{JavaSet, SetTarget, SetUtils, SetUtilsError, SetView};
+    use super::{SetTarget, SetUtils, SetUtilsError, SetValue, SetView};
     use crate::util::ValidateError;
 
     fn ordered_set() -> IndexSet<Option<String>> {
@@ -643,7 +643,7 @@ mod tests {
             singleton_view.iter().cloned().collect::<Vec<_>>(),
             vec![None]
         );
-        let _: &JavaSet<'_, Option<String>> = &singleton;
+        let _: &SetValue<'_, Option<String>> = &singleton;
     }
 
     #[test]

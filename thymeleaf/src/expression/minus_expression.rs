@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaBigDecimal, JavaNumber, Utf16String, ValidateError};
+use crate::util::{BigDecimalValue, NumberValue, Utf16String, ValidateError};
 
 use super::{
     ComplexExpression, IStandardExpression, StandardExpressionExecutionContext,
@@ -59,20 +59,20 @@ impl IStandardExpression for MinusExpression {
             // Java/OGNL 的一元负号保留包装数字类型；这对接收 Integer 参数的
             // `#numbers.sequence(from, to, step)` 等方法尤为重要。
             let negated = match number {
-                JavaNumber::Byte(value) => JavaNumber::Integer(-i32::from(*value)),
-                JavaNumber::Short(value) => JavaNumber::Integer(-i32::from(*value)),
-                JavaNumber::Integer(value) => JavaNumber::Integer(value.wrapping_neg()),
-                JavaNumber::Long(value) => JavaNumber::Long(value.wrapping_neg()),
-                JavaNumber::Float(value) => JavaNumber::Float(-value),
-                JavaNumber::Double(value) => JavaNumber::Double(-value),
-                JavaNumber::BigInteger(value) => JavaNumber::BigInteger(-value),
-                JavaNumber::BigDecimal(value) => {
-                    JavaNumber::BigDecimal(value.multiply_java(&JavaBigDecimal::parse("-1")?)?)
+                NumberValue::Byte(value) => NumberValue::Integer(-i32::from(*value)),
+                NumberValue::Short(value) => NumberValue::Integer(-i32::from(*value)),
+                NumberValue::Integer(value) => NumberValue::Integer(value.wrapping_neg()),
+                NumberValue::Long(value) => NumberValue::Long(value.wrapping_neg()),
+                NumberValue::Float(value) => NumberValue::Float(-value),
+                NumberValue::Double(value) => NumberValue::Double(-value),
+                NumberValue::BigInteger(value) => NumberValue::BigInteger(-value),
+                NumberValue::BigDecimal(value) => {
+                    NumberValue::BigDecimal(value.multiply_java(&BigDecimalValue::parse("-1")?)?)
                 }
-                JavaNumber::Other {
+                NumberValue::Other {
                     class_name,
                     double_value,
-                } => JavaNumber::Other {
+                } => NumberValue::Other {
                     class_name: class_name.clone(),
                     double_value: -double_value,
                 },

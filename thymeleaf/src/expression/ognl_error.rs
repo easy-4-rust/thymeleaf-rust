@@ -5,11 +5,11 @@ use std::fmt::{Display, Formatter};
 /// 该对象只表达 Thymeleaf 可观察的 OGNL 求值失败，不开放 Java 反射能力。
 /// 对应 Java: `ognl.OgnlException`。
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct OgnlException {
+pub struct OgnlError {
     message: String,
 }
 
-impl OgnlException {
+impl OgnlError {
     /// 创建包含 OGNL detail message 的异常。
     ///
     /// # 参数
@@ -28,10 +28,10 @@ impl OgnlException {
     }
 }
 
-impl Display for OgnlException {
+impl Display for OgnlError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(&self.message)
     }
 }
 
-impl std::error::Error for OgnlException {}
+impl std::error::Error for OgnlError {}

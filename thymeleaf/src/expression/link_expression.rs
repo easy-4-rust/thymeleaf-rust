@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::util::string_case_utils::to_lower_case_default;
-use crate::util::{JavaNumber, Utf16String, ValidateError};
+use crate::util::{NumberValue, Utf16String, ValidateError};
 
 use super::{
     AssignationSequence, IStandardExpression, SimpleExpression, StandardExpressionExecutionContext,
@@ -210,7 +210,7 @@ fn normalize_parameter_value(value: Option<Arc<TemplateValue>>) -> Option<Arc<Te
         TemplateValue::Bytes(values) => Some(Arc::new(TemplateValue::List(Arc::new(
             values
                 .iter()
-                .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Byte(*value))))
+                .map(|value| Arc::new(TemplateValue::Number(NumberValue::Byte(*value))))
                 .collect(),
         )))),
         TemplateValue::Object(object) => object

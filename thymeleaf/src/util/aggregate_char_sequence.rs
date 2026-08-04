@@ -3,10 +3,12 @@ use std::fmt::{Display, Formatter};
 use std::io;
 use std::sync::{Arc, Mutex};
 
-use super::{IWritableCharSequence, JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
+use super::{
+    CharSequenceValue, IWritableCharSequence, TemplateWriter, TextUtilsError, Utf16String,
+};
 
 /// 可被线程安全聚合字符序列持有的组件。
-pub type AggregateComponent = Arc<dyn JavaCharSequence + Send + Sync>;
+pub type AggregateComponent = Arc<dyn CharSequenceValue + Send + Sync>;
 
 /// 聚合字符序列构造错误。
 /// 对应 Java 语义：`AggregateCharSequence` 的 Rust 侧类型 `AggregateCharSequenceError`。
@@ -312,7 +314,7 @@ impl AggregateCharSequence {
 
     /// 按字符内容比较任意 Java CharSequence。
     /// 对应 Java: `AggregateCharSequence#contentEquals()`。
-    pub fn content_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+    pub fn content_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
         if self.length != other.java_length()? {
             return Ok(false);
         }
@@ -365,7 +367,7 @@ impl AggregateCharSequence {
     }
 }
 
-impl JavaCharSequence for AggregateCharSequence {
+impl CharSequenceValue for AggregateCharSequence {
     fn java_sequence_class_name(&self) -> &str {
         "org.thymeleaf.util.AggregateCharSequence"
     }
@@ -398,7 +400,7 @@ impl JavaCharSequence for AggregateCharSequence {
         self.hash_code()
     }
 
-    fn java_sequence_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+    fn java_sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
         if other.java_sequence_class_name() != "org.thymeleaf.util.AggregateCharSequence"
             || self.length != other.java_length()?
         {

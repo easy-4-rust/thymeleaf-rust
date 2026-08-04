@@ -7,7 +7,7 @@ use crate::serializer::StandardSerializers;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
-    AbstractLazyCharSequence, IWritableCharSequence, JavaCharSequence, LazyCharSequenceResolver,
+    AbstractLazyCharSequence, CharSequenceValue, IWritableCharSequence, LazyCharSequenceResolver,
     TemplateWriter, TextUtilsError, Utf16String, ValidateError,
 };
 
@@ -74,7 +74,7 @@ pub(crate) fn escape_text_immediately(
     Ok(Utf16String::from_utf16(units))
 }
 
-impl JavaCharSequence for LazyEscapingCharSequence {
+impl CharSequenceValue for LazyEscapingCharSequence {
     fn java_sequence_class_name(&self) -> &str {
         "org.thymeleaf.util.LazyEscapingCharSequence"
     }

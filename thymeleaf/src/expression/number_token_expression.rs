@@ -4,7 +4,7 @@ use num_bigint::BigInt;
 use unicode_general_category::{GeneralCategory, get_general_category};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaBigDecimal, JavaNumber, Utf16String};
+use crate::util::{BigDecimalValue, NumberValue, Utf16String};
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -15,7 +15,7 @@ use super::{
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.NumberTokenExpression`。
 pub struct NumberTokenExpression {
-    value: JavaNumber,
+    value: NumberValue,
 }
 
 impl NumberTokenExpression {
@@ -30,10 +30,10 @@ impl NumberTokenExpression {
         })?;
         let text = String::from_utf16(value.as_utf16())
             .map_err(|error| Box::new(error) as crate::expression::StandardExpressionError)?;
-        let decimal = JavaBigDecimal::parse(&text)
+        let decimal = BigDecimalValue::parse(&text)
             .map_err(|error| Box::new(error) as crate::expression::StandardExpressionError)?;
         let number = if decimal.scale() > 0 {
-            JavaNumber::BigDecimal(decimal)
+            NumberValue::BigDecimal(decimal)
         } else {
             let plain = decimal.to_plain_string();
             let integer = BigInt::parse_bytes(plain.as_bytes(), 10).ok_or_else(|| {
@@ -42,14 +42,14 @@ impl NumberTokenExpression {
                     plain,
                 )) as crate::expression::StandardExpressionError
             })?;
-            JavaNumber::BigInteger(integer)
+            NumberValue::BigInteger(integer)
         };
         Ok(Self { value: number })
     }
 
     /// 返回保存的 Number。
     /// 对应 Java 语义：Java 接口/超类方法 `getValue()` 的 Rust 移植（`NumberTokenExpression` 继承路径）。
-    pub fn get_value(&self) -> &JavaNumber {
+    pub fn get_value(&self) -> &NumberValue {
         &self.value
     }
 
@@ -80,8 +80,8 @@ impl NumberTokenExpression {
 impl IStandardExpression for NumberTokenExpression {
     fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let text = match &self.value {
-            JavaNumber::BigDecimal(value) => value.to_plain_string(),
-            JavaNumber::BigInteger(value) => value.to_string(),
+            NumberValue::BigDecimal(value) => value.to_plain_string(),
+            NumberValue::BigInteger(value) => value.to_string(),
             _ => unreachable!("NumberTokenExpression only stores BigDecimal or BigInteger"),
         };
         Ok(Utf16String::from_rust_str(&text))

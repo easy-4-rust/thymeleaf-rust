@@ -49,7 +49,7 @@ impl AbstractStandardAssertionTagProcessor {
                         expression_processing_error("Could not execute assertion expression", error)
                     })?;
                     let evaluation_value = result.as_deref().map_or(
-                        crate::util::JavaEvaluationValue::Null,
+                        crate::util::EvaluationValue::Null,
                         crate::expression::TemplateValue::to_evaluation_value,
                     );
                     let assertion_valid = EvaluationUtils::evaluate_as_boolean(&evaluation_value)

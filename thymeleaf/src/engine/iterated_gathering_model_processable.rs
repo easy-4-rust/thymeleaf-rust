@@ -10,7 +10,7 @@ use crate::model::{
     ICDATASection, ICloseElementTag, IComment, IDocType, IModel, IOpenElementTag,
     IProcessingInstruction, IStandaloneElementTag, ITemplateEvent, IText, IXMLDeclaration,
 };
-use crate::util::{JavaCharSequence, JavaNumber, Utf16String};
+use crate::util::{CharSequenceValue, NumberValue, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::abstract_gathering_model_processable::AbstractGatheringModelProcessable;
@@ -635,7 +635,7 @@ fn compute_iterated_object(
         TemplateValue::Bytes(values) => (
             values
                 .iter()
-                .map(|value| Arc::new(TemplateValue::Number(JavaNumber::Byte(*value))))
+                .map(|value| Arc::new(TemplateValue::Number(NumberValue::Byte(*value))))
                 .collect(),
             Some(values.len() as i32),
             None,

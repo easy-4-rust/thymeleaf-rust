@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaNumber, Locale, StringUtils, Utf16String};
+use crate::util::{Locale, NumberValue, StringUtils, Utf16String};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -507,10 +507,10 @@ fn string_argument(value: &Option<Arc<TemplateValue>>) -> Option<Utf16String> {
 
 fn integer(value: &Option<Arc<TemplateValue>>) -> Result<i32, StringsError> {
     match value_ref(value) {
-        Some(TemplateValue::Number(JavaNumber::Byte(value))) => Ok(i32::from(*value)),
-        Some(TemplateValue::Number(JavaNumber::Short(value))) => Ok(i32::from(*value)),
-        Some(TemplateValue::Number(JavaNumber::Integer(value))) => Ok(*value),
-        Some(TemplateValue::Number(JavaNumber::Long(value))) => i32::try_from(*value)
+        Some(TemplateValue::Number(NumberValue::Byte(value))) => Ok(i32::from(*value)),
+        Some(TemplateValue::Number(NumberValue::Short(value))) => Ok(i32::from(*value)),
+        Some(TemplateValue::Number(NumberValue::Integer(value))) => Ok(*value),
+        Some(TemplateValue::Number(NumberValue::Long(value))) => i32::try_from(*value)
             .map_err(|_| StringsError::new("Numeric argument is outside Java int range")),
         _ => Err(StringsError::new("Argument is not a Java integer")),
     }
@@ -543,7 +543,7 @@ fn boolean_value(value: bool) -> Option<Arc<TemplateValue>> {
 }
 
 fn integer_value(value: i32) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(value))))
+    Some(Arc::new(TemplateValue::Number(NumberValue::Integer(value))))
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -585,7 +585,7 @@ fn contains_java_value(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateVa
 mod invoke_direct_tests {
     use super::Strings;
     use crate::expression::TemplateValue;
-    use crate::util::{JavaNumber, Locale, Utf16String};
+    use crate::util::{Locale, NumberValue, Utf16String};
     use std::sync::Arc;
 
     fn strings() -> Strings {
@@ -638,7 +638,7 @@ mod invoke_direct_tests {
                         "substring",
                         &[
                             text_arg("abcdef"),
-                            Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(2))))
+                            Some(Arc::new(TemplateValue::Number(NumberValue::Integer(2))))
                         ]
                     )
                     .expect("ok")

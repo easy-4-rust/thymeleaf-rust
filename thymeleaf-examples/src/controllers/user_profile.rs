@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::JavaDate;
+use thymeleaf::util::DateValue;
 use thymeleaf::web::IWebExchange;
 
 use super::{ControllerResult, GtvgController, build_web_context};
@@ -20,7 +20,7 @@ impl GtvgController for UserProfileController {
         &self,
         web_exchange: Arc<dyn IWebExchange>,
         template_engine: &TemplateEngine,
-        _now: JavaDate,
+        _now: DateValue,
     ) -> ControllerResult {
         let context = build_web_context(&web_exchange);
         Ok(template_engine.process_template("userprofile", &context)?)

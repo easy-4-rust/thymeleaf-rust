@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use super::{CharArrayWrapperSequence, JavaHashCode, TemplateWriter, Utf16String};
+use super::{CharArrayWrapperSequence, HashCodeValue, TemplateWriter, Utf16String};
 
 const CASE_MAP: &[u8] = include_bytes!("text_utils_case_map.bin");
 
@@ -103,7 +103,7 @@ impl Error for TextUtilsError {}
 /// 对应 Java: `java.lang.CharSequence`。该 Rust 扩展接口保留 `length()` 与
 /// `charAt(int)` 的调用次数、顺序、可变底层数据和运行时异常，避免将所有实现
 /// 提前复制成不可变字符串。
-pub trait JavaCharSequence: Send + Sync {
+pub trait CharSequenceValue: Send + Sync {
     /// 返回 Java 运行时类名；自定义适配器应覆盖为原对象的全限定类名。
     fn java_sequence_class_name(&self) -> &str {
         std::any::type_name::<Self>()
@@ -153,10 +153,10 @@ pub trait JavaCharSequence: Send + Sync {
     }
 
     /// 执行 Java `equals(Object)`；默认保留引用身份语义。
-    fn java_sequence_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+    fn java_sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
         Ok(std::ptr::eq(
             self as *const Self as *const (),
-            other as *const dyn JavaCharSequence as *const (),
+            other as *const dyn CharSequenceValue as *const (),
         ))
     }
 
@@ -183,7 +183,7 @@ pub trait JavaCharSequence: Send + Sync {
     }
 }
 
-impl JavaCharSequence for Utf16String {
+impl CharSequenceValue for Utf16String {
     fn java_sequence_class_name(&self) -> &str {
         "java.lang.String"
     }
@@ -219,7 +219,7 @@ impl JavaCharSequence for Utf16String {
         Ok(self.java_hash_code())
     }
 
-    fn java_sequence_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
+    fn java_sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
         Ok(other.as_utf16_string().is_some_and(|value| value == self))
     }
 
@@ -248,7 +248,7 @@ impl JavaCharSequence for Utf16String {
     }
 }
 
-impl JavaCharSequence for CharArrayWrapperSequence {
+impl CharSequenceValue for CharArrayWrapperSequence {
     fn java_length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.length())
     }
@@ -285,8 +285,8 @@ impl TextUtils {
     /// 完整 UTF-16 内容是否相等。
     pub fn equals_sequences(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
-        text2: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
+        text2: Option<&dyn CharSequenceValue>,
     ) -> Result<bool, TextUtilsError> {
         let text1 = require_sequence(text1, FIRST_TEXT_NULL)?;
         let text2 = require_sequence(text2, SECOND_TEXT_NULL)?;
@@ -317,7 +317,7 @@ impl TextUtils {
     /// 对应 Java 语义：`TextUtils` 的 `equals_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn equals_sequence_and_chars(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
         text2: Option<&[u16]>,
     ) -> Result<bool, TextUtilsError> {
         let text1_len = implicit_sequence_length(text1)?;
@@ -395,7 +395,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn equals_sequence_and_chars_range(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
         text1_offset: i32,
         text1_len: i32,
         text2: Option<&[u16]>,
@@ -427,10 +427,10 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn equals_sequences_range(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
         text1_offset: i32,
         text1_len: i32,
-        text2: Option<&dyn JavaCharSequence>,
+        text2: Option<&dyn CharSequenceValue>,
         text2_offset: i32,
         text2_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -460,8 +460,8 @@ impl TextUtils {
     /// 是否匹配指定前缀。
     pub fn starts_with_sequences(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
-        prefix: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
+        prefix: Option<&dyn CharSequenceValue>,
     ) -> Result<bool, TextUtilsError> {
         let text = require_sequence(text, TEXT_NULL)?;
         let prefix = require_sequence(prefix, PREFIX_NULL)?;
@@ -492,7 +492,7 @@ impl TextUtils {
     /// 对应 Java 语义：`TextUtils` 的 `starts_with_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn starts_with_sequence_and_chars(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         prefix: Option<&[u16]>,
     ) -> Result<bool, TextUtilsError> {
         let text_len = implicit_sequence_length(text)?;
@@ -563,7 +563,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn starts_with_sequence_and_chars_range(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
         prefix: Option<&[u16]>,
@@ -594,7 +594,7 @@ impl TextUtils {
         text: Option<&[u16]>,
         text_offset: i32,
         text_len: i32,
-        prefix: Option<&dyn JavaCharSequence>,
+        prefix: Option<&dyn CharSequenceValue>,
         prefix_offset: i32,
         prefix_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -619,10 +619,10 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn starts_with_sequences_range(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
-        prefix: Option<&dyn JavaCharSequence>,
+        prefix: Option<&dyn CharSequenceValue>,
         prefix_offset: i32,
         prefix_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -647,8 +647,8 @@ impl TextUtils {
     /// 是否匹配指定后缀。
     pub fn ends_with_sequences(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
-        suffix: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
+        suffix: Option<&dyn CharSequenceValue>,
     ) -> Result<bool, TextUtilsError> {
         let text = require_sequence(text, TEXT_NULL)?;
         let suffix = require_sequence(suffix, SUFFIX_NULL)?;
@@ -679,7 +679,7 @@ impl TextUtils {
     /// 对应 Java 语义：`TextUtils` 的 `ends_with_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn ends_with_sequence_and_chars(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         suffix: Option<&[u16]>,
     ) -> Result<bool, TextUtilsError> {
         let text_len = implicit_sequence_length(text)?;
@@ -750,7 +750,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn ends_with_sequence_and_chars_range(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
         suffix: Option<&[u16]>,
@@ -781,7 +781,7 @@ impl TextUtils {
         text: Option<&[u16]>,
         text_offset: i32,
         text_len: i32,
-        suffix: Option<&dyn JavaCharSequence>,
+        suffix: Option<&dyn CharSequenceValue>,
         suffix_offset: i32,
         suffix_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -806,10 +806,10 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn ends_with_sequences_range(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
-        suffix: Option<&dyn JavaCharSequence>,
+        suffix: Option<&dyn CharSequenceValue>,
         suffix_offset: i32,
         suffix_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -832,8 +832,8 @@ impl TextUtils {
     /// 是否包含指定片段。
     pub fn contains_sequences(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
-        fragment: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
+        fragment: Option<&dyn CharSequenceValue>,
     ) -> Result<bool, TextUtilsError> {
         let text = require_sequence(text, TEXT_NULL)?;
         let fragment = require_sequence(fragment, FRAGMENT_NULL)?;
@@ -865,7 +865,7 @@ impl TextUtils {
     /// 对应 Java 语义：`TextUtils` 的 `contains_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn contains_sequence_and_chars(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         fragment: Option<&[u16]>,
     ) -> Result<bool, TextUtilsError> {
         let text_len = implicit_sequence_length(text)?;
@@ -936,7 +936,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn contains_sequence_and_chars_range(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
         fragment: Option<&[u16]>,
@@ -967,7 +967,7 @@ impl TextUtils {
         text: Option<&[u16]>,
         text_offset: i32,
         text_len: i32,
-        fragment: Option<&dyn JavaCharSequence>,
+        fragment: Option<&dyn CharSequenceValue>,
         fragment_offset: i32,
         fragment_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -992,10 +992,10 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn contains_sequences_range(
         case_sensitive: bool,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
-        fragment: Option<&dyn JavaCharSequence>,
+        fragment: Option<&dyn CharSequenceValue>,
         fragment_offset: i32,
         fragment_len: i32,
     ) -> Result<bool, TextUtilsError> {
@@ -1018,8 +1018,8 @@ impl TextUtils {
     /// 精确字符差值或长度差值。
     pub fn compare_sequences(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
-        text2: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
+        text2: Option<&dyn CharSequenceValue>,
     ) -> Result<i32, TextUtilsError> {
         let text1 = require_sequence(text1, FIRST_TEXT_NULL)?;
         let text2 = require_sequence(text2, SECOND_TEXT_NULL)?;
@@ -1045,7 +1045,7 @@ impl TextUtils {
     /// 对应 Java 语义：`TextUtils` 的 `compare_sequence_and_chars` 行为（Rust 侧辅助/私有路径）。
     pub fn compare_sequence_and_chars(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
         text2: Option<&[u16]>,
     ) -> Result<i32, TextUtilsError> {
         let text1_len = implicit_sequence_length(text1)?;
@@ -1121,7 +1121,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn compare_sequence_and_chars_range(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
         text1_offset: i32,
         text1_len: i32,
         text2: Option<&[u16]>,
@@ -1149,10 +1149,10 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn compare_sequences_range(
         case_sensitive: bool,
-        text1: Option<&dyn JavaCharSequence>,
+        text1: Option<&dyn CharSequenceValue>,
         text1_offset: i32,
         text1_len: i32,
-        text2: Option<&dyn JavaCharSequence>,
+        text2: Option<&dyn CharSequenceValue>,
         text2_offset: i32,
         text2_len: i32,
     ) -> Result<i32, TextUtilsError> {
@@ -1212,7 +1212,7 @@ impl TextUtils {
     pub fn binary_search_chars_values_and_sequence(
         case_sensitive: bool,
         values: Option<&[Option<&[u16]>]>,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
     ) -> Result<i32, TextUtilsError> {
@@ -1238,7 +1238,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_chars(
         case_sensitive: bool,
-        values: Option<&[Option<&dyn JavaCharSequence>]>,
+        values: Option<&[Option<&dyn CharSequenceValue>]>,
         text: Option<&[u16]>,
         text_offset: i32,
         text_len: i32,
@@ -1265,8 +1265,8 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_sequence(
         case_sensitive: bool,
-        values: Option<&[Option<&dyn JavaCharSequence>]>,
-        text: Option<&dyn JavaCharSequence>,
+        values: Option<&[Option<&dyn CharSequenceValue>]>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
     ) -> Result<i32, TextUtilsError> {
@@ -1340,7 +1340,7 @@ impl TextUtils {
         values: Option<&[Option<&[u16]>]>,
         values_offset: i32,
         values_len: i32,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
     ) -> Result<i32, TextUtilsError> {
@@ -1382,7 +1382,7 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_chars_range(
         case_sensitive: bool,
-        values: Option<&[Option<&dyn JavaCharSequence>]>,
+        values: Option<&[Option<&dyn CharSequenceValue>]>,
         values_offset: i32,
         values_len: i32,
         text: Option<&[u16]>,
@@ -1428,10 +1428,10 @@ impl TextUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn binary_search_sequence_values_and_sequence_range(
         case_sensitive: bool,
-        values: Option<&[Option<&dyn JavaCharSequence>]>,
+        values: Option<&[Option<&dyn CharSequenceValue>]>,
         values_offset: i32,
         values_len: i32,
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         text_offset: i32,
         text_len: i32,
     ) -> Result<i32, TextUtilsError> {
@@ -1497,7 +1497,7 @@ impl TextUtils {
     /// # 返回
     /// 完整 UTF-16 内容哈希。
     /// 对应 Java 语义：`TextUtils` 的 `hash_sequence` 行为（Rust 侧辅助/私有路径）。
-    pub fn hash_sequence(text: Option<&dyn JavaCharSequence>) -> Result<i32, TextUtilsError> {
+    pub fn hash_sequence(text: Option<&dyn CharSequenceValue>) -> Result<i32, TextUtilsError> {
         hash_part_whole(0, text)
     }
 
@@ -1509,7 +1509,7 @@ impl TextUtils {
     /// 指定 UTF-16 范围哈希。
     /// 对应 Java 语义：`TextUtils` 的 `hash_sequence_range` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_sequence_range(
-        text: Option<&dyn JavaCharSequence>,
+        text: Option<&dyn CharSequenceValue>,
         begin_index: i32,
         end_index: i32,
     ) -> Result<i32, TextUtilsError> {
@@ -1524,8 +1524,8 @@ impl TextUtils {
     /// 不分配拼接字符串的等价哈希。
     /// 对应 Java 语义：`TextUtils` 的 `hash_pair` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_pair(
-        text0: Option<&dyn JavaCharSequence>,
-        text1: Option<&dyn JavaCharSequence>,
+        text0: Option<&dyn CharSequenceValue>,
+        text1: Option<&dyn CharSequenceValue>,
     ) -> Result<i32, TextUtilsError> {
         hash_part_whole(hash_part_whole(0, text0)?, text1)
     }
@@ -1538,9 +1538,9 @@ impl TextUtils {
     /// 不分配拼接字符串的等价哈希。
     /// 对应 Java 语义：`TextUtils` 的 `hash_triple` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_triple(
-        text0: Option<&dyn JavaCharSequence>,
-        text1: Option<&dyn JavaCharSequence>,
-        text2: Option<&dyn JavaCharSequence>,
+        text0: Option<&dyn CharSequenceValue>,
+        text1: Option<&dyn CharSequenceValue>,
+        text2: Option<&dyn CharSequenceValue>,
     ) -> Result<i32, TextUtilsError> {
         hash_part_whole(hash_part_whole(hash_part_whole(0, text0)?, text1)?, text2)
     }
@@ -1553,10 +1553,10 @@ impl TextUtils {
     /// 不分配拼接字符串的等价哈希。
     /// 对应 Java 语义：`TextUtils` 的 `hash_quadruple` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_quadruple(
-        text0: Option<&dyn JavaCharSequence>,
-        text1: Option<&dyn JavaCharSequence>,
-        text2: Option<&dyn JavaCharSequence>,
-        text3: Option<&dyn JavaCharSequence>,
+        text0: Option<&dyn CharSequenceValue>,
+        text1: Option<&dyn CharSequenceValue>,
+        text2: Option<&dyn CharSequenceValue>,
+        text3: Option<&dyn CharSequenceValue>,
     ) -> Result<i32, TextUtilsError> {
         hash_part_whole(
             hash_part_whole(hash_part_whole(hash_part_whole(0, text0)?, text1)?, text2)?,
@@ -1572,11 +1572,11 @@ impl TextUtils {
     /// 不分配拼接字符串的等价哈希。
     /// 对应 Java 语义：`TextUtils` 的 `hash_quintuple` 行为（Rust 侧辅助/私有路径）。
     pub fn hash_quintuple(
-        text0: Option<&dyn JavaCharSequence>,
-        text1: Option<&dyn JavaCharSequence>,
-        text2: Option<&dyn JavaCharSequence>,
-        text3: Option<&dyn JavaCharSequence>,
-        text4: Option<&dyn JavaCharSequence>,
+        text0: Option<&dyn CharSequenceValue>,
+        text1: Option<&dyn CharSequenceValue>,
+        text2: Option<&dyn CharSequenceValue>,
+        text3: Option<&dyn CharSequenceValue>,
+        text4: Option<&dyn CharSequenceValue>,
     ) -> Result<i32, TextUtilsError> {
         hash_part_whole(
             hash_part_whole(
@@ -1590,7 +1590,7 @@ impl TextUtils {
 
 #[derive(Clone, Copy)]
 enum TextRef<'a> {
-    Sequence(&'a dyn JavaCharSequence),
+    Sequence(&'a dyn CharSequenceValue),
     Chars(&'a [u16]),
 }
 
@@ -1604,9 +1604,9 @@ impl TextRef<'_> {
 }
 
 fn require_sequence<'a>(
-    sequence: Option<&'a dyn JavaCharSequence>,
+    sequence: Option<&'a dyn CharSequenceValue>,
     message: &'static str,
-) -> Result<&'a dyn JavaCharSequence, TextUtilsError> {
+) -> Result<&'a dyn CharSequenceValue, TextUtilsError> {
     sequence.ok_or(TextUtilsError::IllegalArgument { message })
 }
 
@@ -1618,7 +1618,7 @@ fn require_chars<'a>(
 }
 
 fn implicit_sequence_length(
-    sequence: Option<&dyn JavaCharSequence>,
+    sequence: Option<&dyn CharSequenceValue>,
 ) -> Result<i32, TextUtilsError> {
     sequence.ok_or(TextUtilsError::NullPointer)?.java_length()
 }
@@ -1638,8 +1638,8 @@ fn require_char_values<'a>(
 }
 
 fn require_sequence_values<'a>(
-    values: Option<&'a [Option<&'a dyn JavaCharSequence>]>,
-) -> Result<&'a [Option<&'a dyn JavaCharSequence>], TextUtilsError> {
+    values: Option<&'a [Option<&'a dyn CharSequenceValue>]>,
+) -> Result<&'a [Option<&'a dyn CharSequenceValue>], TextUtilsError> {
     values.ok_or(TextUtilsError::IllegalArgument {
         message: VALUES_NULL,
     })
@@ -1683,9 +1683,9 @@ fn char_value_at<'a>(
 }
 
 fn sequence_value_at<'a>(
-    values: &'a [Option<&'a dyn JavaCharSequence>],
+    values: &'a [Option<&'a dyn CharSequenceValue>],
     index: i32,
-) -> Result<Option<&'a dyn JavaCharSequence>, TextUtilsError> {
+) -> Result<Option<&'a dyn CharSequenceValue>, TextUtilsError> {
     let index_usize = match usize::try_from(index) {
         Ok(index_usize) => index_usize,
         Err(_) => {
@@ -1864,14 +1864,14 @@ fn compare_core(
     Ok(text1_len.wrapping_sub(text2_len))
 }
 
-fn hash_part_whole(hash: i32, text: Option<&dyn JavaCharSequence>) -> Result<i32, TextUtilsError> {
+fn hash_part_whole(hash: i32, text: Option<&dyn CharSequenceValue>) -> Result<i32, TextUtilsError> {
     let length = text.ok_or(TextUtilsError::NullPointer)?.java_length()?;
     hash_part_range(hash, text, 0, length)
 }
 
 fn hash_part_range(
     mut hash: i32,
-    text: Option<&dyn JavaCharSequence>,
+    text: Option<&dyn CharSequenceValue>,
     begin_index: i32,
     end_index: i32,
 ) -> Result<i32, TextUtilsError> {
@@ -1969,7 +1969,7 @@ mod tests {
     use std::sync::{Arc, RwLock};
 
     use super::{
-        JavaCharSequence, TextRef, TextUtils, TextUtilsError, Utf16String, char_value_at,
+        CharSequenceValue, TextRef, TextUtils, TextUtilsError, Utf16String, char_value_at,
         compare_core, contains_validated, ends_with_validated, equals_core, hash_part_range,
         hash_part_whole, sequence_value_at,
     };
@@ -1983,7 +1983,7 @@ mod tests {
         }
     }
 
-    impl JavaCharSequence for PlainSequence {
+    impl CharSequenceValue for PlainSequence {
         fn java_length(&self) -> Result<i32, TextUtilsError> {
             Ok(self.0.len() as i32)
         }
@@ -1999,7 +1999,7 @@ mod tests {
 
     struct LengthFailure;
 
-    impl JavaCharSequence for LengthFailure {
+    impl CharSequenceValue for LengthFailure {
         fn java_length(&self) -> Result<i32, TextUtilsError> {
             Err(dynamic_error())
         }
@@ -2015,7 +2015,7 @@ mod tests {
 
     struct CharFailure;
 
-    impl JavaCharSequence for CharFailure {
+    impl CharSequenceValue for CharFailure {
         fn java_length(&self) -> Result<i32, TextUtilsError> {
             Ok(1)
         }
@@ -2308,7 +2308,7 @@ mod tests {
         let c = java("c");
         let e = java("e");
         let char_values = [Some(a.as_utf16()), Some(c.as_utf16()), Some(e.as_utf16())];
-        let sequence_values: [Option<&dyn JavaCharSequence>; 3] = [Some(&a), Some(&c), Some(&e)];
+        let sequence_values: [Option<&dyn CharSequenceValue>; 3] = [Some(&a), Some(&c), Some(&e)];
         for key in ["0", "b", "c", "d", "z"] {
             let key = java(key);
             let char_result = TextUtils::binary_search_chars_values_and_chars(
@@ -2361,7 +2361,7 @@ mod tests {
             )
             .is_err()
         );
-        let empty_sequences: [Option<&dyn JavaCharSequence>; 0] = [];
+        let empty_sequences: [Option<&dyn CharSequenceValue>; 0] = [];
         assert!(
             TextUtils::binary_search_sequence_values_and_sequence_range(
                 true,
@@ -2416,7 +2416,7 @@ mod tests {
             )
             .is_err()
         );
-        let one_sequence_value: [Option<&dyn JavaCharSequence>; 1] = [Some(&a)];
+        let one_sequence_value: [Option<&dyn CharSequenceValue>; 1] = [Some(&a)];
         assert!(
             TextUtils::binary_search_sequence_values_and_chars_range(
                 true,
@@ -2769,7 +2769,7 @@ mod tests {
         assert!(TextUtils::compare_sequences_range(false, Some(&good), 0, 1, None, 0, 1).is_err());
 
         let char_values = [Some(chars.as_slice())];
-        let sequence_values: [Option<&dyn JavaCharSequence>; 1] = [Some(&good)];
+        let sequence_values: [Option<&dyn CharSequenceValue>; 1] = [Some(&good)];
         assert!(
             TextUtils::binary_search_chars_values_and_chars_range(
                 false,
@@ -2866,7 +2866,7 @@ mod tests {
             )
             .is_err()
         );
-        let failing_values: [Option<&dyn JavaCharSequence>; 1] = [Some(&length_failure)];
+        let failing_values: [Option<&dyn CharSequenceValue>; 1] = [Some(&length_failure)];
         assert!(
             TextUtils::binary_search_sequence_values_and_chars(
                 false,
@@ -2913,7 +2913,7 @@ mod tests {
             )
             .is_err()
         );
-        let empty_sequence_values: [Option<&dyn JavaCharSequence>; 0] = [];
+        let empty_sequence_values: [Option<&dyn CharSequenceValue>; 0] = [];
         assert!(
             TextUtils::binary_search_sequence_values_and_chars_range(
                 false,

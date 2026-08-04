@@ -21,7 +21,7 @@ use thymeleaf::processor::{
     AbstractStandardConditionalVisibilityTagProcessor,
     AbstractStandardExpressionAttributeTagProcessor, IProcessor,
 };
-use thymeleaf::util::{EvaluationUtils, JavaEvaluationValue, Utf16String};
+use thymeleaf::util::{EvaluationUtils, EvaluationValue, Utf16String};
 
 use crate::expression_object::read_authentication;
 
@@ -171,10 +171,9 @@ fn evaluate_expression_as_boolean(
     let result = expression.execute(context).map_err(|error| {
         expression_processing_error("Could not execute Standard Expression", error)
     })?;
-    let evaluation_value = result.as_deref().map_or(
-        JavaEvaluationValue::Null,
-        TemplateValue::to_evaluation_value,
-    );
+    let evaluation_value = result
+        .as_deref()
+        .map_or(EvaluationValue::Null, TemplateValue::to_evaluation_value);
     EvaluationUtils::evaluate_as_boolean(&evaluation_value).map_err(|error| {
         Box::new(TemplateProcessingException::with_cause(
             Some("Could not evaluate Standard Expression as boolean".to_owned()),

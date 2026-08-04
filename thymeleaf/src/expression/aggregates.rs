@@ -1,4 +1,6 @@
-use crate::util::{AggregateError, AggregateUtils, JavaBigDecimal, JavaNumber, JavaNumberIterable};
+use crate::util::{
+    AggregateError, AggregateUtils, BigDecimalValue, NumberIterableValue, NumberValue,
+};
 
 /// Thymeleaf `#aggregates` 表达式对象。
 ///
@@ -21,16 +23,16 @@ impl Aggregates {
     /// 求 iterable 数字之和。对应 Java: `Aggregates#sum(Iterable)`。
     pub fn sum_iterable(
         &self,
-        target: Option<&dyn JavaNumberIterable>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&dyn NumberIterableValue>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_iterable(target)
     }
 
     /// 求 `Number[]` 数字之和。对应 Java: `Aggregates#sum(Number[])`。
     pub fn sum_numbers(
         &self,
-        target: Option<&[Option<JavaNumber>]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&[Option<NumberValue>]>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_numbers(target)
     }
 
@@ -38,7 +40,7 @@ impl Aggregates {
     pub fn sum_bytes(
         &self,
         target: Option<&[i8]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_bytes(target)
     }
 
@@ -46,7 +48,7 @@ impl Aggregates {
     pub fn sum_shorts(
         &self,
         target: Option<&[i16]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_shorts(target)
     }
 
@@ -54,7 +56,7 @@ impl Aggregates {
     pub fn sum_ints(
         &self,
         target: Option<&[i32]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_ints(target)
     }
 
@@ -62,7 +64,7 @@ impl Aggregates {
     pub fn sum_longs(
         &self,
         target: Option<&[i64]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_longs(target)
     }
 
@@ -70,7 +72,7 @@ impl Aggregates {
     pub fn sum_floats(
         &self,
         target: Option<&[f32]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_floats(target)
     }
 
@@ -78,23 +80,23 @@ impl Aggregates {
     pub fn sum_doubles(
         &self,
         target: Option<&[f64]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::sum_doubles(target)
     }
 
     /// 求 iterable 数字平均值。对应 Java: `Aggregates#avg(Iterable)`。
     pub fn avg_iterable(
         &self,
-        target: Option<&dyn JavaNumberIterable>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&dyn NumberIterableValue>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_iterable(target)
     }
 
     /// 求 `Number[]` 数字平均值。对应 Java: `Aggregates#avg(Number[])`。
     pub fn avg_numbers(
         &self,
-        target: Option<&[Option<JavaNumber>]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+        target: Option<&[Option<NumberValue>]>,
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_numbers(target)
     }
 
@@ -102,7 +104,7 @@ impl Aggregates {
     pub fn avg_bytes(
         &self,
         target: Option<&[i8]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_bytes(target)
     }
 
@@ -110,7 +112,7 @@ impl Aggregates {
     pub fn avg_shorts(
         &self,
         target: Option<&[i16]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_shorts(target)
     }
 
@@ -118,7 +120,7 @@ impl Aggregates {
     pub fn avg_ints(
         &self,
         target: Option<&[i32]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_ints(target)
     }
 
@@ -126,7 +128,7 @@ impl Aggregates {
     pub fn avg_longs(
         &self,
         target: Option<&[i64]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_longs(target)
     }
 
@@ -134,7 +136,7 @@ impl Aggregates {
     pub fn avg_floats(
         &self,
         target: Option<&[f32]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_floats(target)
     }
 
@@ -142,14 +144,14 @@ impl Aggregates {
     pub fn avg_doubles(
         &self,
         target: Option<&[f64]>,
-    ) -> Result<Option<JavaBigDecimal>, AggregateError> {
+    ) -> Result<Option<BigDecimalValue>, AggregateError> {
         AggregateUtils::avg_doubles(target)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::util::{AggregateError, JavaBigDecimal, JavaNumber, JavaNumberList};
+    use crate::util::{AggregateError, BigDecimalValue, NumberListValue, NumberValue};
 
     use super::Aggregates;
 
@@ -159,8 +161,8 @@ mod tests {
         let default = Aggregates;
         assert_eq!(format!("{aggregates:?}"), format!("{default:?}"));
 
-        let numbers = [Some(JavaNumber::Integer(1)), Some(JavaNumber::Integer(2))];
-        let iterable_numbers = JavaNumberList::new(numbers.to_vec());
+        let numbers = [Some(NumberValue::Integer(1)), Some(NumberValue::Integer(2))];
+        let iterable_numbers = NumberListValue::new(numbers.to_vec());
         assert_eq!(
             aggregates
                 .sum_iterable(Some(&iterable_numbers))
@@ -220,7 +222,7 @@ mod tests {
         assert_eq!(aggregates.avg_ints(Some(&[])).expect("empty"), None);
     }
 
-    fn render(result: Result<Option<JavaBigDecimal>, AggregateError>) -> String {
+    fn render(result: Result<Option<BigDecimalValue>, AggregateError>) -> String {
         result.expect("aggregate").expect("value").to_string()
     }
 }

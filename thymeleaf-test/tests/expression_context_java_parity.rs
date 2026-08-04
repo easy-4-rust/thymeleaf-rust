@@ -38,11 +38,11 @@ fn ctx_var(name: &str, value: &str) -> Context {
 }
 
 fn ctx_num(name: &str, value: i64) -> Context {
-    use thymeleaf::util::JavaNumber;
+    use thymeleaf::util::NumberValue;
     let ctx = Context::new();
     ctx.set_variable(
         Some(Utf16String::from_rust_str(name)),
-        Some(Arc::new(TemplateValue::Number(JavaNumber::Long(value)))),
+        Some(Arc::new(TemplateValue::Number(NumberValue::Long(value)))),
     );
     ctx
 }

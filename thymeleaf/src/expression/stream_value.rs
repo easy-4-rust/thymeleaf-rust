@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::util::{JavaNumber, Utf16String};
+use crate::util::{NumberValue, Utf16String};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -59,7 +59,7 @@ impl TemplateObject for StreamValue {
                         .into())
                 },
                 |values| {
-                    Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Long(
+                    Ok(Some(Arc::new(TemplateValue::Number(NumberValue::Long(
                         values.len() as i64,
                     )))))
                 },

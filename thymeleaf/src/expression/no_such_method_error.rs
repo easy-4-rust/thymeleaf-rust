@@ -4,11 +4,11 @@ use std::fmt::{Display, Formatter};
 ///
 /// 对应 Java: `java.lang.NoSuchMethodException`。
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct NoSuchMethodException {
+pub struct NoSuchMethodError {
     message: String,
 }
 
-impl NoSuchMethodException {
+impl NoSuchMethodError {
     /// 创建包含目标类与方法信息的异常。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
@@ -17,10 +17,10 @@ impl NoSuchMethodException {
     }
 }
 
-impl Display for NoSuchMethodException {
+impl Display for NoSuchMethodError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(&self.message)
     }
 }
 
-impl std::error::Error for NoSuchMethodException {}
+impl std::error::Error for NoSuchMethodError {}

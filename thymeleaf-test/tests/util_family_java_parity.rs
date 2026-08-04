@@ -18,7 +18,7 @@
 use std::sync::Arc;
 
 use thymeleaf::util::{
-    AggregateCharSequence, JavaCharSequence, JavaHashCode, TextUtils, Utf16String,
+    AggregateCharSequence, CharSequenceValue, HashCodeValue, TextUtils, Utf16String,
 };
 
 fn js(value: &str) -> Utf16String {

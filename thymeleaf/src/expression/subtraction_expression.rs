@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaNumber, Utf16String, ValidateError};
+use crate::util::{NumberValue, Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
@@ -59,7 +59,7 @@ impl IStandardExpression for SubtractionExpression {
             evaluate_as_number(Some(&right))?,
         ) {
             return Ok(Some(Arc::new(TemplateValue::Number(
-                JavaNumber::BigDecimal(left_number.subtract_java(&right_number)),
+                NumberValue::BigDecimal(left_number.subtract_java(&right_number)),
             ))));
         }
         Err(Box::new(TemplateProcessingException::new(Some(format!(
