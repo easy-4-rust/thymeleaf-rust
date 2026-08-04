@@ -47,7 +47,7 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
     ),
     "org.thymeleaf.templateparser.text.TextParserTest": (
         "src/text/text_parser.rs",
-        "java_golden_matches_streaming_parser_pool_and_failure_semantics",
+        "golden_matches_streaming_parser_pool_and_failure_semantics",
     ),
     "org.thymeleaf.templateresolver.TemplateResolverAttributesTest": (
         "tests/template_resolution_java_parity.rs",
@@ -127,11 +127,11 @@ DIRECT_EVIDENCE: dict[str, tuple[str, str]] = {
     ),
     "org.thymeleaf.templateparser.reader.ParserLevelCommentTextReaderTest": (
         "src/reader/block_aware_reader.rs",
-        "java_golden_matches_text_comment_reader_streaming_contract",
+        "golden_matches_text_comment_reader_streaming_contract",
     ),
     "org.thymeleaf.templateparser.reader.PrototypeOnlyCommentTextReaderTest": (
         "src/reader/block_aware_reader.rs",
-        "java_golden_matches_text_comment_reader_streaming_contract",
+        "golden_matches_text_comment_reader_streaming_contract",
     ),
 }
 

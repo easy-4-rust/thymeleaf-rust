@@ -9087,7 +9087,7 @@
         {
           "kind": "RUST_TEST",
           "path": "thymeleaf/src/reader/block_aware_reader.rs",
-          "marker": "java_golden_matches_text_comment_reader_streaming_contract"
+          "marker": "golden_matches_text_comment_reader_streaming_contract"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -9108,7 +9108,7 @@
         {
           "kind": "RUST_TEST",
           "path": "thymeleaf/src/reader/block_aware_reader.rs",
-          "marker": "java_golden_matches_text_comment_reader_streaming_contract"
+          "marker": "golden_matches_text_comment_reader_streaming_contract"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -9171,7 +9171,7 @@
         {
           "kind": "RUST_TEST",
           "path": "thymeleaf/src/reader/block_aware_reader.rs",
-          "marker": "java_golden_matches_text_comment_reader_streaming_contract"
+          "marker": "golden_matches_text_comment_reader_streaming_contract"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -9192,7 +9192,7 @@
         {
           "kind": "RUST_TEST",
           "path": "thymeleaf/src/reader/block_aware_reader.rs",
-          "marker": "java_golden_matches_text_comment_reader_streaming_contract"
+          "marker": "golden_matches_text_comment_reader_streaming_contract"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
@@ -9213,7 +9213,7 @@
         {
           "kind": "RUST_TEST",
           "path": "thymeleaf/src/text/text_parser.rs",
-          "marker": "java_golden_matches_streaming_parser_pool_and_failure_semantics"
+          "marker": "golden_matches_streaming_parser_pool_and_failure_semantics"
         }
       ],
       "rationale": "Java 测试由同对象 Rust 合同测试或固定 Java Golden 逐记录验证。"
