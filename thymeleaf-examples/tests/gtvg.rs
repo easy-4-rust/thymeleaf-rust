@@ -50,6 +50,13 @@ fn exchange_for(path: &str, parameters: &[(&str, &str)]) -> Arc<dyn IWebExchange
 }
 
 fn render(controller: &dyn GtvgController, path: &str, parameters: &[(&str, &str)]) -> String {
+    // 固定进程默认 Locale（对应 Java CI 的 -Duser.language=en 等价语义）：CI 各平台
+    // LANG 不同（ubuntu C.UTF-8 / macOS en_US.UTF-8），不固定时 macOS 会命中
+    // home_en.properties 变体，破坏 "(from default messages)" 的默认消息回退断言。
+    JavaLocale::set_default(JavaLocale::new(
+        Utf16String::from_rust_str("C"),
+        Utf16String::from_rust_str(""),
+    ));
     let engine = build_template_engine();
     controller
         .process(exchange_for(path, parameters), &engine, fixed_today())

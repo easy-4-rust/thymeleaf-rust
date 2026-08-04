@@ -39,11 +39,14 @@ impl ExpressionUtils {
     #[must_use]
     pub fn is_type_forbidden(type_name: &str) -> bool {
         let normalized = Self::normalize(Some(type_name), false).expect("non-null");
-        if !is_type_blocked_for_type_reference(&normalized) {
-            return false;
+        if is_type_blocked_for_type_reference(&normalized) {
+            return !ALLOWED_JAVA_CLASS_NAMES.contains(&normalized.as_str())
+                && !ALLOWED_JAVA_SUPERS_NAMES.contains(&normalized.as_str());
         }
-        !ALLOWED_JAVA_CLASS_NAMES.contains(&normalized.as_str())
-            && !ALLOWED_JAVA_SUPERS_NAMES.contains(&normalized.as_str())
+        // 安全模型（比 Java 上游更严格）：非封禁前缀的任意类型也一律禁止，仅受信
+        // 前缀（java.time.* / org.thymeleaf.*）放行。上游依赖反射，由 ClassResolver
+        // 兜底任意解析；Rust 无反射，类型门禁即最终防线，必须默认拒绝。
+        !is_trusted_type_reference(&normalized)
     }
 
     /// 判断类型名是否位于精确的 `java.` 根包。
@@ -89,13 +92,17 @@ impl ExpressionUtils {
     /// 对应 Java: `ExpressionUtils#isMemberForbidden()`。
     #[must_use]
     pub fn is_member_forbidden(target: Option<&dyn TemplateObject>, member_name: &str) -> bool {
-        let Some(target) = target else {
-            return false;
-        };
         let normalized = Self::normalize(Some(member_name), false).expect("non-null");
         if matches!(normalized.as_str(), "getClass" | "toString") {
             return false;
         }
+        let Some(target) = target else {
+            // 无目标（类级/静态上下文）：仅 Object 基础方法与类反射白名单可调用。
+            // 对应 Java 语义：上游 target==null 直接放行；Rust 安全模型收紧为
+            // 默认拒绝（危险方法 loadClass/exec 等不得在无目标上下文出现）。
+            return !ALLOWED_CLASS_METHODS.contains(&normalized.as_str())
+                && !matches!(normalized.as_str(), "hashCode" | "equals" | "compareTo");
+        };
         let class_name = target.java_class_name();
         if class_name == "java.lang.Class" {
             return !ALLOWED_CLASS_METHODS.contains(&normalized.as_str());
@@ -260,6 +267,19 @@ fn is_type_blocked_for_type_reference(type_name: &str) -> bool {
         || BLOCKED_TYPE_REFERENCE_PACKAGE_NAME_PREFIXES
             .iter()
             .any(|prefix| type_name.starts_with(prefix))
+}
+
+/// 判断类型引用是否位于受信前缀下（非封禁前缀包中仍可引用的类型）。
+///
+/// 对应 Java 语义：Java 侧无直接对应——上游 `isTypeForbidden` 对非封禁前缀类型
+/// 一律放行（依赖反射运行时兜底）；Rust 无反射，受信前缀即为白名单之外唯一
+/// 放行面：`java.time.*`（模板时间类型，corpus `@java.time.LocalDateTime@` 等）
+/// 与 `org.thymeleaf.*`（本框架类型，corpus `@org.thymeleaf.expression.Strings@` 等）。
+fn is_trusted_type_reference(type_name: &str) -> bool {
+    ALLOWED_ALL_PURPOSES_PACKAGE_NAME_PREFIXES
+        .iter()
+        .any(|prefix| type_name.starts_with(prefix))
+        || type_name.starts_with("org.thymeleaf.")
 }
 
 fn allowed_super_member(class_name: &str, member_name: &str) -> bool {
