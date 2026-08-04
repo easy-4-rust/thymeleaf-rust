@@ -34,7 +34,7 @@ use crate::serializer::{
     IStandardCSSSerializer, IStandardJavaScriptSerializer, StandardCSSSerializer,
     StandardJavaScriptSerializer, StandardSerializers,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use crate::dialect::{
     AbstractProcessorDialect, ExecutionAttributeMap, IDialect, IExecutionAttributeDialect,
@@ -162,7 +162,7 @@ impl StandardDialect {
     pub fn create_standard_processors_set(
         dialect_prefix: Option<&str>,
     ) -> Result<ProcessorSet, TemplateProcessingException> {
-        let prefix = dialect_prefix.map(JavaString::from_rust_str);
+        let prefix = dialect_prefix.map(Utf16String::from_rust_str);
         let mut processors = ProcessorSet::new();
 
         register_markup_processors(&mut processors, TemplateMode::HTML, prefix.clone(), true)?;
@@ -309,7 +309,7 @@ where
 fn register_markup_processors(
     processors: &mut ProcessorSet,
     mode: TemplateMode,
-    prefix: Option<JavaString>,
+    prefix: Option<Utf16String>,
     html: bool,
 ) -> Result<(), TemplateProcessingException> {
     insert(
@@ -414,7 +414,7 @@ fn register_markup_processors(
         StandardBlockTagProcessor::new(
             mode,
             prefix,
-            JavaString::from_rust_str(StandardBlockTagProcessor::ELEMENT_NAME),
+            Utf16String::from_rust_str(StandardBlockTagProcessor::ELEMENT_NAME),
         )?,
     );
     insert(processors, StandardInliningTextProcessor::new(mode)?);
@@ -432,7 +432,7 @@ fn register_markup_processors(
 
 fn register_html_only_processors(
     processors: &mut ProcessorSet,
-    prefix: Option<JavaString>,
+    prefix: Option<Utf16String>,
 ) -> Result<(), TemplateProcessingException> {
     insert(processors, StandardActionTagProcessor::new(prefix.clone())?);
     insert(
@@ -448,7 +448,7 @@ fn register_html_only_processors(
             processors,
             StandardConditionalFixedValueTagProcessor::new(
                 prefix.clone(),
-                JavaString::from_rust_str(name),
+                Utf16String::from_rust_str(name),
             )?,
         );
     }
@@ -457,7 +457,7 @@ fn register_html_only_processors(
             processors,
             StandardDOMEventAttributeTagProcessor::new(
                 prefix.clone(),
-                JavaString::from_rust_str(name),
+                Utf16String::from_rust_str(name),
             )?,
         );
     }
@@ -472,7 +472,7 @@ fn register_html_only_processors(
             processors,
             StandardNonRemovableAttributeTagProcessor::new(
                 prefix.clone(),
-                JavaString::from_rust_str(name),
+                Utf16String::from_rust_str(name),
             )?,
         );
     }
@@ -481,7 +481,7 @@ fn register_html_only_processors(
             processors,
             StandardRemovableAttributeTagProcessor::new(
                 prefix.clone(),
-                JavaString::from_rust_str(name),
+                Utf16String::from_rust_str(name),
             )?,
         );
     }
@@ -508,7 +508,7 @@ fn register_html_only_processors(
 fn register_textual_processors(
     processors: &mut ProcessorSet,
     mode: TemplateMode,
-    prefix: Option<JavaString>,
+    prefix: Option<Utf16String>,
 ) -> Result<(), TemplateProcessingException> {
     insert(
         processors,
@@ -571,12 +571,12 @@ fn register_textual_processors(
         StandardBlockTagProcessor::new(
             mode,
             prefix.clone(),
-            JavaString::from_rust_str(StandardBlockTagProcessor::ELEMENT_NAME),
+            Utf16String::from_rust_str(StandardBlockTagProcessor::ELEMENT_NAME),
         )?,
     );
     insert(
         processors,
-        StandardBlockTagProcessor::new(mode, None, JavaString::from_rust_str(""))?,
+        StandardBlockTagProcessor::new(mode, None, Utf16String::from_rust_str(""))?,
     );
     insert(processors, StandardInliningTextProcessor::new(mode)?);
     insert(

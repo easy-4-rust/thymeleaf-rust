@@ -16,7 +16,7 @@ use crate::processinginstruction::IProcessingInstructionStructureHandler;
 use crate::processor::AbstractProcessorAdapter;
 use crate::templateboundaries::ITemplateBoundariesStructureHandler;
 use crate::text::ITextStructureHandler;
-use crate::util::{JavaCharSequence, JavaString, JavaWriter, ValidateError};
+use crate::util::{JavaCharSequence, JavaWriter, Utf16String, ValidateError};
 use crate::xmldeclaration::IXMLDeclarationStructureHandler;
 
 use super::Text;
@@ -52,7 +52,7 @@ fn emit_text(output: &mut String) {
     let mut handler = TextStructureHandler::new();
     emit(output, "text.new", text_state(&handler));
 
-    let sequence: Arc<dyn JavaCharSequence> = Arc::new(JavaString::from_rust_str("alpha"));
+    let sequence: Arc<dyn JavaCharSequence> = Arc::new(Utf16String::from_rust_str("alpha"));
     handler.set_text_sequence(Arc::clone(&sequence));
     let stored = handler
         .set_text_value
@@ -146,9 +146,9 @@ fn emit_doc_type(output: &mut String) {
         handler.set_doc_type_nullable(
             None,
             None,
-            Some(JavaString::from_rust_str("public")),
-            Some(JavaString::from_rust_str("system")),
-            Some(JavaString::from_rust_str("subset")),
+            Some(Utf16String::from_rust_str("public")),
+            Some(Utf16String::from_rust_str("system")),
+            Some(Utf16String::from_rust_str("subset")),
         ),
     );
     emit(
@@ -162,11 +162,11 @@ fn emit_doc_type(output: &mut String) {
         output,
         "doctype.element.null",
         handler.set_doc_type_nullable(
-            Some(JavaString::from_rust_str("DOCTYPE")),
+            Some(Utf16String::from_rust_str("DOCTYPE")),
             None,
-            Some(JavaString::from_rust_str("public")),
-            Some(JavaString::from_rust_str("system")),
-            Some(JavaString::from_rust_str("subset")),
+            Some(Utf16String::from_rust_str("public")),
+            Some(Utf16String::from_rust_str("system")),
+            Some(Utf16String::from_rust_str("subset")),
         ),
     );
     emit(
@@ -177,8 +177,8 @@ fn emit_doc_type(output: &mut String) {
 
     handler
         .set_doc_type_nullable(
-            Some(JavaString::from_rust_str("DOCTYPE")),
-            Some(JavaString::from_rust_str("html")),
+            Some(Utf16String::from_rust_str("DOCTYPE")),
+            Some(Utf16String::from_rust_str("html")),
             None,
             None,
             None,
@@ -190,8 +190,8 @@ fn emit_doc_type(output: &mut String) {
         format!(
             "{},keyword={},element={},public=null,system=null,subset=null",
             doc_type_state(&handler),
-            java_string(handler.set_doc_type_keyword.as_ref()),
-            java_string(handler.set_doc_type_element_name.as_ref())
+            utf16_string(handler.set_doc_type_keyword.as_ref()),
+            utf16_string(handler.set_doc_type_element_name.as_ref())
         ),
     );
 }
@@ -214,7 +214,7 @@ fn emit_processing_instruction(output: &mut String) {
     emit_validate_error(
         output,
         "pi.content.null",
-        handler.set_processing_instruction_nullable(Some(JavaString::from_rust_str("xml")), None),
+        handler.set_processing_instruction_nullable(Some(Utf16String::from_rust_str("xml")), None),
     );
     emit(
         output,
@@ -224,8 +224,8 @@ fn emit_processing_instruction(output: &mut String) {
 
     handler
         .set_processing_instruction_nullable(
-            Some(JavaString::from_rust_str("xml")),
-            Some(JavaString::from_rust_str("content")),
+            Some(Utf16String::from_rust_str("xml")),
+            Some(Utf16String::from_rust_str("content")),
         )
         .expect("valid processing instruction");
     emit(
@@ -234,8 +234,8 @@ fn emit_processing_instruction(output: &mut String) {
         format!(
             "{},target={},content={}",
             processing_instruction_state(&handler),
-            java_string(handler.set_processing_instruction_target.as_ref()),
-            java_string(handler.set_processing_instruction_content.as_ref())
+            utf16_string(handler.set_processing_instruction_target.as_ref()),
+            utf16_string(handler.set_processing_instruction_content.as_ref())
         ),
     );
 }
@@ -248,9 +248,9 @@ fn emit_xml_declaration(output: &mut String) {
         "xml.keyword.null",
         handler.set_xml_declaration_nullable(
             None,
-            Some(JavaString::from_rust_str("1.0")),
-            Some(JavaString::from_rust_str("UTF-8")),
-            Some(JavaString::from_rust_str("yes")),
+            Some(Utf16String::from_rust_str("1.0")),
+            Some(Utf16String::from_rust_str("UTF-8")),
+            Some(Utf16String::from_rust_str("yes")),
         ),
     );
     emit(
@@ -260,7 +260,7 @@ fn emit_xml_declaration(output: &mut String) {
     );
 
     handler
-        .set_xml_declaration_nullable(Some(JavaString::from_rust_str("xml")), None, None, None)
+        .set_xml_declaration_nullable(Some(Utf16String::from_rust_str("xml")), None, None, None)
         .expect("valid XML declaration");
     emit(
         output,
@@ -268,7 +268,7 @@ fn emit_xml_declaration(output: &mut String) {
         format!(
             "{},keyword={},version=null,encoding=null,standalone=null",
             xml_declaration_state(&handler),
-            java_string(handler.set_xml_declaration_keyword.as_ref())
+            utf16_string(handler.set_xml_declaration_keyword.as_ref())
         ),
     );
 }
@@ -289,7 +289,7 @@ fn emit_template_boundaries(output: &mut String) {
         |name| {
             context_calls.borrow_mut().push(format!(
                 "removeVariable:{}",
-                name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
             ));
         },
         |selection_target| {
@@ -315,14 +315,14 @@ fn emit_template_boundaries(output: &mut String) {
         format!("[{}]", context_calls.borrow().join(", ")),
     );
 
-    handler.insert_text(JavaString::from_rust_str("before"), true);
+    handler.insert_text(Utf16String::from_rust_str("before"), true);
     emit(
         output,
         "boundary.text",
         format!(
             "{},text={},processable={}",
             boundary_state(&handler),
-            java_string(handler.insert_text_value.as_ref()),
+            utf16_string(handler.insert_text_value.as_ref()),
             handler.insert_text_processable
         ),
     );
@@ -377,7 +377,7 @@ fn emit_abstract_processor_exceptions(output: &mut String) {
     )
     .expect("valid abstract processor");
 
-    let no_location_event = Text::new(Some(Arc::new(JavaString::from_rust_str("x"))));
+    let no_location_event = Text::new(Some(Arc::new(Utf16String::from_rust_str("x"))));
     let no_location = Box::new(TemplateProcessingException::new(Some("plain".to_owned())));
     let no_location_identity = (&*no_location as *const TemplateProcessingException).cast::<()>();
     let mut returned = adapter
@@ -400,8 +400,8 @@ fn emit_abstract_processor_exceptions(output: &mut String) {
     );
 
     let located_event = Text::with_location(
-        Some(Arc::new(JavaString::from_rust_str("x"))),
-        Some(JavaString::from_rust_str("page.html")),
+        Some(Arc::new(Utf16String::from_rust_str("x"))),
+        Some(Utf16String::from_rust_str("page.html")),
         7,
         11,
     );
@@ -551,8 +551,8 @@ fn emit_validate_error(output: &mut String, key: &str, result: Result<(), Valida
     }
 }
 
-fn java_string(value: Option<&JavaString>) -> String {
-    value.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+fn utf16_string(value: Option<&Utf16String>) -> String {
+    value.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
 }
 
 fn emit(output: &mut String, key: &str, value: impl std::fmt::Display) {

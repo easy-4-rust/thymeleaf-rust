@@ -6,7 +6,7 @@ use crate::engine::AttributeName;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{StandardExpressions, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::{EvaluationUtils, JavaEvaluationValue, JavaString};
+use crate::util::{EvaluationUtils, JavaEvaluationValue, Utf16String};
 
 use crate::element::IElementTagStructureHandler;
 
@@ -18,7 +18,7 @@ pub(crate) type StandardAttributeCallback = Box<
             &dyn ITemplateContext,
             &dyn IProcessableElementTag,
             &AttributeName,
-            Option<JavaString>,
+            Option<Utf16String>,
             &mut dyn IElementTagStructureHandler,
         ) -> Result<(), Box<dyn TemplateEngineException>>
         + Send
@@ -73,7 +73,7 @@ impl Error for StandardExpressionCause {
 
 /// 判断 Java `StringUtils.isEmptyOrWhitespace` 所定义的空白文本。
 /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-pub(crate) fn is_empty_or_java_whitespace(value: Option<&JavaString>) -> bool {
+pub(crate) fn is_empty_or_java_whitespace(value: Option<&Utf16String>) -> bool {
     value.is_none_or(|value| {
         value.is_empty()
             || value.as_utf16().iter().all(|unit| {
@@ -98,7 +98,7 @@ pub(crate) fn is_empty_or_java_whitespace(value: Option<&JavaString>) -> bool {
 /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn evaluate_standard_expression_as_boolean(
     context: &dyn ITemplateContext,
-    input: Option<&JavaString>,
+    input: Option<&Utf16String>,
 ) -> Result<bool, Box<dyn TemplateEngineException>> {
     let parser = StandardExpressions::get_expression_parser(context.get_configuration()).map_err(
         |error| expression_processing_error("Could not obtain Standard Expression parser", error),

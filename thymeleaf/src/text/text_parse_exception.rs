@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const TEXT_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.text.TextParseException";
 
@@ -16,8 +16,8 @@ const TEXT_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.text.Text
 pub struct TextParseCause {
     error: Box<dyn Error + Send + Sync>,
     java_class_name: String,
-    java_message: Option<JavaString>,
-    text_parse_location: Option<(i32, i32, JavaString)>,
+    java_message: Option<Utf16String>,
+    text_parse_location: Option<(i32, i32, Utf16String)>,
 }
 
 impl TextParseCause {
@@ -35,7 +35,7 @@ impl TextParseCause {
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
         java_class_name: impl Into<String>,
-        java_message: Option<JavaString>,
+        java_message: Option<Utf16String>,
     ) -> Self {
         Self {
             error,
@@ -110,7 +110,7 @@ impl Debug for TextParseCause {
 /// 拼接消息；显式 location 构造器则始终使用调用方行列，不读取原因消息。
 #[derive(Debug)]
 pub struct TextParseException {
-    message: Option<JavaString>,
+    message: Option<Utf16String>,
     line: Option<i32>,
     col: Option<i32>,
     cause: Option<TextParseCause>,
@@ -137,7 +137,7 @@ impl TextParseException {
     /// # 参数
     /// - `message`：原始 Java UTF-16 消息；`None` 对应 null。
     #[must_use]
-    pub fn with_message(message: Option<JavaString>) -> Self {
+    pub fn with_message(message: Option<Utf16String>) -> Self {
         Self {
             message,
             line: None,
@@ -158,7 +158,7 @@ impl TextParseException {
     /// 同类型且带行列的原因会把行列传播到新异常。
     #[must_use]
     pub fn with_message_and_cause(
-        message: Option<JavaString>,
+        message: Option<Utf16String>,
         cause: Option<TextParseCause>,
     ) -> Self {
         let (line, col) = inherited_location(cause.as_ref());
@@ -211,7 +211,7 @@ impl TextParseException {
     /// - `col`：显式列号。
     #[must_use]
     pub fn with_message_and_cause_at(
-        message: Option<&JavaString>,
+        message: Option<&Utf16String>,
         cause: Option<TextParseCause>,
         line: i32,
         col: i32,
@@ -233,7 +233,7 @@ impl TextParseException {
     /// - `line`：显式行号。
     /// - `col`：显式列号。
     #[must_use]
-    pub fn with_message_at(message: Option<&JavaString>, line: i32, col: i32) -> Self {
+    pub fn with_message_at(message: Option<&Utf16String>, line: i32, col: i32) -> Self {
         Self::with_message_and_cause_at(message, None, line, col)
     }
 
@@ -262,7 +262,7 @@ impl TextParseException {
     /// # 返回
     /// 构造器最终保存的消息；`None` 对应 Java null。
     #[must_use]
-    pub fn get_message(&self) -> Option<&JavaString> {
+    pub fn get_message(&self) -> Option<&Utf16String> {
         self.message.as_ref()
     }
 
@@ -310,7 +310,7 @@ impl Display for TextParseException {
             &self
                 .message
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
     }
 }
@@ -328,9 +328,9 @@ fn inherited_location(cause: Option<&TextParseCause>) -> (Option<i32>, Option<i3
 }
 
 fn compose_inherited_message(
-    message: Option<&JavaString>,
+    message: Option<&Utf16String>,
     cause: Option<&TextParseCause>,
-) -> Option<JavaString> {
+) -> Option<Utf16String> {
     if let Some(cause) = cause
         && let Some((line, col, cause_message)) = cause.text_parse_location.as_ref()
     {
@@ -342,7 +342,7 @@ fn compose_inherited_message(
             }
             None => result.extend_from_slice(cause_message.as_utf16()),
         }
-        return Some(JavaString::from_utf16(result));
+        return Some(Utf16String::from_utf16(result));
     }
     if let Some(message) = message {
         return Some(message.clone());
@@ -350,18 +350,18 @@ fn compose_inherited_message(
     cause.and_then(|cause| cause.java_message.clone())
 }
 
-fn message_prefix(line: i32, col: i32) -> JavaString {
-    JavaString::from_rust_str(&format!("(Line = {line}, Column = {col})"))
+fn message_prefix(line: i32, col: i32) -> Utf16String {
+    Utf16String::from_rust_str(&format!("(Line = {line}, Column = {col})"))
 }
 
-fn prefix_with_message(line: i32, col: i32, message: Option<&JavaString>) -> JavaString {
+fn prefix_with_message(line: i32, col: i32, message: Option<&Utf16String>) -> Utf16String {
     let mut result = message_prefix(line, col).as_utf16().to_vec();
     result.push(u16::from(b' '));
     match message {
         Some(message) => result.extend_from_slice(message.as_utf16()),
         None => result.extend("null".encode_utf16()),
     }
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
 #[cfg(test)]
@@ -370,7 +370,7 @@ mod tests {
     use std::fmt::{Display, Formatter};
 
     use super::{TextParseCause, TextParseException};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[derive(Debug)]
     struct PlainError;
@@ -393,7 +393,7 @@ mod tests {
         let cause = TextParseCause::with_java_metadata(
             error,
             "example.PlainError",
-            Some(JavaString::from_rust_str("cause")),
+            Some(Utf16String::from_rust_str("cause")),
         );
         assert_eq!(PlainError.to_string(), "cause");
         assert!(format!("{cause:?}").contains("example.PlainError"));

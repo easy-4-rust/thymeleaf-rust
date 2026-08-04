@@ -15,7 +15,7 @@ use crate::linkbuilder::{ILinkBuilder, StandardLinkBuilder};
 use crate::messageresolver::{IMessageResolver, StandardMessageResolver};
 use crate::standard::StandardDialect;
 use crate::templateresolver::{ITemplateResolver, StringTemplateResolver};
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 use crate::{
     ConfigurationPrinterHelper, DialectConfiguration, EngineConfiguration, IEngineConfiguration,
     ITemplateEngine, IThrottledTemplateProcessor, TemplateEngineResult, TemplateSpec,
@@ -128,11 +128,11 @@ impl TemplateEngine {
 
     /// 返回按显式或默认前缀分组的方言快照。
     /// 对应 Java: `TemplateEngine#getDialectsByPrefix()`。
-    pub fn get_dialects_by_prefix(&self) -> IndexMap<Option<JavaString>, Vec<Arc<dyn IDialect>>> {
+    pub fn get_dialects_by_prefix(&self) -> IndexMap<Option<Utf16String>, Vec<Arc<dyn IDialect>>> {
         let state = lock(&self.state);
-        let mut result = IndexMap::<Option<JavaString>, Vec<Arc<dyn IDialect>>>::new();
+        let mut result = IndexMap::<Option<Utf16String>, Vec<Arc<dyn IDialect>>>::new();
         for configuration in &state.dialect_configurations {
-            let key = configuration.get_prefix().map(JavaString::from_rust_str);
+            let key = configuration.get_prefix().map(Utf16String::from_rust_str);
             let dialect = configuration.get_dialect_arc();
             let values = result.entry(key).or_default();
             if !values.iter().any(|current| Arc::ptr_eq(current, &dialect)) {
@@ -222,12 +222,12 @@ impl TemplateEngine {
     /// 对应 Java: `TemplateEngine#setDialectsByPrefix()`。
     pub fn set_dialects_by_prefix(
         &self,
-        dialects: Vec<(Option<JavaString>, Arc<dyn IDialect>)>,
+        dialects: Vec<(Option<Utf16String>, Arc<dyn IDialect>)>,
     ) -> Result<(), AlreadyInitializedException> {
         self.mutate_before_initialization(|state| {
             state.dialect_configurations.clear();
             for (prefix, dialect) in dialects {
-                let prefix_text = prefix.as_ref().map(JavaString::to_string_lossy);
+                let prefix_text = prefix.as_ref().map(Utf16String::to_string_lossy);
                 if !contains_dialect_configuration(
                     &state.dialect_configurations,
                     true,
@@ -506,7 +506,10 @@ impl TemplateEngine {
 
     /// 清空指定模板名称的缓存；调用会触发引擎初始化。
     /// 对应 Java: `TemplateEngine#clearTemplateCacheFor()`。
-    pub fn clear_template_cache_for(&self, template_name: &JavaString) -> TemplateEngineResult<()> {
+    pub fn clear_template_cache_for(
+        &self,
+        template_name: &Utf16String,
+    ) -> TemplateEngineResult<()> {
         self.initialize()?
             .get_template_manager()
             .clear_caches_for(template_name);
@@ -519,7 +522,7 @@ impl TemplateEngine {
         &self,
         template: &str,
         context: &dyn IContext,
-    ) -> TemplateEngineResult<JavaString> {
+    ) -> TemplateEngineResult<Utf16String> {
         let template_spec = template_spec(template, None)?;
         self.process(&template_spec, context)
     }
@@ -532,7 +535,7 @@ impl TemplateEngine {
         template: &str,
         template_selectors: &crate::TemplateSelectorSet,
         context: &dyn IContext,
-    ) -> TemplateEngineResult<JavaString> {
+    ) -> TemplateEngineResult<Utf16String> {
         let template_spec = template_spec(template, Some(template_selectors))?;
         self.process(&template_spec, context)
     }
@@ -692,7 +695,7 @@ impl ITemplateEngine for TemplateEngine {
         &self,
         template_spec: &TemplateSpec,
         context: &dyn IContext,
-    ) -> TemplateEngineResult<JavaString> {
+    ) -> TemplateEngineResult<Utf16String> {
         let buffer = Arc::new(Mutex::new(Vec::with_capacity(100)));
         let writer = SharedStringWriter {
             buffer: Arc::clone(&buffer),
@@ -702,7 +705,7 @@ impl ITemplateEngine for TemplateEngine {
             .expect("the processing writer has been dropped")
             .into_inner()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 
     fn process_to_writer(

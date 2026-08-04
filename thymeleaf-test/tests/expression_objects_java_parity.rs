@@ -8,7 +8,7 @@ use std::sync::Arc;
 use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 
 fn create_engine() -> TemplateEngine {
@@ -36,8 +36,8 @@ fn render(template: &str, ctx: &dyn IContext) -> String {
 fn strings_is_empty_with_empty_string() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "",
         )))),
     );
@@ -49,8 +49,8 @@ fn strings_is_empty_with_empty_string() {
 fn strings_is_empty_with_non_empty() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "hello",
         )))),
     );
@@ -62,8 +62,8 @@ fn strings_is_empty_with_non_empty() {
 fn strings_contains() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "hello world",
         )))),
     );
@@ -78,8 +78,8 @@ fn strings_contains() {
 fn strings_starts_with() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "hello world",
         )))),
     );
@@ -94,8 +94,8 @@ fn strings_starts_with() {
 fn strings_ends_with() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "hello world",
         )))),
     );
@@ -114,7 +114,7 @@ fn strings_ends_with() {
 fn bools_is_true() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
+        Some(Utf16String::from_rust_str("val")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     let s = render("<p th:text=\"${#bools.isTrue(val)}\">x</p>", &ctx);
@@ -125,7 +125,7 @@ fn bools_is_true() {
 fn bools_is_false() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
+        Some(Utf16String::from_rust_str("val")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     let s = render("<p th:text=\"${#bools.isFalse(val)}\">x</p>", &ctx);
@@ -140,12 +140,12 @@ fn bools_is_false() {
 fn arrays_length() {
     let ctx = Context::new();
     let arr = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("c"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("c"))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("arr")),
+        Some(Utf16String::from_rust_str("arr")),
         Some(Arc::new(TemplateValue::List(Arc::new(arr)))),
     );
     let s = render("<p th:text=\"${#arrays.length(arr)}\">x</p>", &ctx);
@@ -160,11 +160,11 @@ fn arrays_length() {
 fn lists_size() {
     let ctx = Context::new();
     let list = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("list")),
+        Some(Utf16String::from_rust_str("list")),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     let s = render("<p th:text=\"${#lists.size(list)}\">x</p>", &ctx);
@@ -175,16 +175,16 @@ fn lists_size() {
 fn lists_contains() {
     let ctx = Context::new();
     let list = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("list")),
+        Some(Utf16String::from_rust_str("list")),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("elem")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("elem")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "a",
         )))),
     );
@@ -200,12 +200,12 @@ fn lists_contains() {
 fn sets_size() {
     let ctx = Context::new();
     let set = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("x"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("y"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("z"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("x"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("y"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("z"))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("set")),
+        Some(Utf16String::from_rust_str("set")),
         Some(Arc::new(TemplateValue::List(Arc::new(set)))),
     );
     let s = render("<p th:text=\"${#sets.size(set)}\">x</p>", &ctx);
@@ -221,16 +221,16 @@ fn maps_size() {
     let ctx = Context::new();
     let map = vec![
         (
-            Arc::new(TemplateValue::string(JavaString::from_rust_str("k1"))),
-            Arc::new(TemplateValue::string(JavaString::from_rust_str("v1"))),
+            Arc::new(TemplateValue::string(Utf16String::from_rust_str("k1"))),
+            Arc::new(TemplateValue::string(Utf16String::from_rust_str("v1"))),
         ),
         (
-            Arc::new(TemplateValue::string(JavaString::from_rust_str("k2"))),
-            Arc::new(TemplateValue::string(JavaString::from_rust_str("v2"))),
+            Arc::new(TemplateValue::string(Utf16String::from_rust_str("k2"))),
+            Arc::new(TemplateValue::string(Utf16String::from_rust_str("v2"))),
         ),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("map")),
+        Some(Utf16String::from_rust_str("map")),
         Some(Arc::new(TemplateValue::Map(Arc::new(map)))),
     );
     let s = render("<p th:text=\"${#maps.size(map)}\">x</p>", &ctx);
@@ -256,7 +256,7 @@ fn aggregates_sum() {
         ))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("nums")),
+        Some(Utf16String::from_rust_str("nums")),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     let s = render("<p th:text=\"${#aggregates.sum(nums)}\">x</p>", &ctx);
@@ -271,8 +271,8 @@ fn aggregates_sum() {
 fn th_if_with_strings_is_empty() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "",
         )))),
     );
@@ -287,8 +287,8 @@ fn th_if_with_strings_is_empty() {
 fn th_if_with_strings_is_not_empty() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("val")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("val")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "hello",
         )))),
     );
@@ -307,12 +307,12 @@ fn th_if_with_strings_is_not_empty() {
 fn th_each_with_lists() {
     let ctx = Context::new();
     let list = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("c"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("c"))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("items")),
+        Some(Utf16String::from_rust_str("items")),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     let s = render(
@@ -332,8 +332,8 @@ fn th_each_with_lists() {
 fn complex_expression_with_ternary_and_strings() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("name")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Alice",
         )))),
     );

@@ -8,14 +8,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::IProcessableElementTag;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &dyn IProcessableElementTag,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult;
 
@@ -33,10 +33,10 @@ impl WriteVarAttributeTagProcessor {
         Self {
             processor: AbstractAttributeTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("writevar")),
+                Some(Utf16String::from_rust_str("writevar")),
                 true,
                 100_000_000,
                 true,
@@ -88,14 +88,14 @@ fn write_variable(
     context: &dyn ITemplateContext,
     _tag: &dyn IProcessableElementTag,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     structure_handler: &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult {
     let value = context
-        .get_variable(Some(&JavaString::from_rust_str("var")))
+        .get_variable(Some(&Utf16String::from_rust_str("var")))
         .as_deref()
-        .and_then(|value| value.to_java_string())
-        .unwrap_or_else(|| JavaString::from_rust_str(""));
+        .and_then(|value| value.to_utf16_string())
+        .unwrap_or_else(|| Utf16String::from_rust_str(""));
     structure_handler.set_body_text(value, false);
     Ok(())
 }

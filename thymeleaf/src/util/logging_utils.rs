@@ -1,4 +1,4 @@
-use super::java_string::{JavaString, JavaStringResult};
+use super::utf16_string::{Utf16String, Utf16StringResult};
 
 /// Thymeleaf 日志格式化工具。
 ///
@@ -21,13 +21,13 @@ impl LoggingUtils {
     /// 更长时保留前 35 单元和后 80 单元，中间插入 `[...]`。无需替换的短字符串
     /// 返回借用分支，从而保留 Java 对象身份。
     #[must_use]
-    pub fn loggify_template_name(template: Option<&JavaString>) -> Option<JavaStringResult<'_>> {
+    pub fn loggify_template_name(template: Option<&Utf16String>) -> Option<Utf16StringResult<'_>> {
         let template = template?;
         if template.len() <= 120 {
             if !template.as_utf16().contains(&u16::from(b'\n')) {
-                return Some(JavaStringResult::Borrowed(template));
+                return Some(Utf16StringResult::Borrowed(template));
             }
-            return Some(JavaStringResult::Owned(JavaString::from_utf16(
+            return Some(Utf16StringResult::Owned(Utf16String::from_utf16(
                 replace_line_feeds(template.as_utf16()),
             )));
         }
@@ -37,7 +37,7 @@ impl LoggingUtils {
         result.extend(replace_line_feeds(&units[..35]));
         result.extend("[...]".encode_utf16());
         result.extend(replace_line_feeds(&units[units.len() - 80..]));
-        Some(JavaStringResult::Owned(JavaString::from_utf16(result)))
+        Some(Utf16StringResult::Owned(Utf16String::from_utf16(result)))
     }
 
     /// 格式化有效 Unicode Rust 字符串供内部 `Display` 调用。
@@ -52,9 +52,9 @@ impl LoggingUtils {
     /// 对应 Java 语义：`LoggingUtils` 的 `loggify_str` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn loggify_str(template: Option<&str>) -> Option<String> {
-        let template = template.map(JavaString::from_rust_str)?;
+        let template = template.map(Utf16String::from_rust_str)?;
         Self::loggify_template_name(Some(&template))
-            .map(JavaStringResult::into_owned)
+            .map(Utf16StringResult::into_owned)
             .map(|result| result.to_string_lossy())
     }
 }
@@ -75,27 +75,27 @@ fn replace_line_feeds(source: &[u16]) -> Vec<u16> {
 #[cfg(test)]
 mod tests {
     use super::LoggingUtils;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[test]
     fn preserves_null_empty_and_short_reference_identity() {
         assert!(LoggingUtils::loggify_template_name(None).is_none());
 
-        let empty = JavaString::from_rust_str("");
+        let empty = Utf16String::from_rust_str("");
         assert!(empty.is_empty());
         let result = LoggingUtils::loggify_template_name(Some(&empty)).expect("result");
         assert!(result.is_borrowed_from(&empty));
-        assert_eq!(result.as_java_string().as_utf16(), &[] as &[u16]);
-        assert_eq!(result.as_java_string().to_string_lossy(), "");
-        assert_eq!(format!("{empty:?}"), "JavaString { utf16: [] }");
+        assert_eq!(result.as_utf16_string().as_utf16(), &[] as &[u16]);
+        assert_eq!(result.as_utf16_string().to_string_lossy(), "");
+        assert_eq!(format!("{empty:?}"), "Utf16String { utf16: [] }");
     }
 
     #[test]
     fn replaces_short_line_feeds_with_an_independent_value() {
-        let source = JavaString::from_rust_str("home\npage");
+        let source = Utf16String::from_rust_str("home\npage");
         let result = LoggingUtils::loggify_template_name(Some(&source)).expect("result");
         assert!(!result.is_borrowed_from(&source));
-        assert_eq!(result.as_java_string().to_string_lossy(), "home page");
+        assert_eq!(result.as_utf16_string().to_string_lossy(), "home page");
         assert_eq!(result.into_owned().to_string_lossy(), "home page");
         assert_eq!(source.to_string_lossy(), "home\npage");
     }
@@ -105,7 +105,7 @@ mod tests {
         let mut utf16 = vec![u16::from(b'a'); 34];
         utf16.extend("😀".encode_utf16());
         utf16.extend(vec![u16::from(b'b'); 90]);
-        let source = JavaString::from_utf16(utf16);
+        let source = Utf16String::from_utf16(utf16);
         let result = LoggingUtils::loggify_template_name(Some(&source))
             .expect("result")
             .into_owned();

@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use thymeleaf::context::{IWebContext, WebContext};
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 #[allow(dead_code, unused_imports)]
@@ -19,8 +19,8 @@ mod support;
 
 use support::CorpusWebExchange;
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn exchange() -> Arc<dyn IWebExchange> {
@@ -61,7 +61,7 @@ fn web_exchange_contract_matches_java() {
         exchange
             .get_attribute_value(Some(&js("attr1")))
             .expect("attr1 value")
-            .to_java_string()
+            .to_utf16_string()
             .expect("string")
             .to_string_lossy(),
         "v"
@@ -121,7 +121,7 @@ fn web_session_and_application_contract_matches_java() {
         session
             .get_attribute_value(Some(&js("s1")))
             .expect("s1 value")
-            .to_java_string()
+            .to_utf16_string()
             .expect("string")
             .to_string_lossy(),
         "sv"
@@ -142,7 +142,7 @@ fn web_session_and_application_contract_matches_java() {
         application
             .get_attribute_value(Some(&js("a1")))
             .expect("a1 value")
-            .to_java_string()
+            .to_utf16_string()
             .expect("string")
             .to_string_lossy(),
         "av"

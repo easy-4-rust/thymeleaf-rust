@@ -7,8 +7,8 @@ use crate::serializer::StandardSerializers;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
-    AbstractLazyCharSequence, IWritableCharSequence, JavaCharSequence, JavaString, JavaWriter,
-    LazyCharSequenceResolver, TextUtilsError, ValidateError,
+    AbstractLazyCharSequence, IWritableCharSequence, JavaCharSequence, JavaWriter,
+    LazyCharSequenceResolver, TextUtilsError, Utf16String, ValidateError,
 };
 
 /// 在真正写出时执行模板模式转义的延迟字符序列。
@@ -50,8 +50,8 @@ impl LazyEscapingCharSequence {
 /// 对应 Java 语义：`LazyEscapingCharSequence` 的 `escape_text_immediately` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn escape_text_immediately(
     template_mode: TemplateMode,
-    input: &JavaString,
-) -> Result<JavaString, crate::exceptions::TemplateProcessingException> {
+    input: &Utf16String,
+) -> Result<Utf16String, crate::exceptions::TemplateProcessingException> {
     let output = Arc::new(Mutex::new(Vec::new()));
     let mut writer = SharedWriter {
         output: Arc::clone(&output),
@@ -71,7 +71,7 @@ pub(crate) fn escape_text_immediately(
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .clone();
-    Ok(JavaString::from_utf16(units))
+    Ok(Utf16String::from_utf16(units))
 }
 
 impl JavaCharSequence for LazyEscapingCharSequence {
@@ -87,15 +87,15 @@ impl JavaCharSequence for LazyEscapingCharSequence {
         self.sequence.java_char_at(index)
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.sequence.java_to_string()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.sequence.java_sub_sequence(start, end)
     }
 
@@ -124,14 +124,14 @@ impl LazyEscapingResolver {
         match self.template_mode {
             TemplateMode::TEXT | TemplateMode::HTML => {
                 if let Some(input) = self.input.as_deref()
-                    && let Some(text) = input.to_java_string()
+                    && let Some(text) = input.to_utf16_string()
                 {
                     write_html4_xml(&text, writer)?;
                 }
             }
             TemplateMode::XML => {
                 if let Some(input) = self.input.as_deref()
-                    && let Some(text) = input.to_java_string()
+                    && let Some(text) = input.to_utf16_string()
                 {
                     write_xml10(&text, writer)?;
                 }
@@ -146,7 +146,7 @@ impl LazyEscapingResolver {
             }
             TemplateMode::RAW => {
                 if let Some(input) = self.input.as_deref()
-                    && let Some(text) = input.to_java_string()
+                    && let Some(text) = input.to_utf16_string()
                 {
                     writer.write_utf16(text.as_utf16()).map_err(|error| {
                         crate::exceptions::TemplateProcessingException::with_cause(
@@ -169,7 +169,7 @@ impl LazyCharSequenceResolver for LazyEscapingResolver {
         "org.thymeleaf.util.LazyEscapingCharSequence"
     }
 
-    fn resolve_text(&self) -> Option<JavaString> {
+    fn resolve_text(&self) -> Option<Utf16String> {
         let output = Arc::new(Mutex::new(Vec::new()));
         let mut writer = SharedWriter {
             output: Arc::clone(&output),
@@ -177,7 +177,7 @@ impl LazyCharSequenceResolver for LazyEscapingResolver {
         if let Err(error) = self.produce_escaped_output(&mut writer) {
             panic_any(error);
         }
-        Some(JavaString::from_utf16(
+        Some(Utf16String::from_utf16(
             output
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -206,7 +206,7 @@ impl JavaWriter for SharedWriter {
 }
 
 fn write_html4_xml(
-    input: &JavaString,
+    input: &Utf16String,
     writer: &mut dyn JavaWriter,
 ) -> Result<(), crate::exceptions::TemplateProcessingException> {
     for unit in input.as_utf16() {
@@ -224,7 +224,7 @@ fn write_html4_xml(
 }
 
 fn write_xml10(
-    input: &JavaString,
+    input: &Utf16String,
     writer: &mut dyn JavaWriter,
 ) -> Result<(), crate::exceptions::TemplateProcessingException> {
     let units = input.as_utf16();

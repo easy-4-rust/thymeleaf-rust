@@ -1,11 +1,11 @@
 use std::char::decode_utf16;
 
-use super::{JavaLocale, JavaString};
+use super::{JavaLocale, Utf16String};
 
 /// Java `String` 的全字符串大小写转换适配。
 ///
 /// 对应 Java: `java.lang.String#toLowerCase()`，由 HTML 名称规范化调用。
-pub(crate) fn to_lower_case_default(value: &JavaString) -> JavaString {
+pub(crate) fn to_lower_case_default(value: &Utf16String) -> Utf16String {
     let locale = JavaLocale::get_default();
     let language = locale
         .to_language_tag()
@@ -34,5 +34,5 @@ pub(crate) fn to_lower_case_default(value: &JavaString) -> JavaString {
             Err(error) => result.push(error.unpaired_surrogate()),
         }
     }
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }

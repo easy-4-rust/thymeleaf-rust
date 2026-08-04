@@ -4,7 +4,7 @@ use crate::engine::{AttributeName, AttributeNameValue, AttributeNames, ElementNa
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::IProcessableElementTag;
 use crate::processor::{AbstractProcessor, IProcessor};
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 
 use super::{
     IElementProcessor, IElementTagProcessor, IElementTagStructureHandler, MatchingAttributeName,
@@ -17,7 +17,7 @@ use super::{
 pub struct AbstractAttributeTagProcessor<F> {
     processor: AbstractProcessor,
     processor_class_name: &'static str,
-    dialect_prefix: Option<JavaString>,
+    dialect_prefix: Option<Utf16String>,
     matching_element_name: Option<MatchingElementName>,
     matching_attribute_name: MatchingAttributeName,
     attribute_name: AttributeNameValue,
@@ -34,17 +34,17 @@ impl<F> AbstractAttributeTagProcessor<F> {
     /// 对应 Java 语义：`AbstractAttributeTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: Option<TemplateMode>,
-        dialect_prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
         prefix_element_name: bool,
-        attribute_name: Option<JavaString>,
+        attribute_name: Option<Utf16String>,
         prefix_attribute_name: bool,
         precedence: i32,
         remove_attribute: bool,
         processor_class_name: &'static str,
         do_process: F,
     ) -> Result<Self, TemplateProcessingException> {
-        if attribute_name.as_ref().is_none_or(JavaString::is_empty) {
+        if attribute_name.as_ref().is_none_or(Utf16String::is_empty) {
             return Err(TemplateProcessingException::new(Some(
                 "Attribute name cannot be null or empty in Attribute Tag Processor".to_owned(),
             )));
@@ -85,7 +85,7 @@ impl<F> AbstractAttributeTagProcessor<F> {
 
     /// 返回构造时保存的可空方言前缀。
     /// 对应 Java 语义：Java 接口/超类方法 `getDialectPrefix()` 的 Rust 移植（`AbstractAttributeTagProcessor` 继承路径）。
-    pub fn get_dialect_prefix(&self) -> Option<&JavaString> {
+    pub fn get_dialect_prefix(&self) -> Option<&Utf16String> {
         self.dialect_prefix.as_ref()
     }
 }
@@ -113,7 +113,7 @@ where
             &dyn ITemplateContext,
             &dyn IProcessableElementTag,
             &AttributeName,
-            Option<JavaString>,
+            Option<Utf16String>,
             &mut dyn IElementTagStructureHandler,
         ) -> Result<(), Box<dyn TemplateEngineException>>
         + Send
@@ -138,7 +138,7 @@ where
             &dyn ITemplateContext,
             &dyn IProcessableElementTag,
             &AttributeName,
-            Option<JavaString>,
+            Option<Utf16String>,
             &mut dyn IElementTagStructureHandler,
         ) -> Result<(), Box<dyn TemplateEngineException>>
         + Send
@@ -183,7 +183,7 @@ where
                             "Error during execution of processor '{}'",
                             self.processor_class_name
                         )),
-                        tag.get_template_name().map(JavaString::to_string_lossy),
+                        tag.get_template_name().map(Utf16String::to_string_lossy),
                         line,
                         col,
                         ProcessorCause(error),
@@ -196,8 +196,8 @@ where
 
 fn build_matching_element(
     mode: TemplateMode,
-    dialect_prefix: Option<&JavaString>,
-    element_name: Option<&JavaString>,
+    dialect_prefix: Option<&Utf16String>,
+    element_name: Option<&Utf16String>,
     prefix_element_name: bool,
 ) -> Result<Option<MatchingElementName>, TemplateProcessingException> {
     element_name
@@ -223,7 +223,7 @@ fn enrich_tag_attribute_location(
         return;
     }
     if !error.has_template_name() {
-        error.set_template_name(tag.get_template_name().map(JavaString::to_string_lossy));
+        error.set_template_name(tag.get_template_name().map(Utf16String::to_string_lossy));
     }
     if !error.has_line_and_col() {
         let (line, col) = attribute_location(tag, attribute_name);

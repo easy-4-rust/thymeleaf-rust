@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, JavaString, ValidateError};
+use crate::util::{JavaLocale, Utf16String, ValidateError};
 
 use super::ContextVariableEntries;
 use super::{AbstractContext, IContext, IContextVariableNames};
@@ -98,7 +98,7 @@ impl Context {
     /// - `value`：可空变量值。
     ///
     /// 对应 Java 语义：Java 接口/超类方法 `setVariable()` 的 Rust 移植（`Context` 继承路径）。
-    pub fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    pub fn set_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         self.base.set_variable(name, value);
     }
 
@@ -120,7 +120,7 @@ impl Context {
     /// - `name`：待删除的可空变量名。
     ///
     /// 对应 Java 语义：Java 接口/超类方法 `removeVariable()` 的 Rust 移植（`Context` 继承路径）。
-    pub fn remove_variable(&self, name: Option<&JavaString>) {
+    pub fn remove_variable(&self, name: Option<&Utf16String>) {
         self.base.remove_variable(name);
     }
 
@@ -148,7 +148,7 @@ impl IContext for Context {
         self.base.get_locale()
     }
 
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool {
         self.base.contains_variable(name)
     }
 
@@ -156,7 +156,7 @@ impl IContext for Context {
         self.base.get_variable_names()
     }
 
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.base.get_variable(name)
     }
 }

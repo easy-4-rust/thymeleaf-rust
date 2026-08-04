@@ -8,7 +8,7 @@ use crate::model::{
     IModelFactory, IOpenElementTag, IProcessableElementTag, IProcessingInstruction,
     IStandaloneElementTag, ITemplateEvent, IText, IXMLDeclaration,
 };
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
@@ -74,7 +74,7 @@ impl StandardModelFactory {
 
     fn build_attributes(
         &self,
-        attributes: Option<&IndexMap<JavaString, Option<JavaString>>>,
+        attributes: Option<&IndexMap<Utf16String, Option<Utf16String>>>,
         quotes: AttributeValueQuotes,
     ) -> Result<Option<Arc<Attributes>>, TemplateProcessingException> {
         let Some(attributes) = attributes else {
@@ -102,7 +102,7 @@ impl StandardModelFactory {
             )));
         }
         let white_spaces = (0..built.len())
-            .map(|_| JavaString::from_rust_str(DEFAULT_WHITE_SPACE))
+            .map(|_| Utf16String::from_rust_str(DEFAULT_WHITE_SPACE))
             .collect();
         Ok(Some(Attributes::new(Some(built), Some(white_spaces))))
     }
@@ -125,7 +125,7 @@ impl IModelFactory for StandardModelFactory {
     fn parse(
         &self,
         owner_template: &TemplateData,
-        template: &JavaString,
+        template: &Utf16String,
     ) -> Result<Box<dyn IModel>, TemplateProcessingException> {
         self.configuration()
             .get_template_manager()
@@ -147,7 +147,7 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_cdata_section(
         &self,
-        content: JavaString,
+        content: Utf16String,
     ) -> Result<Arc<dyn ICDATASection>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("CDATASection")?;
         let content: Arc<dyn JavaCharSequence> = Arc::new(content);
@@ -156,7 +156,7 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_comment(
         &self,
-        content: JavaString,
+        content: Utf16String,
     ) -> Result<Arc<dyn IComment>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("Comment")?;
         let content: Arc<dyn JavaCharSequence> = Arc::new(content);
@@ -172,8 +172,8 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_doc_type(
         &self,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
     ) -> Result<Arc<dyn IDocType>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("DocType")?;
         DocType::with_ids(public_id, system_id)
@@ -183,11 +183,11 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_full_doc_type(
         &self,
-        keyword: JavaString,
-        element_name: JavaString,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
+        keyword: Utf16String,
+        element_name: Utf16String,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
     ) -> Result<Arc<dyn IDocType>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("DocType")?;
         DocType::with_components(
@@ -203,8 +203,8 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_processing_instruction(
         &self,
-        target: JavaString,
-        content: JavaString,
+        target: Utf16String,
+        content: Utf16String,
     ) -> Result<Arc<dyn IProcessingInstruction>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("ProcessingInstruction")?;
         Ok(Arc::new(ProcessingInstruction::new(
@@ -213,20 +213,20 @@ impl IModelFactory for StandardModelFactory {
         )))
     }
 
-    fn create_text(&self, text: JavaString) -> Arc<dyn IText> {
+    fn create_text(&self, text: Utf16String) -> Arc<dyn IText> {
         let text: Arc<dyn JavaCharSequence> = Arc::new(text);
         Arc::new(Text::new(Some(text)))
     }
 
     fn create_xml_declaration(
         &self,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
     ) -> Result<Arc<dyn IXMLDeclaration>, TemplateProcessingException> {
         self.check_restricted_event_for_text_template_mode("XMLDeclaration")?;
         Ok(Arc::new(XMLDeclaration::with_components(
-            Some(JavaString::from_rust_str(XML_DECLARATION_KEYWORD)),
+            Some(Utf16String::from_rust_str(XML_DECLARATION_KEYWORD)),
             version,
             encoding,
             standalone,
@@ -235,8 +235,8 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_standalone_element_tag(
         &self,
-        element_name: JavaString,
-        attributes: Option<&IndexMap<JavaString, Option<JavaString>>>,
+        element_name: Utf16String,
+        attributes: Option<&IndexMap<Utf16String, Option<Utf16String>>>,
         attribute_value_quotes: AttributeValueQuotes,
         synthetic: bool,
         minimized: bool,
@@ -260,8 +260,8 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_open_element_tag(
         &self,
-        element_name: JavaString,
-        attributes: Option<&IndexMap<JavaString, Option<JavaString>>>,
+        element_name: Utf16String,
+        attributes: Option<&IndexMap<Utf16String, Option<Utf16String>>>,
         attribute_value_quotes: AttributeValueQuotes,
         synthetic: bool,
     ) -> Result<Arc<dyn IOpenElementTag>, TemplateProcessingException> {
@@ -281,7 +281,7 @@ impl IModelFactory for StandardModelFactory {
 
     fn create_close_element_tag(
         &self,
-        element_name: JavaString,
+        element_name: Utf16String,
         synthetic: bool,
         unmatched: bool,
     ) -> Result<Arc<dyn ICloseElementTag>, TemplateProcessingException> {
@@ -302,8 +302,8 @@ impl IModelFactory for StandardModelFactory {
     fn set_attribute(
         &self,
         tag: Arc<dyn IProcessableElementTag>,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<dyn IProcessableElementTag>, TemplateProcessingException> {
         tag.with_attribute(
@@ -320,8 +320,8 @@ impl IModelFactory for StandardModelFactory {
         &self,
         tag: Arc<dyn IProcessableElementTag>,
         old_attribute_name: &AttributeName,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<dyn IProcessableElementTag>, TemplateProcessingException> {
         tag.with_replaced_attribute(

@@ -5,7 +5,7 @@ use std::{any::Any, sync::Arc};
 use thiserror::Error;
 
 use crate::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use crate::util::{JavaNumber, JavaString};
+use crate::util::{JavaNumber, Utf16String};
 
 /// Thymeleaf 支持的模板解析与输出模式。
 ///
@@ -135,8 +135,8 @@ impl TemplateObject for TemplateMode {
         "org.thymeleaf.templatemode.TemplateMode"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.to_string())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.to_string())
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -145,7 +145,7 @@ impl TemplateObject for TemplateMode {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         if !arguments.is_empty() {
@@ -155,7 +155,7 @@ impl TemplateObject for TemplateMode {
             "isMarkup" => TemplateValue::Boolean(self.is_markup()),
             "isText" => TemplateValue::Boolean(self.is_text()),
             "isCaseSensitive" => TemplateValue::Boolean(self.is_case_sensitive()),
-            "name" | "toString" => TemplateValue::string(self.to_java_string()),
+            "name" | "toString" => TemplateValue::string(self.to_utf16_string()),
             "ordinal" => TemplateValue::Number(JavaNumber::Integer(match self {
                 Self::HTML => 0,
                 Self::XML => 1,

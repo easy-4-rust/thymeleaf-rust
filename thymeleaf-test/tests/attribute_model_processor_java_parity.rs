@@ -8,11 +8,11 @@ use std::sync::Arc;
 use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn engine() -> TemplateEngine {

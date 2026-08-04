@@ -12,7 +12,7 @@ use crate::expression::{
 };
 use crate::model::{IAttribute, IProcessableElementTag};
 use crate::processor::{AbstractProcessor, IProcessor};
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 
 use super::expression_processing_error;
 
@@ -22,7 +22,7 @@ use super::expression_processing_error;
 /// `org.thymeleaf.standard.processor.StandardDefaultAttributesTagProcessor`。
 pub struct StandardDefaultAttributesTagProcessor {
     processor: AbstractProcessor,
-    dialect_prefix: Option<JavaString>,
+    dialect_prefix: Option<Utf16String>,
     matching_attribute_name: MatchingAttributeName,
 }
 
@@ -34,7 +34,7 @@ impl StandardDefaultAttributesTagProcessor {
     /// 对应 Java 语义：`StandardDefaultAttributesTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         let matching_attribute_name = MatchingAttributeName::for_all_attributes_with_prefix(
             Some(template_mode),
@@ -141,7 +141,7 @@ fn process_default_attribute(
         let start = original_complete_name
             .len()
             .saturating_sub(canonical_name.len());
-        JavaString::from_utf16(original_complete_name.as_utf16()[start..].to_vec())
+        Utf16String::from_utf16(original_complete_name.as_utf16()[start..].to_vec())
     };
 
     let expression_result = if let Some(attribute_value) = attribute_value.as_ref() {
@@ -187,10 +187,10 @@ fn process_default_attribute(
     }
     let raw = expression_result
         .as_deref()
-        .and_then(TemplateValue::to_java_string);
+        .and_then(TemplateValue::to_utf16_string);
     let escaped = EscapedAttributeUtils::escape_attribute(Some(template_mode), raw.as_ref())
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
-    if escaped.as_ref().is_none_or(JavaString::is_empty) {
+    if escaped.as_ref().is_none_or(Utf16String::is_empty) {
         structure_handler.remove_attribute(new_attribute_name);
         structure_handler.remove_attribute(original_complete_name.clone());
     } else {
@@ -212,8 +212,8 @@ fn process_default_attribute(
 
 fn prefix_matches(
     template_mode: TemplateMode,
-    actual: &JavaString,
-    expected: Option<&JavaString>,
+    actual: &Utf16String,
+    expected: Option<&Utf16String>,
 ) -> bool {
     let Some(expected) = expected else {
         return false;

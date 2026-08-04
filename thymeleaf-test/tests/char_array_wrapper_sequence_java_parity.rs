@@ -4,7 +4,7 @@ use std::fmt::Write;
 use std::sync::{Arc, RwLock};
 
 use thymeleaf::util::{
-    CharArrayWrapperSequence, CharArrayWrapperSequenceError, JavaString, SharedCharArray,
+    CharArrayWrapperSequence, CharArrayWrapperSequenceError, SharedCharArray, Utf16String,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -205,7 +205,7 @@ fn equality_hash_and_string_cases(output: &mut String) {
     emit(
         output,
         "equals.string",
-        first.equals_object(Some(&first.to_java_string().expect("string"))),
+        first.equals_object(Some(&first.to_utf16_string().expect("string"))),
     );
     emit(
         output,
@@ -227,12 +227,12 @@ fn equality_hash_and_string_cases(output: &mut String) {
     emit(
         output,
         "hash.stringCompatible",
-        first.hash_code() == java_string_hash(&first.to_java_string().expect("string")),
+        first.hash_code() == utf16_string_hash(&first.to_utf16_string().expect("string")),
     );
     emit(
         output,
         "toString.first",
-        to_utf16_hex(&first.to_java_string().expect("string")),
+        to_utf16_hex(&first.to_utf16_string().expect("string")),
     );
 
     let negative = CharArrayWrapperSequence::with_range(Some(chars()), 1, -2).expect("negative");
@@ -245,7 +245,7 @@ fn equality_hash_and_string_cases(output: &mut String) {
         output,
         "negative.toString",
         negative
-            .to_java_string()
+            .to_utf16_string()
             .map(|value| value.to_string_lossy()),
     );
 
@@ -260,7 +260,7 @@ fn equality_hash_and_string_cases(output: &mut String) {
         output,
         "overflow.toString",
         overflow
-            .to_java_string()
+            .to_utf16_string()
             .map(|value| value.to_string_lossy()),
     );
 }
@@ -283,7 +283,7 @@ fn exhaustive_cases(output: &mut String) {
                         constructor_hash = mix(constructor_hash, 1);
                         constructor_hash = mix(constructor_hash, value.length());
                         constructor_hash = mix(constructor_hash, value.hash_code());
-                        constructor_hash = match value.to_java_string() {
+                        constructor_hash = match value.to_utf16_string() {
                             Ok(string) => mix_string(constructor_hash, &string),
                             Err(error) => mix_error(constructor_hash, &error),
                         };
@@ -311,7 +311,7 @@ fn exhaustive_cases(output: &mut String) {
                     subsequence_hash = mix(subsequence_hash, 1);
                     subsequence_hash = mix(subsequence_hash, subsequence.length());
                     subsequence_hash = mix(subsequence_hash, subsequence.hash_code());
-                    subsequence_hash = match subsequence.to_java_string() {
+                    subsequence_hash = match subsequence.to_utf16_string() {
                         Ok(string) => mix_string(subsequence_hash, &string),
                         Err(error) => mix_error(subsequence_hash, &error),
                     };
@@ -351,7 +351,7 @@ fn describe(sequence: &CharArrayWrapperSequence) -> Result<String, CharArrayWrap
         "{}:{}:{}",
         sequence.length(),
         sequence.hash_code(),
-        to_utf16_hex(&sequence.to_java_string()?)
+        to_utf16_hex(&sequence.to_utf16_string()?)
     ))
 }
 
@@ -382,7 +382,7 @@ fn shared(value: Vec<u16>) -> SharedCharArray {
     Arc::new(RwLock::new(value))
 }
 
-fn to_utf16_hex(value: &JavaString) -> String {
+fn to_utf16_hex(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()
@@ -391,7 +391,7 @@ fn to_utf16_hex(value: &JavaString) -> String {
         .join(",")
 }
 
-fn java_string_hash(value: &JavaString) -> i32 {
+fn utf16_string_hash(value: &Utf16String) -> i32 {
     value.as_utf16().iter().fold(0_i32, |hash, unit| {
         hash.wrapping_mul(31).wrapping_add(i32::from(*unit))
     })
@@ -403,10 +403,10 @@ fn mix_error(hash: u64, error: &CharArrayWrapperSequenceError) -> u64 {
 }
 
 fn mix_rust_str(hash: u64, value: &str) -> u64 {
-    mix_string(hash, &JavaString::from_rust_str(value))
+    mix_string(hash, &Utf16String::from_rust_str(value))
 }
 
-fn mix_string(mut hash: u64, value: &JavaString) -> u64 {
+fn mix_string(mut hash: u64, value: &Utf16String) -> u64 {
     for unit in value.as_utf16() {
         hash = mix(hash, i32::from(unit & 0x00FF));
         hash = mix(hash, i32::from(unit >> 8));

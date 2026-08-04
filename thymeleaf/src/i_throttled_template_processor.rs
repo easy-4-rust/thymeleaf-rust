@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use crate::TemplateSpec;
 use crate::engine::IThrottledTemplateWriterControl;
 use crate::exceptions::TemplateEngineException;
-use crate::util::{Charset, JavaString, JavaWriter};
+use crate::util::{Charset, JavaWriter, Utf16String};
 
 /// 节流模板处理调用的统一错误结果。
 ///
@@ -66,7 +66,7 @@ pub trait IThrottledTemplateProcessor {
     ///
     /// 不要求构造级绝对唯一，但必须足以区分日志中的不同处理器执行。
     /// 对应 Java: `IThrottledTemplateProcessor#getProcessorIdentifier()`。
-    fn get_processor_identifier(&self) -> &JavaString;
+    fn get_processor_identifier(&self) -> &Utf16String;
 
     /// 返回本处理器正在执行的模板规格。
     ///

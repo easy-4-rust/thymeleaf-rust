@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::{DateUtils, JavaBigDecimal, JavaDate, JavaNumber, JavaString};
+use thymeleaf::util::{DateUtils, JavaBigDecimal, JavaDate, JavaNumber, Utf16String};
 
 /// 构造 Java `Integer` 模板值。
 fn num(value: i32) -> Arc<TemplateValue> {
@@ -22,7 +22,7 @@ fn decimal(value: &str) -> Arc<TemplateValue> {
 
 /// 构造 Java `String` 模板值。
 fn text(value: &str) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::string(JavaString::from_rust_str(value)))
+    Arc::new(TemplateValue::string(Utf16String::from_rust_str(value)))
 }
 
 /// 构造 Java `Boolean` 模板值。
@@ -57,15 +57,15 @@ impl TemplateObject for OrderLine {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.OrderLine"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.product.name)
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.product.name)
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
@@ -92,15 +92,15 @@ impl TemplateObject for Product {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Product"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.name)
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.name)
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
@@ -127,15 +127,15 @@ impl TemplateObject for Customer {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Customer"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.name)
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.name)
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
@@ -161,15 +161,15 @@ impl TemplateObject for Order {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Order"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.customer.name)
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.customer.name)
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
@@ -196,15 +196,15 @@ impl TemplateObject for User {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.User"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.name())
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
@@ -237,15 +237,15 @@ impl TemplateObject for Comment {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Comment"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.text)
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.text)
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {

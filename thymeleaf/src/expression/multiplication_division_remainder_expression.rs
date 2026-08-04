@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ComplexExpression, IStandardExpression};
 
@@ -8,24 +8,24 @@ use super::{ComplexExpression, IStandardExpression};
 /// `org.thymeleaf.standard.expression.MultiplicationDivisionRemainderExpression`。
 pub trait MultiplicationDivisionRemainderExpression: ComplexExpression {
     /// 乘法操作符。
-    fn multiplication_operator() -> JavaString {
-        JavaString::from_rust_str("*")
+    fn multiplication_operator() -> Utf16String {
+        Utf16String::from_rust_str("*")
     }
     /// 除法符号操作符。
-    fn division_operator() -> JavaString {
-        JavaString::from_rust_str("/")
+    fn division_operator() -> Utf16String {
+        Utf16String::from_rust_str("/")
     }
     /// 除法关键字操作符。
-    fn division_operator_2() -> JavaString {
-        JavaString::from_rust_str("div")
+    fn division_operator_2() -> Utf16String {
+        Utf16String::from_rust_str("div")
     }
     /// 余数符号操作符。
-    fn remainder_operator() -> JavaString {
-        JavaString::from_rust_str("%")
+    fn remainder_operator() -> Utf16String {
+        Utf16String::from_rust_str("%")
     }
     /// 余数关键字操作符。
-    fn remainder_operator_2() -> JavaString {
-        JavaString::from_rust_str("mod")
+    fn remainder_operator_2() -> Utf16String {
+        Utf16String::from_rust_str("mod")
     }
 
     /// 判断左操作数是否符合上游解析约束。

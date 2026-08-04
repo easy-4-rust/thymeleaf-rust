@@ -12,7 +12,7 @@ use crate::element::IElementTagStructureHandler;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel, IProcessableElementTag};
-use crate::util::{JavaCharSequence, JavaString, Validate, ValidateError};
+use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
 
 use super::{
     AttributeDefinitionValue, AttributeDefinitions, AttributeNameValue, AttributesError,
@@ -21,21 +21,21 @@ use super::{
 
 type SetAttributeValue = (
     Option<AttributeDefinitionValue>,
-    JavaString,
-    Option<JavaString>,
+    Utf16String,
+    Option<Utf16String>,
     Option<AttributeValueQuotes>,
 );
 type ReplaceAttributeValue = (
     AttributeNameValue,
     Option<AttributeDefinitionValue>,
-    JavaString,
-    Option<JavaString>,
+    Utf16String,
+    Option<Utf16String>,
     Option<AttributeValueQuotes>,
 );
 type RemoveAttributeValue = (
     u8,
-    Option<JavaString>,
-    Option<JavaString>,
+    Option<Utf16String>,
+    Option<Utf16String>,
     Option<AttributeNameValue>,
 );
 
@@ -61,7 +61,7 @@ pub(crate) struct ElementTagStructureHandler {
     pub(crate) insert_immediately_after_model_value: Option<Arc<dyn IModel>>,
     pub(crate) insert_immediately_after_model_processable: bool,
     pub(crate) replace_with_text: bool,
-    pub(crate) replace_with_text_value: Option<JavaString>,
+    pub(crate) replace_with_text_value: Option<Utf16String>,
     pub(crate) replace_with_text_processable: bool,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
@@ -72,9 +72,9 @@ pub(crate) struct ElementTagStructureHandler {
     pub(crate) remove_all_but_first_child: bool,
 
     pub(crate) set_local_variable: bool,
-    pub(crate) added_local_variables: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    pub(crate) added_local_variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     pub(crate) remove_local_variable: bool,
-    pub(crate) removed_local_variable_names: IndexSet<JavaString>,
+    pub(crate) removed_local_variable_names: IndexSet<Utf16String>,
 
     pub(crate) set_attribute: bool,
     set_attribute_values: Vec<SetAttributeValue>,
@@ -91,8 +91,8 @@ pub(crate) struct ElementTagStructureHandler {
     pub(crate) set_template_data_value: Option<Arc<TemplateData>>,
 
     pub(crate) iterate_element: bool,
-    pub(crate) iter_variable_name: Option<JavaString>,
-    pub(crate) iter_status_variable_name: Option<JavaString>,
+    pub(crate) iter_variable_name: Option<Utf16String>,
+    pub(crate) iter_status_variable_name: Option<Utf16String>,
     pub(crate) iterated_object: Option<Arc<TemplateValue>>,
 }
 
@@ -178,8 +178,8 @@ impl ElementTagStructureHandler {
     pub(crate) fn set_attribute_with_definition(
         &mut self,
         attribute_definition: AttributeDefinitionValue,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         quotes: Option<AttributeValueQuotes>,
     ) {
         self.set_attribute = true;
@@ -197,8 +197,8 @@ impl ElementTagStructureHandler {
         &mut self,
         old_attribute_name: AttributeNameValue,
         attribute_definition: AttributeDefinitionValue,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         quotes: Option<AttributeValueQuotes>,
     ) {
         self.replace_attribute = true;
@@ -319,20 +319,20 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
         self.remove_attribute_values.clear();
     }
 
-    fn set_local_variable(&mut self, name: JavaString, value: Option<Arc<TemplateValue>>) {
+    fn set_local_variable(&mut self, name: Utf16String, value: Option<Arc<TemplateValue>>) {
         self.set_local_variable = true;
         self.added_local_variables.insert(Some(name), value);
     }
 
-    fn remove_local_variable(&mut self, name: JavaString) {
+    fn remove_local_variable(&mut self, name: Utf16String) {
         self.remove_local_variable = true;
         self.removed_local_variable_names.insert(name);
     }
 
     fn set_attribute(
         &mut self,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         quotes: Option<AttributeValueQuotes>,
     ) {
         self.set_attribute = true;
@@ -343,8 +343,8 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
     fn replace_attribute(
         &mut self,
         old_attribute_name: AttributeNameValue,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         quotes: Option<AttributeValueQuotes>,
     ) {
         self.replace_attribute = true;
@@ -357,13 +357,13 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
         ));
     }
 
-    fn remove_attribute(&mut self, attribute_name: JavaString) {
+    fn remove_attribute(&mut self, attribute_name: Utf16String) {
         self.remove_attribute = true;
         self.remove_attribute_values
             .push((REMOVE_COMPLETE, Some(attribute_name), None, None));
     }
 
-    fn remove_attribute_with_prefix(&mut self, prefix: Option<JavaString>, name: JavaString) {
+    fn remove_attribute_with_prefix(&mut self, prefix: Option<Utf16String>, name: Utf16String) {
         self.remove_attribute = true;
         self.remove_attribute_values
             .push((REMOVE_PREFIXED, prefix, Some(name), None));
@@ -390,7 +390,7 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
         self.set_template_data_value = Some(template_data);
     }
 
-    fn set_body_text(&mut self, text: JavaString, processable: bool) {
+    fn set_body_text(&mut self, text: Utf16String, processable: bool) {
         self.reset_all_but_variables_or_attributes();
         self.set_body_text = true;
         self.set_body_text_value = Some(Arc::new(text));
@@ -424,7 +424,7 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
         self.insert_immediately_after_model_processable = processable;
     }
 
-    fn replace_with_text(&mut self, text: JavaString, processable: bool) {
+    fn replace_with_text(&mut self, text: Utf16String, processable: bool) {
         self.reset_all_but_variables_or_attributes();
         self.replace_with_text = true;
         self.replace_with_text_value = Some(text);
@@ -460,8 +460,8 @@ impl IElementTagStructureHandler for ElementTagStructureHandler {
 
     fn iterate_element(
         &mut self,
-        iter_variable_name: JavaString,
-        iter_status_variable_name: Option<JavaString>,
+        iter_variable_name: Utf16String,
+        iter_status_variable_name: Option<Utf16String>,
         iterated_object: Option<Arc<TemplateValue>>,
     ) -> Result<(), ValidateError> {
         let iter_variable_name_text = iter_variable_name.to_string_lossy();
@@ -498,11 +498,11 @@ mod tests {
     use crate::model::{AttributeValueQuotes, IModel, IProcessableElementTag};
     use crate::templatemode::TemplateMode;
     use crate::templateresource::StringTemplateResource;
-    use crate::util::{JavaLocale, JavaString};
+    use crate::util::{JavaLocale, Utf16String};
     use crate::{ITemplateEngine, TemplateEngine};
 
-    fn java(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn java(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
     fn snapshot(handler: &ElementTagStructureHandler) -> String {
@@ -524,7 +524,7 @@ mod tests {
             handler
                 .iter_variable_name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
     }
 
@@ -665,7 +665,7 @@ mod tests {
         assert_eq!(
             attributes
                 .keys()
-                .map(JavaString::to_string_lossy)
+                .map(Utf16String::to_string_lossy)
                 .collect::<Vec<_>>(),
             vec!["data-c", "data-d"],
             "Java 的替换阶段先于设置阶段，因此最后属性顺序固定"
@@ -678,7 +678,7 @@ mod tests {
                     name.to_string_lossy(),
                     value
                         .as_ref()
-                        .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                        .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
                 )
             })
             .collect::<Vec<_>>()

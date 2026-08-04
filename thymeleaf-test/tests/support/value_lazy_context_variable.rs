@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 保存单个值的上游 lazy `.thtest` 宿主对象。
 ///
@@ -24,8 +24,8 @@ impl TemplateObject for ValueLazyContextVariable {
         "org.thymeleaf.templateengine.features.lazy.ValueLazyContextVariable"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.java_class_name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.java_class_name())
     }
 
     fn as_any(&self) -> &dyn Any {

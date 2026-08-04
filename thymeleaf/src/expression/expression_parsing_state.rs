@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IStandardExpression, expression_parsing_node::ExpressionParsingNode};
 
@@ -46,7 +46,7 @@ impl ExpressionParsingState {
     /// 对应 Java 语义：`ExpressionParsingState` 的 `add_node_input` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn add_node_input(
         &mut self,
-        semi_parsed_string: Option<JavaString>,
+        semi_parsed_string: Option<Utf16String>,
     ) -> Result<(), ExpressionParsingStateError> {
         let input = semi_parsed_string.ok_or(ExpressionParsingStateError::IllegalArgument {
             message: "String cannot be null",
@@ -74,7 +74,7 @@ impl ExpressionParsingState {
     pub(crate) fn insert_node_input(
         &mut self,
         position: i32,
-        semi_parsed_string: Option<JavaString>,
+        semi_parsed_string: Option<Utf16String>,
     ) -> Result<(), ExpressionParsingStateError> {
         let input = semi_parsed_string.ok_or(ExpressionParsingStateError::IllegalArgument {
             message: "String cannot be null",
@@ -106,7 +106,7 @@ impl ExpressionParsingState {
     pub(crate) fn set_node_input(
         &mut self,
         position: i32,
-        semi_parsed_string: Option<JavaString>,
+        semi_parsed_string: Option<Utf16String>,
     ) -> Result<(), ExpressionParsingStateError> {
         let input = semi_parsed_string.ok_or(ExpressionParsingStateError::IllegalArgument {
             message: "String cannot be null",

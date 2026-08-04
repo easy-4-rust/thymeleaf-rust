@@ -1,7 +1,7 @@
 use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 
 use super::{
     AbstractStandardExpressionAttributeTagProcessor, delegate_standard_element_tag_processor,
@@ -21,11 +21,11 @@ impl AbstractStandardDoubleAttributeModifierTagProcessor {
     /// 对应 Java 语义：`AbstractStandardDoubleAttributeModifierTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
-        attribute_one_complete_name: JavaString,
-        attribute_two_complete_name: JavaString,
+        attribute_one_complete_name: Utf16String,
+        attribute_two_complete_name: Utf16String,
         remove_if_empty: bool,
         processor_class_name: &'static str,
     ) -> Result<Self, TemplateProcessingException> {
@@ -45,13 +45,13 @@ impl AbstractStandardDoubleAttributeModifierTagProcessor {
                       structure_handler| {
                     let value = expression_result
                         .as_deref()
-                        .and_then(TemplateValue::to_java_string);
+                        .and_then(TemplateValue::to_utf16_string);
                     let escaped = EscapedAttributeUtils::escape_attribute(
                         Some(template_mode),
                         value.as_ref(),
                     )
                     .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
-                    if remove_if_empty && escaped.as_ref().is_none_or(JavaString::is_empty) {
+                    if remove_if_empty && escaped.as_ref().is_none_or(Utf16String::is_empty) {
                         structure_handler.remove_attribute(attribute_one_complete_name.clone());
                         structure_handler.remove_attribute(attribute_two_complete_name.clone());
                     } else {

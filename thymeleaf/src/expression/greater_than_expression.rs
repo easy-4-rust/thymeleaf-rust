@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
@@ -42,9 +42,9 @@ impl GreaterThanExpression {
 }
 
 impl IStandardExpression for GreaterThanExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         self.operation
-            .get_string_representation(Some(&JavaString::from_rust_str(">")))
+            .get_string_representation(Some(&Utf16String::from_rust_str(">")))
     }
 
     fn execute_with_context(
@@ -99,7 +99,7 @@ pub(crate) fn comparison_null_error(
 /// 对应 Java 语义：`GreaterThanExpression` 的 `operation_error` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn operation_error(
     operation: &str,
-    expression: JavaString,
+    expression: Utf16String,
     left: &TemplateValue,
     right: &TemplateValue,
 ) -> crate::expression::StandardExpressionError {
@@ -113,7 +113,7 @@ pub(crate) fn operation_error(
 
 fn display_value(value: Option<&TemplateValue>) -> String {
     value
-        .and_then(TemplateValue::to_java_string)
-        .unwrap_or_else(|| JavaString::from_rust_str("null"))
+        .and_then(TemplateValue::to_utf16_string)
+        .unwrap_or_else(|| Utf16String::from_rust_str("null"))
         .to_string_lossy()
 }

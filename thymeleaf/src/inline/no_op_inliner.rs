@@ -3,7 +3,7 @@ use std::sync::{Arc, OnceLock};
 use crate::context::ITemplateContext;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 
 use super::IInliner;
 
@@ -111,9 +111,9 @@ fn concrete_instance() -> &'static Arc<NoOpInliner> {
 
 impl IInliner for NoOpInliner {
     /// 返回固定名称 `NOOP`。
-    fn get_name(&self) -> &JavaString {
-        static NAME: OnceLock<JavaString> = OnceLock::new();
-        NAME.get_or_init(|| JavaString::from_rust_str("NOOP"))
+    fn get_name(&self) -> &Utf16String {
+        static NAME: OnceLock<Utf16String> = OnceLock::new();
+        NAME.get_or_init(|| Utf16String::from_rust_str("NOOP"))
     }
 
     /// 忽略非空文本参数并返回 `None`。

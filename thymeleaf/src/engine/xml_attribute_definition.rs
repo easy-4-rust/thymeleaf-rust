@@ -50,7 +50,7 @@ mod tests {
     use std::sync::{Arc, RwLock};
 
     use crate::element::ElementProcessorSet;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     use super::super::xml_attribute_name::XMLAttributeName;
     use super::XMLAttributeDefinition;
@@ -64,7 +64,7 @@ mod tests {
         let name = first
             .get_attribute_name()
             .as_attribute_name()
-            .to_java_string()
+            .to_utf16_string()
             .expect("valid XML attribute name")
             .to_string_lossy();
         let actual = format!(
@@ -85,8 +85,8 @@ mod tests {
 
     fn definition(prefix: Option<&str>, name: &str) -> XMLAttributeDefinition {
         let name = XMLAttributeName::for_name(
-            prefix.map(JavaString::from_rust_str),
-            Some(JavaString::from_rust_str(name)),
+            prefix.map(Utf16String::from_rust_str),
+            Some(Utf16String::from_rust_str(name)),
         )
         .expect("valid XML attribute name");
         XMLAttributeDefinition::new(

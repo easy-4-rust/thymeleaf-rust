@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 use thiserror::Error;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     ExpressionObjectNames, IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult,
@@ -22,7 +22,7 @@ pub struct ExpressionObjects {
     context: Weak<dyn IExpressionContext>,
     expression_object_factory: Arc<dyn IExpressionObjectFactory>,
     expression_object_names: ExpressionObjectNames,
-    objects: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    objects: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 /// 创建或使用表达式对象容器时可能出现的结构错误。
@@ -79,7 +79,7 @@ impl IExpressionObjects for ExpressionObjects {
         i32::try_from(self.expression_object_names.len()).unwrap_or(i32::MAX)
     }
 
-    fn contains_object(&self, name: Option<&JavaString>) -> bool {
+    fn contains_object(&self, name: Option<&Utf16String>) -> bool {
         self.expression_object_names
             .iter()
             .any(|candidate| candidate.as_ref() == name)
@@ -91,7 +91,7 @@ impl IExpressionObjects for ExpressionObjects {
 
     fn get_object(
         &self,
-        name: Option<&JavaString>,
+        name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         let key = name.cloned();
 

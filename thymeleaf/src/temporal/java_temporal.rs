@@ -4,7 +4,7 @@ use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Timelik
 use chrono_tz::Tz;
 
 use crate::expression::TemplateObject;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// Java Time API 中具体 `Temporal` 类型的判别值。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -79,10 +79,10 @@ impl JavaTemporal {
     /// 因此该表示与普通 Java `toString()` 分开维护。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn to_javascript_iso_string(&self) -> JavaString {
-        JavaString::from_rust_str(&match self {
+    pub fn to_javascript_iso_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&match self {
             Self::LocalDateTime(value) => value.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),
-            _ => self.to_java_string().to_string_lossy(),
+            _ => self.to_utf16_string().to_string_lossy(),
         })
     }
 }
@@ -102,8 +102,8 @@ impl TemplateObject for JavaTemporal {
         }
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&match self {
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&match self {
             Self::Instant(value) => value.to_rfc3339_opts(chrono::SecondsFormat::AutoSi, true),
             Self::LocalDate(value) => value.format("%Y-%m-%d").to_string(),
             Self::LocalDateTime(value) if value.second() == 0 && value.nanosecond() == 0 => {

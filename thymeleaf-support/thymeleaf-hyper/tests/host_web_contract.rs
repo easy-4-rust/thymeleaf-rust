@@ -4,12 +4,12 @@ use std::io::Read;
 use std::sync::Arc;
 
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use thymeleaf_hyper::{HostWebApplication, HostWebExchange, HostWebRequest, HostWebSession};
 
-fn text(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn text(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn template_text(value: &str) -> Arc<TemplateValue> {
@@ -18,7 +18,7 @@ fn template_text(value: &str) -> Arc<TemplateValue> {
 
 fn value_text(value: &Arc<TemplateValue>) -> String {
     value
-        .to_java_string()
+        .to_utf16_string()
         .expect("string template value")
         .to_string_lossy()
 }

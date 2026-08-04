@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IStandardExpression, StandardExpressionResult};
 
@@ -13,14 +13,14 @@ use super::{IStandardExpression, StandardExpressionResult};
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.ExpressionParsingNode`。
 pub(crate) struct ExpressionParsingNode {
-    input: Option<JavaString>,
+    input: Option<Utf16String>,
     expression: Option<Arc<dyn IStandardExpression>>,
 }
 
 impl ExpressionParsingNode {
     /// 从半解析文本创建节点，并执行 Java `String#trim()`。
     /// 对应 Java 语义：`ExpressionParsingNode` 的 `from_input` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn from_input(input: JavaString) -> Self {
+    pub(crate) fn from_input(input: Utf16String) -> Self {
         Self {
             input: Some(java_trim(&input)),
             expression: None,
@@ -66,7 +66,7 @@ impl ExpressionParsingNode {
 
     /// 返回可空输入文本。
     /// 对应 Java: `ExpressionParsingNode#getInput()`。
-    pub(crate) fn get_input(&self) -> Option<&JavaString> {
+    pub(crate) fn get_input(&self) -> Option<&Utf16String> {
         self.input.as_ref()
     }
 
@@ -77,22 +77,22 @@ impl ExpressionParsingNode {
     }
 
     /// 返回 Java `toString()` 的节点诊断文本。
-    /// 对应 Java 语义：`ExpressionParsingNode` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn to_java_string(&self) -> StandardExpressionResult<JavaString> {
+    /// 对应 Java 语义：`ExpressionParsingNode` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub(crate) fn to_utf16_string(&self) -> StandardExpressionResult<Utf16String> {
         if let Some(expression) = &self.expression {
             let mut units = vec![b'[' as u16];
             units.extend_from_slice(expression.get_string_representation()?.as_utf16());
             units.push(b']' as u16);
-            return Ok(JavaString::from_utf16(units));
+            return Ok(Utf16String::from_utf16(units));
         }
         Ok(self
             .input
             .clone()
-            .unwrap_or_else(|| JavaString::from_rust_str("null")))
+            .unwrap_or_else(|| Utf16String::from_rust_str("null")))
     }
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
+fn java_trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let mut start = 0;
     while start < units.len() && units[start] <= 0x20 {
@@ -102,5 +102,5 @@ fn java_trim(input: &JavaString) -> JavaString {
     while end > start && units[end - 1] <= 0x20 {
         end -= 1;
     }
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }

@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 将 `|...|` 字面量替换语法转换为标准连接表达式。
 ///
@@ -8,7 +8,7 @@ pub(crate) struct LiteralSubstitutionUtil;
 impl LiteralSubstitutionUtil {
     /// 执行字面量替换；不包含替换定界符时保留输入值。
     /// 对应 Java: `LiteralSubstitutionUtil#performLiteralSubstitution()`。
-    pub(crate) fn perform_literal_substitution(input: Option<&JavaString>) -> Option<JavaString> {
+    pub(crate) fn perform_literal_substitution(input: Option<&Utf16String>) -> Option<Utf16String> {
         let input = input?;
         let units = input.as_utf16();
 
@@ -16,7 +16,7 @@ impl LiteralSubstitutionUtil {
         // `@{|/orders/${id}|}`。先递归处理最外层 selector 的内容，否则状态机会把
         // 整个 `@{...}` 当成一个不可进入的插值区间而漏掉内层 `|...|`。
         if is_complete_outer_selector(units) && units[2..units.len() - 1].contains(&(b'|' as u16)) {
-            let content = JavaString::from_utf16(units[2..units.len() - 1].to_vec());
+            let content = Utf16String::from_utf16(units[2..units.len() - 1].to_vec());
             let substituted = Self::perform_literal_substitution(Some(&content))
                 .expect("non-null selector content remains non-null");
             if substituted != content {
@@ -24,18 +24,18 @@ impl LiteralSubstitutionUtil {
                 nested.extend_from_slice(&units[..2]);
                 nested.extend_from_slice(substituted.as_utf16());
                 nested.push(b'}' as u16);
-                return Some(JavaString::from_utf16(nested));
+                return Some(Utf16String::from_utf16(nested));
             }
         }
         if let Some((start, end)) = find_nested_selector_with_substitution(units) {
-            let selector = JavaString::from_utf16(units[start..=end].to_vec());
+            let selector = Utf16String::from_utf16(units[start..=end].to_vec());
             let substituted = Self::perform_literal_substitution(Some(&selector))
                 .expect("non-null nested selector remains non-null");
             let mut nested = Vec::with_capacity(units.len() + substituted.len());
             nested.extend_from_slice(&units[..start]);
             nested.extend_from_slice(substituted.as_utf16());
             nested.extend_from_slice(&units[end + 1..]);
-            return Self::perform_literal_substitution(Some(&JavaString::from_utf16(nested)));
+            return Self::perform_literal_substitution(Some(&Utf16String::from_utf16(nested)));
         }
 
         let mut output: Option<Vec<u16>> = None;
@@ -144,7 +144,7 @@ impl LiteralSubstitutionUtil {
             index += 1;
         }
 
-        Some(output.map_or_else(|| input.clone(), JavaString::from_utf16))
+        Some(output.map_or_else(|| input.clone(), Utf16String::from_utf16))
     }
 }
 

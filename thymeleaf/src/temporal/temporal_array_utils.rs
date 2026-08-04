@@ -1,6 +1,6 @@
 use chrono_tz::Tz;
 
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 
 use super::temporal_formatting_utils::TemporalFormattingError;
 use super::{JavaTemporal, TemporalFormattingUtils};
@@ -28,7 +28,7 @@ impl TemporalArrayUtils {
         target: &[Option<JavaTemporal>],
         pattern: Option<&str>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         target
             .iter()
             .map(|value| {
@@ -115,7 +115,7 @@ impl TemporalArrayUtils {
     pub fn array_month_name(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("MMMM"), None)
     }
 
@@ -124,7 +124,7 @@ impl TemporalArrayUtils {
     pub fn array_month_name_short(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("MMM"), None)
     }
 
@@ -133,7 +133,7 @@ impl TemporalArrayUtils {
     pub fn array_day_of_week_name(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("EEEE"), None)
     }
 
@@ -142,7 +142,7 @@ impl TemporalArrayUtils {
     pub fn array_day_of_week_name_short(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("EEE"), None)
     }
 
@@ -151,7 +151,7 @@ impl TemporalArrayUtils {
     pub fn array_format_iso(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         target
             .iter()
             .map(|value| self.formatting.format_iso(value.as_ref()))

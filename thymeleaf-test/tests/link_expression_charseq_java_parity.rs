@@ -7,10 +7,10 @@
 use std::sync::Arc;
 
 use thymeleaf::expression::LinkExpression;
-use thymeleaf::util::{AggregateCharSequence, JavaString};
+use thymeleaf::util::{AggregateCharSequence, Utf16String};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn two_parts(a: &str, b: &str) -> AggregateCharSequence {
@@ -30,7 +30,7 @@ fn aggregate_from_components_concatenates() {
         Some(Arc::new(js("World"))),
     ]))
     .expect("valid");
-    let text = seq.to_java_string().unwrap();
+    let text = seq.to_utf16_string().unwrap();
     assert_eq!(text.to_string_lossy(), "Hello World");
 }
 
@@ -107,20 +107,20 @@ fn aggregate_from_five() {
         Some(Arc::new(js("e"))),
     )
     .expect("valid");
-    assert_eq!(seq.to_java_string().unwrap().to_string_lossy(), "abcde");
+    assert_eq!(seq.to_utf16_string().unwrap().to_string_lossy(), "abcde");
 }
 
 #[test]
 fn aggregate_from_one() {
     let seq = AggregateCharSequence::from_one(Some(Arc::new(js("solo")))).expect("valid");
-    assert_eq!(seq.to_java_string().unwrap().to_string_lossy(), "solo");
+    assert_eq!(seq.to_utf16_string().unwrap().to_string_lossy(), "solo");
 }
 
 #[test]
 fn aggregate_unicode_preserved() {
     let seq = two_parts("日本語", "テスト");
     assert_eq!(
-        seq.to_java_string().unwrap().to_string_lossy(),
+        seq.to_utf16_string().unwrap().to_string_lossy(),
         "日本語テスト"
     );
 }

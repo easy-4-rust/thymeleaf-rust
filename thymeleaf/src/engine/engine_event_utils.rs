@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::context::ITemplateContext;
 use crate::expression::{IStandardExpression, StandardExpressionResult, StandardExpressions};
 use crate::model::{ICDATASection, IComment, IProcessableElementTag, IText};
-use crate::util::{JavaCharSequence, JavaString, TextUtilsError};
+use crate::util::{JavaCharSequence, TextUtilsError, Utf16String};
 
 use super::AttributeName;
 
@@ -81,7 +81,7 @@ impl EngineEventUtils {
         context: &dyn ITemplateContext,
         tag: &dyn IProcessableElementTag,
         attribute_name: &AttributeName,
-        attribute_value: &JavaString,
+        attribute_value: &Utf16String,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
         let Some(processable_tag) = tag.as_engine_processable_element_tag() else {
             return parse_attribute_expression(context, attribute_value);
@@ -110,7 +110,7 @@ impl EngineEventUtils {
 
 fn parse_attribute_expression(
     context: &dyn ITemplateContext,
-    attribute_value: &JavaString,
+    attribute_value: &Utf16String,
 ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
     StandardExpressions::get_expression_parser(context.get_configuration())?
         .parse_expression(context, Some(attribute_value))

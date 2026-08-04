@@ -14,7 +14,7 @@ use thymeleaf::expression::{IExpressionObjects, StandardExpressionResult, Templa
 use thymeleaf::inline::{IInliner, NoOpInliner};
 use thymeleaf::messageresolver::MessageResolutionResult;
 use thymeleaf::model::{ICDATASection, IComment, IModelFactory, IProcessableElementTag, IText};
-use thymeleaf::util::{JavaCharSequence, JavaLocale, JavaString};
+use thymeleaf::util::{JavaCharSequence, JavaLocale, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, TemplateMode, TemplateProcessingException, TemplateResolutionAttributes,
 };
@@ -179,8 +179,8 @@ struct ProbeInliner {
 }
 
 impl IInliner for ProbeInliner {
-    fn get_name(&self) -> &JavaString {
-        static NAME: OnceLock<JavaString> = OnceLock::new();
+    fn get_name(&self) -> &Utf16String {
+        static NAME: OnceLock<Utf16String> = OnceLock::new();
         NAME.get_or_init(|| java("PROBE"))
     }
 
@@ -223,7 +223,7 @@ impl IContext for PanicTemplateContext {
         panic!("NoOp/Probe must not read the context locale")
     }
 
-    fn contains_variable(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, _name: Option<&Utf16String>) -> bool {
         panic!("NoOp/Probe must not read context variables")
     }
 
@@ -231,7 +231,7 @@ impl IContext for PanicTemplateContext {
         panic!("NoOp/Probe must not read context variable names")
     }
 
-    fn get_variable(&self, _name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_variable(&self, _name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         panic!("NoOp/Probe must not read context variables")
     }
 }
@@ -290,18 +290,18 @@ impl ITemplateContext for PanicTemplateContext {
     fn get_message(
         &self,
         _origin: Option<TypeId>,
-        _key: &JavaString,
+        _key: &Utf16String,
         _message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         _use_absent_message_representation: bool,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         panic!("NoOp/Probe must not resolve messages")
     }
 
     fn build_link(
         &self,
-        _base: Option<&JavaString>,
-        _parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<JavaString, TemplateProcessingException> {
+        _base: Option<&Utf16String>,
+        _parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Utf16String, TemplateProcessingException> {
         panic!("NoOp/Probe must not build links")
     }
 
@@ -310,8 +310,8 @@ impl ITemplateContext for PanicTemplateContext {
     }
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn java_sequence(value: &str) -> Arc<dyn JavaCharSequence> {
@@ -325,7 +325,7 @@ fn emit(output: &mut String, key: &str, value: impl std::fmt::Display) {
     output.push('\n');
 }
 
-fn emit_java(output: &mut String, key: &str, value: &JavaString) {
+fn emit_java(output: &mut String, key: &str, value: &Utf16String) {
     emit(output, key, value.to_string_lossy());
 }
 

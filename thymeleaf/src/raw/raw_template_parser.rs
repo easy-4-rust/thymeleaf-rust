@@ -7,7 +7,7 @@ use crate::engine::{ITemplateHandler, TemplateHandlerAdapterRawHandler};
 use crate::exceptions::TemplateInputException;
 use crate::raw::{RawParser, RawParserError, RawReader, RawStringReader};
 use crate::templateresource::ITemplateResource;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use crate::templateparser::{ITemplateParser, TemplateParserError};
 
@@ -32,7 +32,7 @@ impl RawTemplateParser {
 
     fn parse_resource(
         &self,
-        template_name: JavaString,
+        template_name: Utf16String,
         resource: Arc<dyn ITemplateResource>,
         line_offset: i32,
         col_offset: i32,
@@ -62,9 +62,9 @@ impl ITemplateParser for RawTemplateParser {
     fn parse_standalone(
         &self,
         _configuration: Arc<dyn IEngineConfiguration>,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         resource: Arc<dyn ITemplateResource>,
         template_mode: TemplateMode,
         use_decoupled_logic: bool,
@@ -95,8 +95,8 @@ impl ITemplateParser for RawTemplateParser {
     fn parse_string(
         &self,
         _configuration: Arc<dyn IEngineConfiguration>,
-        owner_template: &JavaString,
-        template: &JavaString,
+        owner_template: &Utf16String,
+        template: &Utf16String,
         line_offset: i32,
         col_offset: i32,
         template_mode: TemplateMode,
@@ -121,7 +121,7 @@ impl ITemplateParser for RawTemplateParser {
 }
 
 struct Utf8RawReader {
-    value: JavaString,
+    value: Utf16String,
     position: usize,
     initialization_error: Option<io::Error>,
     closed: bool,
@@ -134,20 +134,20 @@ impl Utf8RawReader {
         match result {
             Ok(_) => match String::from_utf8(bytes) {
                 Ok(value) => Self {
-                    value: JavaString::from_rust_str(&value),
+                    value: Utf16String::from_rust_str(&value),
                     position: 0,
                     initialization_error: None,
                     closed: false,
                 },
                 Err(error) => Self {
-                    value: JavaString::from_utf16(Vec::new()),
+                    value: Utf16String::from_utf16(Vec::new()),
                     position: 0,
                     initialization_error: Some(io::Error::new(io::ErrorKind::InvalidData, error)),
                     closed: false,
                 },
             },
             Err(error) => Self {
-                value: JavaString::from_utf16(Vec::new()),
+                value: Utf16String::from_utf16(Vec::new()),
                 position: 0,
                 initialization_error: Some(error),
                 closed: false,

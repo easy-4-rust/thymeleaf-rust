@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::{Arc, PoisonError, RwLock, RwLockReadGuard};
 
-use super::JavaString;
+use super::Utf16String;
 
 /// Java `char[]` 的线程安全共享适配。
 ///
@@ -83,7 +83,7 @@ impl CharArrayWrapperSequenceError {
     /// # 返回
     /// 保存精确消息 UTF-16 代码单元的新 Java 字符串。
     #[must_use]
-    pub fn message(&self) -> JavaString {
+    pub fn message(&self) -> Utf16String {
         let message = match self {
             Self::NullBuffer => "Buffer cannot be null".to_owned(),
             Self::InvalidOffset { offset, size } => {
@@ -108,7 +108,7 @@ impl CharArrayWrapperSequenceError {
                 size,
             } => format!("Range [{offset}, {offset} + {length}) out of bounds for length {size}"),
         };
-        JavaString::from_rust_str(&message)
+        Utf16String::from_rust_str(&message)
     }
 }
 
@@ -298,7 +298,7 @@ impl CharArrayWrapperSequence {
     /// - `object`：任意 Rust `'static` 对象；`None` 对应 Java null。
     ///
     /// # 返回
-    /// 仅另一个 `CharArrayWrapperSequence` 可以相等；JavaString/String 等其他
+    /// 仅另一个 `CharArrayWrapperSequence` 可以相等；Utf16String/String 等其他
     /// 类型即使内容相同也返回 false。相同引用立即返回 true。
     #[must_use]
     pub fn equals_object(&self, object: Option<&dyn Any>) -> bool {
@@ -321,7 +321,7 @@ impl CharArrayWrapperSequence {
     /// # 错误
     /// 构造阶段被上游接受的负 length 或溢出 length 在此返回精确
     /// `StringIndexOutOfBoundsException` 类别与范围消息。
-    pub fn to_java_string(&self) -> Result<JavaString, CharArrayWrapperSequenceError> {
+    pub fn to_utf16_string(&self) -> Result<Utf16String, CharArrayWrapperSequenceError> {
         let buffer = read_buffer(&self.buffer);
         let end = i64::from(self.offset) + i64::from(self.len);
         // 所有构造路径都已拒绝负 offset；这里仅复现仍可能延迟到 String 构造阶段的
@@ -333,7 +333,7 @@ impl CharArrayWrapperSequence {
                 size: buffer.len(),
             });
         }
-        Ok(JavaString::from_utf16(
+        Ok(Utf16String::from_utf16(
             buffer[self.offset as usize..end as usize].to_vec(),
         ))
     }
@@ -401,7 +401,7 @@ mod tests {
         buffer.write().expect("write lock")[1] = 0x005A;
 
         assert_eq!(
-            sequence.to_java_string().expect("sequence").as_utf16(),
+            sequence.to_utf16_string().expect("sequence").as_utf16(),
             &[0x005A, 0x0042]
         );
         assert!(clone == sequence);
@@ -421,7 +421,7 @@ mod tests {
         assert_eq!(negative.length(), -2);
         assert_eq!(negative.hash_code(), 0);
         assert_eq!(
-            negative.to_java_string(),
+            negative.to_utf16_string(),
             Err(CharArrayWrapperSequenceError::StringRange {
                 offset: 1,
                 length: -2,

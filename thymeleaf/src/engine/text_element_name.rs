@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ElementName, ElementNameError, ElementNameKind};
 
@@ -11,14 +11,14 @@ use super::{ElementName, ElementNameError, ElementNameKind};
 /// 的 `isPrefixed()` 与 complete-name 选择刻意表现不同。
 pub struct TextElementName {
     element_name: ElementName,
-    complete_namespaced_element_name: JavaString,
+    complete_namespaced_element_name: Utf16String,
 }
 
 impl TextElementName {
     /// 对应 Java: `TextElementName#forName()`。
     pub(super) fn for_name(
-        prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
+        prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
     ) -> Result<Self, ElementNameError> {
         let raw_element_name = element_name
             .as_ref()
@@ -29,7 +29,7 @@ impl TextElementName {
             let mut complete = prefix_value.as_utf16().to_vec();
             complete.push(u16::from(b':'));
             complete.extend_from_slice(raw_element_name.as_utf16());
-            JavaString::from_utf16(complete)
+            Utf16String::from_utf16(complete)
         } else {
             raw_element_name.clone()
         };
@@ -53,7 +53,7 @@ impl TextElementName {
 
     /// 返回可直接用于文本模式匹配的完整命名空间元素名。
     #[must_use]
-    pub const fn get_complete_namespaced_element_name(&self) -> &JavaString {
+    pub const fn get_complete_namespaced_element_name(&self) -> &Utf16String {
         &self.complete_namespaced_element_name
     }
 }

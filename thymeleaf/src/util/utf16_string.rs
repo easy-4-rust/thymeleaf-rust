@@ -9,11 +9,11 @@ use std::fmt::{Debug, Formatter};
 /// 代理项。本类型保存原始 UTF-16 代码单元，确保模板名日志截断不会用替换字符改变
 /// 上游结果。
 #[derive(Clone, Eq, Hash, PartialEq)]
-pub struct JavaString {
+pub struct Utf16String {
     utf16: Vec<u16>,
 }
 
-impl JavaString {
+impl Utf16String {
     /// 从有效 Rust 字符串创建 Java 字符串。
     ///
     /// # 参数
@@ -87,10 +87,10 @@ impl JavaString {
     }
 }
 
-impl Debug for JavaString {
+impl Debug for Utf16String {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter
-            .debug_struct("JavaString")
+            .debug_struct("Utf16String")
             .field("utf16", &self.utf16)
             .finish()
     }
@@ -101,21 +101,21 @@ impl Debug for JavaString {
 /// 对应 Java `String.replace(char,char)` 在找不到换行符时返回原对象，以及需要替换
 /// 或截断时创建新对象的身份语义。
 #[derive(Debug)]
-pub enum JavaStringResult<'a> {
+pub enum Utf16StringResult<'a> {
     /// 返回输入的同一个 Java 字符串对象。
-    Borrowed(&'a JavaString),
+    Borrowed(&'a Utf16String),
     /// 返回新创建的 Java 字符串对象。
-    Owned(JavaString),
+    Owned(Utf16String),
 }
 
-impl<'a> JavaStringResult<'a> {
+impl<'a> Utf16StringResult<'a> {
     /// 返回结果 Java 字符串。
     ///
     /// # 返回
     /// 借用或拥有分支中的统一只读引用。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
-    pub fn as_java_string(&self) -> &JavaString {
+    pub fn as_utf16_string(&self) -> &Utf16String {
         match self {
             Self::Borrowed(value) => value,
             Self::Owned(value) => value,
@@ -131,7 +131,7 @@ impl<'a> JavaStringResult<'a> {
     /// 结果为同一借用对象时返回 `true`。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
-    pub fn is_borrowed_from(&self, source: &JavaString) -> bool {
+    pub fn is_borrowed_from(&self, source: &Utf16String) -> bool {
         matches!(self, Self::Borrowed(value) if std::ptr::eq(*value, source))
     }
 
@@ -141,7 +141,7 @@ impl<'a> JavaStringResult<'a> {
     /// 已拥有结果直接移动；借用结果克隆相同 UTF-16 代码单元。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
-    pub fn into_owned(self) -> JavaString {
+    pub fn into_owned(self) -> Utf16String {
         match self {
             Self::Borrowed(value) => value.clone(),
             Self::Owned(value) => value,
@@ -151,19 +151,19 @@ impl<'a> JavaStringResult<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{JavaString, JavaStringResult};
+    use super::{Utf16String, Utf16StringResult};
 
     #[test]
     fn preserves_null_empty_and_short_reference_identity() {
-        let empty = JavaString::from_rust_str("");
+        let empty = Utf16String::from_rust_str("");
         assert!(empty.is_empty());
-        let result = JavaStringResult::Borrowed(&empty);
+        let result = Utf16StringResult::Borrowed(&empty);
         assert!(result.is_borrowed_from(&empty));
-        assert_eq!(result.as_java_string().as_utf16(), &[] as &[u16]);
-        assert_eq!(result.as_java_string().to_string_lossy(), "");
-        assert_eq!(format!("{empty:?}"), "JavaString { utf16: [] }");
+        assert_eq!(result.as_utf16_string().as_utf16(), &[] as &[u16]);
+        assert_eq!(result.as_utf16_string().to_string_lossy(), "");
+        assert_eq!(format!("{empty:?}"), "Utf16String { utf16: [] }");
         assert!(
-            JavaStringResult::Owned(empty.clone())
+            Utf16StringResult::Owned(empty.clone())
                 .into_owned()
                 .as_utf16()
                 .is_empty()
@@ -174,7 +174,7 @@ mod tests {
     fn preserves_isolated_surrogates_without_replacement() {
         let mut utf16 = vec![0xD83D];
         utf16.extend("abc".encode_utf16());
-        let value = JavaString::from_utf16(utf16);
+        let value = Utf16String::from_utf16(utf16);
         assert_eq!(value.len(), 4);
         assert_eq!(value.as_utf16()[0], 0xD83D);
     }

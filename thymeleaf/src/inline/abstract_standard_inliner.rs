@@ -10,7 +10,7 @@ use crate::expression::{
 use crate::model::{ICDATASection, IComment, IModel, IText};
 use crate::serializer::{IStandardCSSSerializer, IStandardJavaScriptSerializer};
 use crate::util::{
-    EscapedAttributeUtils, JavaCharSequence, JavaString, JavaWriter, LazyProcessingCharSequence,
+    EscapedAttributeUtils, JavaCharSequence, JavaWriter, LazyProcessingCharSequence, Utf16String,
 };
 use crate::{IEngineConfiguration, TemplateMode};
 
@@ -159,7 +159,7 @@ impl AbstractStandardInliner {
     fn inline_switch_template_mode(
         &self,
         context: &dyn ITemplateContext,
-        content: JavaString,
+        content: Utf16String,
         line: i32,
         col: i32,
         allow_lazy: bool,
@@ -199,7 +199,7 @@ impl AbstractStandardInliner {
                 }),
             )
             .map_err(box_error)?;
-        Ok(Some(Box::new(JavaString::from_utf16(
+        Ok(Some(Box::new(Utf16String::from_utf16(
             output
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -211,13 +211,13 @@ impl AbstractStandardInliner {
     fn perform_inlining(
         &self,
         context: &dyn ITemplateContext,
-        text: &JavaString,
+        text: &Utf16String,
         offset: usize,
         len: usize,
-        template_name: Option<&JavaString>,
+        template_name: Option<&Utf16String>,
         line: i32,
         col: i32,
-    ) -> StandardExpressionResult<JavaString> {
+    ) -> StandardExpressionResult<Utf16String> {
         let expression_parser =
             StandardExpressions::get_expression_parser(context.get_configuration())?;
         let units = text.as_utf16();
@@ -232,9 +232,9 @@ impl AbstractStandardInliner {
             if let Some((start, closing, current_line, current_col)) = expression {
                 let Some(end) = find_structure_end(units, index, max, closing, &mut locator) else {
                     output.extend_from_slice(&units[current..max]);
-                    return Ok(JavaString::from_utf16(output));
+                    return Ok(Utf16String::from_utf16(output));
                 };
-                let expression_text = JavaString::from_utf16(units[start + 2..end].to_vec());
+                let expression_text = Utf16String::from_utf16(units[start + 2..end].to_vec());
                 let escaped = closing == u16::from(b']');
                 let result = self.process_expression(
                     context,
@@ -254,7 +254,7 @@ impl AbstractStandardInliner {
             } else {
                 let Some(start) = find_structure_start(units, index, max, &mut locator) else {
                     output.extend_from_slice(&units[current..max]);
-                    return Ok(JavaString::from_utf16(output));
+                    return Ok(Utf16String::from_utf16(output));
                 };
                 // Java 在下一次循环（进入 inExpression 分支）才读取 locator，因此这里
                 // 必须保存扫描到表达式起点后的行列，而不是当前文本事件的起始行列。
@@ -274,7 +274,7 @@ impl AbstractStandardInliner {
         if expression.is_some() {
             output.extend_from_slice(&units[current..max]);
         }
-        Ok(JavaString::from_utf16(output))
+        Ok(Utf16String::from_utf16(output))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -282,12 +282,12 @@ impl AbstractStandardInliner {
         &self,
         context: &dyn ITemplateContext,
         expression_parser: &dyn crate::expression::IStandardExpressionParser,
-        expression: &JavaString,
+        expression: &Utf16String,
         escape: bool,
-        template_name: Option<&JavaString>,
+        template_name: Option<&Utf16String>,
         line: i32,
         col: i32,
-    ) -> StandardExpressionResult<JavaString> {
+    ) -> StandardExpressionResult<Utf16String> {
         let result = (|| {
             let unescaped = EscapedAttributeUtils::unescape_attribute(
                 Some(self.template_mode),
@@ -306,13 +306,13 @@ impl AbstractStandardInliner {
             Ok(value) => Ok(value
                 .as_deref()
                 .filter(|value| !matches!(value, TemplateValue::Null))
-                .and_then(TemplateValue::to_java_string)
-                .unwrap_or_else(|| JavaString::from_rust_str(""))),
+                .and_then(TemplateValue::to_utf16_string)
+                .unwrap_or_else(|| Utf16String::from_rust_str(""))),
             Err(mut error) => {
                 if let Some(processing) = error.downcast_mut::<TemplateProcessingException>() {
                     if !processing.has_template_name() {
                         processing
-                            .set_template_name(template_name.map(JavaString::to_string_lossy));
+                            .set_template_name(template_name.map(Utf16String::to_string_lossy));
                     }
                     if !processing.has_line_and_col() {
                         processing.set_line_and_col(line, col);
@@ -325,7 +325,7 @@ impl AbstractStandardInliner {
                             "Error during execution of inlined expression '{}'",
                             expression.to_string_lossy()
                         )),
-                        template_name.map(JavaString::to_string_lossy),
+                        template_name.map(Utf16String::to_string_lossy),
                         line,
                         col,
                         InlinerExpressionCause(error.to_string()),
@@ -338,20 +338,20 @@ impl AbstractStandardInliner {
     fn produce_escaped_output(
         &self,
         input: Option<&TemplateValue>,
-    ) -> StandardExpressionResult<JavaString> {
+    ) -> StandardExpressionResult<Utf16String> {
         match &self.escaping {
             StandardInlinerEscaping::Html => {
                 let text = input
                     .filter(|value| !matches!(value, TemplateValue::Null))
-                    .and_then(TemplateValue::to_java_string)
-                    .unwrap_or_else(|| JavaString::from_rust_str(""));
+                    .and_then(TemplateValue::to_utf16_string)
+                    .unwrap_or_else(|| Utf16String::from_rust_str(""));
                 Ok(escape_html4_xml(&text))
             }
             StandardInlinerEscaping::Xml => {
                 let text = input
                     .filter(|value| !matches!(value, TemplateValue::Null))
-                    .and_then(TemplateValue::to_java_string)
-                    .unwrap_or_else(|| JavaString::from_rust_str(""));
+                    .and_then(TemplateValue::to_utf16_string)
+                    .unwrap_or_else(|| Utf16String::from_rust_str(""));
                 Ok(escape_xml10(&text))
             }
             StandardInlinerEscaping::JavaScript(serializer) => {
@@ -436,7 +436,7 @@ fn count_char(locator: &mut [i32; 2], unit: u16) {
     }
 }
 
-fn escape_html4_xml(input: &JavaString) -> JavaString {
+fn escape_html4_xml(input: &Utf16String) -> Utf16String {
     let mut output = Vec::with_capacity(input.len());
     for &unit in input.as_utf16() {
         match unit {
@@ -448,10 +448,10 @@ fn escape_html4_xml(input: &JavaString) -> JavaString {
             _ => output.push(unit),
         }
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
-fn escape_xml10(input: &JavaString) -> JavaString {
+fn escape_xml10(input: &Utf16String) -> Utf16String {
     let mut output = Vec::with_capacity(input.len());
     for &unit in input.as_utf16() {
         match unit {
@@ -464,20 +464,20 @@ fn escape_xml10(input: &JavaString) -> JavaString {
             _ => {}
         }
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
 fn serialize_value(
     input: Option<&TemplateValue>,
     operation: impl FnOnce(&mut dyn JavaWriter) -> Result<(), TemplateProcessingException>,
-) -> StandardExpressionResult<JavaString> {
+) -> StandardExpressionResult<Utf16String> {
     let output = Arc::new(Mutex::new(Vec::new()));
     let mut writer = SharedUtf16Writer {
         output: Arc::clone(&output),
     };
     let _ = input;
     operation(&mut writer).map_err(box_error)?;
-    Ok(JavaString::from_utf16(
+    Ok(Utf16String::from_utf16(
         output
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)

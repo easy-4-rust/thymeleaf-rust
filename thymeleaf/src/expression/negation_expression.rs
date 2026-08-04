@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     ComplexExpression, IStandardExpression, StandardExpressionExecutionContext,
@@ -33,7 +33,7 @@ impl NegationExpression {
 }
 
 impl IStandardExpression for NegationExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = vec![b'!' as u16];
         if self.operand.is_complex() {
             units.push(b'(' as u16);
@@ -42,7 +42,7 @@ impl IStandardExpression for NegationExpression {
         if self.operand.is_complex() {
             units.push(b')' as u16);
         }
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
     fn execute_with_context(
         &self,

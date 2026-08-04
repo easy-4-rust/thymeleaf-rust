@@ -2,7 +2,7 @@ use super::{
     AbstractStandardAttributeModifierTagProcessor, delegate_standard_element_tag_processor,
 };
 use crate::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 /// HTML `th:value` 属性修改 Processor。对应 Java: `org.thymeleaf.standard.processor.StandardValueTagProcessor`。
 pub struct StandardValueTagProcessor {
     processor: AbstractStandardAttributeModifierTagProcessor,
@@ -15,13 +15,13 @@ impl StandardValueTagProcessor {
     /// 创建 Processor。
     /// 对应 Java 语义：`StandardValueTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardAttributeModifierTagProcessor::new(
                 TemplateMode::HTML,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 false,
                 false,

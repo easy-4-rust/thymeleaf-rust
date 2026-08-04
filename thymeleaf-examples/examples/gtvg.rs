@@ -10,7 +10,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, JavaLocale, JavaString};
+use thymeleaf::util::{JavaDate, JavaLocale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf_examples::controllers::controller_mappings::ControllerMapping;
 use thymeleaf_examples::web::gtvg_web_exchange::GtvgWebExchange;
@@ -23,11 +23,11 @@ use thymeleaf_examples::web::gtvg_web_request::GtvgWebRequest;
 /// prefix 指向本 crate 的 `templates/` 目录（与 Java webapp 的绝对路径对应）。
 fn build_template_engine() -> TemplateEngine {
     let mut template_resolver = thymeleaf::templateresolver::FileTemplateResolver::new();
-    template_resolver.set_prefix(Some(JavaString::from_rust_str(concat!(
+    template_resolver.set_prefix(Some(Utf16String::from_rust_str(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/templates/"
     ))));
-    template_resolver.set_suffix(Some(JavaString::from_rust_str(".html")));
+    template_resolver.set_suffix(Some(Utf16String::from_rust_str(".html")));
     let engine = TemplateEngine::new();
     engine
         .set_template_resolver(Arc::new(template_resolver))

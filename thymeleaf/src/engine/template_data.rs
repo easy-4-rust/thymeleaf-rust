@@ -5,7 +5,7 @@ use crate::cache::ICacheEntryValidity;
 use crate::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
 use crate::templatemode::TemplateMode;
 use crate::templateresource::ITemplateResource;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 当前处理模板的名称、选择器、资源、模式和缓存有效性元数据。
 ///
@@ -14,8 +14,8 @@ use crate::util::JavaString;
 /// 构造器与上游一致，不执行任何校验或转换。
 #[derive(Clone)]
 pub struct TemplateData {
-    template: Option<JavaString>,
-    template_selectors: Option<Vec<JavaString>>,
+    template: Option<Utf16String>,
+    template_selectors: Option<Vec<Utf16String>>,
     template_resource: Option<Arc<dyn ITemplateResource>>,
     template_mode: Option<TemplateMode>,
     cache_validity: Option<Arc<dyn ICacheEntryValidity>>,
@@ -26,8 +26,8 @@ impl TemplateData {
     #[must_use]
     /// 对应 Java 语义：`TemplateData` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        template: Option<JavaString>,
-        template_selectors: Option<Vec<JavaString>>,
+        template: Option<Utf16String>,
+        template_selectors: Option<Vec<Utf16String>>,
         template_resource: Option<Arc<dyn ITemplateResource>>,
         template_mode: Option<TemplateMode>,
         cache_validity: Option<Arc<dyn ICacheEntryValidity>>,
@@ -43,7 +43,7 @@ impl TemplateData {
 
     /// 返回可空模板名。
     #[must_use]
-    pub const fn get_template(&self) -> Option<&JavaString> {
+    pub const fn get_template(&self) -> Option<&Utf16String> {
         self.template.as_ref()
     }
 
@@ -56,7 +56,7 @@ impl TemplateData {
     /// 返回可空、保持原顺序的模板选择器。
     #[must_use]
     /// 对应 Java: `TemplateData#getTemplateSelectors()`。
-    pub fn get_template_selectors(&self) -> Option<&[JavaString]> {
+    pub fn get_template_selectors(&self) -> Option<&[Utf16String]> {
         self.template_selectors.as_deref()
     }
 
@@ -102,8 +102,8 @@ impl TemplateObject for TemplateData {
         "org.thymeleaf.engine.TemplateData"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.engine.TemplateData")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.engine.TemplateData")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -112,7 +112,7 @@ impl TemplateObject for TemplateData {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
             "template" => self
@@ -163,8 +163,8 @@ impl TemplateObject for TemplateResourceExpressionObject {
         "org.thymeleaf.templateresource.ITemplateResource"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&self.resource.get_description())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&self.resource.get_description())
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -173,14 +173,16 @@ impl TemplateObject for TemplateResourceExpressionObject {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
-            "description" => Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+            "description" => Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
                 &self.resource.get_description(),
             )))),
             "baseName" => self.resource.get_base_name().map(|base_name| {
-                Arc::new(TemplateValue::string(JavaString::from_rust_str(&base_name)))
+                Arc::new(TemplateValue::string(Utf16String::from_rust_str(
+                    &base_name,
+                )))
             }),
             "exists" => Some(Arc::new(TemplateValue::Boolean(self.resource.exists()))),
             _ => return None,
@@ -202,8 +204,8 @@ impl TemplateObject for CacheEntryValidityExpressionObject {
         "org.thymeleaf.cache.ICacheEntryValidity"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.cache.ICacheEntryValidity")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.cache.ICacheEntryValidity")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -212,7 +214,7 @@ impl TemplateObject for CacheEntryValidityExpressionObject {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
             "cacheable" => Some(Arc::new(TemplateValue::Boolean(
@@ -236,12 +238,12 @@ mod tests {
     use crate::cache::AlwaysValidCacheEntryValidity;
     use crate::expression::{TemplateObject, TemplateValue};
     use crate::templateresource::{ITemplateResource, StringTemplateResource};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[test]
     fn constructor_preserves_nullable_metadata_like_java() {
         let data = TemplateData::new(
-            Some(JavaString::from_rust_str("template")),
+            Some(Utf16String::from_rust_str("template")),
             None,
             None,
             Some(TemplateMode::HTML),
@@ -251,7 +253,7 @@ mod tests {
         let output = format!(
             "{},{},{},{},{},{}",
             data.get_template()
-                .map(JavaString::to_string_lossy)
+                .map(Utf16String::to_string_lossy)
                 .expect("template"),
             data.has_template_selectors(),
             nullable(
@@ -279,10 +281,10 @@ mod tests {
         let validity: Arc<dyn crate::cache::ICacheEntryValidity> =
             Arc::new(AlwaysValidCacheEntryValidity::new());
         let full = TemplateData::new(
-            Some(JavaString::from_rust_str("full")),
+            Some(Utf16String::from_rust_str("full")),
             Some(vec![
-                JavaString::from_rust_str("second"),
-                JavaString::from_rust_str("first"),
+                Utf16String::from_rust_str("second"),
+                Utf16String::from_rust_str("first"),
             ]),
             Some(Arc::clone(&resource)),
             Some(TemplateMode::XML),
@@ -323,17 +325,17 @@ mod tests {
 
     fn assert_property(data: &TemplateData, property: &str, expected: Option<&str>) {
         let actual = data
-            .java_get_property(&JavaString::from_rust_str(property))
+            .java_get_property(&Utf16String::from_rust_str(property))
             .expect("TemplateData JavaBean property")
             .expect("TemplateData getter must not fail")
-            .and_then(|value| value.to_java_string())
+            .and_then(|value| value.to_utf16_string())
             .map(|value| value.to_string_lossy());
         assert_eq!(actual.as_deref(), expected, "property {property}");
     }
 
     fn object_property(data: &TemplateData, property: &str) -> Arc<dyn TemplateObject> {
         let value = data
-            .java_get_property(&JavaString::from_rust_str(property))
+            .java_get_property(&Utf16String::from_rust_str(property))
             .expect("TemplateData JavaBean property")
             .expect("TemplateData getter must not fail")
             .expect("non-null Java object");
@@ -345,10 +347,10 @@ mod tests {
 
     fn assert_object_property(object: &dyn TemplateObject, property: &str, expected: Option<&str>) {
         let actual = object
-            .java_get_property(&JavaString::from_rust_str(property))
+            .java_get_property(&Utf16String::from_rust_str(property))
             .expect("nested JavaBean property")
             .expect("nested getter must not fail")
-            .and_then(|value| value.to_java_string())
+            .and_then(|value| value.to_utf16_string())
             .map(|value| value.to_string_lossy());
         assert_eq!(actual.as_deref(), expected, "nested property {property}");
     }

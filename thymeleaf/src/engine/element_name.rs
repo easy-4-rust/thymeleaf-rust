@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use crate::util::{JavaHashCode, JavaString};
+use crate::util::{JavaHashCode, Utf16String};
 
 /// `ElementName` 的具体 Java 子类标识。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -60,9 +60,9 @@ impl Error for ElementNameError {}
 /// 内部 `String[]` 的别名行为；哈希仅在构造时计算，数组后续修改不会刷新缓存。
 pub struct ElementName {
     kind: ElementNameKind,
-    prefix: Option<JavaString>,
-    element_name: JavaString,
-    complete_element_names: Arc<RwLock<Vec<Option<JavaString>>>>,
+    prefix: Option<Utf16String>,
+    element_name: Utf16String,
+    complete_element_names: Arc<RwLock<Vec<Option<Utf16String>>>>,
     hash_code: i32,
 }
 
@@ -70,9 +70,9 @@ impl ElementName {
     /// 对应 Java 语义：`ElementName` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn new(
         kind: ElementNameKind,
-        prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
-        complete_element_names: Vec<Option<JavaString>>,
+        prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
+        complete_element_names: Vec<Option<Utf16String>>,
     ) -> Result<Self, ElementNameError> {
         let element_name = element_name.ok_or(ElementNameError::InvalidElementName)?;
         if !element_name.is_empty()
@@ -101,7 +101,7 @@ impl ElementName {
 
     /// 返回不带命名空间前缀的元素名。
     #[must_use]
-    pub const fn get_element_name(&self) -> &JavaString {
+    pub const fn get_element_name(&self) -> &Utf16String {
         &self.element_name
     }
 
@@ -115,7 +115,7 @@ impl ElementName {
 
     /// 返回可空命名空间前缀。
     #[must_use]
-    pub const fn get_prefix(&self) -> Option<&JavaString> {
+    pub const fn get_prefix(&self) -> Option<&Utf16String> {
         self.prefix.as_ref()
     }
 
@@ -126,7 +126,7 @@ impl ElementName {
     /// 所有调用共享同一个可写数组，等价于 Java 直接返回字段引用。
     #[must_use]
     /// 对应 Java: `ElementName#getCompleteElementNames()`。
-    pub fn get_complete_element_names(&self) -> Arc<RwLock<Vec<Option<JavaString>>>> {
+    pub fn get_complete_element_names(&self) -> Arc<RwLock<Vec<Option<Utf16String>>>> {
         Arc::clone(&self.complete_element_names)
     }
 
@@ -141,8 +141,8 @@ impl ElementName {
     /// # 错误
     ///
     /// complete names 数组为空时保留 Java 首元素访问越界异常。
-    /// 对应 Java 语义：`ElementName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> Result<JavaString, ElementNameError> {
+    /// 对应 Java 语义：`ElementName` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Result<Utf16String, ElementNameError> {
         let names = read_recovering_poison(&self.complete_element_names);
         let Some(first) = names.first() else {
             return Err(ElementNameError::EmptyCompleteElementNames);
@@ -155,7 +155,7 @@ impl ElementName {
             append_nullable(&mut result, name.as_ref());
         }
         result.push(u16::from(b'}'));
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 }
 
@@ -175,7 +175,7 @@ impl PartialEq for ElementName {
 
 impl Eq for ElementName {}
 
-fn arrays_hash_code(names: &[Option<JavaString>]) -> i32 {
+fn arrays_hash_code(names: &[Option<Utf16String>]) -> i32 {
     names.iter().fold(1_i32, |result, name| {
         result
             .wrapping_mul(31)
@@ -183,7 +183,7 @@ fn arrays_hash_code(names: &[Option<JavaString>]) -> i32 {
     })
 }
 
-fn append_nullable(target: &mut Vec<u16>, value: Option<&JavaString>) {
+fn append_nullable(target: &mut Vec<u16>, value: Option<&Utf16String>) {
     match value {
         Some(value) => target.extend_from_slice(value.as_utf16()),
         None => target.extend("null".encode_utf16()),

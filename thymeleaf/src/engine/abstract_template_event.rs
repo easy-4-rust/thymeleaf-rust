@@ -1,10 +1,10 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 所有引擎模板事件共享的可空模板位置。
 ///
 /// 对应 Java: `org.thymeleaf.engine.AbstractTemplateEvent`。
 pub struct AbstractTemplateEvent {
-    template_name: Option<JavaString>,
+    template_name: Option<Utf16String>,
     line: i32,
     col: i32,
 }
@@ -23,7 +23,7 @@ impl AbstractTemplateEvent {
     /// 创建带上游原始位置字段的事件基类。
     #[must_use]
     /// 对应 Java 语义：`AbstractTemplateEvent` 的 `with_location` 行为（Rust 侧辅助/私有路径）。
-    pub fn with_location(template_name: Option<JavaString>, line: i32, col: i32) -> Self {
+    pub fn with_location(template_name: Option<Utf16String>, line: i32, col: i32) -> Self {
         Self {
             template_name,
             line,
@@ -50,7 +50,7 @@ impl AbstractTemplateEvent {
 
     /// 返回可空模板名。
     #[must_use]
-    pub const fn get_template_name(&self) -> Option<&JavaString> {
+    pub const fn get_template_name(&self) -> Option<&Utf16String> {
         self.template_name.as_ref()
     }
 

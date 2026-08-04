@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::engine::{AttributeNameError, AttributeNameKind, AttributeNameValue};
 use crate::templatemode::TemplateMode;
-use crate::util::{JavaString, java_case_fold_unit};
+use crate::util::{Utf16String, java_case_fold_unit};
 
 /// `MatchingAttributeName` 构造、匹配和显示错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -43,7 +43,7 @@ impl Error for MatchingAttributeNameError {}
 pub struct MatchingAttributeName {
     template_mode: TemplateMode,
     matching_attribute_name: Option<AttributeNameValue>,
-    matching_all_attributes_with_prefix: Option<JavaString>,
+    matching_all_attributes_with_prefix: Option<Utf16String>,
     matching_all_attributes: bool,
 }
 
@@ -78,7 +78,7 @@ impl MatchingAttributeName {
     /// 对应 Java: `MatchingAttributeName#forAllAttributesWithPrefix()`。
     pub fn for_all_attributes_with_prefix(
         template_mode: Option<TemplateMode>,
-        prefix: Option<JavaString>,
+        prefix: Option<Utf16String>,
     ) -> Result<Self, MatchingAttributeNameError> {
         Ok(Self {
             template_mode: require_mode(template_mode)?,
@@ -115,7 +115,7 @@ impl MatchingAttributeName {
 
     /// 返回“prefix 下全部属性”规则的可空 prefix。
     #[must_use]
-    pub const fn get_matching_all_attributes_with_prefix(&self) -> Option<&JavaString> {
+    pub const fn get_matching_all_attributes_with_prefix(&self) -> Option<&Utf16String> {
         self.matching_all_attributes_with_prefix.as_ref()
     }
 
@@ -172,23 +172,23 @@ impl MatchingAttributeName {
     /// # 错误
     ///
     /// 精确属性名数组被外部破坏时传播对应错误。
-    /// 对应 Java 语义：`MatchingAttributeName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> Result<JavaString, MatchingAttributeNameError> {
+    /// 对应 Java 语义：`MatchingAttributeName` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Result<Utf16String, MatchingAttributeNameError> {
         if let Some(name) = self.matching_attribute_name.as_ref() {
             return name
                 .as_attribute_name()
-                .to_java_string()
+                .to_utf16_string()
                 .map_err(MatchingAttributeNameError::AttributeName);
         }
         if self.matching_all_attributes {
-            return Ok(JavaString::from_rust_str("*"));
+            return Ok(Utf16String::from_rust_str("*"));
         }
         let Some(prefix) = self.matching_all_attributes_with_prefix.as_ref() else {
-            return Ok(JavaString::from_rust_str("[^:]*"));
+            return Ok(Utf16String::from_rust_str("[^:]*"));
         };
         let mut result = prefix.as_utf16().to_vec();
         result.extend(":*".encode_utf16());
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 }
 
@@ -229,7 +229,7 @@ fn kind_matches_mode(mode: TemplateMode, kind: AttributeNameKind) -> bool {
     }
 }
 
-fn text_equals(case_sensitive: bool, left: &JavaString, right: &JavaString) -> bool {
+fn text_equals(case_sensitive: bool, left: &Utf16String, right: &Utf16String) -> bool {
     left.len() == right.len()
         && left
             .as_utf16()

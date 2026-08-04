@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::model::IModel;
 use crate::processinginstruction::IProcessingInstructionStructureHandler;
-use crate::util::{JavaString, Validate, ValidateError};
+use crate::util::{Utf16String, Validate, ValidateError};
 
 /// 引擎内部 ProcessingInstruction 结构动作状态机。
 ///
@@ -10,8 +10,8 @@ use crate::util::{JavaString, Validate, ValidateError};
 /// `org.thymeleaf.engine.ProcessingInstructionStructureHandler`。
 pub(crate) struct ProcessingInstructionStructureHandler {
     pub(crate) set_processing_instruction: bool,
-    pub(crate) set_processing_instruction_target: Option<JavaString>,
-    pub(crate) set_processing_instruction_content: Option<JavaString>,
+    pub(crate) set_processing_instruction_target: Option<Utf16String>,
+    pub(crate) set_processing_instruction_content: Option<Utf16String>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -42,8 +42,8 @@ impl ProcessingInstructionStructureHandler {
     /// 方法先重置，再按 target、content 的顺序校验。
     pub(crate) fn set_processing_instruction_nullable(
         &mut self,
-        target: Option<JavaString>,
-        content: Option<JavaString>,
+        target: Option<Utf16String>,
+        content: Option<Utf16String>,
     ) -> Result<(), ValidateError> {
         self.reset();
         Validate::not_null(target.as_ref(), Some("Target cannot be null"))?;
@@ -81,7 +81,7 @@ impl IProcessingInstructionStructureHandler for ProcessingInstructionStructureHa
         self.remove_processing_instruction = false;
     }
 
-    fn set_processing_instruction(&mut self, target: JavaString, content: JavaString) {
+    fn set_processing_instruction(&mut self, target: Utf16String, content: Utf16String) {
         self.set_processing_instruction_nullable(Some(target), Some(content))
             .expect("Rust non-null processing-instruction boundary must satisfy Java validation");
     }

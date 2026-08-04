@@ -9,11 +9,11 @@ use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::inline::StandardInlineMode;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn engine_with_mode(mode: TemplateMode) -> TemplateEngine {
@@ -78,8 +78,8 @@ fn inline_mode_parse_unknown() {
 fn html_inline_double_bracket_escapes() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("name")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "<b>Alice</b>",
         )))),
     );
@@ -100,8 +100,8 @@ fn html_inline_double_bracket_escapes() {
 fn inline_none_preserves_expression() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("name")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "x",
         )))),
     );
@@ -121,8 +121,8 @@ fn inline_none_preserves_expression() {
 fn text_inline_expression() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("msg")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("msg")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello",
         )))),
     );
@@ -134,8 +134,8 @@ fn text_inline_expression() {
 fn text_inline_escaped() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("msg")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("msg")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "a<b",
         )))),
     );
@@ -151,7 +151,7 @@ fn text_inline_escaped() {
 fn javascript_inline_literal() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("num")),
+        Some(Utf16String::from_rust_str("num")),
         Some(Arc::new(TemplateValue::Number(
             thymeleaf::util::JavaNumber::Integer(42),
         ))),
@@ -164,8 +164,8 @@ fn javascript_inline_literal() {
 fn javascript_inline_string() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("name")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Alice",
         )))),
     );
@@ -181,7 +181,7 @@ fn javascript_inline_string() {
 fn css_inline_number() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("w")),
+        Some(Utf16String::from_rust_str("w")),
         Some(Arc::new(TemplateValue::Number(
             thymeleaf::util::JavaNumber::Integer(100),
         ))),
@@ -198,11 +198,11 @@ fn css_inline_number() {
 fn inline_with_each() {
     let ctx = Context::new();
     let list = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
     ];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("items")),
+        Some(Utf16String::from_rust_str("items")),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     let s = render(
@@ -222,8 +222,8 @@ fn inline_with_each() {
 fn html_default_inlining_enabled() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("name")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Alice",
         )))),
     );

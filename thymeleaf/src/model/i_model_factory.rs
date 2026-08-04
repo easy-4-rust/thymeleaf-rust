@@ -3,7 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 
 use crate::engine::{AttributeName, TemplateData};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AttributeValueQuotes, ICDATASection, ICloseElementTag, IComment, IDocType, IModel,
@@ -26,17 +26,17 @@ pub trait IModelFactory: Send + Sync {
     fn parse(
         &self,
         owner_template: &TemplateData,
-        template: &JavaString,
+        template: &Utf16String,
     ) -> Result<Box<dyn IModel>, crate::exceptions::TemplateProcessingException>;
     /// 创建 CDATA 事件。
     fn create_cdata_section(
         &self,
-        content: JavaString,
+        content: Utf16String,
     ) -> Result<Arc<dyn ICDATASection>, crate::exceptions::TemplateProcessingException>;
     /// 创建注释事件。
     fn create_comment(
         &self,
-        content: JavaString,
+        content: Utf16String,
     ) -> Result<Arc<dyn IComment>, crate::exceptions::TemplateProcessingException>;
     /// 创建 HTML5 DOCTYPE。
     fn create_html5_doc_type(
@@ -45,38 +45,38 @@ pub trait IModelFactory: Send + Sync {
     /// 创建带 public/system ID 的 DOCTYPE。
     fn create_doc_type(
         &self,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
     ) -> Result<Arc<dyn IDocType>, crate::exceptions::TemplateProcessingException>;
     /// 创建完整 DOCTYPE。
     fn create_full_doc_type(
         &self,
-        keyword: JavaString,
-        element_name: JavaString,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
+        keyword: Utf16String,
+        element_name: Utf16String,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
     ) -> Result<Arc<dyn IDocType>, crate::exceptions::TemplateProcessingException>;
     /// 创建 processing instruction。
     fn create_processing_instruction(
         &self,
-        target: JavaString,
-        content: JavaString,
+        target: Utf16String,
+        content: Utf16String,
     ) -> Result<Arc<dyn IProcessingInstruction>, crate::exceptions::TemplateProcessingException>;
     /// 创建文本事件。
-    fn create_text(&self, text: JavaString) -> Arc<dyn IText>;
+    fn create_text(&self, text: Utf16String) -> Arc<dyn IText>;
     /// 创建 XML declaration。
     fn create_xml_declaration(
         &self,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
     ) -> Result<Arc<dyn IXMLDeclaration>, crate::exceptions::TemplateProcessingException>;
     /// 创建独立标签。
     fn create_standalone_element_tag(
         &self,
-        element_name: JavaString,
-        attributes: Option<&IndexMap<JavaString, Option<JavaString>>>,
+        element_name: Utf16String,
+        attributes: Option<&IndexMap<Utf16String, Option<Utf16String>>>,
         attribute_value_quotes: AttributeValueQuotes,
         synthetic: bool,
         minimized: bool,
@@ -84,15 +84,15 @@ pub trait IModelFactory: Send + Sync {
     /// 创建开始标签。
     fn create_open_element_tag(
         &self,
-        element_name: JavaString,
-        attributes: Option<&IndexMap<JavaString, Option<JavaString>>>,
+        element_name: Utf16String,
+        attributes: Option<&IndexMap<Utf16String, Option<Utf16String>>>,
         attribute_value_quotes: AttributeValueQuotes,
         synthetic: bool,
     ) -> Result<Arc<dyn IOpenElementTag>, crate::exceptions::TemplateProcessingException>;
     /// 创建结束标签。
     fn create_close_element_tag(
         &self,
-        element_name: JavaString,
+        element_name: Utf16String,
         synthetic: bool,
         unmatched: bool,
     ) -> Result<Arc<dyn ICloseElementTag>, crate::exceptions::TemplateProcessingException>;
@@ -100,8 +100,8 @@ pub trait IModelFactory: Send + Sync {
     fn set_attribute(
         &self,
         tag: Arc<dyn IProcessableElementTag>,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<dyn IProcessableElementTag>, crate::exceptions::TemplateProcessingException>;
     /// 返回替换属性后的同类型新标签。
@@ -109,8 +109,8 @@ pub trait IModelFactory: Send + Sync {
         &self,
         tag: Arc<dyn IProcessableElementTag>,
         old_attribute_name: &AttributeName,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<dyn IProcessableElementTag>, crate::exceptions::TemplateProcessingException>;
     /// 返回删除属性后的同类型标签；属性不存在时允许返回原对象身份。

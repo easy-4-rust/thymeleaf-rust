@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::context::ITemplateContext;
 use crate::expression::TemplateValue;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::MessageResolutionResult;
 
@@ -22,7 +22,7 @@ pub trait IMessageResolver: Send + Sync {
     /// # 返回值
     ///
     /// 配置的名称；`None` 对应 Java `null`。
-    fn get_name(&self) -> Option<&JavaString>;
+    fn get_name(&self) -> Option<&Utf16String>;
 
     /// 返回可空链式顺序。
     ///
@@ -49,9 +49,9 @@ pub trait IMessageResolver: Send + Sync {
         &self,
         context: Option<&dyn ITemplateContext>,
         origin: Option<TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>>;
+    ) -> MessageResolutionResult<Option<Utf16String>>;
 
     /// 为 Rust 非空调用者提供的便利入口。
     ///
@@ -66,9 +66,9 @@ pub trait IMessageResolver: Send + Sync {
         &self,
         context: &dyn ITemplateContext,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         self.resolve_message_nullable(Some(context), origin, Some(key), message_parameters)
     }
     /// 创建未命中消息的表示；无法创建时返回 `None`。
@@ -86,9 +86,9 @@ pub trait IMessageResolver: Send + Sync {
         &self,
         context: Option<&dyn ITemplateContext>,
         origin: Option<TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>>;
+    ) -> MessageResolutionResult<Option<Utf16String>>;
 
     /// 为 Rust 非空调用者提供的 absent representation 便利入口。
     ///
@@ -99,9 +99,9 @@ pub trait IMessageResolver: Send + Sync {
         &self,
         context: &dyn ITemplateContext,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         self.create_absent_message_representation_nullable(
             Some(context),
             origin,

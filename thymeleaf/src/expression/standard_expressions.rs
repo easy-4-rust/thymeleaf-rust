@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::IEngineConfiguration;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     IStandardConversionService, IStandardExpressionParser, IStandardVariableExpressionEvaluator,
@@ -102,7 +102,7 @@ fn get_registered_attribute<T>(
 where
     T: Clone + Send + Sync + 'static,
 {
-    let name = JavaString::from_rust_str(name);
+    let name = Utf16String::from_rust_str(name);
     configuration
         .get_execution_attributes()
         .get(&Some(name))

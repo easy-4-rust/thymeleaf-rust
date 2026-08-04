@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const NULL_LOCATOR_MESSAGE: &str = "Cannot load from int array because \"<parameter1>\" is null";
 
@@ -38,10 +38,10 @@ impl ParsingLocatorError {
     ///
     /// # 返回
     /// Java 17 增强 NPE 或数组访问消息的 UTF-16 值。
-    pub(crate) fn message(&self) -> JavaString {
+    pub(crate) fn message(&self) -> Utf16String {
         match self {
-            Self::NullLocator => JavaString::from_rust_str(NULL_LOCATOR_MESSAGE),
-            Self::ArrayIndex { index, length } => JavaString::from_rust_str(&format!(
+            Self::NullLocator => Utf16String::from_rust_str(NULL_LOCATOR_MESSAGE),
+            Self::ArrayIndex { index, length } => Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             )),
         }
@@ -109,7 +109,7 @@ mod tests {
 
     use super::{NULL_LOCATOR_MESSAGE, ParsingLocatorError, ParsingLocatorUtil};
     use crate::text::TextParseStatus;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
     const JAVA_GOLDEN: &str =
@@ -262,7 +262,7 @@ mod tests {
             .join(",")
     }
 
-    fn to_utf16_hex(value: &JavaString) -> String {
+    fn to_utf16_hex(value: &Utf16String) -> String {
         value
             .as_utf16()
             .iter()

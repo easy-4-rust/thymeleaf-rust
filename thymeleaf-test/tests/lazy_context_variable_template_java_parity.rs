@@ -25,7 +25,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
@@ -36,8 +36,8 @@ const TEMPLATE4: &str = "<[# th:if='${doit}' th:text='${lazz}']...[/]>";
 const TEMPLATE9: &str = "<[# th:if='${doit}' th:text='${session.lazz}']...[/]>";
 const TEMPLATE10: &str = "<[# th:if='${doit}' th:text='${application.lazz}']...[/]>";
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 /// 构造一个求值计数 +1 的惰性变量（对应 Java `Lazy.initialized` 标志）。

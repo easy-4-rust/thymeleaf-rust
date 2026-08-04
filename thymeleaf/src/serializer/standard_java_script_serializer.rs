@@ -1,7 +1,7 @@
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
 use crate::temporal::JavaTemporal;
-use crate::util::{JavaDate, JavaString, JavaWriter, ResourceLoaderUtils};
+use crate::util::{JavaDate, JavaWriter, ResourceLoaderUtils, Utf16String};
 
 use super::IStandardJavaScriptSerializer;
 
@@ -122,7 +122,7 @@ impl Jackson3StandardJavaScriptSerializer {
 struct JacksonThymeleafISO8601DateFormat;
 
 impl JacksonThymeleafISO8601DateFormat {
-    fn format(date: &JavaDate) -> JavaString {
+    fn format(date: &JavaDate) -> Utf16String {
         crate::util::DateUtils::format_iso(Some(date))
             .expect("non-null JavaDate always has an ISO representation")
     }
@@ -133,7 +133,7 @@ impl JacksonThymeleafISO8601DateFormat {
     /// `JacksonThymeleafISO8601DateFormat#parse(String, ParsePosition)`。
     #[expect(dead_code, reason = "保留 Java 只写日期格式器的拒绝解析合同")]
     fn parse(
-        _source: &JavaString,
+        _source: &Utf16String,
         _position: i32,
     ) -> Result<JavaDate, TemplateProcessingException> {
         Err(TemplateProcessingException::new(Some(
@@ -214,11 +214,11 @@ fn write_value(
     match object {
         TemplateValue::Null => write_ascii(writer, "null"),
         TemplateValue::Boolean(value) => write_ascii(writer, if *value { "true" } else { "false" }),
-        TemplateValue::Number(_) => write_java_string(
+        TemplateValue::Number(_) => write_utf16_string(
             writer,
             &object
-                .to_java_string()
-                .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                .to_utf16_string()
+                .unwrap_or_else(|| Utf16String::from_rust_str("null")),
         ),
         TemplateValue::Character(unit) => write_json_string(writer, &[*unit], escape_all_slashes),
         TemplateValue::String(value) | TemplateValue::SafeHtml(value) => {
@@ -260,7 +260,7 @@ fn write_value(
             let text = value
                 .get_value()
                 .cloned()
-                .unwrap_or_else(|| JavaString::from_rust_str("null"));
+                .unwrap_or_else(|| Utf16String::from_rust_str("null"));
             write_json_string(writer, text.as_utf16(), escape_all_slashes)
         }
         TemplateValue::NoOp => write_json_string(writer, &[u16::from(b'_')], escape_all_slashes),
@@ -287,7 +287,7 @@ fn write_value(
             } else {
                 write_json_string(
                     writer,
-                    value.to_java_string().as_utf16(),
+                    value.to_utf16_string().as_utf16(),
                     escape_all_slashes,
                 )
             }
@@ -336,6 +336,6 @@ fn write_ascii(writer: &mut dyn JavaWriter, input: &str) -> std::io::Result<()> 
     writer.write_utf16(&input.encode_utf16().collect::<Vec<_>>())
 }
 
-fn write_java_string(writer: &mut dyn JavaWriter, input: &JavaString) -> std::io::Result<()> {
+fn write_utf16_string(writer: &mut dyn JavaWriter, input: &Utf16String) -> std::io::Result<()> {
     writer.write_utf16(input.as_utf16())
 }

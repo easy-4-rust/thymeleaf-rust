@@ -1,6 +1,6 @@
 use crate::engine::ElementDefinition;
 use crate::templatemode::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::ITemplateEvent;
 
@@ -12,7 +12,7 @@ pub trait IElementTag: ITemplateEvent {
     fn get_template_mode(&self) -> TemplateMode;
 
     /// 返回模板中原样书写的完整元素名。
-    fn get_element_complete_name(&self) -> &JavaString;
+    fn get_element_complete_name(&self) -> &Utf16String;
 
     /// 返回元素元数据定义。
     fn get_element_definition(&self) -> &ElementDefinition;

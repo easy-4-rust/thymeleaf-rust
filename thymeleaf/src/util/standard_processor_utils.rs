@@ -1,7 +1,7 @@
 use crate::element::IElementTagStructureHandler;
 use crate::engine::{AttributeDefinition, AttributeNameValue};
 use crate::model::AttributeValueQuotes;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// Standard Dialect 修改事件属性的内部工具。
 ///
@@ -15,8 +15,8 @@ impl StandardProcessorUtils {
         structure_handler: &mut dyn IElementTagStructureHandler,
         old_attribute_name: AttributeNameValue,
         _attribute_definition: &AttributeDefinition,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
     ) {
         structure_handler.replace_attribute(
             old_attribute_name,
@@ -31,8 +31,8 @@ impl StandardProcessorUtils {
     pub fn set_attribute(
         structure_handler: &mut dyn IElementTagStructureHandler,
         _attribute_definition: &AttributeDefinition,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
     ) {
         structure_handler.set_attribute(
             attribute_name,

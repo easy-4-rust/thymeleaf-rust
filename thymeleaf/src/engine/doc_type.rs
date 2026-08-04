@@ -4,7 +4,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IDocType, IModelVisitor, ITemplateEvent};
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -41,13 +41,13 @@ impl Error for DocTypeError {}
 /// 对应 Java: `org.thymeleaf.engine.DocType`。
 pub struct DocType {
     template_event: AbstractTemplateEvent,
-    keyword: Option<JavaString>,
-    element_name: Option<JavaString>,
-    doc_type_kind: Option<JavaString>,
-    public_id: Option<JavaString>,
-    system_id: Option<JavaString>,
-    internal_subset: Option<JavaString>,
-    doc_type: JavaString,
+    keyword: Option<Utf16String>,
+    element_name: Option<Utf16String>,
+    doc_type_kind: Option<Utf16String>,
+    public_id: Option<Utf16String>,
+    system_id: Option<Utf16String>,
+    internal_subset: Option<Utf16String>,
+    doc_type: Utf16String,
 }
 
 impl DocType {
@@ -62,12 +62,12 @@ impl DocType {
     ///
     /// 对应 Java: `DocType#DocType(String,String)`。
     pub fn with_ids(
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
     ) -> Result<Self, DocTypeError> {
         Self::with_components(
-            Some(JavaString::from_rust_str(DEFAULT_KEYWORD)),
-            Some(JavaString::from_rust_str(DEFAULT_ELEMENT_NAME)),
+            Some(Utf16String::from_rust_str(DEFAULT_KEYWORD)),
+            Some(Utf16String::from_rust_str(DEFAULT_ELEMENT_NAME)),
             public_id,
             system_id,
             None,
@@ -79,11 +79,11 @@ impl DocType {
     /// 对应 Java:
     /// `DocType#DocType(String,String,String,String,String)`。
     pub fn with_components(
-        keyword: Option<JavaString>,
-        element_name: Option<JavaString>,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
+        keyword: Option<Utf16String>,
+        element_name: Option<Utf16String>,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
     ) -> Result<Self, DocTypeError> {
         let doc_type_kind = compute_type(public_id.as_ref(), system_id.as_ref())?;
         let doc_type = compute_doc_type(
@@ -112,13 +112,13 @@ impl DocType {
     /// `DocType#DocType(String,String,String,String,String,String,String,int,int)`。
     #[allow(clippy::too_many_arguments)]
     pub fn with_location(
-        doc_type: Option<JavaString>,
-        keyword: Option<JavaString>,
-        element_name: Option<JavaString>,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
-        template_name: Option<JavaString>,
+        doc_type: Option<Utf16String>,
+        keyword: Option<Utf16String>,
+        element_name: Option<Utf16String>,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Result<Self, DocTypeError> {
@@ -147,31 +147,31 @@ impl DocType {
 }
 
 impl IDocType for DocType {
-    fn get_keyword(&self) -> Option<&JavaString> {
+    fn get_keyword(&self) -> Option<&Utf16String> {
         self.keyword.as_ref()
     }
 
-    fn get_element_name(&self) -> Option<&JavaString> {
+    fn get_element_name(&self) -> Option<&Utf16String> {
         self.element_name.as_ref()
     }
 
-    fn get_type(&self) -> Option<&JavaString> {
+    fn get_type(&self) -> Option<&Utf16String> {
         self.doc_type_kind.as_ref()
     }
 
-    fn get_public_id(&self) -> Option<&JavaString> {
+    fn get_public_id(&self) -> Option<&Utf16String> {
         self.public_id.as_ref()
     }
 
-    fn get_system_id(&self) -> Option<&JavaString> {
+    fn get_system_id(&self) -> Option<&Utf16String> {
         self.system_id.as_ref()
     }
 
-    fn get_internal_subset(&self) -> Option<&JavaString> {
+    fn get_internal_subset(&self) -> Option<&Utf16String> {
         self.internal_subset.as_ref()
     }
 
-    fn get_doc_type(&self) -> Option<&JavaString> {
+    fn get_doc_type(&self) -> Option<&Utf16String> {
         Some(&self.doc_type)
     }
 }
@@ -181,7 +181,7 @@ impl ITemplateEvent for DocType {
         self.template_event.has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.template_event.get_template_name()
     }
 
@@ -218,16 +218,16 @@ impl Display for DocType {
 }
 
 fn compute_type(
-    public_id: Option<&JavaString>,
-    system_id: Option<&JavaString>,
-) -> Result<Option<JavaString>, DocTypeError> {
+    public_id: Option<&Utf16String>,
+    system_id: Option<&Utf16String>,
+) -> Result<Option<Utf16String>, DocTypeError> {
     if public_id.is_some() && system_id.is_none() {
         return Err(DocTypeError);
     }
     if public_id.is_none() && system_id.is_none() {
         return Ok(None);
     }
-    Ok(Some(JavaString::from_rust_str(if public_id.is_some() {
+    Ok(Some(Utf16String::from_rust_str(if public_id.is_some() {
         DEFAULT_TYPE_PUBLIC
     } else {
         DEFAULT_TYPE_SYSTEM
@@ -235,13 +235,13 @@ fn compute_type(
 }
 
 fn compute_doc_type(
-    keyword: Option<&JavaString>,
-    element_name: Option<&JavaString>,
-    doc_type_kind: Option<&JavaString>,
-    public_id: Option<&JavaString>,
-    system_id: Option<&JavaString>,
-    internal_subset: Option<&JavaString>,
-) -> JavaString {
+    keyword: Option<&Utf16String>,
+    element_name: Option<&Utf16String>,
+    doc_type_kind: Option<&Utf16String>,
+    public_id: Option<&Utf16String>,
+    system_id: Option<&Utf16String>,
+    internal_subset: Option<&Utf16String>,
+) -> Utf16String {
     let mut result = Vec::with_capacity(120);
     result.extend("<!".encode_utf16());
     append_nullable(&mut result, keyword);
@@ -265,10 +265,10 @@ fn compute_doc_type(
         result.push(u16::from(b']'));
     }
     result.push(u16::from(b'>'));
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
-fn append_nullable(result: &mut Vec<u16>, value: Option<&JavaString>) {
+fn append_nullable(result: &mut Vec<u16>, value: Option<&Utf16String>) {
     match value {
         Some(value) => result.extend_from_slice(value.as_utf16()),
         None => result.extend("null".encode_utf16()),

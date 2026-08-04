@@ -11,7 +11,7 @@ use crate::expression::{
     Fragment, FragmentExpression, StandardExpressionExecutionContext, TemplateValue,
 };
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IProcessor, StandardAttributeCallback, expression_processing_error};
 
@@ -34,7 +34,7 @@ impl StandardUtextTagProcessor {
     /// 对应 Java 语义：`StandardUtextTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         let callback: StandardAttributeCallback = Box::new(
             move |context, tag, attribute_name, attribute_value, structure_handler| {
@@ -111,8 +111,8 @@ impl StandardUtextTagProcessor {
                 let unescaped_text = expression_result
                     .as_deref()
                     .filter(|value| !matches!(value, TemplateValue::Null))
-                    .and_then(TemplateValue::to_java_string)
-                    .unwrap_or_else(|| JavaString::from_rust_str(""));
+                    .and_then(TemplateValue::to_utf16_string)
+                    .unwrap_or_else(|| Utf16String::from_rust_str(""));
                 if context
                     .get_configuration()
                     .get_post_processors(template_mode)
@@ -151,7 +151,7 @@ impl StandardUtextTagProcessor {
                 dialect_prefix,
                 None,
                 false,
-                Some(JavaString::from_rust_str(Self::ATTR_NAME)),
+                Some(Utf16String::from_rust_str(Self::ATTR_NAME)),
                 true,
                 Self::PRECEDENCE,
                 true,
@@ -205,7 +205,7 @@ impl IElementTagProcessor for StandardUtextTagProcessor {
     }
 }
 
-fn might_contain_structures(unescaped_text: &JavaString) -> bool {
+fn might_contain_structures(unescaped_text: &Utf16String) -> bool {
     unescaped_text
         .as_utf16()
         .iter()

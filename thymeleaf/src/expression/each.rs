@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{IStandardExpression, StandardExpressionResult};
 
@@ -55,7 +55,7 @@ impl Each {
     }
     /// 返回 `iter[,status] : iterable` 规范文本。
     /// 对应 Java: `Each#getStringRepresentation()`。
-    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = self
             .iter_var
             .get_string_representation()?
@@ -67,6 +67,6 @@ impl Each {
         }
         units.extend_from_slice(&[b' ' as u16, b':' as u16, b' ' as u16]);
         units.extend_from_slice(self.iterable.get_string_representation()?.as_utf16());
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 }

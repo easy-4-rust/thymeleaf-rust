@@ -82,7 +82,7 @@ mod tests {
     use crate::context::{Context, EngineContext, IContext, IEngineContext, IEngineContextFactory};
     use crate::expression::TemplateValue;
     use crate::templateresource::StringTemplateResource;
-    use crate::util::{JavaLocale, JavaString};
+    use crate::util::{JavaLocale, Utf16String};
     use crate::{
         IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateMode,
         TemplateResolutionAttributeValue, TemplateResolutionAttributes,
@@ -98,17 +98,17 @@ mod tests {
             .collect()
     }
 
-    fn java_string(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn utf16_string(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
     fn locale(language_tag: &str, country: &str) -> JavaLocale {
-        JavaLocale::new(java_string(language_tag), java_string(country))
+        JavaLocale::new(utf16_string(language_tag), utf16_string(country))
     }
 
     fn template_data(name: &str) -> TemplateData {
         TemplateData::new(
-            Some(java_string(name)),
+            Some(utf16_string(name)),
             None,
             Some(Arc::new(
                 StringTemplateResource::new(Some(name)).expect("string resource"),
@@ -171,8 +171,8 @@ mod tests {
         let attributes = resolution_attributes();
 
         let original_variables = vec![(
-            Some(java_string("root")),
-            Some(Arc::new(TemplateValue::string(java_string("value")))),
+            Some(utf16_string("root")),
+            Some(Arc::new(TemplateValue::string(utf16_string("value")))),
         )];
         let original = Context::with_locale_and_variables(
             Some(locale("en-US", "US")),
@@ -218,8 +218,8 @@ mod tests {
 
         let mut existing_variables = IndexMap::new();
         existing_variables.insert(
-            Some(java_string("existing")),
-            Some(Arc::new(TemplateValue::string(java_string("yes")))),
+            Some(utf16_string("existing")),
+            Some(Arc::new(TemplateValue::string(utf16_string("yes")))),
         );
         let existing = EngineContext::new(
             Arc::clone(&configuration),

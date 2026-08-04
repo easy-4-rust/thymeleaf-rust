@@ -4,7 +4,7 @@ use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException
 use thymeleaf::model::IText;
 use thymeleaf::processor::IProcessor;
 use thymeleaf::text::{AbstractTextProcessor, ITextProcessor, ITextStructureHandler};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback =
@@ -75,8 +75,8 @@ fn process_text(
                 error,
             )) as Box<dyn TemplateEngineException>
         })?
-        .unwrap_or_else(|| JavaString::from_rust_str(""));
-    structure_handler.set_text(JavaString::from_rust_str(&format!(
+        .unwrap_or_else(|| Utf16String::from_rust_str(""));
+    structure_handler.set_text(Utf16String::from_rust_str(&format!(
         "{}[01]",
         text.to_string_lossy()
     )));

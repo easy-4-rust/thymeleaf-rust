@@ -1,6 +1,6 @@
 use chrono_tz::Tz;
 
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 
 use super::temporal_formatting_utils::TemporalFormattingError;
 use super::{JavaTemporal, TemporalArrayUtils};
@@ -28,7 +28,7 @@ impl TemporalListUtils {
         target: &[Option<JavaTemporal>],
         pattern: Option<&str>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_utils.array_format(target, pattern, locale)
     }
 
@@ -101,7 +101,7 @@ impl TemporalListUtils {
     pub fn list_month_name(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_utils.array_month_name(target)
     }
     /// 批量读取短月份名。
@@ -109,7 +109,7 @@ impl TemporalListUtils {
     pub fn list_month_name_short(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_utils.array_month_name_short(target)
     }
     /// 批量读取完整星期名。
@@ -117,7 +117,7 @@ impl TemporalListUtils {
     pub fn list_day_of_week_name(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_utils.array_day_of_week_name(target)
     }
     /// 批量读取短星期名。
@@ -125,7 +125,7 @@ impl TemporalListUtils {
     pub fn list_day_of_week_name_short(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_utils.array_day_of_week_name_short(target)
     }
     /// 批量输出 ISO 格式。
@@ -133,7 +133,7 @@ impl TemporalListUtils {
     pub fn list_format_iso(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_utils.array_format_iso(target)
     }
 }

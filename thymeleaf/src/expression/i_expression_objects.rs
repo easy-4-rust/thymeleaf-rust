@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ExpressionObjectNames, StandardExpressionResult, TemplateValue};
 
@@ -27,7 +27,7 @@ pub trait IExpressionObjects {
     /// # 返回值
     ///
     /// 名称存在于工厂完整名称集合时返回 `true`。
-    fn contains_object(&self, name: Option<&JavaString>) -> bool;
+    fn contains_object(&self, name: Option<&Utf16String>) -> bool;
 
     /// 返回对象名称集合。
     ///
@@ -52,6 +52,6 @@ pub trait IExpressionObjects {
     /// 原样返回表达式对象工厂的构建错误。
     fn get_object(
         &self,
-        name: Option<&JavaString>,
+        name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>>;
 }

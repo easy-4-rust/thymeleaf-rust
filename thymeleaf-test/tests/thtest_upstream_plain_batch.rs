@@ -27,7 +27,7 @@ use thymeleaf::expression::{
 };
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::text::TextParserReaderError;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{
     ITemplateEngine, ITemplateResolver, StandardDialect, TemplateEngine, TemplateMode,
@@ -554,10 +554,10 @@ struct EffectiveTestData {
     template_mode: TemplateMode,
     root_template_name: String,
     input: String,
-    named_inputs: IndexMap<JavaString, JavaString>,
-    named_template_modes: IndexMap<JavaString, TemplateMode>,
+    named_inputs: IndexMap<Utf16String, Utf16String>,
+    named_template_modes: IndexMap<Utf16String, TemplateMode>,
     context: Option<String>,
-    messages_by_locale: HashMap<Option<String>, HashMap<JavaString, JavaString>>,
+    messages_by_locale: HashMap<Option<String>, HashMap<Utf16String, Utf16String>>,
     fragment_spec: Option<String>,
     expected_output: Option<String>,
     expected_exception: Option<String>,
@@ -684,7 +684,7 @@ fn effective_section(layers: &[TestResourceLayer], name: &str) -> Option<String>
 
 fn merge_message_sections(
     source: &str,
-    messages_by_locale: &mut HashMap<Option<String>, HashMap<JavaString, JavaString>>,
+    messages_by_locale: &mut HashMap<Option<String>, HashMap<Utf16String, Utf16String>>,
 ) -> Result<(), String> {
     if let Some(messages) = directive_section(source, "MESSAGES") {
         messages_by_locale
@@ -713,7 +713,7 @@ fn merge_message_sections(
     Ok(())
 }
 
-fn parse_message_properties(source: &str) -> Result<HashMap<JavaString, JavaString>, String> {
+fn parse_message_properties(source: &str) -> Result<HashMap<Utf16String, Utf16String>, String> {
     let mut logical_lines = Vec::new();
     let mut current = String::new();
     for line in source.lines() {
@@ -778,8 +778,8 @@ fn parse_message_properties(source: &str) -> Result<HashMap<JavaString, JavaStri
         let key = decode_java_properties_value(key.trim_end())?;
         let value = decode_java_properties_value(value)?;
         messages.insert(
-            JavaString::from_rust_str(&key),
-            JavaString::from_rust_str(&value),
+            Utf16String::from_rust_str(&key),
+            Utf16String::from_rust_str(&value),
         );
     }
     Ok(messages)
@@ -1184,8 +1184,8 @@ fn unescape_test_resource_unicode(input: &str) -> Result<String, String> {
 
 fn build_web_context(engine: &TemplateEngine, source: Option<&str>) -> Result<WebContext, String> {
     let default_locale = JavaLocale::new(
-        JavaString::from_rust_str("en"),
-        JavaString::from_rust_str(""),
+        Utf16String::from_rust_str("en"),
+        Utf16String::from_rust_str(""),
     );
     let exchange = Arc::new(CorpusWebExchange::new());
     let web_exchange: Arc<dyn IWebExchange> = exchange.clone();
@@ -1206,13 +1206,13 @@ fn build_web_context(engine: &TemplateEngine, source: Option<&str>) -> Result<We
     for assignment in split_context_assignments(source)? {
         let (target, expression) = split_context_assignment(&assignment)?;
         let expression = decode_java_properties_value(expression)?;
-        let expression = VariableExpression::new(Some(JavaString::from_rust_str(&expression)))
+        let expression = VariableExpression::new(Some(Utf16String::from_rust_str(&expression)))
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         let value = expression
             .execute(expression_context.as_ref())
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         if let Some(name) = target.strip_prefix("session.") {
-            let name = Some(JavaString::from_rust_str(name.trim()));
+            let name = Some(Utf16String::from_rust_str(name.trim()));
             exchange
                 .get_session()
                 .expect("corpus web exchange always has a session")
@@ -1220,9 +1220,9 @@ fn build_web_context(engine: &TemplateEngine, source: Option<&str>) -> Result<We
         } else if let Some(name) = target.strip_prefix("application.") {
             exchange
                 .get_application()
-                .set_attribute_value(Some(JavaString::from_rust_str(name.trim())), value);
+                .set_attribute_value(Some(Utf16String::from_rust_str(name.trim())), value);
         } else if is_simple_context_name(target) {
-            let name = Some(JavaString::from_rust_str(target));
+            let name = Some(Utf16String::from_rust_str(target));
             context.set_variable(name.clone(), value.clone());
             expression_context.set_variable(name, value);
         } else {

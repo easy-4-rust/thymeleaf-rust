@@ -1484,7 +1484,7 @@ fn normalize_attributes(
             attribute.get_col(),
         )));
     }
-    let spaces = vec![crate::util::JavaString::from_rust_str(" "); normalized.len()];
+    let spaces = vec![crate::util::Utf16String::from_rust_str(" "); normalized.len()];
     Ok(Some(Attributes::new(Some(normalized), Some(spaces))))
 }
 
@@ -2336,7 +2336,7 @@ fn location_error(message: String, event: &dyn ITemplateEvent) -> Box<dyn Templa
         Some(message),
         event
             .get_template_name()
-            .map(crate::util::JavaString::to_string_lossy),
+            .map(crate::util::Utf16String::to_string_lossy),
         event.get_line(),
         event.get_col(),
     ))

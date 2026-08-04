@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::engine::ITemplateHandler;
 use crate::exceptions::TemplateEngineException;
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 
 use super::{ICloseElementTag, IModelVisitor, IOpenElementTag, IProcessableElementTag, IText};
 
@@ -15,7 +15,7 @@ pub trait ITemplateEvent: Send + Sync {
     fn has_location(&self) -> bool;
 
     /// 返回可空原模板名称。
-    fn get_template_name(&self) -> Option<&JavaString>;
+    fn get_template_name(&self) -> Option<&Utf16String>;
 
     /// 返回事件在模板中的一基行号；无位置事件保留实现的占位整数。
     fn get_line(&self) -> i32;

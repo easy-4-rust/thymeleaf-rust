@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 创建解耦逻辑注入属性时的 Java 数组错误。
 ///
@@ -155,7 +155,7 @@ impl DecoupledInjectedAttribute {
     /// # 错误
     ///
     /// 工厂收到彼此不一致的合法复制范围时，保留 Java `String` 构造器的范围异常。
-    pub fn get_name(&self) -> Result<JavaString, DecoupledInjectedAttributeError> {
+    pub fn get_name(&self) -> Result<Utf16String, DecoupledInjectedAttributeError> {
         self.slice(self.name_offset, self.name_len)
     }
 
@@ -164,7 +164,7 @@ impl DecoupledInjectedAttribute {
     /// # 错误
     ///
     /// 内部重基准化范围越界时返回 `StringIndexOutOfBoundsException` 对应错误。
-    pub fn get_operator(&self) -> Result<JavaString, DecoupledInjectedAttributeError> {
+    pub fn get_operator(&self) -> Result<Utf16String, DecoupledInjectedAttributeError> {
         self.slice(self.operator_offset, self.operator_len)
     }
 
@@ -173,7 +173,7 @@ impl DecoupledInjectedAttribute {
     /// # 错误
     ///
     /// 内部重基准化范围越界时返回 `StringIndexOutOfBoundsException` 对应错误。
-    pub fn get_value_content(&self) -> Result<JavaString, DecoupledInjectedAttributeError> {
+    pub fn get_value_content(&self) -> Result<Utf16String, DecoupledInjectedAttributeError> {
         self.slice(self.value_content_offset, self.value_content_len)
     }
 
@@ -182,7 +182,7 @@ impl DecoupledInjectedAttribute {
     /// # 错误
     ///
     /// 内部重基准化范围越界时返回 `StringIndexOutOfBoundsException` 对应错误。
-    pub fn get_value_outer(&self) -> Result<JavaString, DecoupledInjectedAttributeError> {
+    pub fn get_value_outer(&self) -> Result<Utf16String, DecoupledInjectedAttributeError> {
         self.slice(self.value_outer_offset, self.value_outer_len)
     }
 
@@ -190,8 +190,8 @@ impl DecoupledInjectedAttribute {
     ///
     /// 对应 Java: `DecoupledInjectedAttribute#toString()`。
     #[must_use]
-    pub fn to_java_string(&self) -> JavaString {
-        JavaString::from_utf16(self.buffer.clone())
+    pub fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_utf16(self.buffer.clone())
     }
 
     /// 返回向标记 parser 注入属性所需的私有 UTF-16 buffer 与全部范围。
@@ -214,7 +214,7 @@ impl DecoupledInjectedAttribute {
         )
     }
 
-    fn slice(&self, offset: i32, len: i32) -> Result<JavaString, DecoupledInjectedAttributeError> {
+    fn slice(&self, offset: i32, len: i32) -> Result<Utf16String, DecoupledInjectedAttributeError> {
         let range_is_invalid = offset < 0
             || len < 0
             || usize::try_from(offset)
@@ -232,7 +232,7 @@ impl DecoupledInjectedAttribute {
         }
         let start = offset as usize;
         let end = start + len as usize;
-        Ok(JavaString::from_utf16(self.buffer[start..end].to_vec()))
+        Ok(Utf16String::from_utf16(self.buffer[start..end].to_vec()))
     }
 }
 

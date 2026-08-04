@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AssignationSequence, AssignationUtils, Each, EachUtils, ExpressionCache, ExpressionSequence,
@@ -26,7 +26,7 @@ impl StandardExpressionParser {
     pub fn parse_assignation_sequence(
         &self,
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
         allow_parameters_without_value: bool,
     ) -> StandardExpressionResult<Arc<AssignationSequence>> {
         AssignationUtils::parse_assignation_sequence(context, input, allow_parameters_without_value)
@@ -36,7 +36,7 @@ impl StandardExpressionParser {
     pub fn parse_expression_sequence(
         &self,
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<ExpressionSequence>> {
         ExpressionSequenceUtils::parse_expression_sequence(context, input)
     }
@@ -45,7 +45,7 @@ impl StandardExpressionParser {
     pub fn parse_each(
         &self,
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<Each>> {
         EachUtils::parse_each(context, input)
     }
@@ -54,7 +54,7 @@ impl StandardExpressionParser {
     pub fn parse_fragment_signature(
         &self,
         configuration: Option<&dyn crate::IEngineConfiguration>,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<FragmentSignature>> {
         FragmentSignatureUtils::parse_fragment_signature(configuration, input)
     }
@@ -64,7 +64,7 @@ impl IStandardExpressionParser for StandardExpressionParser {
     fn parse_expression(
         &self,
         _context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
         let input = input.ok_or_else(|| {
             Box::new(crate::util::ValidateError::IllegalArgument {

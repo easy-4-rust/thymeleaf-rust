@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::{Arc, LazyLock, Weak};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaLocale, JavaString, ValidateError};
+use crate::util::{JavaLocale, Utf16String, ValidateError};
 
 use super::{
     Aggregates, Arrays, Bools, Calendars, Conversions, Dates, ExecutionInfo, ExpressionObjectNames,
@@ -22,7 +22,7 @@ pub struct StandardExpressionObjectFactory;
 static ALL_EXPRESSION_OBJECT_NAMES: LazyLock<ExpressionObjectNames> = LazyLock::new(|| {
     StandardExpressionObjectFactory::all_names()
         .iter()
-        .map(|name| Some(JavaString::from_rust_str(name)))
+        .map(|name| Some(Utf16String::from_rust_str(name)))
         .collect::<Vec<_>>()
         .into()
 });
@@ -181,9 +181,9 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
-        let name = expression_object_name.map(JavaString::to_string_lossy);
+        let name = expression_object_name.map(Utf16String::to_string_lossy);
         let Some(name) = name.as_deref() else {
             return Ok(None);
         };
@@ -278,9 +278,9 @@ impl IExpressionObjectFactory for StandardExpressionObjectFactory {
     /// 条件表达式结果。
     ///
     /// 对应 Java: `StandardExpressionObjectFactory#isCacheable(String)`。
-    fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool {
+    fn is_cacheable(&self, expression_object_name: Option<&Utf16String>) -> bool {
         expression_object_name.is_some_and(|name| {
-            name != &JavaString::from_rust_str(Self::SELECTION_TARGET_EXPRESSION_OBJECT_NAME)
+            name != &Utf16String::from_rust_str(Self::SELECTION_TARGET_EXPRESSION_OBJECT_NAME)
         })
     }
 }
@@ -300,8 +300,8 @@ impl TemplateObject for ContextExpressionObject {
         "org.thymeleaf.context.IExpressionContext"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.context.IExpressionContext")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.context.IExpressionContext")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -317,7 +317,7 @@ impl TemplateObject for ContextExpressionObject {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
         Some(Ok(self.context.upgrade().and_then(|context| {
             context.get_variable(Some(property_name))
@@ -330,10 +330,10 @@ impl TemplateObject for JavaLocale {
         "java.util.Locale"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         // Locale#toString 使用下划线连接 language/country/variant；
         // BCP-47 连字符形式只属于 Locale#toLanguageTag。
-        JavaString::from_rust_str(&self.to_string())
+        Utf16String::from_rust_str(&self.to_string())
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -342,7 +342,7 @@ impl TemplateObject for JavaLocale {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
             "language" => self.get_language(),
@@ -356,7 +356,7 @@ impl TemplateObject for JavaLocale {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectMethodError>> {
         if !arguments.is_empty() {
@@ -367,7 +367,7 @@ impl TemplateObject for JavaLocale {
             "getCountry" => self.get_country().clone(),
             "getVariant" => self.get_variant(),
             "toLanguageTag" => self.to_language_tag().clone(),
-            "toString" => self.to_java_string(),
+            "toString" => self.to_utf16_string(),
             _ => return None,
         };
         Some(Ok(Some(Arc::new(TemplateValue::string(value)))))
@@ -381,8 +381,8 @@ macro_rules! stateless_template_object {
                 $class_name
             }
 
-            fn to_java_string(&self) -> JavaString {
-                JavaString::from_rust_str($class_name)
+            fn to_utf16_string(&self) -> Utf16String {
+                Utf16String::from_rust_str($class_name)
             }
 
             fn as_any(&self) -> &dyn Any {
@@ -391,7 +391,7 @@ macro_rules! stateless_template_object {
 
             fn java_invoke_method(
                 &self,
-                method_name: &JavaString,
+                method_name: &Utf16String,
                 arguments: &[Option<Arc<TemplateValue>>],
             ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectMethodError>> {
                 Some(
@@ -406,7 +406,7 @@ macro_rules! stateless_template_object {
 
             fn java_get_property(
                 &self,
-                property_name: &JavaString,
+                property_name: &Utf16String,
             ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>>
             {
                 super::standard_expression_object_invoker::get_standard_expression_object_property(

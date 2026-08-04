@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use thiserror::Error;
 
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 /// Java 对象参与标准转换时提供的动态行为。
 ///
@@ -19,7 +19,7 @@ pub trait JavaConversionObject: Any {
     ///
     /// # 错误
     /// `toString()` 抛出的运行时异常必须按原类别和消息返回。
-    fn java_to_string(&self) -> Result<JavaStringConversionResult<'_>, StandardConversionError>;
+    fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError>;
 }
 
 /// 传给标准转换服务的 Java 运行时值分类。
@@ -33,7 +33,7 @@ pub enum JavaConversionValue<'a> {
     /// Java null。
     Null,
     /// `java.lang.String` 的借用。
-    String(&'a JavaString),
+    String(&'a Utf16String),
     /// 其他 Java 对象的动态借用。
     Object(&'a dyn JavaConversionObject),
 }
@@ -70,14 +70,14 @@ impl JavaTargetClass {
 ///
 /// 借用分支供框架转换服务保留既有字符串身份；默认 `Object#toString()` 通常返回
 /// 新字符串，因此使用拥有分支。
-/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `JavaStringConversionResult`。
-pub enum JavaStringConversionResult<'a> {
+/// 对应 Java 语义：`IStandardConversionService` 的 Rust 侧类型 `Utf16StringConversionResult`。
+pub enum Utf16StringConversionResult<'a> {
     /// Java null。
     Null,
     /// 借用的既有字符串。
-    Borrowed(&'a JavaString),
+    Borrowed(&'a Utf16String),
     /// 新创建或由转换器返回的字符串。
-    Owned(JavaString),
+    Owned(Utf16String),
 }
 
 /// 标准转换服务的动态返回值。
@@ -89,21 +89,21 @@ pub enum JavaConversionResult<'a> {
     /// Java null。
     Null,
     /// 原字符串的同一引用。
-    BorrowedString(&'a JavaString),
+    BorrowedString(&'a Utf16String),
     /// 新建字符串。
-    OwnedString(JavaString),
+    OwnedString(Utf16String),
     /// 扩展转换器返回的既有对象引用。
     BorrowedObject(&'a dyn Any),
     /// 扩展转换器新建的对象。
     OwnedObject(Box<dyn Any>),
 }
 
-impl<'a> From<JavaStringConversionResult<'a>> for JavaConversionResult<'a> {
-    fn from(result: JavaStringConversionResult<'a>) -> Self {
+impl<'a> From<Utf16StringConversionResult<'a>> for JavaConversionResult<'a> {
+    fn from(result: Utf16StringConversionResult<'a>) -> Self {
         match result {
-            JavaStringConversionResult::Null => Self::Null,
-            JavaStringConversionResult::Borrowed(value) => Self::BorrowedString(value),
-            JavaStringConversionResult::Owned(value) => Self::OwnedString(value),
+            Utf16StringConversionResult::Null => Self::Null,
+            Utf16StringConversionResult::Borrowed(value) => Self::BorrowedString(value),
+            Utf16StringConversionResult::Owned(value) => Self::OwnedString(value),
         }
     }
 }

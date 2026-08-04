@@ -3,11 +3,11 @@ use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use indexmap::IndexMap;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, JavaString, ValidateError};
+use crate::util::{JavaLocale, Utf16String, ValidateError};
 
 use super::{ContextVariableEntries, IContext, IContextVariableNames};
 
-type Variables = IndexMap<Option<JavaString>, Arc<TemplateValue>>;
+type Variables = IndexMap<Option<Utf16String>, Arc<TemplateValue>>;
 
 /// 非 Web Context 的共享可变基础实现。
 ///
@@ -93,7 +93,7 @@ impl AbstractContext {
     ///
     /// - `name`：可空变量名。
     /// - `value`：可空值；为空时保存显式 Java `null`。
-    pub fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    pub fn set_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         write_recovering_poison(&self.variables)
             .insert(name, value.unwrap_or_else(|| Arc::new(TemplateValue::Null)));
     }
@@ -128,7 +128,7 @@ impl AbstractContext {
     /// # 参数
     ///
     /// - `name`：待删除的可空变量名；不存在时无副作用。
-    pub fn remove_variable(&self, name: Option<&JavaString>) {
+    pub fn remove_variable(&self, name: Option<&Utf16String>) {
         write_recovering_poison(&self.variables).shift_remove(&owned_key(name));
     }
 
@@ -149,7 +149,7 @@ impl IContext for AbstractContext {
         read_recovering_poison(&self.locale).clone()
     }
 
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool {
         read_recovering_poison(&self.variables).contains_key(&owned_key(name))
     }
 
@@ -157,7 +157,7 @@ impl IContext for AbstractContext {
         self.variable_names.clone()
     }
 
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         read_recovering_poison(&self.variables)
             .get(&owned_key(name))
             .cloned()
@@ -173,18 +173,18 @@ impl IContextVariableNames for VariableNamesView {
         read_recovering_poison(&self.variables).len()
     }
 
-    fn contains(&self, name: Option<&JavaString>) -> bool {
+    fn contains(&self, name: Option<&Utf16String>) -> bool {
         read_recovering_poison(&self.variables).contains_key(&owned_key(name))
     }
 
-    fn snapshot(&self) -> Vec<Option<JavaString>> {
+    fn snapshot(&self) -> Vec<Option<Utf16String>> {
         read_recovering_poison(&self.variables)
             .keys()
             .cloned()
             .collect()
     }
 
-    fn remove(&self, name: Option<&JavaString>) -> bool {
+    fn remove(&self, name: Option<&Utf16String>) -> bool {
         write_recovering_poison(&self.variables)
             .shift_remove(&owned_key(name))
             .is_some()
@@ -201,6 +201,6 @@ fn write_recovering_poison<T>(lock: &RwLock<T>) -> RwLockWriteGuard<'_, T> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-fn owned_key(name: Option<&JavaString>) -> Option<JavaString> {
+fn owned_key(name: Option<&Utf16String>) -> Option<Utf16String> {
     name.cloned()
 }

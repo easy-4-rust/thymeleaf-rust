@@ -7,7 +7,7 @@ use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::IModel;
 use crate::templateboundaries::ITemplateBoundariesStructureHandler;
-use crate::util::{JavaString, Validate, ValidateError};
+use crate::util::{Utf16String, Validate, ValidateError};
 
 /// 模板开始与模板结束处理器共用的结构变更状态机。
 ///
@@ -15,7 +15,7 @@ use crate::util::{JavaString, Validate, ValidateError};
 /// 对应 Java: `org.thymeleaf.engine.TemplateBoundariesStructureHandler`。
 pub(crate) struct TemplateBoundariesStructureHandler {
     pub(crate) insert_text: bool,
-    pub(crate) insert_text_value: Option<JavaString>,
+    pub(crate) insert_text_value: Option<Utf16String>,
     pub(crate) insert_text_processable: bool,
 
     pub(crate) insert_model: bool,
@@ -23,10 +23,10 @@ pub(crate) struct TemplateBoundariesStructureHandler {
     pub(crate) insert_model_processable: bool,
 
     pub(crate) set_local_variable: bool,
-    pub(crate) added_local_variables: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    pub(crate) added_local_variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
 
     pub(crate) remove_local_variable: bool,
-    pub(crate) removed_local_variable_names: IndexSet<Option<JavaString>>,
+    pub(crate) removed_local_variable_names: IndexSet<Option<Utf16String>>,
 
     pub(crate) set_selection_target: bool,
     pub(crate) selection_target_object: Option<Arc<TemplateValue>>,
@@ -86,8 +86,8 @@ impl TemplateBoundariesStructureHandler {
     /// 对应 Java 语义：`TemplateBoundariesStructureHandler` 的 `apply_context_modifications_with` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn apply_context_modifications_with(
         &self,
-        mut set_variables: impl FnMut(&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>),
-        mut remove_variable: impl FnMut(Option<&JavaString>),
+        mut set_variables: impl FnMut(&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>),
+        mut remove_variable: impl FnMut(Option<&Utf16String>),
         mut set_selection_target: impl FnMut(Option<Arc<TemplateValue>>),
         mut set_inliner: impl FnMut(Option<Arc<dyn IInliner>>),
     ) {
@@ -117,7 +117,7 @@ impl TemplateBoundariesStructureHandler {
     /// 仅清除互斥插入动作，保留已收集的上下文变更；随后校验文本非空。
     pub(crate) fn insert_text_nullable(
         &mut self,
-        text: Option<JavaString>,
+        text: Option<Utf16String>,
         processable: bool,
     ) -> Result<(), ValidateError> {
         self.reset_all_but_local_variables();
@@ -162,14 +162,14 @@ impl ITemplateBoundariesStructureHandler for TemplateBoundariesStructureHandler 
         self.set_inliner_value = None;
     }
 
-    fn set_local_variable(&mut self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_local_variable(&mut self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         // 可与其他动作组合，无需清除已收集状态。
         // Java Map 的 put 语义：同名变量以后一次设置为准。
         self.set_local_variable = true;
         self.added_local_variables.insert(name, value);
     }
 
-    fn remove_local_variable(&mut self, name: Option<JavaString>) {
+    fn remove_local_variable(&mut self, name: Option<Utf16String>) {
         // 可与其他动作组合，无需清除已收集状态。
         self.remove_local_variable = true;
         self.removed_local_variable_names.insert(name);
@@ -187,7 +187,7 @@ impl ITemplateBoundariesStructureHandler for TemplateBoundariesStructureHandler 
         self.set_inliner_value = inliner;
     }
 
-    fn insert_text(&mut self, text: JavaString, processable: bool) {
+    fn insert_text(&mut self, text: Utf16String, processable: bool) {
         self.insert_text_nullable(Some(text), processable)
             .expect("Rust non-null text boundary must satisfy Java validation");
     }

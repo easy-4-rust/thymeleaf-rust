@@ -1,6 +1,6 @@
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 
 use super::IStandardCSSSerializer;
 
@@ -29,8 +29,8 @@ impl IStandardCSSSerializer for StandardCSSSerializer {
         };
         if matches!(object, TemplateValue::Boolean(_) | TemplateValue::Number(_)) {
             let text = object
-                .to_java_string()
-                .unwrap_or_else(|| JavaString::from_rust_str(""));
+                .to_utf16_string()
+                .unwrap_or_else(|| Utf16String::from_rust_str(""));
             return writer.write_utf16(text.as_utf16()).map_err(|error| {
                 TemplateProcessingException::with_cause(
                     Some(
@@ -45,8 +45,8 @@ impl IStandardCSSSerializer for StandardCSSSerializer {
             return Ok(());
         }
         let text = object
-            .to_java_string()
-            .unwrap_or_else(|| JavaString::from_rust_str(""));
+            .to_utf16_string()
+            .unwrap_or_else(|| Utf16String::from_rust_str(""));
         let escaped = escape_css_identifier(text.as_utf16());
         writer.write_utf16(&escaped).map_err(|error| {
             TemplateProcessingException::with_cause(

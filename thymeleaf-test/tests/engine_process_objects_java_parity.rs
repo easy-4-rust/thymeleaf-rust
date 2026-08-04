@@ -27,11 +27,11 @@ use thymeleaf::context::Context;
 use thymeleaf::engine::{ITemplateHandler, OutputTemplateHandler, Text};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IText;
-use thymeleaf::util::{Charset, JavaString, JavaWriter};
+use thymeleaf::util::{Charset, JavaWriter, Utf16String};
 use thymeleaf::{ITemplateResolver, TemplateEngine};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string_engine() -> TemplateEngine {
@@ -195,10 +195,10 @@ fn output_template_handler_writes_text_events() {
     };
     let mut handler = OutputTemplateHandler::new(Box::new(writer));
 
-    let text: Arc<dyn IText> = Arc::new(Text::new(Some(Arc::new(JavaString::from_rust_str(
+    let text: Arc<dyn IText> = Arc::new(Text::new(Some(Arc::new(Utf16String::from_rust_str(
         "hello ",
     )))));
-    let next: Arc<dyn IText> = Arc::new(Text::new(Some(Arc::new(JavaString::from_rust_str(
+    let next: Arc<dyn IText> = Arc::new(Text::new(Some(Arc::new(Utf16String::from_rust_str(
         "world",
     )))));
     handler.handle_text(text).expect("write text");
@@ -206,7 +206,7 @@ fn output_template_handler_writes_text_events() {
     assert_eq!("hello world", writer_text(&buffer));
 
     // 空文本事件写出空串
-    let empty: Arc<dyn IText> = Arc::new(Text::new(Some(Arc::new(JavaString::from_rust_str("")))));
+    let empty: Arc<dyn IText> = Arc::new(Text::new(Some(Arc::new(Utf16String::from_rust_str("")))));
     handler.handle_text(empty).expect("write empty");
     assert_eq!("hello world", writer_text(&buffer));
 }

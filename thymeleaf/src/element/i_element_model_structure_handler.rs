@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::engine::TemplateData;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// ElementModel Processor 的上下文结构变更合同。
 ///
@@ -13,9 +13,9 @@ pub trait IElementModelStructureHandler {
     /// 清除全部动作。
     fn reset(&mut self);
     /// 设置局部变量。
-    fn set_local_variable(&mut self, name: JavaString, value: Option<Arc<TemplateValue>>);
+    fn set_local_variable(&mut self, name: Utf16String, value: Option<Arc<TemplateValue>>);
     /// 删除局部变量。
-    fn remove_local_variable(&mut self, name: JavaString);
+    fn remove_local_variable(&mut self, name: Utf16String);
     /// 设置 selection target。
     fn set_selection_target(&mut self, selection_target: Option<Arc<TemplateValue>>);
     /// 设置内联器。

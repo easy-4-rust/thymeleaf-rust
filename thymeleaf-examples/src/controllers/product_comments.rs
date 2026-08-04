@@ -24,7 +24,7 @@ impl GtvgController for ProductCommentsController {
         // Java: Integer.valueOf(webExchange.getRequest().getParameterValue("prodId"))
         let prod_id = web_exchange
             .get_request()
-            .get_parameter_value(Some(&thymeleaf::util::JavaString::from_rust_str("prodId")))
+            .get_parameter_value(Some(&thymeleaf::util::Utf16String::from_rust_str("prodId")))
             .ok_or_else(|| super::ControllerError("missing prodId parameter".to_owned()))?;
         let prod_id: i32 = prod_id
             .to_string_lossy()

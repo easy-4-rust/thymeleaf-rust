@@ -219,7 +219,7 @@ mod tests {
         let engine = TemplateEngine::new();
         let configuration = engine.get_configuration().expect("configuration");
         let template_data = Arc::new(TemplateData::new(
-            Some(crate::util::JavaString::from_rust_str("template")),
+            Some(crate::util::Utf16String::from_rust_str("template")),
             None,
             None,
             Some(TemplateMode::HTML),

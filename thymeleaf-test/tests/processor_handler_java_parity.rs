@@ -8,7 +8,7 @@ use std::sync::Arc;
 use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 
 fn engine() -> TemplateEngine {
@@ -30,8 +30,8 @@ fn render(tmpl: &str, ctx: &dyn IContext) -> String {
 fn ctx_var(name: &str, val: &str) -> Context {
     let c = Context::new();
     c.set_variable(
-        Some(JavaString::from_rust_str(name)),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str(name)),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             val,
         )))),
     );
@@ -41,7 +41,7 @@ fn ctx_var(name: &str, val: &str) -> Context {
 fn ctx_bool(name: &str, val: bool) -> Context {
     let c = Context::new();
     c.set_variable(
-        Some(JavaString::from_rust_str(name)),
+        Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::Boolean(val))),
     );
     c
@@ -50,7 +50,7 @@ fn ctx_bool(name: &str, val: bool) -> Context {
 fn ctx_num(name: &str, val: i64) -> Context {
     let c = Context::new();
     c.set_variable(
-        Some(JavaString::from_rust_str(name)),
+        Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::Number(
             thymeleaf::util::JavaNumber::Long(val),
         ))),
@@ -62,10 +62,10 @@ fn ctx_list(name: &str, vals: &[&str]) -> Context {
     let c = Context::new();
     let list: Vec<Arc<TemplateValue>> = vals
         .iter()
-        .map(|v| Arc::new(TemplateValue::string(JavaString::from_rust_str(v))))
+        .map(|v| Arc::new(TemplateValue::string(Utf16String::from_rust_str(v))))
         .collect();
     c.set_variable(
-        Some(JavaString::from_rust_str(name)),
+        Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     c
@@ -307,14 +307,14 @@ fn th_attr_sets() {
 fn th_attr_multiple() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("u")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("u")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "http://x.com",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("t")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("t")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "MyLink",
         )))),
     );
@@ -348,12 +348,12 @@ fn th_attrprepend() {
 fn multiple_th_attrs() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("s")),
+        Some(Utf16String::from_rust_str("s")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("t")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("t")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello",
         )))),
     );
@@ -506,11 +506,11 @@ fn lists_size() {
 fn maps_size() {
     let ctx = Context::new();
     let map = vec![(
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("k"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("v"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("k"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("v"))),
     )];
     ctx.set_variable(
-        Some(JavaString::from_rust_str("m")),
+        Some(Utf16String::from_rust_str("m")),
         Some(Arc::new(TemplateValue::Map(Arc::new(map)))),
     );
     assert!(render("<p th:text=\"${#maps.size(m)}\">x</p>", &ctx).contains("1"));
@@ -538,11 +538,11 @@ fn comparison() {
 fn logical() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
+        Some(Utf16String::from_rust_str("a")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("b")),
+        Some(Utf16String::from_rust_str("b")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     assert!(render("<p th:text=\"${a and a}\">x</p>", &ctx).contains("true"));

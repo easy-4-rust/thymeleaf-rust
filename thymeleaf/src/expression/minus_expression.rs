@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaBigDecimal, JavaNumber, JavaString, ValidateError};
+use crate::util::{JavaBigDecimal, JavaNumber, Utf16String, ValidateError};
 
 use super::{
     ComplexExpression, IStandardExpression, StandardExpressionExecutionContext,
@@ -35,7 +35,7 @@ impl MinusExpression {
 }
 
 impl IStandardExpression for MinusExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = vec![b'-' as u16];
         if self.operand.is_complex() {
             units.push(b'(' as u16);
@@ -44,7 +44,7 @@ impl IStandardExpression for MinusExpression {
         if self.operand.is_complex() {
             units.push(b')' as u16);
         }
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
     fn execute_with_context(
         &self,
@@ -80,7 +80,7 @@ impl IStandardExpression for MinusExpression {
             return Ok(Some(Arc::new(TemplateValue::Number(negated))));
         }
         let display = literal_unwrapped_string(operand.as_ref())
-            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"))
             .to_string_lossy();
         Err(Box::new(TemplateProcessingException::new(Some(format!(
             "Cannot execute minus: operand is \"{display}\""

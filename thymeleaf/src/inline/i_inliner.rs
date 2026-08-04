@@ -1,7 +1,7 @@
 use crate::context::ITemplateContext;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 
 /// 文本类模板节点的内联处理合同。
 ///
@@ -23,7 +23,7 @@ pub trait IInliner: Send + Sync {
     ///
     /// # 返回值
     /// 返回用于诊断和配置识别的名称。
-    fn get_name(&self) -> &JavaString;
+    fn get_name(&self) -> &Utf16String;
 
     /// 对文本节点执行内联。
     ///

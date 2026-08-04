@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::TemplateResolutionAttributes;
 use crate::cache::{AlwaysValidCacheEntryValidity, ICacheEntryValidity};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{
     IEngineConfiguration, ITemplateResource, StringTemplateResource, TemplateMode,
     TemplateModeParseError,
@@ -18,7 +18,7 @@ use super::{
 pub struct DefaultTemplateResolver {
     resolver: AbstractTemplateResolver,
     template_mode: TemplateMode,
-    template: Option<JavaString>,
+    template: Option<Utf16String>,
 }
 
 impl DefaultTemplateResolver {
@@ -35,7 +35,7 @@ impl DefaultTemplateResolver {
                 "org.thymeleaf.templateresolver.DefaultTemplateResolver",
             ),
             template_mode: Self::DEFAULT_TEMPLATE_MODE,
-            template: Some(JavaString::from_rust_str("")),
+            template: Some(Utf16String::from_rust_str("")),
         }
     }
 
@@ -91,14 +91,14 @@ impl DefaultTemplateResolver {
     ///
     /// 对应 Java: `DefaultTemplateResolver#getTemplate()`。
     #[must_use]
-    pub fn get_template(&self) -> Option<&JavaString> {
+    pub fn get_template(&self) -> Option<&Utf16String> {
         self.template.as_ref()
     }
 
     /// 设置固定模板正文。
     ///
     /// 对应 Java: `DefaultTemplateResolver#setTemplate(String)`。
-    pub fn set_template(&mut self, template: Option<JavaString>) {
+    pub fn set_template(&mut self, template: Option<Utf16String>) {
         self.template = template;
     }
 }
@@ -123,7 +123,7 @@ impl std::ops::DerefMut for DefaultTemplateResolver {
 }
 
 impl ITemplateResolver for DefaultTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.resolver.get_name()
     }
     fn get_order(&self) -> Option<i32> {
@@ -132,14 +132,14 @@ impl ITemplateResolver for DefaultTemplateResolver {
     fn resolve_template(
         &self,
         _configuration: &dyn IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolve_template(
             template,
             || {
-                let text = self.template.as_ref().map(JavaString::to_string_lossy);
+                let text = self.template.as_ref().map(Utf16String::to_string_lossy);
                 StringTemplateResource::new(text.as_deref())
                     .map(|resource| Some(Arc::new(resource) as Arc<dyn ITemplateResource>))
                     .map_err(TemplateResolverError::from)

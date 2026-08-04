@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use thymeleaf::engine::{CDATASection, Comment, EngineEventUtils, Text};
-use thymeleaf::util::{JavaCharSequence, JavaString};
+use thymeleaf::util::{JavaCharSequence, Utf16String};
 
 fn golden() -> BTreeMap<String, String> {
     include_str!("../../thymeleaf/tests/fixtures/engine_event_utils_golden.txt")
@@ -17,7 +17,7 @@ fn golden() -> BTreeMap<String, String> {
 }
 
 fn sequence(value: &str) -> Arc<dyn JavaCharSequence> {
-    Arc::new(JavaString::from_rust_str(value))
+    Arc::new(Utf16String::from_rust_str(value))
 }
 
 #[test]

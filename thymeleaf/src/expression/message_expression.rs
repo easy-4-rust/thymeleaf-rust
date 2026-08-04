@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     ExpressionSequence, IStandardExpression, SimpleExpression, StandardExpressionExecutionContext,
@@ -57,7 +57,7 @@ impl MessageExpression {
 }
 
 impl IStandardExpression for MessageExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = vec![b'#' as u16, b'{' as u16];
         units.extend_from_slice(self.base.get_string_representation()?.as_utf16());
         if self.has_parameters() {
@@ -72,7 +72,7 @@ impl IStandardExpression for MessageExpression {
             units.push(b')' as u16);
         }
         units.push(b'}' as u16);
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 
     fn execute_with_context(
@@ -94,7 +94,7 @@ impl IStandardExpression for MessageExpression {
         let key_value = self.base.execute_with_context(context, execution_context)?;
         let key = match key_value.as_deref() {
             None | Some(TemplateValue::Null) => None,
-            Some(value) => value.to_java_string(),
+            Some(value) => value.to_utf16_string(),
         };
         if key.as_ref().is_none_or(is_empty_or_java_whitespace) {
             return Err(Box::new(TemplateProcessingException::new(Some(
@@ -141,7 +141,7 @@ fn unwrap_literal(value: Option<Arc<TemplateValue>>) -> Option<Arc<TemplateValue
     }
 }
 
-fn is_empty_or_java_whitespace(value: &JavaString) -> bool {
+fn is_empty_or_java_whitespace(value: &Utf16String) -> bool {
     value.is_empty()
         || value.as_utf16().iter().all(|unit| {
             matches!(

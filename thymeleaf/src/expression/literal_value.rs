@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::ptr;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 表达式解析期间使用的文本字面量包装器。
 ///
@@ -11,7 +11,7 @@ use crate::util::JavaString;
 /// 对应 Java: `org.thymeleaf.standard.expression.LiteralValue`。
 #[derive(Debug)]
 pub struct LiteralValue {
-    value: Option<JavaString>,
+    value: Option<Utf16String>,
 }
 
 impl PartialEq for LiteralValue {
@@ -31,7 +31,7 @@ impl LiteralValue {
     /// # 返回
     /// 保存原始可空文本的新包装器。
     #[must_use]
-    pub const fn new(value: Option<JavaString>) -> Self {
+    pub const fn new(value: Option<Utf16String>) -> Self {
         Self { value }
     }
 
@@ -40,7 +40,7 @@ impl LiteralValue {
     /// # 返回
     /// 字面量文本的借用；内部 Java null 返回 `None`。
     #[must_use]
-    pub const fn get_value(&self) -> Option<&JavaString> {
+    pub const fn get_value(&self) -> Option<&Utf16String> {
         self.value.as_ref()
     }
 
@@ -69,17 +69,17 @@ mod tests {
     use std::ptr;
 
     use super::LiteralValue;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[test]
     fn preserves_nullable_value_and_unwrap_identity() {
-        let value = JavaString::from_rust_str("4");
+        let value = Utf16String::from_rust_str("4");
         let literal = LiteralValue::new(Some(value.clone()));
         assert_eq!(literal.get_value(), Some(&value));
 
         let unwrapped =
             LiteralValue::unwrap(Some(&literal as &dyn Any)).expect("non-null literal must unwrap");
-        assert_eq!(unwrapped.downcast_ref::<JavaString>(), Some(&value));
+        assert_eq!(unwrapped.downcast_ref::<Utf16String>(), Some(&value));
         assert!(LiteralValue::unwrap(Some(&LiteralValue::new(None) as &dyn Any)).is_none());
         assert!(LiteralValue::unwrap(None).is_none());
 

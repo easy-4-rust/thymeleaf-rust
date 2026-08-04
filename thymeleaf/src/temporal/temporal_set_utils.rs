@@ -1,6 +1,6 @@
 use chrono_tz::Tz;
 
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 
 use super::temporal_formatting_utils::TemporalFormattingError;
 use super::{JavaTemporal, TemporalArrayUtils};
@@ -28,7 +28,7 @@ impl TemporalSetUtils {
         target: &[Option<JavaTemporal>],
         pattern: Option<&str>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(
             self.array_utils.array_format(target, pattern, locale)?,
         ))
@@ -103,7 +103,7 @@ impl TemporalSetUtils {
     pub fn set_month_name(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_month_name(target)?))
     }
     /// 批量读取短月份名并去重。
@@ -111,7 +111,7 @@ impl TemporalSetUtils {
     pub fn set_month_name_short(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_month_name_short(target)?))
     }
     /// 批量读取完整星期名并去重。
@@ -119,7 +119,7 @@ impl TemporalSetUtils {
     pub fn set_day_of_week_name(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_day_of_week_name(target)?))
     }
     /// 批量读取短星期名并去重。
@@ -127,7 +127,7 @@ impl TemporalSetUtils {
     pub fn set_day_of_week_name_short(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(
             self.array_utils.array_day_of_week_name_short(target)?,
         ))
@@ -137,7 +137,7 @@ impl TemporalSetUtils {
     pub fn set_format_iso(
         &self,
         target: &[Option<JavaTemporal>],
-    ) -> Result<Vec<Option<JavaString>>, TemporalFormattingError> {
+    ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_format_iso(target)?))
     }
 }

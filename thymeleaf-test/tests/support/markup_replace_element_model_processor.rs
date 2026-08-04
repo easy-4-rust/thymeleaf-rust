@@ -8,14 +8,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::IModel;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -33,10 +33,10 @@ impl MarkupReplaceElementModelProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("replace")),
+                Some(Utf16String::from_rust_str("replace")),
                 true,
                 1000,
                 true,
@@ -88,14 +88,14 @@ fn replace_element(
     context: &dyn ITemplateContext,
     model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     let replacement = context
         .get_model_factory()
         .parse(
             &context.get_template_data(),
-            &JavaString::from_rust_str(
+            &Utf16String::from_rust_str(
                 "<p>This is a <span th:text=\"replacement\">prototype</span></p>",
             ),
         )

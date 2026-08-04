@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{AttributeName, AttributeNameError, AttributeNameKind};
 
@@ -7,14 +7,14 @@ use super::{AttributeName, AttributeNameError, AttributeNameKind};
 /// 对应 Java: `org.thymeleaf.engine.TextAttributeName`。
 pub struct TextAttributeName {
     attribute_name: AttributeName,
-    complete_namespaced_attribute_name: JavaString,
+    complete_namespaced_attribute_name: Utf16String,
 }
 
 impl TextAttributeName {
     /// 对应 Java: `TextAttributeName#forName()`。
     pub(super) fn for_name(
-        prefix: Option<JavaString>,
-        attribute_name: Option<JavaString>,
+        prefix: Option<Utf16String>,
+        attribute_name: Option<Utf16String>,
     ) -> Result<Self, AttributeNameError> {
         let raw_name = attribute_name
             .as_ref()
@@ -40,17 +40,17 @@ impl TextAttributeName {
 
     /// 返回 `prefix:name` 或无 prefix 的原始属性名。
     #[must_use]
-    pub const fn get_complete_namespaced_attribute_name(&self) -> &JavaString {
+    pub const fn get_complete_namespaced_attribute_name(&self) -> &Utf16String {
         &self.complete_namespaced_attribute_name
     }
 }
 
-fn complete_namespaced(prefix: Option<&JavaString>, attribute_name: &JavaString) -> JavaString {
+fn complete_namespaced(prefix: Option<&Utf16String>, attribute_name: &Utf16String) -> Utf16String {
     let Some(prefix) = prefix.filter(|value| !value.is_empty()) else {
         return attribute_name.clone();
     };
     let mut result = prefix.as_utf16().to_vec();
     result.push(u16::from(b':'));
     result.extend_from_slice(attribute_name.as_utf16());
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }

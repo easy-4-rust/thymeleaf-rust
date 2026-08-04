@@ -21,7 +21,7 @@ use thymeleaf::TemplateValue;
 use thymeleaf::expression::{
     TemplateObject, TemplateObjectMethodError, TemplateObjectPropertyError,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 use crate::authentication::SaTokenAuthentication;
 
@@ -56,10 +56,10 @@ impl TemplateObject for SaTokenAuthenticationObject {
         "org.thymeleaf.extras.springsecurity6.auth.Authorization"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         self.authentication.login_id().map_or_else(
-            || JavaString::from_rust_str("anonymous"),
-            JavaString::from_rust_str,
+            || Utf16String::from_rust_str("anonymous"),
+            Utf16String::from_rust_str,
         )
     }
 
@@ -87,18 +87,18 @@ impl TemplateObject for SaTokenAuthenticationObject {
 
     fn java_serializable_properties(
         &self,
-    ) -> Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>> {
+    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![
             (
-                JavaString::from_rust_str("name"),
-                Some(Arc::new(TemplateValue::string(self.to_java_string()))),
+                Utf16String::from_rust_str("name"),
+                Some(Arc::new(TemplateValue::string(self.to_utf16_string()))),
             ),
             (
-                JavaString::from_rust_str("roles"),
+                Utf16String::from_rust_str("roles"),
                 Some(Arc::new(sequence_value(self.authentication.roles().iter()))),
             ),
             (
-                JavaString::from_rust_str("permissions"),
+                Utf16String::from_rust_str("permissions"),
                 Some(Arc::new(sequence_value(
                     self.authentication.permissions().iter(),
                 ))),
@@ -108,11 +108,11 @@ impl TemplateObject for SaTokenAuthenticationObject {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
             "name" | "loginId" | "login_id" => {
-                Some(Arc::new(TemplateValue::string(self.to_java_string())))
+                Some(Arc::new(TemplateValue::string(self.to_utf16_string())))
             }
             "roles" => Some(Arc::new(sequence_value(self.authentication.roles().iter()))),
             "permissions" => Some(Arc::new(sequence_value(
@@ -128,7 +128,7 @@ impl TemplateObject for SaTokenAuthenticationObject {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         let result = match method_name.to_string_lossy().as_str() {
@@ -172,7 +172,7 @@ where
     TemplateValue::List(Arc::new(
         items
             .into_iter()
-            .map(|item| Arc::new(TemplateValue::string(JavaString::from_rust_str(item))))
+            .map(|item| Arc::new(TemplateValue::string(Utf16String::from_rust_str(item))))
             .collect(),
     ))
 }

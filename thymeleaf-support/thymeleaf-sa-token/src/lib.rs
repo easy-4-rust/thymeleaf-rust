@@ -14,7 +14,7 @@
 //! let authentication = load_authentication(&manager, login_id).await?;
 //! let mut context = WebContext::new(Some(exchange))?;
 //! context.set_variable(
-//!     Some(JavaString::from_rust_str(AUTHENTICATION_VARIABLE)),
+//!     Some(Utf16String::from_rust_str(AUTHENTICATION_VARIABLE)),
 //!     Some(Arc::new(SaTokenAuthenticationObject::to_template_value(
 //!         Arc::new(authentication),
 //!     ))),

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::io;
 use std::sync::{Arc, Mutex};
 
-use super::{IWritableCharSequence, JavaCharSequence, JavaString, JavaWriter, TextUtilsError};
+use super::{IWritableCharSequence, JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
 
 /// 可被线程安全聚合字符序列持有的组件。
 pub type AggregateComponent = Arc<dyn JavaCharSequence + Send + Sync>;
@@ -180,7 +180,7 @@ impl AggregateCharSequence {
     ) -> Result<Self, AggregateCharSequenceError> {
         let components = components.ok_or(AggregateCharSequenceError::NullComponents)?;
         if components.is_empty() {
-            let empty: AggregateComponent = Arc::new(JavaString::from_utf16(Vec::new()));
+            let empty: AggregateComponent = Arc::new(Utf16String::from_utf16(Vec::new()));
             return Ok(Self::new_parts(vec![empty], vec![0], 0));
         }
         let mut values: Vec<AggregateComponent> = Vec::with_capacity(components.len());
@@ -230,7 +230,7 @@ impl AggregateCharSequence {
         }
         Err(TextUtilsError::SequenceAccess {
             class_name: "java.lang.IllegalStateException".into(),
-            message: Some(JavaString::from_rust_str(
+            message: Some(Utf16String::from_rust_str(
                 "Bad computing of charAt at AggregatedString",
             )),
         })
@@ -242,7 +242,7 @@ impl AggregateCharSequence {
         &self,
         begin_index: i32,
         end_index: i32,
-    ) -> Result<JavaString, TextUtilsError> {
+    ) -> Result<Utf16String, TextUtilsError> {
         if begin_index < 0 {
             return Err(range_error(begin_index, self.length));
         }
@@ -257,7 +257,7 @@ impl AggregateCharSequence {
         for index in begin_index..end_index {
             result.push(self.char_at(index)?);
         }
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 
     /// 按聚合内容比较另一个同类对象。
@@ -328,10 +328,10 @@ impl AggregateCharSequence {
     }
 
     /// 将所有组件的 `toString()` 结果串联。
-    /// 对应 Java 语义：`AggregateCharSequence` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> Result<JavaString, TextUtilsError> {
+    /// 对应 Java 语义：`AggregateCharSequence` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         if self.length == 0 {
-            return Ok(JavaString::from_utf16(Vec::new()));
+            return Ok(Utf16String::from_utf16(Vec::new()));
         }
         if self.values.len() == 1 {
             return self.values[0].java_to_string();
@@ -339,7 +339,7 @@ impl AggregateCharSequence {
         let result_length =
             usize::try_from(self.length).map_err(|_| TextUtilsError::SequenceAccess {
                 class_name: "java.lang.NegativeArraySizeException".into(),
-                message: Some(JavaString::from_rust_str(&self.length.to_string())),
+                message: Some(Utf16String::from_rust_str(&self.length.to_string())),
             })?;
         let mut result = vec![0_u16; result_length];
         for (component_index, component) in self.values.iter().enumerate() {
@@ -361,7 +361,7 @@ impl AggregateCharSequence {
                 *slot = component.java_char_at(source_index)?;
             }
         }
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 }
 
@@ -378,15 +378,15 @@ impl JavaCharSequence for AggregateCharSequence {
         self.char_at(index)
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
-        self.to_java_string()
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+        self.to_utf16_string()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.sub_sequence(start, end)
     }
 

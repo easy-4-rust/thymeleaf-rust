@@ -9,7 +9,7 @@ use crate::element::{
 use crate::engine::AttributeName;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IProcessor, StandardAttributeCallback};
 
@@ -27,8 +27,8 @@ impl AbstractStandardConditionalVisibilityTagProcessor {
     /// 对应 Java 受保护构造器与抽象 `isVisible` 方法。
     pub fn new<F>(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         is_visible: F,
         processor_class_name: &'static str,
@@ -38,7 +38,7 @@ impl AbstractStandardConditionalVisibilityTagProcessor {
                 &dyn ITemplateContext,
                 &dyn IProcessableElementTag,
                 &AttributeName,
-                Option<&JavaString>,
+                Option<&Utf16String>,
             ) -> Result<bool, Box<dyn TemplateEngineException>>
             + Send
             + Sync

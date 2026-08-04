@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::model::{ICloseElementTag, IElementTag, IModelVisitor, ITemplateEvent};
 use crate::templatemode::TemplateMode;
-use crate::util::{FastStringWriter, JavaString, JavaWriter};
+use crate::util::{FastStringWriter, JavaWriter, Utf16String};
 
 use super::{
     AbstractElementTag, ElementDefinition, ElementDefinitionValue, IEngineTemplateEvent,
@@ -16,7 +16,7 @@ use super::{
 /// 对应 Java: `org.thymeleaf.engine.CloseElementTag`。
 pub struct CloseElementTag {
     element_tag: AbstractElementTag,
-    trailing_white_space: Option<JavaString>,
+    trailing_white_space: Option<Utf16String>,
     unmatched: bool,
 }
 
@@ -29,8 +29,8 @@ impl CloseElementTag {
     pub fn new(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
-        trailing_white_space: Option<JavaString>,
+        element_complete_name: Utf16String,
+        trailing_white_space: Option<Utf16String>,
         synthetic: bool,
         unmatched: bool,
     ) -> Self {
@@ -55,11 +55,11 @@ impl CloseElementTag {
     pub fn with_location(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
-        trailing_white_space: Option<JavaString>,
+        element_complete_name: Utf16String,
+        trailing_white_space: Option<Utf16String>,
         synthetic: bool,
         unmatched: bool,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -80,8 +80,8 @@ impl CloseElementTag {
 
     /// 返回完整 UTF-16 输出表示；synthetic 标签返回空字符串。
     #[must_use]
-    /// 对应 Java 语义：`CloseElementTag` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> JavaString {
+    /// 对应 Java 语义：`CloseElementTag` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Utf16String {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)
             .expect("FastStringWriter must accept complete UTF-16 slices");
@@ -100,7 +100,7 @@ impl IElementTag for CloseElementTag {
         self.element_tag.get_template_mode()
     }
 
-    fn get_element_complete_name(&self) -> &JavaString {
+    fn get_element_complete_name(&self) -> &Utf16String {
         self.element_tag.get_element_complete_name()
     }
 
@@ -118,7 +118,7 @@ impl ITemplateEvent for CloseElementTag {
         self.element_tag.as_template_event().has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.element_tag.as_template_event().get_template_name()
     }
 
@@ -170,6 +170,6 @@ impl IEngineTemplateEvent for CloseElementTag {}
 
 impl Display for CloseElementTag {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.to_java_string().to_string_lossy())
+        formatter.write_str(&self.to_utf16_string().to_string_lossy())
     }
 }

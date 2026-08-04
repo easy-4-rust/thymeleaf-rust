@@ -4,7 +4,7 @@ use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
 use crate::util::{
-    JavaCharSequence, JavaString, LazyEscapingCharSequence, escape_text_immediately,
+    JavaCharSequence, LazyEscapingCharSequence, Utf16String, escape_text_immediately,
 };
 
 use super::{
@@ -30,13 +30,13 @@ impl StandardTextTagProcessor {
     /// 对应 Java 语义：`StandardTextTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardExpressionAttributeTagProcessor::with_restricted_execution(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 true,
                 template_mode == TemplateMode::TEXT,
@@ -66,8 +66,8 @@ impl StandardTextTagProcessor {
                         _ => {
                             let input = expression_result
                                 .as_deref()
-                                .and_then(TemplateValue::to_java_string)
-                                .unwrap_or_else(|| JavaString::from_rust_str(""));
+                                .and_then(TemplateValue::to_utf16_string)
+                                .unwrap_or_else(|| Utf16String::from_rust_str(""));
                             if template_mode == TemplateMode::RAW {
                                 Arc::new(input)
                             } else if input.len() > 100 {

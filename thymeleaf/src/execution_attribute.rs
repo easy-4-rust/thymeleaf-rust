@@ -68,7 +68,7 @@ impl ExecutionAttributeValue {
         if let Some(value) = self.downcast_ref::<String>() {
             return value.clone();
         }
-        if let Some(value) = self.downcast_ref::<crate::util::JavaString>() {
+        if let Some(value) = self.downcast_ref::<crate::util::Utf16String>() {
             return value.to_string_lossy();
         }
         scalar!(bool);

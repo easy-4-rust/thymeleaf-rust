@@ -160,17 +160,17 @@ pub enum ExpressionCacheKeyError {
 }
 
 fn compute_hash_code(expression_type: &str, expression0: &str, expression1: Option<&str>) -> i32 {
-    let mut result = java_string_hash_code(expression_type);
+    let mut result = utf16_string_hash_code(expression_type);
     result = result
         .wrapping_mul(31)
-        .wrapping_add(java_string_hash_code(expression0));
+        .wrapping_add(utf16_string_hash_code(expression0));
     result = result
         .wrapping_mul(31)
-        .wrapping_add(expression1.map(java_string_hash_code).unwrap_or(0));
+        .wrapping_add(expression1.map(utf16_string_hash_code).unwrap_or(0));
     result
 }
 
-fn java_string_hash_code(value: &str) -> i32 {
+fn utf16_string_hash_code(value: &str) -> i32 {
     value.encode_utf16().fold(0_i32, |hash, code_unit| {
         hash.wrapping_mul(31).wrapping_add(i32::from(code_unit))
     })
@@ -182,7 +182,7 @@ mod tests {
     use std::fmt::Write;
     use std::hash::{Hash, Hasher};
 
-    use super::{ExpressionCacheKey, ExpressionCacheKeyError, java_string_hash_code};
+    use super::{ExpressionCacheKey, ExpressionCacheKeyError, utf16_string_hash_code};
 
     fn rust_hash(value: &ExpressionCacheKey) -> u64 {
         let mut hasher = DefaultHasher::new();
@@ -241,7 +241,7 @@ mod tests {
         assert_eq!(key.get_expression0(), "😀");
         assert_eq!(key.get_expression1(), None);
         assert_eq!(key.to_string(), "EXPRESSION|😀");
-        assert_eq!(java_string_hash_code("😀"), 1_772_899);
+        assert_eq!(utf16_string_hash_code("😀"), 1_772_899);
         assert_eq!(key.hash_code(), -775_497_835);
     }
 

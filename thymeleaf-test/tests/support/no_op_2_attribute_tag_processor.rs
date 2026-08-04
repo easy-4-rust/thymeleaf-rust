@@ -9,14 +9,14 @@ use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IProcessableElementTag;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &dyn IProcessableElementTag,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult;
 
@@ -34,10 +34,10 @@ impl NoOp2AttributeTagProcessor {
         Self {
             processor: AbstractAttributeTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("noop")),
+                Some(Utf16String::from_rust_str("noop")),
                 true,
                 1100,
                 false,
@@ -91,12 +91,12 @@ fn verify_tag_variable(
     context: &dyn ITemplateContext,
     _tag: &dyn IProcessableElementTag,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult {
     if !matches!(
         context
-            .get_variable(Some(&JavaString::from_rust_str("noop-tag")))
+            .get_variable(Some(&Utf16String::from_rust_str("noop-tag")))
             .as_deref(),
         Some(TemplateValue::Boolean(true))
     ) {

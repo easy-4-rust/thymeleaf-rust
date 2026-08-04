@@ -9,7 +9,7 @@ use crate::model::{
     IProcessableElementTag, ITemplateEvent,
 };
 use crate::templatemode::TemplateMode;
-use crate::util::{FastStringWriter, JavaString, JavaWriter};
+use crate::util::{FastStringWriter, JavaWriter, Utf16String};
 
 use super::{
     AbstractProcessableElementTag, AttributeDefinitionValue, AttributeDefinitions, AttributeName,
@@ -33,7 +33,7 @@ impl OpenElementTag {
     pub fn new(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
+        element_complete_name: Utf16String,
         attributes: Option<Arc<Attributes>>,
         synthetic: bool,
     ) -> Self {
@@ -57,10 +57,10 @@ impl OpenElementTag {
     pub fn with_location(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
+        element_complete_name: Utf16String,
         attributes: Option<Arc<Attributes>>,
         synthetic: bool,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -85,8 +85,8 @@ impl OpenElementTag {
         self: &Arc<Self>,
         attribute_definitions: &AttributeDefinitions,
         attribute_definition: Option<&AttributeDefinitionValue>,
-        complete_name: JavaString,
-        value: Option<JavaString>,
+        complete_name: Utf16String,
+        value: Option<Utf16String>,
         value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<Self>, AttributesError> {
         let old_attributes = self
@@ -114,8 +114,8 @@ impl OpenElementTag {
         attribute_definitions: &AttributeDefinitions,
         old_name: &AttributeName,
         new_attribute_definition: Option<&AttributeDefinitionValue>,
-        complete_new_name: JavaString,
-        value: Option<JavaString>,
+        complete_new_name: Utf16String,
+        value: Option<Utf16String>,
         value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<Self>, AttributesError> {
         let old_attributes = self
@@ -140,7 +140,7 @@ impl OpenElementTag {
     /// 对应 Java: `OpenElementTag#removeAttribute(String)`。
     pub fn remove_attribute(
         self: &Arc<Self>,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<Arc<Self>, AttributesError> {
         let old_attributes = self
             .processable_tag
@@ -160,8 +160,8 @@ impl OpenElementTag {
     /// 对应 Java: `OpenElementTag#removeAttribute(String,String)`。
     pub fn remove_attribute_with_prefix(
         self: &Arc<Self>,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<Arc<Self>, AttributesError> {
         let old_attributes = self
             .processable_tag
@@ -195,8 +195,8 @@ impl OpenElementTag {
 
     /// 返回完整 UTF-16 标签表示。
     #[must_use]
-    /// 对应 Java 语义：`OpenElementTag` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> JavaString {
+    /// 对应 Java 语义：`OpenElementTag` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Utf16String {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)
             .expect("FastStringWriter must accept complete UTF-16 slices");
@@ -245,18 +245,18 @@ impl IProcessableElementTag for OpenElementTag {
             })
     }
 
-    fn get_attribute_map(&self) -> IndexMap<JavaString, Option<JavaString>> {
+    fn get_attribute_map(&self) -> IndexMap<Utf16String, Option<Utf16String>> {
         self.processable_tag.get_attribute_map()
     }
 
-    fn has_attribute(&self, complete_name: &JavaString) -> Result<bool, AttributesError> {
+    fn has_attribute(&self, complete_name: &Utf16String) -> Result<bool, AttributesError> {
         self.processable_tag.has_attribute(complete_name)
     }
 
     fn has_attribute_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<bool, AttributesError> {
         self.processable_tag.has_attribute_with_prefix(prefix, name)
     }
@@ -267,7 +267,7 @@ impl IProcessableElementTag for OpenElementTag {
 
     fn get_attribute(
         &self,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<Option<&dyn IAttribute>, AttributesError> {
         Ok(self
             .processable_tag
@@ -277,8 +277,8 @@ impl IProcessableElementTag for OpenElementTag {
 
     fn get_attribute_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<Option<&dyn IAttribute>, AttributesError> {
         Ok(self
             .processable_tag
@@ -294,8 +294,8 @@ impl IProcessableElementTag for OpenElementTag {
 
     fn get_attribute_value(
         &self,
-        complete_name: &JavaString,
-    ) -> Result<Option<&JavaString>, AttributesError> {
+        complete_name: &Utf16String,
+    ) -> Result<Option<&Utf16String>, AttributesError> {
         Ok(self
             .processable_tag
             .get_attribute(complete_name)?
@@ -304,16 +304,16 @@ impl IProcessableElementTag for OpenElementTag {
 
     fn get_attribute_value_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
-    ) -> Result<Option<&JavaString>, AttributesError> {
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
+    ) -> Result<Option<&Utf16String>, AttributesError> {
         Ok(self
             .processable_tag
             .get_attribute_with_prefix(prefix, name)?
             .and_then(IAttribute::get_value))
     }
 
-    fn get_attribute_value_by_name(&self, attribute_name: &AttributeName) -> Option<&JavaString> {
+    fn get_attribute_value_by_name(&self, attribute_name: &AttributeName) -> Option<&Utf16String> {
         self.processable_tag
             .get_attribute_name(attribute_name)
             .and_then(IAttribute::get_value)
@@ -323,8 +323,8 @@ impl IProcessableElementTag for OpenElementTag {
         self: Arc<Self>,
         attribute_definitions: &AttributeDefinitions,
         attribute_definition: Option<&AttributeDefinitionValue>,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
         OpenElementTag::set_attribute(
@@ -343,8 +343,8 @@ impl IProcessableElementTag for OpenElementTag {
         attribute_definitions: &AttributeDefinitions,
         old_attribute_name: &AttributeName,
         attribute_definition: Option<&AttributeDefinitionValue>,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         attribute_value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
         OpenElementTag::replace_attribute(
@@ -368,7 +368,7 @@ impl IProcessableElementTag for OpenElementTag {
 
     fn without_attribute_complete(
         self: Arc<Self>,
-        attribute_name: &JavaString,
+        attribute_name: &Utf16String,
     ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
         OpenElementTag::remove_attribute(&self, attribute_name)
             .map(|tag| tag as Arc<dyn IProcessableElementTag>)
@@ -376,8 +376,8 @@ impl IProcessableElementTag for OpenElementTag {
 
     fn without_attribute_with_prefix(
         self: Arc<Self>,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<Arc<dyn IProcessableElementTag>, AttributesError> {
         OpenElementTag::remove_attribute_with_prefix(&self, prefix, name)
             .map(|tag| tag as Arc<dyn IProcessableElementTag>)
@@ -389,7 +389,7 @@ impl IElementTag for OpenElementTag {
         self.processable_tag.as_element_tag().get_template_mode()
     }
 
-    fn get_element_complete_name(&self) -> &JavaString {
+    fn get_element_complete_name(&self) -> &Utf16String {
         self.processable_tag
             .as_element_tag()
             .get_element_complete_name()
@@ -414,7 +414,7 @@ impl ITemplateEvent for OpenElementTag {
             .has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.processable_tag
             .as_element_tag()
             .as_template_event()
@@ -479,6 +479,6 @@ impl IEngineTemplateEvent for OpenElementTag {}
 
 impl Display for OpenElementTag {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.to_java_string().to_string_lossy())
+        formatter.write_str(&self.to_utf16_string().to_string_lossy())
     }
 }

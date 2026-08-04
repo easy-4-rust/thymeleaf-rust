@@ -300,7 +300,7 @@ mod tests {
     use super::{BlockAction, BlockAwareReader};
     use crate::reader::{ParserLevelCommentTextReader, PrototypeOnlyCommentTextReader};
     use crate::text::{TextParserReader, TextParserReaderError};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_GOLDEN: &str = include_str!("../../tests/fixtures/text_comment_reader_golden.txt");
 
@@ -908,7 +908,7 @@ mod tests {
     /// 必须在 Rust 动态分派中保持 Java 行为。
     #[test]
     fn direct_block_actions_and_utf16_reader_default_method_are_preserved() {
-        let value = JavaString::from_utf16(vec![0xd800, b'a' as u16, 0xdc00]);
+        let value = Utf16String::from_utf16(vec![0xd800, b'a' as u16, 0xdc00]);
         let mut reader = StringReader {
             value: value.as_utf16().to_vec(),
             position: 0,

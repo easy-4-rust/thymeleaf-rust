@@ -270,7 +270,7 @@ mod tests {
         IOpenElementTag, IProcessingInstruction, IStandaloneElementTag, ITemplateEnd,
         ITemplateEvent, ITemplateStart, IText, IXMLDeclaration,
     };
-    use crate::util::{FastStringWriter, JavaString};
+    use crate::util::{FastStringWriter, Utf16String};
     use crate::{ITemplateEngine, TemplateEngine, TemplateMode};
 
     /// 只记录 Text 的最小处理器；其余事件方法保持成功，模拟 Java 可链接 Handler。
@@ -483,7 +483,7 @@ mod tests {
     }
 
     fn event(value: &str) -> Arc<dyn ITemplateEvent> {
-        Arc::new(Text::new(Some(Arc::new(JavaString::from_rust_str(value)))))
+        Arc::new(Text::new(Some(Arc::new(Utf16String::from_rust_str(value)))))
     }
 
     fn golden(key: &str) -> &str {

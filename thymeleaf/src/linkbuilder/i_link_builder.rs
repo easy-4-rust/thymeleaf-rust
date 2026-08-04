@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 链接构建器动态边界的错误结果。
 ///
@@ -30,7 +30,7 @@ pub trait ILinkBuilder: Send + Sync {
     /// # 返回值
     ///
     /// 当前构建器名称；`None` 对应 Java `null`。
-    fn get_name(&self) -> Option<&JavaString>;
+    fn get_name(&self) -> Option<&Utf16String>;
 
     /// 返回构建器在链中的可空执行顺序。
     ///
@@ -61,9 +61,9 @@ pub trait ILinkBuilder: Send + Sync {
     fn build_link(
         &self,
         context: &dyn IExpressionContext,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException>;
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Option<Utf16String>, TemplateProcessingException>;
 
     /// 保留 Java 公共入口的可空上下文校验边界。
     ///
@@ -82,9 +82,9 @@ pub trait ILinkBuilder: Send + Sync {
     fn build_link_nullable(
         &self,
         context: Option<&dyn IExpressionContext>,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> LinkBuilderResult<Option<JavaString>> {
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> LinkBuilderResult<Option<Utf16String>> {
         crate::util::Validate::not_null(context, Some("Expression context cannot be null"))
             .map_err(|error| Box::new(error) as Box<dyn Error + Send + Sync>)?;
         self.build_link(

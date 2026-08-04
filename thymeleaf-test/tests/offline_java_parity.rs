@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// Java `ResourceUtils#normalize`：逐行去 `\r`，再去末尾空白。
 fn normalize(text: &str) -> String {
@@ -24,11 +24,11 @@ fn normalize(text: &str) -> String {
 #[test]
 fn offline01_matches_java() {
     let mut template_resolver = thymeleaf::templateresolver::FileTemplateResolver::new();
-    template_resolver.set_prefix(Some(JavaString::from_rust_str(concat!(
+    template_resolver.set_prefix(Some(Utf16String::from_rust_str(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/tests/fixtures/offline/"
     ))));
-    template_resolver.set_suffix(Some(JavaString::from_rust_str(".html")));
+    template_resolver.set_suffix(Some(Utf16String::from_rust_str(".html")));
     let engine = TemplateEngine::new();
     engine
         .set_template_resolver(Arc::new(template_resolver))
@@ -37,8 +37,8 @@ fn offline01_matches_java() {
     // Java：`ctx.setVariable("one", "This is one")`
     let context = thymeleaf::context::Context::new();
     context.set_variable(
-        Some(JavaString::from_rust_str("one")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("one")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "This is one",
         )))),
     );

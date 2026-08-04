@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::context::{IExpressionContext, ITemplateContext};
 use crate::exceptions::{TemplateInputException, TemplateProcessingException};
 use crate::model::IModel;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::fragment::FragmentParameterMap;
 use super::{
@@ -109,7 +109,7 @@ impl FragmentExpression {
 
     /// 解析完整 Fragment 表达式。
     /// 对应 Java: `FragmentExpression#parseFragmentExpression()`。
-    pub fn parse_fragment_expression(input: Option<&JavaString>) -> Option<Self> {
+    pub fn parse_fragment_expression(input: Option<&Utf16String>) -> Option<Self> {
         let input = input?;
         let trimmed = java_trim(input.as_utf16());
         if trimmed.len() < 3
@@ -123,10 +123,10 @@ impl FragmentExpression {
         if content.is_empty() {
             return Some(Self::empty());
         }
-        Self::parse_fragment_expression_content(&JavaString::from_utf16(content.to_vec()))
+        Self::parse_fragment_expression_content(&Utf16String::from_utf16(content.to_vec()))
     }
 
-    fn parse_fragment_expression_content(input: &JavaString) -> Option<Self> {
+    fn parse_fragment_expression_content(input: &Utf16String) -> Option<Self> {
         let trimmed = java_trim(input.as_utf16());
         if trimmed.is_empty() {
             return Some(Self::empty());
@@ -167,7 +167,7 @@ impl FragmentExpression {
         let parameter_sequence = match parameters.filter(|value| !java_trim(value).is_empty()) {
             None => None,
             Some(value) => {
-                let value = JavaString::from_utf16(value.to_vec());
+                let value = Utf16String::from_utf16(value.to_vec());
                 if let Some(assignations) =
                     AssignationUtils::internal_parse_assignation_sequence(&value, false)
                 {
@@ -310,26 +310,26 @@ impl FragmentExpression {
 
     /// 将模板名结果转换为名称；`this` 和 null 表示当前模板。
     /// 对应 Java: `FragmentExpression#resolveTemplateName()`。
-    pub fn resolve_template_name(executed: &ExecutedFragmentExpression) -> Option<JavaString> {
+    pub fn resolve_template_name(executed: &ExecutedFragmentExpression) -> Option<Utf16String> {
         let result = executed.template_name_expression_result.as_deref()?;
-        let value = result.to_java_string()?;
-        (value != JavaString::from_rust_str("this")).then_some(value)
+        let value = result.to_utf16_string()?;
+        (value != Utf16String::from_rust_str("this")).then_some(value)
     }
 
     /// 将 selector 结果规范化为单元素 selector 集合。
     /// 对应 Java: `FragmentExpression#resolveFragments()`。
-    pub fn resolve_fragments(executed: &ExecutedFragmentExpression) -> Option<Vec<JavaString>> {
+    pub fn resolve_fragments(executed: &ExecutedFragmentExpression) -> Option<Vec<Utf16String>> {
         let value = executed
             .fragment_selector_expression_result
             .as_deref()?
-            .to_java_string()?;
+            .to_utf16_string()?;
         let units = value.as_utf16();
         let normalized = if units.len() > 3
             && units.first() == Some(&(b'[' as u16))
             && units.last() == Some(&(b']' as u16))
             && units[units.len() - 2] != b'\'' as u16
         {
-            JavaString::from_utf16(java_trim(&units[1..units.len() - 1]).to_vec())
+            Utf16String::from_utf16(java_trim(&units[1..units.len() - 1]).to_vec())
         } else {
             value
         };
@@ -346,7 +346,7 @@ impl IStandardExpression for FragmentExpression {
         Some(self)
     }
 
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = vec![b'~' as u16, b'{' as u16];
         if let Some(template_name) = &self.template_name {
             units.extend_from_slice(template_name.get_string_representation()?.as_utf16());
@@ -363,7 +363,7 @@ impl IStandardExpression for FragmentExpression {
             units.push(b')' as u16);
         }
         units.push(b'}' as u16);
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 
     fn execute_with_context(
@@ -398,7 +398,7 @@ impl super::SimpleExpression for FragmentExpression {}
 /// 对应 Java: `FragmentExpression.ExecutedFragmentExpression`。
 pub struct ExecutedFragmentExpression {
     fragment_expression: FragmentExpression,
-    expression_representation: JavaString,
+    expression_representation: Utf16String,
     template_name_expression_result: Option<Arc<TemplateValue>>,
     fragment_selector_expression_result: Option<Arc<TemplateValue>>,
     fragment_parameters: Option<Arc<RwLock<FragmentParameterMap>>>,
@@ -410,7 +410,7 @@ impl ExecutedFragmentExpression {
     fn empty() -> Self {
         Self {
             fragment_expression: FragmentExpression::empty(),
-            expression_representation: JavaString::from_rust_str("~{}"),
+            expression_representation: Utf16String::from_rust_str("~{}"),
             template_name_expression_result: None,
             fragment_selector_expression_result: None,
             fragment_parameters: None,
@@ -471,7 +471,7 @@ fn create_executed_parameters(
             .get_left()
             .execute_with_context(context, expression_context)?
             .as_deref()
-            .and_then(TemplateValue::to_java_string);
+            .and_then(TemplateValue::to_utf16_string);
         let parameter_value = assignation
             .get_right()
             .ok_or_else(|| {
@@ -490,7 +490,7 @@ fn create_synthetic_parameters(
 ) -> Option<AssignationSequence> {
     let mut assignations = Vec::with_capacity(expressions.size() as usize + 2);
     for (index, expression) in expressions.get_expressions().iter().flatten().enumerate() {
-        let name = JavaString::from_rust_str(&format!(
+        let name = Utf16String::from_rust_str(&format!(
             "{}{index}",
             FragmentExpression::UNNAMED_PARAMETERS_PREFIX
         ));
@@ -506,7 +506,7 @@ fn create_synthetic_parameters(
 }
 
 fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let input = JavaString::from_utf16(java_trim(input).to_vec());
+    let input = Utf16String::from_utf16(java_trim(input).to_vec());
     if let Ok(expression) = ExpressionParsingUtil::parse_expression(&input) {
         return Some(expression);
     }
@@ -531,7 +531,7 @@ fn parse_template_name_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStan
         )
     });
     if input.contains(&(b'/' as u16)) && !contains_standard_expression {
-        let input = JavaString::from_utf16(input.to_vec());
+        let input = Utf16String::from_utf16(input.to_vec());
         let wrapped = TextLiteralExpression::wrap_string_into_literal(Some(&input))?;
         return Some(Arc::new(
             TextLiteralExpression::parse_text_literal_expression(&wrapped),

@@ -6,7 +6,7 @@ use crate::engine::{AttributeName, AttributeNameValue, AttributeNames, ElementNa
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::{IAttribute, IModel, IProcessableElementTag, ITemplateEvent};
 use crate::processor::{AbstractProcessor, IProcessor};
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 
 use super::{
     IElementModelProcessor, IElementModelStructureHandler, IElementProcessor,
@@ -19,7 +19,7 @@ use super::{
 pub struct AbstractAttributeModelProcessor<F> {
     processor: AbstractProcessor,
     processor_class_name: &'static str,
-    dialect_prefix: Option<JavaString>,
+    dialect_prefix: Option<Utf16String>,
     matching_element_name: Option<MatchingElementName>,
     matching_attribute_name: MatchingAttributeName,
     attribute_name: AttributeNameValue,
@@ -36,10 +36,10 @@ impl<F> AbstractAttributeModelProcessor<F> {
     /// 对应 Java 语义：`AbstractAttributeModelProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: Option<TemplateMode>,
-        dialect_prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
         prefix_element_name: bool,
-        attribute_name: Option<JavaString>,
+        attribute_name: Option<Utf16String>,
         prefix_attribute_name: bool,
         precedence: i32,
         remove_attribute: bool,
@@ -82,7 +82,7 @@ impl<F> AbstractAttributeModelProcessor<F> {
 
     /// 返回构造时保存的可空方言前缀。
     /// 对应 Java 语义：Java 接口/超类方法 `getDialectPrefix()` 的 Rust 移植（`AbstractAttributeModelProcessor` 继承路径）。
-    pub fn get_dialect_prefix(&self) -> Option<&JavaString> {
+    pub fn get_dialect_prefix(&self) -> Option<&Utf16String> {
         self.dialect_prefix.as_ref()
     }
 }
@@ -110,7 +110,7 @@ where
             &dyn ITemplateContext,
             &mut dyn IModel,
             &AttributeName,
-            Option<JavaString>,
+            Option<Utf16String>,
             &mut dyn IElementModelStructureHandler,
         ) -> Result<(), Box<dyn TemplateEngineException>>
         + Send
@@ -135,7 +135,7 @@ where
             &dyn ITemplateContext,
             &mut dyn IModel,
             &AttributeName,
-            Option<JavaString>,
+            Option<Utf16String>,
             &mut dyn IElementModelStructureHandler,
         ) -> Result<(), Box<dyn TemplateEngineException>>
         + Send
@@ -252,8 +252,8 @@ fn locate_first_event_in_model(
 
 fn build_matching_element(
     mode: TemplateMode,
-    dialect_prefix: Option<&JavaString>,
-    element_name: Option<&JavaString>,
+    dialect_prefix: Option<&Utf16String>,
+    element_name: Option<&Utf16String>,
     prefix_element_name: bool,
 ) -> Result<Option<MatchingElementName>, TemplateProcessingException> {
     element_name
@@ -295,7 +295,7 @@ fn model_attribute_location(
     (
         first_tag
             .get_template_name()
-            .map(JavaString::to_string_lossy),
+            .map(Utf16String::to_string_lossy),
         attribute.map_or(-1, IAttribute::get_line),
         attribute.map_or(-1, IAttribute::get_col),
     )

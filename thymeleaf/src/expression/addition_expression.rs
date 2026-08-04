@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaNumber, JavaString, ValidateError};
+use crate::util::{JavaNumber, Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression, LiteralValue,
@@ -64,15 +64,15 @@ impl AdditionExpression {
         let mut units = left.as_utf16().to_vec();
         units.extend_from_slice(right.as_utf16());
         Ok(Some(Arc::new(TemplateValue::Literal(Arc::new(
-            LiteralValue::new(Some(JavaString::from_utf16(units))),
+            LiteralValue::new(Some(Utf16String::from_utf16(units))),
         )))))
     }
 }
 
 impl IStandardExpression for AdditionExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         self.operation
-            .get_string_representation(Some(&JavaString::from_rust_str("+")))
+            .get_string_representation(Some(&Utf16String::from_rust_str("+")))
     }
 
     fn execute_with_context(

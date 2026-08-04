@@ -20,15 +20,15 @@ use std::sync::{Arc, Mutex};
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
 use thymeleaf::serializer::{IStandardJavaScriptSerializer, StandardJavaScriptSerializer};
-use thymeleaf::util::{DateUtils, JavaNumber, JavaString, JavaWriter};
+use thymeleaf::util::{DateUtils, JavaNumber, JavaWriter, Utf16String};
 use thymeleaf::{ITemplateResolver, TemplateEngine};
 
 // ===========================================================================
 // 辅助
 // ===========================================================================
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {
@@ -88,7 +88,7 @@ impl TemplateObject for SomeObjectA {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.inline.ScriptInlineTest$SomeObjectA"
     }
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         js("SomeObjectA")
     }
     fn as_any(&self) -> &dyn Any {
@@ -96,7 +96,7 @@ impl TemplateObject for SomeObjectA {
     }
     fn java_serializable_properties(
         &self,
-    ) -> Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>> {
+    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![(js("one"), Some(string_value("value number one")))])
     }
 }
@@ -109,7 +109,7 @@ impl TemplateObject for SomeObjectB {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.inline.ScriptInlineTest$SomeObjectB"
     }
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         js("SomeObjectB")
     }
     fn as_any(&self) -> &dyn Any {
@@ -117,7 +117,7 @@ impl TemplateObject for SomeObjectB {
     }
     fn java_serializable_properties(
         &self,
-    ) -> Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>> {
+    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![
             (js("one"), Some(string_value("value number one"))),
             (js("two"), Some(integer_value(1231))),

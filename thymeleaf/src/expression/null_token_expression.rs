@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -21,7 +21,7 @@ impl NullTokenExpression {
 
     /// 忽略大小写解析 null，并复用内部规范单例。
     /// 对应 Java: `NullTokenExpression#parseNullTokenExpression()`。
-    pub fn parse_null_token_expression(input: Option<&JavaString>) -> Option<Arc<Self>> {
+    pub fn parse_null_token_expression(input: Option<&Utf16String>) -> Option<Arc<Self>> {
         let input = input?;
         input
             .to_string_lossy()
@@ -43,8 +43,8 @@ impl Default for NullTokenExpression {
 }
 
 impl IStandardExpression for NullTokenExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
-        Ok(JavaString::from_rust_str("null"))
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
+        Ok(Utf16String::from_rust_str("null"))
     }
 
     fn execute_with_context(

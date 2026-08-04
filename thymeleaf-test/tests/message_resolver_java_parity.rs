@@ -15,7 +15,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::messageresolver::{IMessageResolver, StandardMessageResolver};
 use thymeleaf::templateresource::TemplateResourceError;
-use thymeleaf::util::{JavaBigDecimal, JavaDate, JavaLocale, JavaNumber, JavaString};
+use thymeleaf::util::{JavaBigDecimal, JavaDate, JavaLocale, JavaNumber, Utf16String};
 use thymeleaf::{ITemplateEngine, ITemplateResource, TemplateEngine};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -103,7 +103,7 @@ fn message_format_selected_contracts_match_java_golden() {
         "{0}-{2}",
         &[string("A")],
     );
-    let surrogate_parameter = Some(Arc::new(TemplateValue::string(JavaString::from_utf16(
+    let surrogate_parameter = Some(Arc::new(TemplateValue::string(Utf16String::from_utf16(
         vec![u16::from(b'x'), 0xd800, u16::from(b'y')],
     ))));
     let formatted = resolver
@@ -114,7 +114,7 @@ fn message_format_selected_contracts_match_java_golden() {
         utf16_hex(&formatted),
         golden["format.parameter_surrogate_hex"]
     );
-    let surrogate_pattern = JavaString::from_utf16(vec![
+    let surrogate_pattern = Utf16String::from_utf16(vec![
         u16::from(b'x'),
         0xd800,
         u16::from(b'\''),
@@ -679,7 +679,7 @@ fn standard_resolver_composition_hooks_match_java_subclass_extension_points() {
                 let default = StandardMessageResolver::new()
                     .format_message(locale, message, parameters)?
                     .expect("default formatter result");
-                Ok(Some(JavaString::from_utf16(
+                Ok(Some(Utf16String::from_utf16(
                     [
                         vec![u16::from(b'[')],
                         default.as_utf16().to_vec(),
@@ -691,7 +691,7 @@ fn standard_resolver_composition_hooks_match_java_subclass_extension_points() {
             .with_absent_message_hook(move |_context, _origin, key, _parameters| {
                 absent_probe.fetch_add(1, Ordering::SeqCst);
                 let key = key.expect("Java hook fixture receives key");
-                Ok(Some(JavaString::from_rust_str(&format!(
+                Ok(Some(Utf16String::from_rust_str(&format!(
                     "ABSENT:{}",
                     key.to_string_lossy()
                 ))))
@@ -883,8 +883,8 @@ fn locale(tag: &str, country: &str) -> JavaLocale {
     JavaLocale::new(java(tag), java(country))
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string(value: &str) -> Option<Arc<TemplateValue>> {
@@ -922,7 +922,7 @@ fn date(epoch_millis: i64) -> Option<Arc<TemplateValue>> {
     )))))
 }
 
-fn utf16_hex(value: &JavaString) -> String {
+fn utf16_hex(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()

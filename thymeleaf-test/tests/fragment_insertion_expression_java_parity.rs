@@ -6,10 +6,10 @@
 //! 判定逐例转录。
 
 use thymeleaf::processor::AbstractStandardFragmentInsertionTagProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn check(expression: &str, expected: bool) {

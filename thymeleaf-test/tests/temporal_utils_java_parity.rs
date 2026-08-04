@@ -22,10 +22,10 @@ use thymeleaf::temporal::{
     JavaTemporal, JavaTemporalKind, TemporalArrayUtils, TemporalCreationUtils,
     TemporalFormattingUtils, TemporalListUtils, TemporalObjects, TemporalSetUtils,
 };
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn us() -> JavaLocale {
@@ -49,7 +49,7 @@ fn date_time(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u3
     )
 }
 
-fn text(value: Option<JavaString>) -> String {
+fn text(value: Option<Utf16String>) -> String {
     value.map(|v| v.to_string_lossy()).unwrap_or_default()
 }
 

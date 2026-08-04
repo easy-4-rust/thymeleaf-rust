@@ -1,7 +1,7 @@
 use std::sync::{OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{fmt::Display, fmt::Formatter};
 
-use super::JavaString;
+use super::Utf16String;
 
 static DEFAULT_LOCALE: OnceLock<RwLock<JavaLocale>> = OnceLock::new();
 
@@ -13,8 +13,8 @@ static DEFAULT_LOCALE: OnceLock<RwLock<JavaLocale>> = OnceLock::new();
 /// `Locale.getDefault()` / `Locale.setDefault()` 对后续 Context 构造的影响。
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct JavaLocale {
-    language_tag: JavaString,
-    country: JavaString,
+    language_tag: Utf16String,
+    country: Utf16String,
 }
 
 impl JavaLocale {
@@ -25,7 +25,7 @@ impl JavaLocale {
     /// - `language_tag`：Java `Locale#toLanguageTag()` 对应文本。
     /// - `country`：Java `Locale#getCountry()` 对应文本。
     #[must_use]
-    pub const fn new(language_tag: JavaString, country: JavaString) -> Self {
+    pub const fn new(language_tag: Utf16String, country: Utf16String) -> Self {
         Self {
             language_tag,
             country,
@@ -34,21 +34,21 @@ impl JavaLocale {
 
     /// 返回 BCP-47 语言标签。
     #[must_use]
-    pub const fn to_language_tag(&self) -> &JavaString {
+    pub const fn to_language_tag(&self) -> &Utf16String {
         &self.language_tag
     }
 
     /// 返回 ISO 3166 country 或空字符串。
     #[must_use]
-    pub const fn get_country(&self) -> &JavaString {
+    pub const fn get_country(&self) -> &Utf16String {
         &self.country
     }
 
     /// 返回 Java `Locale#getLanguage()` 对应语言代码。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
-    pub fn get_language(&self) -> JavaString {
-        JavaString::from_rust_str(
+    pub fn get_language(&self) -> Utf16String {
+        Utf16String::from_rust_str(
             self.language_tag
                 .to_string_lossy()
                 .split(['-', '_'])
@@ -60,7 +60,7 @@ impl JavaLocale {
     /// 返回 Java `Locale#getVariant()` 对应变体。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     #[must_use]
-    pub fn get_variant(&self) -> JavaString {
+    pub fn get_variant(&self) -> Utf16String {
         let tag = self.language_tag.to_string_lossy();
         let mut parts = tag.split(['-', '_']);
         let _language = parts.next();
@@ -73,7 +73,7 @@ impl JavaLocale {
         {
             remaining.remove(0);
         }
-        JavaString::from_rust_str(&remaining.join("_"))
+        Utf16String::from_rust_str(&remaining.join("_"))
     }
 
     /// 返回当前进程默认 Locale 的独立值快照。
@@ -129,8 +129,8 @@ fn locale_from_environment() -> JavaLocale {
         .unwrap_or("")
         .to_ascii_uppercase();
     JavaLocale::new(
-        JavaString::from_rust_str(&normalized),
-        JavaString::from_rust_str(&country),
+        Utf16String::from_rust_str(&normalized),
+        Utf16String::from_rust_str(&country),
     )
 }
 

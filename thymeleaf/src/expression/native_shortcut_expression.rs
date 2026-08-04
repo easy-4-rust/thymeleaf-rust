@@ -4,7 +4,7 @@ use thiserror::Error;
 use unicode_general_category::{GeneralCategory, get_general_category};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaNumber, JavaString};
+use crate::util::{JavaNumber, Utf16String};
 
 use super::TemplateValue;
 
@@ -12,13 +12,13 @@ use super::TemplateValue;
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.OGNLShortcutExpression`。
 pub struct NativeShortcutExpression {
-    expression_levels: Vec<JavaString>,
+    expression_levels: Vec<Utf16String>,
 }
 
 impl NativeShortcutExpression {
     /// 保存已经解析的属性层级。
     /// 对应 Java 语义：`OGNLShortcutExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(expression_levels: Vec<JavaString>) -> Self {
+    pub fn new(expression_levels: Vec<Utf16String>) -> Self {
         Self { expression_levels }
     }
 
@@ -26,14 +26,14 @@ impl NativeShortcutExpression {
     ///
     /// 任一层为空或包含非 Java 标识符字符时返回 `None`，由完整求值器处理。
     /// 对应 Java: `OGNLShortcutExpression#parse()`。
-    pub fn parse(expression: Option<&JavaString>) -> Option<Vec<JavaString>> {
+    pub fn parse(expression: Option<&Utf16String>) -> Option<Vec<Utf16String>> {
         let expression = expression?;
         let mut levels = Vec::new();
         for level in expression.as_utf16().split(|unit| *unit == b'.' as u16) {
             if level.is_empty() || !is_java_identifier(level) {
                 return None;
             }
-            levels.push(JavaString::from_utf16(level.to_vec()));
+            levels.push(Utf16String::from_utf16(level.to_vec()));
         }
         (!levels.is_empty()).then_some(levels)
     }
@@ -61,7 +61,7 @@ impl NativeShortcutExpression {
 
         for property_name in &self.expression_levels {
             if context_root {
-                if restrict_variable_access && property_name == &JavaString::from_rust_str("param")
+                if restrict_variable_access && property_name == &Utf16String::from_rust_str("param")
                 {
                     return Err(NativeShortcutError::RestrictedVariable {
                         name: property_name.to_string_lossy(),
@@ -84,7 +84,7 @@ impl NativeShortcutExpression {
 
 fn read_property(
     target: &TemplateValue,
-    property_name: &JavaString,
+    property_name: &Utf16String,
 ) -> Result<Option<Arc<TemplateValue>>, NativeShortcutError> {
     let name = property_name.to_string_lossy();
     match target {

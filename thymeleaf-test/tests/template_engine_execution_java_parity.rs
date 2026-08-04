@@ -8,7 +8,7 @@ use thymeleaf::expression::TemplateValue;
 use thymeleaf::linkbuilder::StandardLinkBuilder;
 use thymeleaf::messageresolver::StandardMessageResolver;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::{Charset, JavaString, JavaWriter};
+use thymeleaf::util::{Charset, JavaWriter, Utf16String};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateSelectorSet, TemplateSpec};
 
 const JAVA_GOLDEN: &str =
@@ -184,8 +184,8 @@ fn emit_processing_overloads(output: &mut String) {
     let engine = string_engine();
     let context = Context::new();
     context.set_variable(
-        Some(JavaString::from_rust_str("name")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Rust",
         )))),
     );

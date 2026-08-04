@@ -7,7 +7,7 @@ use crate::context::ITemplateContext;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::IComment;
 use crate::processor::IProcessor;
-use crate::util::{JavaString, JavaWriter, StandardConditionalCommentUtils};
+use crate::util::{JavaWriter, StandardConditionalCommentUtils, Utf16String};
 
 type CommentCallback = Box<
     dyn Fn(
@@ -112,7 +112,7 @@ impl StandardConditionalCommentProcessor {
                 parsing.get_end_expression_len(),
             )?;
             append_ascii(&output, "]");
-            let rendered = JavaString::from_utf16(
+            let rendered = Utf16String::from_utf16(
                 output
                     .lock()
                     .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -180,10 +180,10 @@ impl JavaWriter for SharedWriter {
 }
 
 fn slice(
-    value: &JavaString,
+    value: &Utf16String,
     offset: i32,
     length: i32,
-) -> Result<JavaString, Box<dyn TemplateEngineException>> {
+) -> Result<Utf16String, Box<dyn TemplateEngineException>> {
     let start = usize::try_from(offset).map_err(|error| {
         Box::new(TemplateProcessingException::with_cause(
             Some("Conditional comment offset is negative".to_owned()),
@@ -201,12 +201,12 @@ fn slice(
             "Conditional comment range is out of bounds".to_owned(),
         ))) as Box<dyn TemplateEngineException>
     })?;
-    Ok(JavaString::from_utf16(units.to_vec()))
+    Ok(Utf16String::from_utf16(units.to_vec()))
 }
 
 fn append_slice(
     output: &Arc<Mutex<Vec<u16>>>,
-    value: &JavaString,
+    value: &Utf16String,
     offset: i32,
     length: i32,
 ) -> Result<(), Box<dyn TemplateEngineException>> {

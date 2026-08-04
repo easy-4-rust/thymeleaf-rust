@@ -5,7 +5,7 @@
 
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{Assignation, StandardExpressionResult};
 
@@ -50,7 +50,7 @@ impl AssignationSequence {
 
     /// 返回逗号连接且不插入空格的当前字符串表示。
     /// 对应 Java: `AssignationSequence#getStringRepresentation()`。
-    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let assignations = read_recovering_poison(&self.assignations);
         let mut units = Vec::new();
         for (index, assignation) in assignations.iter().enumerate() {
@@ -64,7 +64,7 @@ impl AssignationSequence {
                 None => units.extend("null".encode_utf16()),
             }
         }
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 }
 

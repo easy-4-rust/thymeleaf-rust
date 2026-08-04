@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::TemplateValue;
 
@@ -15,8 +15,8 @@ pub trait OgnlRuntime: Send + Sync {
     /// 读取宿主注册类型的静态字段。
     fn read_static_field(
         &self,
-        _type_name: &JavaString,
-        _member_name: &JavaString,
+        _type_name: &Utf16String,
+        _member_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         None
     }
@@ -24,8 +24,8 @@ pub trait OgnlRuntime: Send + Sync {
     /// 调用宿主注册类型的静态方法；参数中的 `None` 表示 Java null。
     fn invoke_static_method(
         &self,
-        _type_name: &JavaString,
-        _method_name: &JavaString,
+        _type_name: &Utf16String,
+        _method_name: &Utf16String,
         _arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         None
@@ -34,7 +34,7 @@ pub trait OgnlRuntime: Send + Sync {
     /// 调用宿主注册类型的构造器。
     fn construct(
         &self,
-        _type_name: &JavaString,
+        _type_name: &Utf16String,
         _arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         None
@@ -48,7 +48,7 @@ pub trait OgnlRuntime: Send + Sync {
     fn is_instance_of(
         &self,
         _value: &TemplateValue,
-        _type_name: &JavaString,
+        _type_name: &Utf16String,
     ) -> Option<Result<bool, OgnlRuntimeError>> {
         None
     }

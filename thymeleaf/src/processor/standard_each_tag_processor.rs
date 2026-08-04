@@ -6,7 +6,7 @@ use crate::element::{
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{EachUtils, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     IProcessor, StandardAttributeCallback, expression_processing_error, is_empty_or_java_whitespace,
@@ -29,7 +29,7 @@ impl StandardEachTagProcessor {
     /// 对应 Java 语义：`StandardEachTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         let callback: StandardAttributeCallback = Box::new(
             |context, _tag, _attribute_name, attribute_value, structure_handler| {
@@ -59,7 +59,7 @@ impl StandardEachTagProcessor {
 
                 let iter_var_name = iter_var_value
                     .as_deref()
-                    .and_then(TemplateValue::to_java_string);
+                    .and_then(TemplateValue::to_utf16_string);
                 if is_empty_or_java_whitespace(iter_var_name.as_ref()) {
                     return Err(Box::new(TemplateProcessingException::new(Some(format!(
                         "Iteration variable name expression evaluated as null: \"{}\"",
@@ -70,7 +70,7 @@ impl StandardEachTagProcessor {
                 }
                 let status_var_name = status_var_value
                     .as_deref()
-                    .and_then(TemplateValue::to_java_string);
+                    .and_then(TemplateValue::to_utf16_string);
                 if each.has_status_var() && is_empty_or_java_whitespace(status_var_name.as_ref()) {
                     return Err(Box::new(TemplateProcessingException::new(Some(format!(
                         "Status variable name expression evaluated as null or empty: \"{}\"",
@@ -99,7 +99,7 @@ impl StandardEachTagProcessor {
                 dialect_prefix,
                 None,
                 false,
-                Some(JavaString::from_rust_str(Self::ATTR_NAME)),
+                Some(Utf16String::from_rust_str(Self::ATTR_NAME)),
                 true,
                 Self::PRECEDENCE,
                 true,

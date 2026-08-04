@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::DecoupledInjectedAttribute;
 
@@ -14,7 +14,7 @@ use super::DecoupledInjectedAttribute;
 /// 对应 Java:
 /// `org.thymeleaf.templateparser.markup.decoupled.DecoupledTemplateLogic`。
 pub struct DecoupledTemplateLogic {
-    injected_attributes: HashMap<JavaString, Vec<Arc<DecoupledInjectedAttribute>>>,
+    injected_attributes: HashMap<Utf16String, Vec<Arc<DecoupledInjectedAttribute>>>,
 }
 
 impl DecoupledTemplateLogic {
@@ -40,7 +40,7 @@ impl DecoupledTemplateLogic {
     ///
     /// 对应 Java: `DecoupledTemplateLogic#getAllInjectedAttributeSelectors()`。
     #[must_use]
-    pub fn get_all_injected_attribute_selectors(&self) -> Vec<&JavaString> {
+    pub fn get_all_injected_attribute_selectors(&self) -> Vec<&Utf16String> {
         self.injected_attributes.keys().collect()
     }
 
@@ -51,7 +51,7 @@ impl DecoupledTemplateLogic {
     #[must_use]
     pub fn get_injected_attributes_for_selector(
         &self,
-        selector: &JavaString,
+        selector: &Utf16String,
     ) -> Option<&[Arc<DecoupledInjectedAttribute>]> {
         self.injected_attributes.get(selector).map(Vec::as_slice)
     }
@@ -64,7 +64,7 @@ impl DecoupledTemplateLogic {
     /// 对应 Java: `DecoupledTemplateLogic#addInjectedAttribute`。
     pub fn add_injected_attribute(
         &mut self,
-        selector: JavaString,
+        selector: Utf16String,
         injected_attribute: Arc<DecoupledInjectedAttribute>,
     ) {
         self.injected_attributes
@@ -82,7 +82,7 @@ impl Default for DecoupledTemplateLogic {
 
 impl Display for DecoupledTemplateLogic {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut keys: Vec<&JavaString> = self.injected_attributes.keys().collect();
+        let mut keys: Vec<&Utf16String> = self.injected_attributes.keys().collect();
         keys.sort_by(|left, right| left.as_utf16().cmp(right.as_utf16()));
         formatter.write_str("{")?;
         for (index, key) in keys.into_iter().enumerate() {
@@ -95,7 +95,7 @@ impl Display for DecoupledTemplateLogic {
                     if attribute_index > 0 {
                         formatter.write_str(", ")?;
                     }
-                    formatter.write_str(&attribute.to_java_string().to_string_lossy())?;
+                    formatter.write_str(&attribute.to_utf16_string().to_string_lossy())?;
                 }
             }
             formatter.write_str("]")?;

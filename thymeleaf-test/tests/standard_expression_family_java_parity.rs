@@ -26,11 +26,11 @@ use thymeleaf::context::ExpressionContext;
 use thymeleaf::expression::{
     FragmentSignatureUtils, IStandardExpressionParser, StandardExpressionParser,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn expression_context() -> Arc<dyn thymeleaf::context::IExpressionContext> {

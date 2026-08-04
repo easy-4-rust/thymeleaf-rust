@@ -5,10 +5,10 @@ use indexmap::IndexMap;
 
 use crate::expression::TemplateValue;
 use crate::model::IModel;
-use crate::util::{FastStringWriter, JavaString, ValidateError};
+use crate::util::{FastStringWriter, Utf16String, ValidateError};
 
 /// Fragment 调用参数的有序动态 Map；键和值都保留 Java null。
-pub type FragmentParameterMap = IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+pub type FragmentParameterMap = IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>;
 
 /// Fragment Expression 的执行结果。
 ///
@@ -97,8 +97,8 @@ impl Fragment {
     }
 
     /// 返回模型序列化文本。
-    /// 对应 Java 语义：`Fragment` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> io::Result<JavaString> {
+    /// 对应 Java 语义：`Fragment` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> io::Result<Utf16String> {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)?;
         Ok(writer.to_string())
@@ -110,9 +110,9 @@ impl super::TemplateObject for Fragment {
         "org.thymeleaf.standard.expression.Fragment"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        self.to_java_string()
-            .unwrap_or_else(|_| JavaString::from_rust_str(""))
+    fn to_utf16_string(&self) -> Utf16String {
+        self.to_utf16_string()
+            .unwrap_or_else(|_| Utf16String::from_rust_str(""))
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

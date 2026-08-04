@@ -8,7 +8,7 @@ use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IModel;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -31,8 +31,8 @@ impl NoOp2ModelProcessor {
         Self {
             processor: AbstractElementModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
-                Some(JavaString::from_rust_str("noop")),
+                dialect_prefix.map(Utf16String::from_rust_str),
+                Some(Utf16String::from_rust_str("noop")),
                 true,
                 None,
                 false,
@@ -90,7 +90,7 @@ fn verify_model_variable(
 ) -> ProcessResult {
     if !matches!(
         context
-            .get_variable(Some(&JavaString::from_rust_str("noop-model")))
+            .get_variable(Some(&Utf16String::from_rust_str("noop-model")))
             .as_deref(),
         Some(TemplateValue::Boolean(true))
     ) {

@@ -1,6 +1,6 @@
 use crate::TemplateMode;
 use crate::element::AbstractAttributeTagProcessor;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{StandardAttributeCallback, delegate_standard_element_tag_processor};
 
@@ -20,14 +20,14 @@ impl StandardXmlNsTagProcessor {
     /// 对应 Java 语义：`StandardXmlNsTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
-        let name = JavaString::from_rust_str(&format!(
+        let name = Utf16String::from_rust_str(&format!(
             "{}{}",
             Self::ATTR_NAME_PREFIX,
             dialect_prefix
                 .as_ref()
-                .map_or_else(String::new, JavaString::to_string_lossy)
+                .map_or_else(String::new, Utf16String::to_string_lossy)
         ));
         let callback: StandardAttributeCallback =
             Box::new(|_context, _tag, _name, _value, _handler| Ok(()));

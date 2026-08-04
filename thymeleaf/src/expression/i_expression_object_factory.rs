@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{StandardExpressionResult, TemplateValue};
 
@@ -9,7 +9,7 @@ use super::{StandardExpressionResult, TemplateValue};
 ///
 /// Java 使用 `Set<String>`。Rust 使用共享只读切片保留构造后不可变的集合身份，并由
 /// 工厂负责保持名称唯一性和迭代顺序。
-pub type ExpressionObjectNames = Arc<[Option<JavaString>]>;
+pub type ExpressionObjectNames = Arc<[Option<Utf16String>]>;
 
 /// 按需创建表达式工具对象的工厂合同。
 ///
@@ -45,7 +45,7 @@ pub trait IExpressionObjectFactory: Send + Sync {
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>>;
 
     /// 判断指定对象能否在同一次模板执行的所有表达式之间缓存复用。
@@ -59,5 +59,5 @@ pub trait IExpressionObjectFactory: Send + Sync {
     /// # 返回值
     ///
     /// `true` 表示容器应缓存包括 Java `null` 在内的构建结果。
-    fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool;
+    fn is_cacheable(&self, expression_object_name: Option<&Utf16String>) -> bool;
 }

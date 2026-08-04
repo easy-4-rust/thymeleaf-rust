@@ -12,7 +12,7 @@ use thymeleaf::expression::{
     NativeExpressionObjectsWrapperError, StandardExpressionObjectFactory, StandardExpressionResult,
     TemplateValue,
 };
-use thymeleaf::util::{JavaLocale, JavaString, ValidateError};
+use thymeleaf::util::{JavaLocale, Utf16String, ValidateError};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -644,7 +644,7 @@ fn join_names(names: &ExpressionObjectNames) -> String {
         .iter()
         .map(|name| {
             name.as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
         })
         .collect::<Vec<_>>()
         .join(",")
@@ -671,7 +671,7 @@ fn value_string(value: &Option<Arc<TemplateValue>>) -> String {
         || "null".to_owned(),
         |value| {
             value
-                .to_java_string()
+                .to_utf16_string()
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
         },
     )
@@ -710,8 +710,8 @@ fn emit_wrapper_unit(
     }
 }
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {
@@ -774,12 +774,12 @@ impl IExpressionObjectFactory for ProbeFactory {
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         *self.last_context.lock().expect("last context") = Some(context);
         let sequence = self.builds.fetch_add(1, Ordering::SeqCst) + 1;
         let name =
-            expression_object_name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+            expression_object_name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         *self
             .builds_by_name
             .lock()
@@ -792,9 +792,9 @@ impl IExpressionObjectFactory for ProbeFactory {
         Ok(Some(string_value(&format!("{name}-{sequence}"))))
     }
 
-    fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool {
+    fn is_cacheable(&self, expression_object_name: Option<&Utf16String>) -> bool {
         let name =
-            expression_object_name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+            expression_object_name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         *self
             .cache_checks_by_name
             .lock()
@@ -828,7 +828,7 @@ impl IExpressionObjects for WrapperObjects {
         i32::try_from(self.names.len()).expect("small names collection")
     }
 
-    fn contains_object(&self, name: Option<&JavaString>) -> bool {
+    fn contains_object(&self, name: Option<&Utf16String>) -> bool {
         self.names
             .iter()
             .any(|candidate| candidate.as_ref() == name)
@@ -840,10 +840,10 @@ impl IExpressionObjects for WrapperObjects {
 
     fn get_object(
         &self,
-        name: Option<&JavaString>,
+        name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         self.gets.fetch_add(1, Ordering::SeqCst);
-        let name = name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+        let name = name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         Ok(Some(string_value(&format!("object:{name}"))))
     }
 }

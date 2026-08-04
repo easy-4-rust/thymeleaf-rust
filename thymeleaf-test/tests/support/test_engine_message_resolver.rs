@@ -5,7 +5,7 @@ use std::sync::Arc;
 use thymeleaf::context::ITemplateContext;
 use thymeleaf::expression::{Numbers, TemplateValue};
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
-use thymeleaf::util::{JavaNumber, JavaString, NumberPointType};
+use thymeleaf::util::{JavaNumber, NumberPointType, Utf16String};
 
 /// 上游测试框架的内存消息解析器。
 ///
@@ -15,7 +15,7 @@ use thymeleaf::util::{JavaNumber, JavaString, NumberPointType};
 /// 先按处理 Locale、语言和无 Locale 消息查找，再使用 Java `MessageFormat`
 /// 的索引占位符与单引号规则格式化结果。
 pub struct TestEngineMessageResolver {
-    messages_by_locale: HashMap<Option<String>, HashMap<JavaString, JavaString>>,
+    messages_by_locale: HashMap<Option<String>, HashMap<Utf16String, Utf16String>>,
 }
 
 impl TestEngineMessageResolver {
@@ -24,7 +24,7 @@ impl TestEngineMessageResolver {
     /// `None` 对应未限定的 `%MESSAGES`，字符串键对应 `%MESSAGES[locale]`。
     #[must_use]
     pub fn new(
-        messages_by_locale: HashMap<Option<String>, HashMap<JavaString, JavaString>>,
+        messages_by_locale: HashMap<Option<String>, HashMap<Utf16String, Utf16String>>,
     ) -> Self {
         Self { messages_by_locale }
     }
@@ -32,8 +32,8 @@ impl TestEngineMessageResolver {
     fn resolve_for_locale(
         &self,
         context: &dyn ITemplateContext,
-        key: &JavaString,
-    ) -> Option<&JavaString> {
+        key: &Utf16String,
+    ) -> Option<&Utf16String> {
         let locale = context.get_locale();
         let exact = locale.to_string().to_ascii_lowercase();
         let language = locale.get_language().to_string_lossy().to_ascii_lowercase();
@@ -57,7 +57,7 @@ impl TestEngineMessageResolver {
 }
 
 impl IMessageResolver for TestEngineMessageResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         None
     }
 
@@ -69,9 +69,9 @@ impl IMessageResolver for TestEngineMessageResolver {
         &self,
         context: Option<&dyn ITemplateContext>,
         _origin: Option<TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let (Some(context), Some(key)) = (context, key) else {
             return Ok(None);
         };
@@ -84,13 +84,13 @@ impl IMessageResolver for TestEngineMessageResolver {
         &self,
         context: Option<&dyn ITemplateContext>,
         _origin: Option<TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         _message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let (Some(context), Some(key)) = (context, key) else {
             return Ok(None);
         };
-        Ok(Some(JavaString::from_rust_str(&format!(
+        Ok(Some(Utf16String::from_rust_str(&format!(
             "??{}_{}??",
             key.to_string_lossy(),
             context.get_locale()
@@ -99,10 +99,10 @@ impl IMessageResolver for TestEngineMessageResolver {
 }
 
 fn format_message_like_java(
-    message: &JavaString,
+    message: &Utf16String,
     parameters: &[Option<Arc<TemplateValue>>],
     context: &dyn ITemplateContext,
-) -> JavaString {
+) -> Utf16String {
     let text = message.to_string_lossy();
     let characters = text.chars().collect::<Vec<_>>();
     let mut result = String::with_capacity(text.len());
@@ -154,10 +154,10 @@ fn format_message_like_java(
                         .format_integer(Some(number), 1, Some(NumberPointType::Default))
                         .ok()
                         .flatten()
-                        .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                        .unwrap_or_else(|| Utf16String::from_rust_str("null")),
                     value => value
-                        .and_then(TemplateValue::to_java_string)
-                        .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                        .and_then(TemplateValue::to_utf16_string)
+                        .unwrap_or_else(|| Utf16String::from_rust_str("null")),
                 };
                 result.push_str(&value.to_string_lossy());
                 position = end + 1;
@@ -167,5 +167,5 @@ fn format_message_like_java(
         result.push(character);
         position += 1;
     }
-    JavaString::from_rust_str(&result)
+    Utf16String::from_rust_str(&result)
 }

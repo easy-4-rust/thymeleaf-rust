@@ -6,7 +6,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     IStandardExpression, LiteralValue, StandardExpressionError, StandardExpressionExecutionContext,
@@ -31,7 +31,7 @@ impl TextLiteralExpression {
 
     /// 创建文本字面量；外层成对单引号会移除，`\\'` 与 `\\\\` 会解转义。
     /// 对应 Java 语义：`TextLiteralExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(value: Option<&JavaString>) -> Result<Self, ValidateError> {
+    pub fn new(value: Option<&Utf16String>) -> Result<Self, ValidateError> {
         let value = value.ok_or_else(|| ValidateError::IllegalArgument {
             message: Some("Value cannot be null".to_owned()),
         })?;
@@ -48,13 +48,13 @@ impl TextLiteralExpression {
 
     /// 解析文本字面量。上游该入口始终调用构造器，不额外验证定界符。
     /// 对应 Java: `TextLiteralExpression#parseTextLiteralExpression()`。
-    pub(crate) fn parse_text_literal_expression(input: &JavaString) -> Self {
+    pub(crate) fn parse_text_literal_expression(input: &Utf16String) -> Self {
         Self::new(Some(input)).expect("non-null parser input")
     }
 
     /// 把可空字符串包装成单引号字面量，并转义其中每个单引号。
     /// 对应 Java: `TextLiteralExpression#wrapStringIntoLiteral()`。
-    pub fn wrap_string_into_literal(value: Option<&JavaString>) -> Option<JavaString> {
+    pub fn wrap_string_into_literal(value: Option<&Utf16String>) -> Option<Utf16String> {
         let value = value?;
         let quote_count = value
             .as_utf16()
@@ -70,13 +70,13 @@ impl TextLiteralExpression {
             units.push(*unit);
         }
         units.push(Self::DELIMITER);
-        Some(JavaString::from_utf16(units))
+        Some(Utf16String::from_utf16(units))
     }
 
     /// 判断指定定界符前是否存在奇数个连续反斜杠。
     /// 对应 Java: `TextLiteralExpression#isDelimiterEscaped()`。
     pub(crate) fn is_delimiter_escaped(
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
         position: i32,
     ) -> Result<bool, TokenError> {
         let input = input.ok_or(TokenError::NullPointer)?;
@@ -105,7 +105,7 @@ impl TextLiteralExpression {
 }
 
 impl IStandardExpression for TextLiteralExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let value = self
             .value
             .get_value()
@@ -143,7 +143,7 @@ impl IStandardExpression for TextLiteralExpression {
 
 impl super::SimpleExpression for TextLiteralExpression {}
 
-fn unwrap_literal(input: &JavaString) -> JavaString {
+fn unwrap_literal(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     if units.len() > 1
         && units[0] == TextLiteralExpression::DELIMITER
@@ -154,7 +154,7 @@ fn unwrap_literal(input: &JavaString) -> JavaString {
     input.clone()
 }
 
-fn unescape_literal(text: &[u16]) -> JavaString {
+fn unescape_literal(text: &[u16]) -> Utf16String {
     let mut result = Vec::with_capacity(text.len());
     let mut position = 0;
     while position < text.len() {
@@ -172,5 +172,5 @@ fn unescape_literal(text: &[u16]) -> JavaString {
         result.push(unit);
         position += 1;
     }
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }

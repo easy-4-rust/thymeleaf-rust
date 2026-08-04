@@ -4,7 +4,7 @@ use std::panic::panic_any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 首次读取时抛出固定运行时异常的惰性测试变量。
 ///
@@ -17,8 +17,8 @@ impl TemplateObject for ExceptionLazyContextVariable {
         "org.thymeleaf.templateengine.features.lazy.ExceptionLazyContextVariable"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.java_class_name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.java_class_name())
     }
 
     fn as_any(&self) -> &dyn Any {

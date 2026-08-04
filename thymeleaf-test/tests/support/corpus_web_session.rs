@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebSession;
 
 /// 为上游语料提供已建立会话的内存实现。
@@ -11,7 +11,7 @@ use thymeleaf::web::IWebSession;
 /// 所创建的 `IWebSession` 测试对象。
 #[derive(Default)]
 pub struct CorpusWebSession {
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 impl IWebSession for CorpusWebSession {
@@ -19,7 +19,7 @@ impl IWebSession for CorpusWebSession {
         true
     }
 
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -33,7 +33,7 @@ impl IWebSession for CorpusWebSession {
             .len() as i32
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -42,14 +42,14 @@ impl IWebSession for CorpusWebSession {
             .collect()
     }
 
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
     }
 
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -58,7 +58,7 @@ impl IWebSession for CorpusWebSession {
             .flatten()
     }
 
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let mut attributes = self
             .attributes
             .write()
@@ -70,7 +70,7 @@ impl IWebSession for CorpusWebSession {
         }
     }
 
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .unwrap_or_else(|poisoned| poisoned.into_inner())

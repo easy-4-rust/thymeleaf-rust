@@ -16,7 +16,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
 fn golden() -> BTreeMap<String, String> {
@@ -29,21 +29,21 @@ fn golden() -> BTreeMap<String, String> {
         .collect()
 }
 
-fn java_string(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn utf16_string(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn value(value: &str) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::string(java_string(value)))
+    Arc::new(TemplateValue::string(utf16_string(value)))
 }
 
 fn locale(language: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(java_string(language), java_string(country))
+    JavaLocale::new(utf16_string(language), utf16_string(country))
 }
 
 fn template_data(name: &str) -> TemplateData {
     TemplateData::new(
-        Some(java_string(name)),
+        Some(utf16_string(name)),
         None,
         Some(Arc::new(
             StringTemplateResource::new(Some(name)).expect("resource"),
@@ -55,8 +55,8 @@ fn template_data(name: &str) -> TemplateData {
 
 fn variable_text(context: &dyn IContext, name: &str) -> String {
     context
-        .get_variable(Some(&java_string(name)))
-        .and_then(|value| value.to_java_string())
+        .get_variable(Some(&utf16_string(name)))
+        .and_then(|value| value.to_utf16_string())
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
 }
 
@@ -89,9 +89,9 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
         .get_configuration()
         .expect("configuration");
     let mut variables = IndexMap::new();
-    variables.insert(Some(java_string("root")), Some(value("one")));
+    variables.insert(Some(utf16_string("root")), Some(value("one")));
     variables.insert(
-        Some(java_string("nullable")),
+        Some(utf16_string("nullable")),
         Some(Arc::new(TemplateValue::Null)),
     );
     let context = EngineContext::new(
@@ -117,8 +117,8 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
 
     context.set_selection_target(Some(value("root-target")));
     context.increase_level();
-    context.set_variable(Some(java_string("root")), Some(value("local")));
-    context.set_variable(Some(java_string("local")), Some(value("yes")));
+    context.set_variable(Some(utf16_string("root")), Some(value("local")));
+    context.set_variable(Some(utf16_string("local")), Some(value("yes")));
     context.set_selection_target(None);
     context.set_template_data(Arc::new(template_data("nested-template")));
     assert_eq!(context.level().to_string(), fixture["plain.nested.level"]);
@@ -132,7 +132,7 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
     );
     assert_eq!(
         context
-            .is_variable_local(Some(&java_string("root")))
+            .is_variable_local(Some(&utf16_string("root")))
             .to_string(),
         fixture["plain.nested.root.local"]
     );
@@ -160,7 +160,7 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
     assert_eq!(
         context
             .get_selection_target()
-            .and_then(|value| value.to_java_string())
+            .and_then(|value| value.to_utf16_string())
             .expect("selection")
             .to_string_lossy(),
         fixture["plain.restored.selection"]
@@ -176,11 +176,11 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
         locale("en-CA", "CA"),
         None,
     );
-    web.set_variable(Some(java_string("value")), Some(value("root")));
+    web.set_variable(Some(utf16_string("value")), Some(value("root")));
     web.set_selection_target(Some(value("root-target")));
     web.increase_level();
-    web.set_variable(Some(java_string("value")), Some(value("local")));
-    web.set_variable(Some(java_string("local")), Some(value("yes")));
+    web.set_variable(Some(utf16_string("value")), Some(value("local")));
+    web.set_variable(Some(utf16_string("local")), Some(value("yes")));
     web.set_selection_target(None);
     assert_eq!(
         variable_text(web.as_ref(), "value"),
@@ -191,7 +191,7 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
         fixture["web.nested.local"]
     );
     assert_eq!(
-        web.is_variable_local(Some(&java_string("value")))
+        web.is_variable_local(Some(&utf16_string("value")))
             .to_string(),
         fixture["web.nested.value.local"]
     );
@@ -215,7 +215,7 @@ fn engine_and_web_contexts_match_java_golden_for_scope_and_selection() {
     );
     assert_eq!(
         web.get_selection_target()
-            .and_then(|value| value.to_java_string())
+            .and_then(|value| value.to_utf16_string())
             .expect("selection")
             .to_string_lossy(),
         fixture["web.restored.selection"]
@@ -257,7 +257,7 @@ fn engine_context_removed_marker_and_inliner_representation_match_java() {
         .get_configuration()
         .expect("configuration");
     let mut variables = IndexMap::new();
-    variables.insert(Some(java_string("one")), Some(value("two values")));
+    variables.insert(Some(utf16_string("one")), Some(value("two values")));
     let context = EngineContext::new(
         Arc::clone(&configuration),
         template_data("test01"),
@@ -274,22 +274,22 @@ fn engine_context_removed_marker_and_inliner_representation_match_java() {
     assert_eq!(context.to_string(), "{one=two values}(test01)");
 
     context.increase_level();
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
     assert_eq!(
         context.get_string_representation_by_level(),
         "{1:{one=hello},0:{one=two values}(test01)}[1]"
     );
 
     // removeVariable -> EngineContext 用 (*removed*) 占位（WebEngineContext 为 null）
-    context.remove_variable(Some(&java_string("one")));
+    context.remove_variable(Some(&utf16_string("one")));
     assert_eq!(
         context.get_string_representation_by_level(),
         "{1:{one=(*removed*)},0:{one=two values}(test01)}[1]"
     );
     assert_eq!(context.to_string(), "{}(test01)");
 
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
-    context.remove_variable(Some(&java_string("two")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
+    context.remove_variable(Some(&utf16_string("two")));
     assert_eq!(
         context.get_string_representation_by_level(),
         "{1:{one=hello},0:{one=two values}(test01)}[1]",
@@ -297,7 +297,7 @@ fn engine_context_removed_marker_and_inliner_representation_match_java() {
     );
 
     // setInliner(StandardTextInliner) -> 表示串与 toString 带 [StandardTextInliner]
-    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    context.set_variable(Some(utf16_string("two")), Some(value("twello")));
     context.set_inliner(Some(Arc::new(StandardTextInliner::new(
         configuration.as_ref(),
     ))));
@@ -310,12 +310,12 @@ fn engine_context_removed_marker_and_inliner_representation_match_java() {
         "{one=hello, two=twello}[StandardTextInliner](test01)"
     );
 
-    context.remove_variable(Some(&java_string("two")));
+    context.remove_variable(Some(&utf16_string("two")));
     assert_eq!(
         context.get_string_representation_by_level(),
         "{1:{one=hello}[StandardTextInliner],0:{one=two values}(test01)}[1]"
     );
-    context.remove_variable(Some(&java_string("one")));
+    context.remove_variable(Some(&utf16_string("one")));
     assert_eq!(
         context.get_string_representation_by_level(),
         "{1:{one=(*removed*)}[StandardTextInliner],0:{one=two values}(test01)}[1]"
@@ -337,7 +337,7 @@ fn engine_context_removed_marker_and_inliner_representation_match_java() {
 
 /// 断言 containsVariable + getVariable 与 Java 一致。
 fn assert_variable(context: &dyn IContext, name: &str, present: bool, expected: &str) {
-    let key = java_string(name);
+    let key = utf16_string(name);
     assert_eq!(
         context.contains_variable(Some(&key)),
         present,
@@ -353,7 +353,7 @@ fn assert_variable(context: &dyn IContext, name: &str, present: bool, expected: 
 fn selection_text(context: &dyn ITemplateContext) -> String {
     context
         .get_selection_target()
-        .and_then(|value| value.to_java_string())
+        .and_then(|value| value.to_utf16_string())
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
 }
 
@@ -370,17 +370,17 @@ fn engine_context_test01_multi_level_shadowing_matches_java() {
         None,
     );
 
-    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    context.set_variable(Some(utf16_string("one")), Some(value("a value")));
     assert_variable(context.as_ref(), "one", true, "a value");
 
-    context.set_variable(Some(java_string("one")), Some(value("two values")));
+    context.set_variable(Some(utf16_string("one")), Some(value("two values")));
     assert_variable(context.as_ref(), "one", true, "two values");
 
     context.increase_level();
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
     assert_variable(context.as_ref(), "one", true, "hello");
 
-    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    context.set_variable(Some(utf16_string("two")), Some(value("twello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
 
@@ -389,17 +389,17 @@ fn engine_context_test01_multi_level_shadowing_matches_java() {
     assert_variable(context.as_ref(), "two", false, "null");
 
     context.increase_level();
-    context.set_variable(Some(java_string("two")), Some(value("twellor")));
+    context.set_variable(Some(utf16_string("two")), Some(value("twellor")));
     assert_variable(context.as_ref(), "one", true, "two values");
     assert_variable(context.as_ref(), "two", true, "twellor");
 
     context.increase_level();
-    context.set_variable(Some(java_string("three")), Some(value("twelloree")));
+    context.set_variable(Some(utf16_string("three")), Some(value("twelloree")));
     assert_variable(context.as_ref(), "one", true, "two values");
     assert_variable(context.as_ref(), "two", true, "twellor");
     assert_variable(context.as_ref(), "three", true, "twelloree");
 
-    context.set_variable(Some(java_string("one")), Some(value("atwe")));
+    context.set_variable(Some(utf16_string("one")), Some(value("atwe")));
     assert_variable(context.as_ref(), "one", true, "atwe");
     assert_variable(context.as_ref(), "two", true, "twellor");
     assert_variable(context.as_ref(), "three", true, "twelloree");
@@ -411,13 +411,13 @@ fn engine_context_test01_multi_level_shadowing_matches_java() {
     assert_variable(context.as_ref(), "two", true, "twellor");
     assert_variable(context.as_ref(), "three", true, "twelloree");
 
-    context.set_variable(Some(java_string("four")), Some(value("lotwss")));
+    context.set_variable(Some(utf16_string("four")), Some(value("lotwss")));
     assert_variable(context.as_ref(), "one", true, "atwe");
     assert_variable(context.as_ref(), "two", true, "twellor");
     assert_variable(context.as_ref(), "three", true, "twelloree");
     assert_variable(context.as_ref(), "four", true, "lotwss");
 
-    context.set_variable(Some(java_string("two")), Some(value("itwiii")));
+    context.set_variable(Some(utf16_string("two")), Some(value("itwiii")));
     assert_variable(context.as_ref(), "one", true, "atwe");
     assert_variable(context.as_ref(), "two", true, "itwiii");
     assert_variable(context.as_ref(), "three", true, "twelloree");
@@ -465,8 +465,8 @@ fn engine_context_test02_starting_variables_shadowing_matches_java() {
         .get_configuration()
         .expect("configuration");
     let mut variables = IndexMap::new();
-    variables.insert(Some(java_string("one")), Some(value("ha")));
-    variables.insert(Some(java_string("ten")), Some(value("tieen")));
+    variables.insert(Some(utf16_string("one")), Some(value("ha")));
+    variables.insert(Some(utf16_string("ten")), Some(value("tieen")));
     let context = EngineContext::new(
         Arc::clone(&configuration),
         template_data("test01"),
@@ -478,12 +478,12 @@ fn engine_context_test02_starting_variables_shadowing_matches_java() {
     assert_variable(context.as_ref(), "one", true, "ha");
     assert_variable(context.as_ref(), "ten", true, "tieen");
 
-    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    context.set_variable(Some(utf16_string("one")), Some(value("a value")));
     assert_variable(context.as_ref(), "one", true, "a value");
     assert_variable(context.as_ref(), "ten", true, "tieen");
 
     context.increase_level();
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "ten", true, "tieen");
 
@@ -509,36 +509,36 @@ fn engine_context_test06_seven_variables_match_java() {
         None,
     );
 
-    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    context.set_variable(Some(utf16_string("one")), Some(value("a value")));
     assert_variable(context.as_ref(), "one", true, "a value");
 
     context.increase_level();
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
     assert_variable(context.as_ref(), "one", true, "hello");
 
-    context.set_variable(Some(java_string("two")), Some(value("twello")));
+    context.set_variable(Some(utf16_string("two")), Some(value("twello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
 
-    context.set_variable(Some(java_string("three")), Some(value("trwello")));
+    context.set_variable(Some(utf16_string("three")), Some(value("trwello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
     assert_variable(context.as_ref(), "three", true, "trwello");
 
-    context.set_variable(Some(java_string("four")), Some(value("fwello")));
+    context.set_variable(Some(utf16_string("four")), Some(value("fwello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
     assert_variable(context.as_ref(), "three", true, "trwello");
     assert_variable(context.as_ref(), "four", true, "fwello");
 
-    context.set_variable(Some(java_string("five")), Some(value("vwello")));
+    context.set_variable(Some(utf16_string("five")), Some(value("vwello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
     assert_variable(context.as_ref(), "three", true, "trwello");
     assert_variable(context.as_ref(), "four", true, "fwello");
     assert_variable(context.as_ref(), "five", true, "vwello");
 
-    context.set_variable(Some(java_string("six")), Some(value("swello")));
+    context.set_variable(Some(utf16_string("six")), Some(value("swello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
     assert_variable(context.as_ref(), "three", true, "trwello");
@@ -546,7 +546,7 @@ fn engine_context_test06_seven_variables_match_java() {
     assert_variable(context.as_ref(), "five", true, "vwello");
     assert_variable(context.as_ref(), "six", true, "swello");
 
-    context.set_variable(Some(java_string("seven")), Some(value("svwello")));
+    context.set_variable(Some(utf16_string("seven")), Some(value("svwello")));
     assert_variable(context.as_ref(), "one", true, "hello");
     assert_variable(context.as_ref(), "two", true, "twello");
     assert_variable(context.as_ref(), "three", true, "trwello");
@@ -573,7 +573,7 @@ fn engine_context_test07_selection_targets_match_java() {
         None,
     );
 
-    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    context.set_variable(Some(utf16_string("one")), Some(value("a value")));
     assert!(!context.has_selection_target());
     assert_eq!(selection_text(context.as_ref()), "null");
     assert_eq!(
@@ -583,12 +583,12 @@ fn engine_context_test07_selection_targets_match_java() {
     assert_eq!(context.to_string(), "{one=a value}(test01)");
 
     context.increase_level();
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
-    context.remove_variable(Some(&java_string("one")));
-    context.set_variable(Some(java_string("one")), Some(value("hello")));
-    context.remove_variable(Some(&java_string("two")));
-    context.set_variable(Some(java_string("two")), Some(value("twello")));
-    context.set_variable(Some(java_string("two")), Some(value("twellor")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
+    context.remove_variable(Some(&utf16_string("one")));
+    context.set_variable(Some(utf16_string("one")), Some(value("hello")));
+    context.remove_variable(Some(&utf16_string("two")));
+    context.set_variable(Some(utf16_string("two")), Some(value("twello")));
+    context.set_variable(Some(utf16_string("two")), Some(value("twellor")));
     assert!(!context.has_selection_target());
     assert_eq!(selection_text(context.as_ref()), "null");
     assert_eq!(
@@ -598,8 +598,8 @@ fn engine_context_test07_selection_targets_match_java() {
     assert_eq!(context.to_string(), "{one=hello, two=twellor}(test01)");
 
     context.increase_level();
-    context.set_variable(Some(java_string("three")), Some(value("twelloree")));
-    context.set_variable(Some(java_string("one")), Some(value("atwe")));
+    context.set_variable(Some(utf16_string("three")), Some(value("twelloree")));
+    context.set_variable(Some(utf16_string("one")), Some(value("atwe")));
     assert!(!context.has_selection_target());
     assert_eq!(selection_text(context.as_ref()), "null");
     assert_eq!(
@@ -627,7 +627,7 @@ fn engine_context_test07_selection_targets_match_java() {
     );
 
     context.increase_level();
-    context.remove_variable(Some(&java_string("two")));
+    context.remove_variable(Some(&utf16_string("two")));
     assert_variable(context.as_ref(), "one", true, "atwe");
     assert_variable(context.as_ref(), "two", false, "null");
     assert_variable(context.as_ref(), "three", true, "twelloree");
@@ -643,7 +643,7 @@ fn engine_context_test07_selection_targets_match_java() {
     );
 
     context.increase_level();
-    context.remove_variable(Some(&java_string("two")));
+    context.remove_variable(Some(&utf16_string("two")));
     context.set_selection_target(Some(value("SMALLFORM")));
     assert_variable(context.as_ref(), "one", true, "atwe");
     assert_variable(context.as_ref(), "two", false, "null");
@@ -674,7 +674,7 @@ fn engine_context_test07_selection_targets_match_java() {
         "{one=atwe, three=twelloree}<SMALLFORM>(test01)"
     );
 
-    context.set_variable(Some(java_string("four")), Some(value("lotwss")));
+    context.set_variable(Some(utf16_string("four")), Some(value("lotwss")));
     assert_variable(context.as_ref(), "one", true, "atwe");
     assert_variable(context.as_ref(), "two", false, "null");
     assert_variable(context.as_ref(), "three", true, "twelloree");
@@ -824,16 +824,16 @@ fn engine_context_test10_set_variable_null_semantics_match_java() {
 
     assert_variable(context.as_ref(), "one", false, "null");
 
-    context.set_variable(Some(java_string("one")), None);
+    context.set_variable(Some(utf16_string("one")), None);
     assert_variable(context.as_ref(), "one", true, "null");
 
-    context.set_variable(Some(java_string("one")), Some(value("a value")));
+    context.set_variable(Some(utf16_string("one")), Some(value("a value")));
     assert_variable(context.as_ref(), "one", true, "a value");
 
     context.increase_level();
     assert_variable(context.as_ref(), "one", true, "a value");
 
-    context.set_variable(Some(java_string("one")), None);
+    context.set_variable(Some(utf16_string("one")), None);
     assert_variable(context.as_ref(), "one", true, "null");
 
     context.decrease_level();

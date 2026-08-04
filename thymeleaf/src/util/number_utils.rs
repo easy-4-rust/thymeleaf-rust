@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use num_bigint::BigInt;
 
-use super::{JavaBigDecimal, JavaLocale, JavaNumber, JavaString, NumberPointType};
+use super::{JavaBigDecimal, JavaLocale, JavaNumber, NumberPointType, Utf16String};
 
 /// 数字格式化与序列生成错误。
 /// 对应 Java 语义：`NumberUtils` 的 Rust 侧类型 `NumberUtilsError`。
@@ -31,7 +31,7 @@ impl NumberUtils {
         fraction_digits: Option<i32>,
         decimal_point_type: Option<NumberPointType>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, NumberUtilsError> {
+    ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let Some(target) = target else {
             return Ok(None);
         };
@@ -87,7 +87,7 @@ impl NumberUtils {
             rendered.push(point_character(decimal_point_type, locale, true));
             rendered.push_str(fraction.as_deref().unwrap_or(""));
         }
-        Ok(Some(JavaString::from_rust_str(&rendered)))
+        Ok(Some(Utf16String::from_rust_str(&rendered)))
     }
 
     /// 创建包含边界且按方向选择默认步长的整数序列。
@@ -146,7 +146,7 @@ impl NumberUtils {
     pub fn format_currency(
         target: Option<&JavaNumber>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, NumberUtilsError> {
+    ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let locale = locale.ok_or_else(|| invalid("Locale cannot be null"))?;
         let Some(target) = target else {
             return Ok(None);
@@ -166,7 +166,7 @@ impl NumberUtils {
         } else {
             format!("{symbol}{}", number.to_string_lossy())
         };
-        Ok(Some(JavaString::from_rust_str(&text)))
+        Ok(Some(Utf16String::from_rust_str(&text)))
     }
 
     /// 把数字乘以一百并按 Locale 百分号格式输出。
@@ -176,7 +176,7 @@ impl NumberUtils {
         min_integer_digits: Option<i32>,
         fraction_digits: Option<i32>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, NumberUtilsError> {
+    ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let fraction_digits = required(fraction_digits, "Fraction digits cannot be null")?;
         let locale = locale.ok_or_else(|| invalid("Locale cannot be null"))?;
         let Some(target) = target else {
@@ -205,7 +205,7 @@ impl NumberUtils {
         } else {
             ""
         };
-        Ok(Some(JavaString::from_rust_str(&format!(
+        Ok(Some(Utf16String::from_rust_str(&format!(
             "{}{separator}%",
             number.to_string_lossy()
         ))))

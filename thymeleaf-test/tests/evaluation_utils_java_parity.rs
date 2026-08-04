@@ -8,7 +8,7 @@ use thymeleaf::expression::{Bools, JavaObjectArray, LiteralValue};
 use thymeleaf::util::{
     EvaluationError, EvaluationUtils, JavaBigDecimal, JavaBigDecimalResult, JavaEvaluationArray,
     JavaEvaluationElement, JavaEvaluationList, JavaEvaluationListType, JavaEvaluationTarget,
-    JavaEvaluationValue, JavaHashCode, JavaMapEntry, JavaNumber, JavaString,
+    JavaEvaluationValue, JavaHashCode, JavaMapEntry, JavaNumber, Utf16String,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -48,7 +48,7 @@ fn cover_public_adapter_contracts() {
 
     assert_eq!(7_i32.java_hash_code(), 7);
     assert_eq!("Aa".to_owned().java_hash_code(), 2_112);
-    assert_eq!(JavaString::from_rust_str("Aa").java_hash_code(), 2_112);
+    assert_eq!(Utf16String::from_rust_str("Aa").java_hash_code(), 2_112);
 
     let mut null_entry = JavaMapEntry::<String>::new(None, None);
     assert_eq!(null_entry.get_key(), None);
@@ -115,7 +115,7 @@ fn cover_public_adapter_contracts() {
             .is_some()
     );
     let malformed =
-        JavaEvaluationValue::String(JavaString::from_utf16(vec![u16::from(b'1'), 0xD800]));
+        JavaEvaluationValue::String(Utf16String::from_utf16(vec![u16::from(b'1'), 0xD800]));
     assert!(
         EvaluationUtils::evaluate_as_number(&malformed)
             .expect("invalid string becomes null")
@@ -763,12 +763,12 @@ fn number(value: JavaNumber) -> JavaEvaluationValue {
 }
 
 fn string(value: &str) -> JavaEvaluationValue {
-    JavaEvaluationValue::String(JavaString::from_rust_str(value))
+    JavaEvaluationValue::String(Utf16String::from_rust_str(value))
 }
 
 fn literal(value: Option<&str>) -> JavaEvaluationValue {
     JavaEvaluationValue::LiteralValue(Arc::new(LiteralValue::new(
-        value.map(JavaString::from_rust_str),
+        value.map(Utf16String::from_rust_str),
     )))
 }
 

@@ -8,7 +8,7 @@
 use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebRequest;
 use vernal_http::HttpRequestSnapshot;
 
@@ -97,46 +97,46 @@ impl VernalWebRequest {
     }
 }
 
-fn to_java_strings(values: &[String]) -> Vec<Option<JavaString>> {
+fn to_utf16_strings(values: &[String]) -> Vec<Option<Utf16String>> {
     values
         .iter()
-        .map(|value| Some(JavaString::from_rust_str(value)))
+        .map(|value| Some(Utf16String::from_rust_str(value)))
         .collect()
 }
 
 impl IWebRequest for VernalWebRequest {
-    fn get_method(&self) -> Option<JavaString> {
-        Some(JavaString::from_rust_str(self.snapshot.method().as_str()))
+    fn get_method(&self) -> Option<Utf16String> {
+        Some(Utf16String::from_rust_str(self.snapshot.method().as_str()))
     }
 
-    fn get_scheme(&self) -> Option<JavaString> {
+    fn get_scheme(&self) -> Option<Utf16String> {
         self.snapshot
             .uri()
             .scheme()
-            .map(|scheme| JavaString::from_rust_str(scheme.as_str()))
+            .map(|scheme| Utf16String::from_rust_str(scheme.as_str()))
     }
 
-    fn get_server_name(&self) -> Option<JavaString> {
-        self.snapshot.uri().host().map(JavaString::from_rust_str)
+    fn get_server_name(&self) -> Option<Utf16String> {
+        self.snapshot.uri().host().map(Utf16String::from_rust_str)
     }
 
     fn get_server_port(&self) -> Option<i32> {
         self.snapshot.uri().port_u16().map(i32::from)
     }
 
-    fn get_application_path(&self) -> Option<JavaString> {
+    fn get_application_path(&self) -> Option<Utf16String> {
         None
     }
 
-    fn get_path_within_application(&self) -> Option<JavaString> {
-        Some(JavaString::from_rust_str(self.snapshot.uri().path()))
+    fn get_path_within_application(&self) -> Option<Utf16String> {
+        Some(Utf16String::from_rust_str(self.snapshot.uri().path()))
     }
 
-    fn get_query_string(&self) -> Option<JavaString> {
-        self.snapshot.uri().query().map(JavaString::from_rust_str)
+    fn get_query_string(&self) -> Option<Utf16String> {
+        self.snapshot.uri().query().map(Utf16String::from_rust_str)
     }
 
-    fn contains_header(&self, name: Option<&JavaString>) -> bool {
+    fn contains_header(&self, name: Option<&Utf16String>) -> bool {
         self.get_header_value(name).is_some()
     }
 
@@ -144,25 +144,25 @@ impl IWebRequest for VernalWebRequest {
         self.snapshot.headers().len() as i32
     }
 
-    fn get_all_header_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_header_names(&self) -> Vec<Option<Utf16String>> {
         self.snapshot
             .headers()
             .keys()
-            .map(|name| Some(JavaString::from_rust_str(name.as_str())))
+            .map(|name| Some(Utf16String::from_rust_str(name.as_str())))
             .collect()
     }
 
-    fn get_header_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>> {
-        let mut map: IndexMap<Option<JavaString>, Vec<Option<JavaString>>> = IndexMap::new();
+    fn get_header_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
+        let mut map: IndexMap<Option<Utf16String>, Vec<Option<Utf16String>>> = IndexMap::new();
         for (name, value) in self.snapshot.headers() {
-            let key = Some(JavaString::from_rust_str(name.as_str()));
-            let value = value.to_str().ok().map(JavaString::from_rust_str);
+            let key = Some(Utf16String::from_rust_str(name.as_str()));
+            let value = value.to_str().ok().map(Utf16String::from_rust_str);
             map.entry(key).or_default().push(value);
         }
         map.into_iter().map(|(k, v)| (k, Some(v))).collect()
     }
 
-    fn get_header_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+    fn get_header_values(&self, name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>> {
         let name = name?;
         let mut values = Vec::new();
         for (header_name, value) in self.snapshot.headers() {
@@ -170,13 +170,13 @@ impl IWebRequest for VernalWebRequest {
                 .as_str()
                 .eq_ignore_ascii_case(&name.to_string_lossy())
             {
-                values.push(value.to_str().ok().map(JavaString::from_rust_str));
+                values.push(value.to_str().ok().map(Utf16String::from_rust_str));
             }
         }
         (!values.is_empty()).then_some(values)
     }
 
-    fn contains_parameter(&self, name: Option<&JavaString>) -> bool {
+    fn contains_parameter(&self, name: Option<&Utf16String>) -> bool {
         self.get_parameter_value(name).is_some()
     }
 
@@ -184,33 +184,33 @@ impl IWebRequest for VernalWebRequest {
         self.parameters().values().map(Vec::len).sum::<usize>() as i32
     }
 
-    fn get_all_parameter_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_parameter_names(&self) -> Vec<Option<Utf16String>> {
         self.parameters()
             .keys()
-            .map(|name| Some(JavaString::from_rust_str(name)))
+            .map(|name| Some(Utf16String::from_rust_str(name)))
             .collect()
     }
 
-    fn get_parameter_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>> {
+    fn get_parameter_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
         self.parameters()
             .iter()
             .map(|(name, values)| {
                 (
-                    Some(JavaString::from_rust_str(name)),
-                    Some(to_java_strings(values)),
+                    Some(Utf16String::from_rust_str(name)),
+                    Some(to_utf16_strings(values)),
                 )
             })
             .collect()
     }
 
-    fn get_parameter_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+    fn get_parameter_values(&self, name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>> {
         let name = name?;
         self.parameters()
             .get(&name.to_string_lossy())
-            .map(|values| to_java_strings(values))
+            .map(|values| to_utf16_strings(values))
     }
 
-    fn contains_cookie(&self, name: Option<&JavaString>) -> bool {
+    fn contains_cookie(&self, name: Option<&Utf16String>) -> bool {
         self.get_cookie_value(name).is_some()
     }
 
@@ -218,29 +218,29 @@ impl IWebRequest for VernalWebRequest {
         self.cookies().values().map(Vec::len).sum::<usize>() as i32
     }
 
-    fn get_all_cookie_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_cookie_names(&self) -> Vec<Option<Utf16String>> {
         self.cookies()
             .keys()
-            .map(|name| Some(JavaString::from_rust_str(name)))
+            .map(|name| Some(Utf16String::from_rust_str(name)))
             .collect()
     }
 
-    fn get_cookie_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>> {
+    fn get_cookie_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
         self.cookies()
             .iter()
             .map(|(name, values)| {
                 (
-                    Some(JavaString::from_rust_str(name)),
-                    Some(to_java_strings(values)),
+                    Some(Utf16String::from_rust_str(name)),
+                    Some(to_utf16_strings(values)),
                 )
             })
             .collect()
     }
 
-    fn get_cookie_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+    fn get_cookie_values(&self, name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>> {
         let name = name?;
         self.cookies()
             .get(&name.to_string_lossy())
-            .map(|values| to_java_strings(values))
+            .map(|values| to_utf16_strings(values))
     }
 }

@@ -1,7 +1,7 @@
 use std::sync::{Arc, OnceLock};
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -21,7 +21,7 @@ impl NoOpTokenExpression {
 
     /// 只接受单个下划线，并复用内部规范单例。
     /// 对应 Java: `NoOpTokenExpression#parseNoOpTokenExpression()`。
-    pub fn parse_no_op_token_expression(input: Option<&JavaString>) -> Option<Arc<Self>> {
+    pub fn parse_no_op_token_expression(input: Option<&Utf16String>) -> Option<Arc<Self>> {
         let input = input?;
         (input.as_utf16() == [b'_' as u16]).then(Self::singleton)
     }
@@ -39,8 +39,8 @@ impl Default for NoOpTokenExpression {
 }
 
 impl IStandardExpression for NoOpTokenExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
-        Ok(JavaString::from_rust_str("_"))
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
+        Ok(Utf16String::from_rust_str("_"))
     }
 
     fn execute_with_context(

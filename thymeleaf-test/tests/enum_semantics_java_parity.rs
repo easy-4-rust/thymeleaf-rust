@@ -5,7 +5,7 @@ use std::fmt::Write;
 use thymeleaf::engine::HTMLElementType;
 use thymeleaf::inline::{StandardInlineMode, StandardInlineModeParseError};
 use thymeleaf::model::AttributeValueQuotes;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str = include_str!("../../thymeleaf/tests/fixtures/enum_semantics_golden.txt");
@@ -60,34 +60,34 @@ fn emit_standard_inline_modes(output: &mut String) {
 fn emit_parse_cases(output: &mut String) {
     for (key, input) in [
         ("null", None),
-        ("empty", Some(JavaString::from_rust_str(""))),
-        ("space", Some(JavaString::from_rust_str(" "))),
+        ("empty", Some(Utf16String::from_rust_str(""))),
+        ("space", Some(Utf16String::from_rust_str(" "))),
         (
             "controls",
-            Some(JavaString::from_utf16([0x0000, 0x0009, 0x0020])),
+            Some(Utf16String::from_utf16([0x0000, 0x0009, 0x0020])),
         ),
-        ("nbsp", Some(JavaString::from_utf16([0x00A0]))),
-        ("raw", Some(JavaString::from_rust_str("RAW"))),
-        ("noneLower", Some(JavaString::from_rust_str("none"))),
-        ("htmlMixed", Some(JavaString::from_rust_str("hTmL"))),
-        ("xmlLower", Some(JavaString::from_rust_str("xml"))),
-        ("textMixed", Some(JavaString::from_rust_str("TeXt"))),
+        ("nbsp", Some(Utf16String::from_utf16([0x00A0]))),
+        ("raw", Some(Utf16String::from_rust_str("RAW"))),
+        ("noneLower", Some(Utf16String::from_rust_str("none"))),
+        ("htmlMixed", Some(Utf16String::from_rust_str("hTmL"))),
+        ("xmlLower", Some(Utf16String::from_rust_str("xml"))),
+        ("textMixed", Some(Utf16String::from_rust_str("TeXt"))),
         (
             "javascriptLower",
-            Some(JavaString::from_rust_str("javascript")),
+            Some(Utf16String::from_rust_str("javascript")),
         ),
-        ("cssLower", Some(JavaString::from_rust_str("css"))),
+        ("cssLower", Some(Utf16String::from_rust_str("css"))),
         (
             "cssLongS",
-            Some(JavaString::from_utf16([b'C' as u16, 0x017F, 0x017F])),
+            Some(Utf16String::from_utf16([b'C' as u16, 0x017F, 0x017F])),
         ),
         (
             "javascriptDotlessI",
-            Some(JavaString::from_rust_str("JAVASCRıPT")),
+            Some(Utf16String::from_rust_str("JAVASCRıPT")),
         ),
         (
             "javascriptDottedI",
-            Some(JavaString::from_rust_str("JAVASCRİPT")),
+            Some(Utf16String::from_rust_str("JAVASCRİPT")),
         ),
     ] {
         emit_parse(output, key, input.as_ref());
@@ -95,12 +95,12 @@ fn emit_parse_cases(output: &mut String) {
     emit_parse_utf16(
         output,
         "paddedHtml",
-        Some(&JavaString::from_rust_str(" HTML ")),
+        Some(&Utf16String::from_rust_str(" HTML ")),
     );
     emit_parse_utf16(
         output,
         "isolatedHighSurrogate",
-        Some(&JavaString::from_utf16([0xD800])),
+        Some(&Utf16String::from_utf16([0xD800])),
     );
 }
 
@@ -109,7 +109,7 @@ fn emit_exhaustive_inline_parsing(output: &mut String) {
     for code_unit in u16::MIN..=u16::MAX {
         single_code_unit_hash = mix(
             single_code_unit_hash,
-            parse_code(Some(&JavaString::from_utf16([code_unit]))),
+            parse_code(Some(&Utf16String::from_utf16([code_unit]))),
         );
     }
     emit(
@@ -119,7 +119,7 @@ fn emit_exhaustive_inline_parsing(output: &mut String) {
     );
 
     for mode in StandardInlineMode::VALUES {
-        let mut units = JavaString::from_rust_str(&mode.to_string())
+        let mut units = Utf16String::from_rust_str(&mode.to_string())
             .as_utf16()
             .to_vec();
         for position in 0..units.len() {
@@ -129,7 +129,7 @@ fn emit_exhaustive_inline_parsing(output: &mut String) {
                 units[position] = code_unit;
                 hash = mix(
                     hash,
-                    parse_code(Some(&JavaString::from_utf16(units.clone()))),
+                    parse_code(Some(&Utf16String::from_utf16(units.clone()))),
                 );
             }
             units[position] = original;
@@ -142,7 +142,7 @@ fn emit_exhaustive_inline_parsing(output: &mut String) {
     }
 }
 
-fn parse_code(input: Option<&JavaString>) -> u8 {
+fn parse_code(input: Option<&Utf16String>) -> u8 {
     match StandardInlineMode::parse(input) {
         Ok(mode) => mode.ordinal() as u8,
         Err(StandardInlineModeParseError::NullOrEmpty) => 6,
@@ -150,7 +150,7 @@ fn parse_code(input: Option<&JavaString>) -> u8 {
     }
 }
 
-fn emit_parse(output: &mut String, key: &str, input: Option<&JavaString>) {
+fn emit_parse(output: &mut String, key: &str, input: Option<&Utf16String>) {
     match StandardInlineMode::parse(input) {
         Ok(mode) => emit(output, &format!("parse.{key}"), format!("OK:{mode}")),
         Err(error) => emit(
@@ -161,7 +161,7 @@ fn emit_parse(output: &mut String, key: &str, input: Option<&JavaString>) {
     }
 }
 
-fn emit_parse_utf16(output: &mut String, key: &str, input: Option<&JavaString>) {
+fn emit_parse_utf16(output: &mut String, key: &str, input: Option<&Utf16String>) {
     match StandardInlineMode::parse(input) {
         Ok(mode) => emit(output, &format!("parse.{key}"), format!("OK:{mode}")),
         Err(error) => emit(

@@ -9,7 +9,7 @@ use crate::temporal::{
     JavaTemporal, TemporalCreationUtils, TemporalFormattingError, TemporalFormattingUtils,
     TemporalObjects,
 };
-use crate::util::{JavaLocale, JavaNumber, JavaString, template_integer};
+use crate::util::{JavaLocale, JavaNumber, Utf16String, template_integer};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -199,7 +199,7 @@ impl Temporals {
                 .unwrap_or_else(|| Arc::new(TemplateValue::Null));
             if !set_semantics
                 || !output.iter().any(|value: &Arc<TemplateValue>| {
-                    value.to_java_string() == item.to_java_string()
+                    value.to_utf16_string() == item.to_utf16_string()
                 })
             {
                 output.push(item);
@@ -214,8 +214,8 @@ impl TemplateObject for Temporals {
         "org.thymeleaf.expression.Temporals"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.expression.Temporals")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.expression.Temporals")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -224,7 +224,7 @@ impl TemplateObject for Temporals {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         Some(
@@ -280,7 +280,7 @@ fn temporal_value(value: JavaTemporal) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::Object(Arc::new(value)))
 }
 
-fn string_value(value: Option<JavaString>) -> Option<Arc<TemplateValue>> {
+fn string_value(value: Option<Utf16String>) -> Option<Arc<TemplateValue>> {
     value.map(|value| Arc::new(TemplateValue::string(value)))
 }
 
@@ -290,7 +290,7 @@ fn required_string(
 ) -> Result<String, TemporalsError> {
     value
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy())
         .ok_or_else(|| TemporalsError::new(message))
 }

@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    DateUtils, DateUtilsError, JavaDate, JavaLocale, JavaNumber, JavaString, template_integer,
+    DateUtils, DateUtilsError, JavaDate, JavaLocale, JavaNumber, Utf16String, template_integer,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -69,8 +69,8 @@ impl Calendars {
     pub fn format(
         &self,
         target: Option<&JavaDate>,
-        pattern: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, CalendarsError> {
+        pattern: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, CalendarsError> {
         Ok(DateUtils::format(target, pattern, Some(&self.locale))?)
     }
 
@@ -196,7 +196,7 @@ impl Calendars {
         arguments: &[Option<Arc<TemplateValue>>],
         pattern: &str,
     ) -> Result<Option<Arc<TemplateValue>>, CalendarsError> {
-        let pattern = JavaString::from_rust_str(pattern);
+        let pattern = Utf16String::from_rust_str(pattern);
         Ok(string_value(
             self.format(calendar_argument(arguments)?, Some(&pattern))?,
         ))
@@ -208,8 +208,8 @@ impl TemplateObject for Calendars {
         "org.thymeleaf.expression.Calendars"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.expression.Calendars")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.expression.Calendars")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -218,7 +218,7 @@ impl TemplateObject for Calendars {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         Some(
@@ -278,8 +278,8 @@ fn calendar_argument(
     }
 }
 
-fn string_argument(value: &Option<Arc<TemplateValue>>) -> Option<JavaString> {
-    value.as_deref().and_then(TemplateValue::to_java_string)
+fn string_argument(value: &Option<Arc<TemplateValue>>) -> Option<Utf16String> {
+    value.as_deref().and_then(TemplateValue::to_utf16_string)
 }
 
 fn time_zone(value: &Option<Arc<TemplateValue>>) -> Option<String> {
@@ -293,7 +293,7 @@ fn list(value: &Option<Arc<TemplateValue>>) -> Result<&[Arc<TemplateValue>], Cal
     }
 }
 
-fn string_value(value: Option<JavaString>) -> Option<Arc<TemplateValue>> {
+fn string_value(value: Option<Utf16String>) -> Option<Arc<TemplateValue>> {
     value.map(|value| Arc::new(TemplateValue::string(value)))
 }
 
@@ -315,8 +315,8 @@ fn collection_method(method_name: &str) -> Option<(bool, String)> {
 }
 
 fn contains_text(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateValue>) -> bool {
-    let candidate = candidate.to_java_string();
+    let candidate = candidate.to_utf16_string();
     values
         .iter()
-        .any(|value| value.to_java_string() == candidate)
+        .any(|value| value.to_utf16_string() == candidate)
 }

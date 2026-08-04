@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
@@ -46,9 +46,9 @@ impl OrExpression {
 }
 
 impl IStandardExpression for OrExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         self.operation
-            .get_string_representation(Some(&JavaString::from_rust_str("or")))
+            .get_string_representation(Some(&Utf16String::from_rust_str("or")))
     }
     fn execute_with_context(
         &self,

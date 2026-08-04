@@ -22,7 +22,7 @@ use sha2::Digest;
 use thymeleaf::context::{Context, ExpressionContext};
 use thymeleaf::expression::{IStandardExpression, TemplateValue, VariableExpression};
 use thymeleaf::templateresolver::ITemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
 // ===========================================================================
@@ -237,7 +237,7 @@ fn evaluate_context_expression(
     let configuration = engine.get_configuration().expect("configuration");
     let expression_context =
         ExpressionContext::new(Some(configuration)).expect("expression context");
-    let expression = VariableExpression::new(Some(JavaString::from_rust_str(expression)))
+    let expression = VariableExpression::new(Some(Utf16String::from_rust_str(expression)))
         .expect("variable expression");
     expression
         .execute(expression_context.as_ref())
@@ -264,7 +264,7 @@ fn run_case(name: &str) {
     let context = Context::new();
     for (key, expression) in &case.context {
         let value = evaluate_context_expression(&engine, expression);
-        context.set_variable(Some(JavaString::from_rust_str(key)), value);
+        context.set_variable(Some(Utf16String::from_rust_str(key)), value);
     }
 
     let result = engine.process_template(&case.input, &context);
@@ -464,7 +464,7 @@ fn inline34_exception_message_matches_java_pattern() {
     let context = Context::new();
     for (key, expression) in &case.context {
         let value = evaluate_context_expression(&engine, expression);
-        context.set_variable(Some(JavaString::from_rust_str(key)), value);
+        context.set_variable(Some(Utf16String::from_rust_str(key)), value);
     }
     let error = engine
         .process_template(&case.input, &context)

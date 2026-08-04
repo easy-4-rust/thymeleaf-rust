@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -18,7 +18,7 @@ pub struct BooleanTokenExpression {
 impl BooleanTokenExpression {
     /// 按 Java `Boolean.valueOf(String)` 创建布尔 Token；null 字符串得到 false。
     /// 对应 Java 语义：`BooleanTokenExpression` 的 `from_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn from_string(value: Option<&JavaString>) -> Self {
+    pub fn from_string(value: Option<&Utf16String>) -> Self {
         let value = value.is_some_and(|value| value.to_string_lossy().eq_ignore_ascii_case("true"));
         Self { value: Some(value) }
     }
@@ -35,7 +35,7 @@ impl BooleanTokenExpression {
 
     /// 解析忽略大小写的 true/false；其他输入不匹配。
     /// 对应 Java: `BooleanTokenExpression#parseBooleanTokenExpression()`。
-    pub fn parse_boolean_token_expression(input: Option<&JavaString>) -> Option<Self> {
+    pub fn parse_boolean_token_expression(input: Option<&Utf16String>) -> Option<Self> {
         let input = input?;
         let text = input.to_string_lossy();
         (text.eq_ignore_ascii_case("true") || text.eq_ignore_ascii_case("false"))
@@ -44,9 +44,9 @@ impl BooleanTokenExpression {
 }
 
 impl IStandardExpression for BooleanTokenExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         self.value
-            .map(|value| JavaString::from_rust_str(if value { "true" } else { "false" }))
+            .map(|value| Utf16String::from_rust_str(if value { "true" } else { "false" }))
             .ok_or_else(|| Box::new(TokenError::NullPointer) as _)
     }
 

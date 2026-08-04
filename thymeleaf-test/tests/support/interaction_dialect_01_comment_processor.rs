@@ -4,7 +4,7 @@ use thymeleaf::context::ITemplateContext;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::IComment;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback =
@@ -75,8 +75,8 @@ fn process_comment(
                 error,
             )) as Box<dyn TemplateEngineException>
         })?
-        .unwrap_or_else(|| JavaString::from_rust_str(""));
-    structure_handler.set_content(JavaString::from_rust_str(&format!(
+        .unwrap_or_else(|| Utf16String::from_rust_str(""));
+    structure_handler.set_content(Utf16String::from_rust_str(&format!(
         "||{}||",
         content.to_string_lossy()
     )));

@@ -9,7 +9,7 @@ use indexmap::IndexMap;
 
 use crate::model::{AttributeValueQuotes, IAttribute};
 use crate::templatemode::TemplateMode;
-use crate::util::{FastStringWriter, JavaString, JavaWriter};
+use crate::util::{FastStringWriter, JavaWriter, Utf16String};
 
 use super::{
     Attribute, AttributeDefinitionValue, AttributeDefinitions, AttributeDefinitionsError,
@@ -87,7 +87,7 @@ impl From<AttributeDefinitionsError> for AttributesError {
 /// `Attribute[]#clone()` 的浅克隆语义一致。
 pub struct Attributes {
     attributes: Option<Vec<Arc<Attribute>>>,
-    inner_white_spaces: Option<Vec<JavaString>>,
+    inner_white_spaces: Option<Vec<Utf16String>>,
     associated_processor_count: AtomicI32,
 }
 
@@ -99,7 +99,7 @@ impl Attributes {
     #[must_use]
     pub fn new(
         attributes: Option<Vec<Arc<Attribute>>>,
-        inner_white_spaces: Option<Vec<JavaString>>,
+        inner_white_spaces: Option<Vec<Utf16String>>,
     ) -> Arc<Self> {
         Arc::new(Self {
             attributes,
@@ -140,7 +140,7 @@ impl Attributes {
     pub fn has_attribute(
         &self,
         template_mode: TemplateMode,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<bool, AttributesError> {
         Ok(self.search_attribute(template_mode, complete_name)? >= 0)
     }
@@ -151,8 +151,8 @@ impl Attributes {
     pub fn has_attribute_with_prefix(
         &self,
         template_mode: TemplateMode,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<bool, AttributesError> {
         Ok(self.search_attribute_with_prefix(template_mode, prefix, name)? >= 0)
     }
@@ -179,7 +179,7 @@ impl Attributes {
     pub fn get_attribute(
         &self,
         template_mode: TemplateMode,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<Option<&Arc<Attribute>>, AttributesError> {
         let position = self.search_attribute(template_mode, complete_name)?;
         Ok(self.attribute_at(position))
@@ -191,8 +191,8 @@ impl Attributes {
     pub fn get_attribute_with_prefix(
         &self,
         template_mode: TemplateMode,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<Option<&Arc<Attribute>>, AttributesError> {
         let position = self.search_attribute_with_prefix(template_mode, prefix, name)?;
         Ok(self.attribute_at(position))
@@ -241,7 +241,7 @@ impl Attributes {
     ///
     /// 对应 Java 同包代码对 `Attributes.innerWhiteSpaces` 的构造语义；仅用于在
     /// decoupled logic 注入时保留“最后一个事件是否为空白”的状态。
-    pub(crate) fn inner_white_spaces(&self) -> Option<&[JavaString]> {
+    pub(crate) fn inner_white_spaces(&self) -> Option<&[Utf16String]> {
         self.inner_white_spaces.as_deref()
     }
 
@@ -249,7 +249,7 @@ impl Attributes {
     ///
     /// 对应 Java: `Attributes#getAttributeMap()`。
     #[must_use]
-    pub fn get_attribute_map(&self) -> IndexMap<JavaString, Option<JavaString>> {
+    pub fn get_attribute_map(&self) -> IndexMap<Utf16String, Option<Utf16String>> {
         let Some(attributes) = self.attributes.as_ref() else {
             return IndexMap::new();
         };
@@ -271,8 +271,8 @@ impl Attributes {
         attribute_definitions: &AttributeDefinitions,
         template_mode: TemplateMode,
         attribute_definition: Option<&AttributeDefinitionValue>,
-        complete_name: JavaString,
-        value: Option<JavaString>,
+        complete_name: Utf16String,
+        value: Option<Utf16String>,
         value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<Self>, AttributesError> {
         validate_xml_value(template_mode, value.as_ref(), value_quotes)?;
@@ -345,8 +345,8 @@ impl Attributes {
         template_mode: TemplateMode,
         old_name: &AttributeName,
         new_attribute_definition: Option<&AttributeDefinitionValue>,
-        new_complete_name: JavaString,
-        value: Option<JavaString>,
+        new_complete_name: Utf16String,
+        value: Option<Utf16String>,
         value_quotes: Option<AttributeValueQuotes>,
     ) -> Result<Arc<Self>, AttributesError> {
         validate_xml_value(template_mode, value.as_ref(), value_quotes)?;
@@ -439,7 +439,7 @@ impl Attributes {
     pub fn remove_attribute(
         self: &Arc<Self>,
         template_mode: TemplateMode,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<Arc<Self>, AttributesError> {
         if self.attributes.is_none() {
             return Ok(self.clone());
@@ -454,8 +454,8 @@ impl Attributes {
     pub fn remove_attribute_with_prefix(
         self: &Arc<Self>,
         template_mode: TemplateMode,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<Arc<Self>, AttributesError> {
         if self.attributes.is_none() {
             return Ok(self.clone());
@@ -518,8 +518,8 @@ impl Attributes {
 
     /// 返回 Java `toString()` 对应的 UTF-16 属性序列。
     #[must_use]
-    /// 对应 Java 语义：`Attributes` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> JavaString {
+    /// 对应 Java 语义：`Attributes` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Utf16String {
         let mut writer = FastStringWriter::new();
         self.write(&mut writer)
             .expect("FastStringWriter must accept complete UTF-16 slices");
@@ -543,7 +543,7 @@ impl Attributes {
     fn search_attribute(
         &self,
         template_mode: TemplateMode,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<i32, AttributesError> {
         let Some(attributes) = self.attributes.as_ref() else {
             return Ok(-1);
@@ -560,10 +560,10 @@ impl Attributes {
     fn search_attribute_with_prefix(
         &self,
         template_mode: TemplateMode,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<i32, AttributesError> {
-        if prefix.is_none_or(JavaString::is_empty) {
+        if prefix.is_none_or(Utf16String::is_empty) {
             return self.search_attribute(template_mode, name);
         }
         let attribute_name =
@@ -639,13 +639,13 @@ impl Attributes {
 
 impl Display for Attributes {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.to_java_string().to_string_lossy())
+        formatter.write_str(&self.to_utf16_string().to_string_lossy())
     }
 }
 
 fn validate_xml_value(
     template_mode: TemplateMode,
-    value: Option<&JavaString>,
+    value: Option<&Utf16String>,
     value_quotes: Option<AttributeValueQuotes>,
 ) -> Result<(), AttributesError> {
     if template_mode == TemplateMode::XML && value.is_none() {
@@ -657,6 +657,6 @@ fn validate_xml_value(
     Ok(())
 }
 
-fn default_white_space() -> JavaString {
-    JavaString::from_rust_str(DEFAULT_WHITE_SPACE)
+fn default_white_space() -> Utf16String {
+    Utf16String::from_rust_str(DEFAULT_WHITE_SPACE)
 }

@@ -10,7 +10,7 @@ use crate::engine::{AttributeName, EngineEventUtils};
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{FragmentExpression, StandardExpressionExecutionContext, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IProcessor, StandardAttributeCallback, expression_processing_error};
 
@@ -28,8 +28,8 @@ impl AbstractStandardExpressionAttributeTagProcessor {
     /// 对应 Java 语义：`AbstractStandardExpressionAttributeTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new<F>(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         remove_attribute: bool,
         expression_execution_context: &'static StandardExpressionExecutionContext,
@@ -41,7 +41,7 @@ impl AbstractStandardExpressionAttributeTagProcessor {
                 &dyn ITemplateContext,
                 &dyn IProcessableElementTag,
                 &AttributeName,
-                Option<&JavaString>,
+                Option<&Utf16String>,
                 Option<Arc<TemplateValue>>,
                 &mut dyn IElementTagStructureHandler,
             ) -> Result<(), Box<dyn TemplateEngineException>>
@@ -108,7 +108,7 @@ impl AbstractStandardExpressionAttributeTagProcessor {
                     .is_some_and(|value| matches!(value, TemplateValue::NoOp))
                 {
                     if remove_if_noop {
-                        let complete_name = attribute_name.to_java_string().map_err(|error| {
+                        let complete_name = attribute_name.to_utf16_string().map_err(|error| {
                             Box::new(TemplateProcessingException::with_cause(
                                 Some("Could not render attribute name".to_owned()),
                                 error,
@@ -150,8 +150,8 @@ impl AbstractStandardExpressionAttributeTagProcessor {
     /// 对应 Java 语义：`AbstractStandardExpressionAttributeTagProcessor` 的 `with_restricted_execution` 行为（Rust 侧辅助/私有路径）。
     pub fn with_restricted_execution<F>(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         remove_attribute: bool,
         restricted_expression_execution: bool,
@@ -163,7 +163,7 @@ impl AbstractStandardExpressionAttributeTagProcessor {
                 &dyn ITemplateContext,
                 &dyn IProcessableElementTag,
                 &AttributeName,
-                Option<&JavaString>,
+                Option<&Utf16String>,
                 Option<Arc<TemplateValue>>,
                 &mut dyn IElementTagStructureHandler,
             ) -> Result<(), Box<dyn TemplateEngineException>>

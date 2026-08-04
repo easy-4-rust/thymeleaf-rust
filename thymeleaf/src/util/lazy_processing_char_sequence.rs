@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use crate::context::ITemplateContext;
 use crate::model::IModel;
 
-use super::{IWritableCharSequence, JavaCharSequence, JavaString, JavaWriter, TextUtilsError};
+use super::{IWritableCharSequence, JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
 
 /// 延迟执行 TemplateModel 并直接写入最终输出的字符序列。
 ///
@@ -12,7 +12,7 @@ use super::{IWritableCharSequence, JavaCharSequence, JavaString, JavaWriter, Tex
 pub struct LazyProcessingCharSequence {
     context: Arc<dyn ITemplateContext>,
     template_model: Arc<dyn IModel>,
-    resolved_text: RwLock<Option<JavaString>>,
+    resolved_text: RwLock<Option<Utf16String>>,
 }
 
 impl LazyProcessingCharSequence {
@@ -28,7 +28,7 @@ impl LazyProcessingCharSequence {
         }
     }
 
-    fn resolve_text(&self) -> Result<JavaString, TextUtilsError> {
+    fn resolve_text(&self) -> Result<Utf16String, TextUtilsError> {
         if let Some(text) = self.read_resolved_text()? {
             return Ok(text.clone());
         }
@@ -45,7 +45,7 @@ impl LazyProcessingCharSequence {
                 Box::new(writer),
             )
             .map_err(processing_text_error)?;
-        let text = JavaString::from_utf16(
+        let text = Utf16String::from_utf16(
             output
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -58,7 +58,7 @@ impl LazyProcessingCharSequence {
         Ok(text)
     }
 
-    fn read_resolved_text(&self) -> Result<Option<JavaString>, TextUtilsError> {
+    fn read_resolved_text(&self) -> Result<Option<Utf16String>, TextUtilsError> {
         self.resolved_text
             .read()
             .map(|guard| guard.clone())
@@ -67,7 +67,7 @@ impl LazyProcessingCharSequence {
 }
 
 impl JavaCharSequence for LazyProcessingCharSequence {
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
@@ -83,11 +83,11 @@ impl JavaCharSequence for LazyProcessingCharSequence {
         self.resolve_text()?.java_char_at(index)
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.resolve_text()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.resolve_text()?.java_sub_sequence(start, end)
     }
 
@@ -144,14 +144,14 @@ impl JavaWriter for SharedUtf16Writer {
 fn processing_text_error(error: crate::exceptions::TemplateProcessingException) -> TextUtilsError {
     TextUtilsError::SequenceAccess {
         class_name: "org.thymeleaf.exceptions.TemplateProcessingException".to_owned(),
-        message: Some(JavaString::from_rust_str(&error.get_message())),
+        message: Some(Utf16String::from_rust_str(&error.get_message())),
     }
 }
 
 fn processing_lock_error() -> TextUtilsError {
     TextUtilsError::SequenceAccess {
         class_name: "java.lang.IllegalStateException".to_owned(),
-        message: Some(JavaString::from_rust_str(
+        message: Some(Utf16String::from_rust_str(
             "LazyProcessingCharSequence resolved text lock is poisoned",
         )),
     }

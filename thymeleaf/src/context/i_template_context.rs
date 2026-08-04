@@ -8,7 +8,7 @@ use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{TemplateMode, TemplateResolutionAttributes};
 
 use super::{IExpressionContext, IdentifierSequences};
@@ -39,16 +39,16 @@ pub trait ITemplateContext: IExpressionContext {
     fn get_message(
         &self,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         use_absent_message_representation: bool,
-    ) -> crate::messageresolver::MessageResolutionResult<Option<JavaString>>;
+    ) -> crate::messageresolver::MessageResolutionResult<Option<Utf16String>>;
     /// 构建模板链接。
     fn build_link(
         &self,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<JavaString, TemplateProcessingException>;
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Utf16String, TemplateProcessingException>;
     /// 返回上下文级唯一标识序列。
     fn get_identifier_sequences(&self) -> &IdentifierSequences;
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IStandardExpression, StandardExpressionResult};
 
@@ -15,7 +15,7 @@ pub trait IStandardExpressionParser: Send + Sync {
     fn parse_expression(
         &self,
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>>;
 
     /// 是否为支持 `__...__` 预处理的标准解析器实现。

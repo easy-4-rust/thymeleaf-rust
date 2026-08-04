@@ -3,7 +3,7 @@ use std::io;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::model::{IComment, IModelVisitor, ITemplateEvent};
-use crate::util::{JavaCharSequence, JavaString, JavaWriter, TextUtilsError};
+use crate::util::{JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTextualTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -15,9 +15,9 @@ const COMMENT_SUFFIX: &str = "-->";
 /// 对应 Java: `org.thymeleaf.engine.Comment`。
 pub struct Comment {
     textual_event: AbstractTextualTemplateEvent,
-    prefix: JavaString,
-    suffix: JavaString,
-    computed_comment: RwLock<Option<JavaString>>,
+    prefix: Utf16String,
+    suffix: Utf16String,
+    computed_comment: RwLock<Option<Utf16String>>,
 }
 
 impl Comment {
@@ -27,9 +27,9 @@ impl Comment {
     #[must_use]
     pub fn new(content: Option<Arc<dyn JavaCharSequence>>) -> Self {
         Self::with_boundaries(
-            JavaString::from_rust_str(COMMENT_PREFIX),
+            Utf16String::from_rust_str(COMMENT_PREFIX),
             content,
-            JavaString::from_rust_str(COMMENT_SUFFIX),
+            Utf16String::from_rust_str(COMMENT_SUFFIX),
         )
     }
 
@@ -38,9 +38,9 @@ impl Comment {
     /// 对应 Java: `Comment#Comment(String,CharSequence,String)`。
     #[must_use]
     pub fn with_boundaries(
-        prefix: JavaString,
+        prefix: Utf16String,
         content: Option<Arc<dyn JavaCharSequence>>,
-        suffix: JavaString,
+        suffix: Utf16String,
     ) -> Self {
         Self {
             textual_event: AbstractTextualTemplateEvent::new(content),
@@ -56,14 +56,14 @@ impl Comment {
     #[must_use]
     pub fn with_location(
         content: Option<Arc<dyn JavaCharSequence>>,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
         Self::with_boundaries_and_location(
-            JavaString::from_rust_str(COMMENT_PREFIX),
+            Utf16String::from_rust_str(COMMENT_PREFIX),
             content,
-            JavaString::from_rust_str(COMMENT_SUFFIX),
+            Utf16String::from_rust_str(COMMENT_SUFFIX),
             template_name,
             line,
             col,
@@ -75,10 +75,10 @@ impl Comment {
     /// 对应 Java: `Comment#Comment(String,CharSequence,String,String,int,int)`。
     #[must_use]
     pub fn with_boundaries_and_location(
-        prefix: JavaString,
+        prefix: Utf16String,
         content: Option<Arc<dyn JavaCharSequence>>,
-        suffix: JavaString,
-        template_name: Option<JavaString>,
+        suffix: Utf16String,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -95,7 +95,7 @@ impl Comment {
         }
     }
 
-    fn compute_comment(&self) -> Result<JavaString, TextUtilsError> {
+    fn compute_comment(&self) -> Result<Utf16String, TextUtilsError> {
         if let Some(value) = read_lock(&self.computed_comment).as_ref() {
             return Ok(value.clone());
         }
@@ -107,18 +107,18 @@ impl Comment {
         result.extend_from_slice(self.prefix.as_utf16());
         result.extend_from_slice(content.as_utf16());
         result.extend_from_slice(self.suffix.as_utf16());
-        let result = JavaString::from_utf16(result);
+        let result = Utf16String::from_utf16(result);
         *write_lock(&self.computed_comment) = Some(result.clone());
         Ok(result)
     }
 
     /// 返回 parser 保留的注释前缀。
-    pub(crate) const fn prefix(&self) -> &JavaString {
+    pub(crate) const fn prefix(&self) -> &Utf16String {
         &self.prefix
     }
 
     /// 返回 parser 保留的注释后缀。
-    pub(crate) const fn suffix(&self) -> &JavaString {
+    pub(crate) const fn suffix(&self) -> &Utf16String {
         &self.suffix
     }
 }
@@ -147,15 +147,15 @@ impl JavaCharSequence for Comment {
             .char_at_content(index.wrapping_sub(prefix_length))
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.compute_comment()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         let prefix_length = self.prefix.len() as i32;
         let content_end = prefix_length.wrapping_add(self.textual_event.get_content_length()?);
         if start >= prefix_length && end < content_end {
@@ -173,11 +173,11 @@ impl IComment for Comment {
         Some(self)
     }
 
-    fn get_comment(&self) -> Result<Option<JavaString>, TextUtilsError> {
+    fn get_comment(&self) -> Result<Option<Utf16String>, TextUtilsError> {
         self.compute_comment().map(Some)
     }
 
-    fn get_content(&self) -> Result<Option<JavaString>, TextUtilsError> {
+    fn get_content(&self) -> Result<Option<Utf16String>, TextUtilsError> {
         self.textual_event.get_content_text()
     }
 }
@@ -187,7 +187,7 @@ impl ITemplateEvent for Comment {
         self.textual_event.as_template_event().has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.textual_event.as_template_event().get_template_name()
     }
 

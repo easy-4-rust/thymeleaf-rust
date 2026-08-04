@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaNumber, JavaString, ValidateError};
+use crate::util::{JavaNumber, Utf16String, ValidateError};
 
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
@@ -41,9 +41,9 @@ impl MultiplicationExpression {
 }
 
 impl IStandardExpression for MultiplicationExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         self.operation
-            .get_string_representation(Some(&JavaString::from_rust_str("*")))
+            .get_string_representation(Some(&Utf16String::from_rust_str("*")))
     }
 
     fn execute_with_context(
@@ -80,6 +80,6 @@ impl super::MultiplicationDivisionRemainderExpression for MultiplicationExpressi
 
 fn display_unwrapped(value: &TemplateValue) -> String {
     literal_unwrapped_string(value)
-        .unwrap_or_else(|| JavaString::from_rust_str("null"))
+        .unwrap_or_else(|| Utf16String::from_rust_str("null"))
         .to_string_lossy()
 }

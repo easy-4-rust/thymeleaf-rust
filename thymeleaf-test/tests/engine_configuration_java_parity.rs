@@ -12,7 +12,7 @@ use thymeleaf::linkbuilder::{ILinkBuilder, StandardLinkBuilder};
 use thymeleaf::messageresolver::{IMessageResolver, StandardMessageResolver};
 use thymeleaf::standard::StandardDialect;
 use thymeleaf::templateresolver::{ITemplateResolver, StringTemplateResolver};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{
     DialectConfiguration, EngineConfiguration, IDialect, IEngineConfiguration, TemplateMode,
 };
@@ -47,21 +47,21 @@ fn unescape(value: &str) -> String {
 
 fn template_resolver(name: &str, order: Option<i32>) -> Arc<dyn ITemplateResolver> {
     let mut resolver = StringTemplateResolver::new();
-    resolver.set_name(Some(JavaString::from_rust_str(name)));
+    resolver.set_name(Some(Utf16String::from_rust_str(name)));
     resolver.set_order(order);
     Arc::new(resolver)
 }
 
 fn message_resolver(name: &str, order: Option<i32>) -> Arc<dyn IMessageResolver> {
     let mut resolver = StandardMessageResolver::new();
-    resolver.set_name(Some(JavaString::from_rust_str(name)));
+    resolver.set_name(Some(Utf16String::from_rust_str(name)));
     resolver.set_order(order);
     Arc::new(resolver)
 }
 
 fn link_builder(name: &str, order: Option<i32>) -> Arc<dyn ILinkBuilder> {
     let mut builder = StandardLinkBuilder::new();
-    builder.set_name(Some(JavaString::from_rust_str(name)));
+    builder.set_name(Some(Utf16String::from_rust_str(name)));
     builder.set_order(order);
     Arc::new(builder)
 }
@@ -84,10 +84,10 @@ fn configuration(
     .expect("engine configuration")
 }
 
-fn joined_names<T: ?Sized>(values: Vec<&T>, name: impl Fn(&T) -> Option<&JavaString>) -> String {
+fn joined_names<T: ?Sized>(values: Vec<&T>, name: impl Fn(&T) -> Option<&Utf16String>) -> String {
     values
         .into_iter()
-        .map(|value| name(value).map_or_else(String::new, JavaString::to_string_lossy))
+        .map(|value| name(value).map_or_else(String::new, Utf16String::to_string_lossy))
         .collect::<Vec<_>>()
         .join(",")
 }
@@ -194,7 +194,7 @@ fn engine_configuration_matches_java_golden() {
     assert_eq!(
         configuration
             .get_standard_dialect_prefix()
-            .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+            .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         fixture["dialect.prefix"]
     );
     assert_eq!(

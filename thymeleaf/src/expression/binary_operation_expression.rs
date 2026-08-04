@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{EvaluationUtils, JavaBigDecimal, JavaString, ValidateError};
+use crate::util::{EvaluationUtils, JavaBigDecimal, Utf16String, ValidateError};
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -82,14 +82,14 @@ pub(crate) fn evaluate_as_boolean(
 
 /// 对应 Java 语义：`BinaryOperationExpression` 的 `normalized_null_value` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn normalized_null_value(value: Option<Arc<TemplateValue>>) -> Arc<TemplateValue> {
-    value.unwrap_or_else(|| Arc::new(TemplateValue::string(JavaString::from_rust_str("null"))))
+    value.unwrap_or_else(|| Arc::new(TemplateValue::string(Utf16String::from_rust_str("null"))))
 }
 
 /// 对应 Java 语义：`BinaryOperationExpression` 的 `literal_unwrapped_string` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn literal_unwrapped_string(value: &TemplateValue) -> Option<JavaString> {
+pub(crate) fn literal_unwrapped_string(value: &TemplateValue) -> Option<Utf16String> {
     match value {
         TemplateValue::Literal(literal) => literal.get_value().cloned(),
-        _ => value.to_java_string(),
+        _ => value.to_utf16_string(),
     }
 }
 
@@ -165,7 +165,7 @@ pub(crate) fn compare_java_values(
 fn character_as_string(value: &Arc<TemplateValue>) -> Arc<TemplateValue> {
     match value.as_ref() {
         TemplateValue::Character(unit) => {
-            Arc::new(TemplateValue::string(JavaString::from_utf16(vec![*unit])))
+            Arc::new(TemplateValue::string(Utf16String::from_utf16(vec![*unit])))
         }
         _ => Arc::clone(value),
     }
@@ -215,8 +215,8 @@ impl BinaryOperationExpression {
     /// 对应 Java: `BinaryOperationExpression#getStringRepresentation()`。
     pub fn get_string_representation(
         &self,
-        operator: Option<&JavaString>,
-    ) -> StandardExpressionResult<JavaString> {
+        operator: Option<&Utf16String>,
+    ) -> StandardExpressionResult<Utf16String> {
         let mut units = Vec::new();
         append_operand(&mut units, self.left.as_ref())?;
         units.push(b' ' as u16);
@@ -226,7 +226,7 @@ impl BinaryOperationExpression {
         }
         units.push(b' ' as u16);
         append_operand(&mut units, self.right.as_ref())?;
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 }
 

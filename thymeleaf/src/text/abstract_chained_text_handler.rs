@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::panic::panic_any;
 
 use super::{ITextHandler, TextParseException};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const HANDLER_CLASS: &str = "org.thymeleaf.templateparser.text.ITextHandler";
 
@@ -40,8 +40,8 @@ impl ChainedTextHandlerRuntimeError {
     /// 精确保留失败回调签名及字段表达式 `this.next`。
     /// 对应 Java 语义：`AbstractChainedTextHandler` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_message(&self) -> JavaString {
-        JavaString::from_rust_str(&format!(
+    pub fn java_message(&self) -> Utf16String {
+        Utf16String::from_rust_str(&format!(
             "Cannot invoke \"{HANDLER_CLASS}.{}\" because \"this.next\" is null",
             self.method_signature
         ))
@@ -290,7 +290,7 @@ mod tests {
         TextParseException,
     };
     use crate::text::AbstractTextHandler;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
     const JAVA_GOLDEN: &str = include_str!("../../tests/fixtures/text_handler_adapters_golden.txt");
@@ -631,7 +631,7 @@ mod tests {
         assert_eq!(*error, cloned);
         assert_eq!(error.java_class_name(), "java.lang.NullPointerException");
         assert_eq!(error.to_string(), error.java_message().to_string_lossy());
-        assert_eq!(describe_java_string(None), "null");
+        assert_eq!(describe_utf16_string(None), "null");
     }
 
     fn abstract_no_op_cases(output: &mut String) {
@@ -669,7 +669,7 @@ mod tests {
     fn chained_checked_cases(output: &mut String) {
         for event in EVENTS {
             let checked = Box::new(TextParseException::with_message_at(
-                Some(&JavaString::from_rust_str(&format!(
+                Some(&Utf16String::from_rust_str(&format!(
                     "checked-{}",
                     event.key()
                 ))),
@@ -690,7 +690,7 @@ mod tests {
                     "same={};class=org.thymeleaf.templateparser.text.TextParseException;\
                      message={};line={};col={};buffer={}",
                     std::ptr::eq(error.as_ref(), expected_pointer),
-                    describe_java_string(error.get_message()),
+                    describe_utf16_string(error.get_message()),
                     error.get_line().expect("line"),
                     error.get_col().expect("col"),
                     describe_buffer(Some(&buffer))
@@ -722,7 +722,7 @@ mod tests {
                 format!(
                     "same={};class=java.lang.IllegalStateException;message={};buffer={}",
                     runtime.event == event && Arc::ptr_eq(&runtime.identity, &identity),
-                    describe_java_string(Some(&JavaString::from_rust_str(&format!(
+                    describe_utf16_string(Some(&Utf16String::from_rust_str(&format!(
                         "runtime-{}",
                         event.key()
                     )))),
@@ -755,7 +755,7 @@ mod tests {
                 format!(
                     "class={};message={};buffer={}",
                     error.java_class_name(),
-                    describe_java_string(Some(&error.java_message())),
+                    describe_utf16_string(Some(&error.java_message())),
                     describe_buffer(Some(&buffer))
                 ),
             );
@@ -801,7 +801,7 @@ mod tests {
         )
     }
 
-    fn describe_java_string(value: Option<&JavaString>) -> String {
+    fn describe_utf16_string(value: Option<&Utf16String>) -> String {
         value.map_or_else(
             || "null".to_owned(),
             |value| describe_buffer(Some(value.as_utf16())),

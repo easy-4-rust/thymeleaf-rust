@@ -7,7 +7,7 @@ use thymeleaf::element::{
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::{AttributeValueQuotes, IProcessableElementTag};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 use super::element_stack_text_processor::element_stack_text;
 
@@ -32,7 +32,7 @@ impl ElementStackAttrProcessor {
         Self {
             processor: AbstractElementTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
                 None,
@@ -96,8 +96,8 @@ fn process_tag(
 ) -> ProcessResult {
     let escaped = html_escape::encode_safe(&element_stack_text(context)).into_owned();
     structure_handler.set_attribute(
-        JavaString::from_rust_str("stack"),
-        Some(JavaString::from_rust_str(&escaped)),
+        Utf16String::from_rust_str("stack"),
+        Some(Utf16String::from_rust_str(&escaped)),
         Some(AttributeValueQuotes::DOUBLE),
     );
     Ok(())

@@ -3,7 +3,7 @@ use std::sync::{Arc, Weak};
 use crate::TemplateMode;
 use crate::context::IExpressionContext;
 use crate::engine::TemplateData;
-use crate::util::{DateUtils, JavaDate, JavaString, ValidateError};
+use crate::util::{DateUtils, JavaDate, Utf16String, ValidateError};
 
 /// 暴露当前模板、顶层模板、模板栈及求值开始时间。
 ///
@@ -35,7 +35,7 @@ impl ExecutionInfo {
 
     /// 返回当前叶模板名称。
     /// 对应 Java: `ExecutionInfo#getTemplateName()`。
-    pub fn get_template_name(&self) -> Option<JavaString> {
+    pub fn get_template_name(&self) -> Option<Utf16String> {
         self.template_context()?
             .as_template_context()?
             .get_template_data()
@@ -54,7 +54,7 @@ impl ExecutionInfo {
 
     /// 返回首次调用 TemplateEngine 的顶层模板名称。
     /// 对应 Java: `ExecutionInfo#getProcessedTemplateName()`。
-    pub fn get_processed_template_name(&self) -> Option<JavaString> {
+    pub fn get_processed_template_name(&self) -> Option<Utf16String> {
         self.template_context()?
             .as_template_context()?
             .get_template_stack()
@@ -74,7 +74,7 @@ impl ExecutionInfo {
 
     /// 返回从顶层到当前叶模板的名称快照。
     /// 对应 Java: `ExecutionInfo#getTemplateNames()`。
-    pub fn get_template_names(&self) -> Vec<Option<JavaString>> {
+    pub fn get_template_names(&self) -> Vec<Option<Utf16String>> {
         self.template_context()
             .and_then(|context| {
                 context

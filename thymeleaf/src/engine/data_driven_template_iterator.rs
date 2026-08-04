@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::{TemplateObject, TemplateValue};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{DataDrivenTemplateSignal, IThrottledTemplateWriterControl};
 
@@ -72,7 +72,7 @@ impl<T> DataDrivenTemplateIterator<T> {
 
     /// 设置 SSE 事件名前缀；`null` 或空字符串会清除前缀。
     /// 对应 Java: `DataDrivenTemplateIterator#setSseEventsPrefix()`。
-    pub fn set_sse_events_prefix(&mut self, sse_events_prefix: Option<&JavaString>) {
+    pub fn set_sse_events_prefix(&mut self, sse_events_prefix: Option<&Utf16String>) {
         self.sse_events_prefix = sse_events_prefix
             .filter(|prefix| !prefix.is_empty())
             .map(|prefix| prefix.as_utf16().to_vec());
@@ -293,8 +293,8 @@ impl TemplateObject for Mutex<DataDrivenTemplateIterator<Arc<TemplateValue>>> {
         "org.thymeleaf.engine.DataDrivenTemplateIterator"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.engine.DataDrivenTemplateIterator")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.engine.DataDrivenTemplateIterator")
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

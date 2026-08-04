@@ -15,7 +15,7 @@ use support::CorpusWebExchange;
 use thymeleaf::context::WebContext;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 
@@ -54,8 +54,8 @@ fn web_context_with_exchange_ok() {
 fn exchange_attribute_visible_in_template() {
     let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("greeting")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("greeting")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello Web",
         )))),
     );
@@ -67,20 +67,20 @@ fn exchange_attribute_visible_in_template() {
 fn exchange_attribute_count_and_names() {
     let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("a")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("a")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "1",
         )))),
     );
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("b")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("b")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "2",
         )))),
     );
     assert_eq!(exchange.get_attribute_count(), 2);
-    assert!(exchange.contains_attribute(Some(&JavaString::from_rust_str("a"))));
-    assert!(exchange.contains_attribute(Some(&JavaString::from_rust_str("b"))));
+    assert!(exchange.contains_attribute(Some(&Utf16String::from_rust_str("a"))));
+    assert!(exchange.contains_attribute(Some(&Utf16String::from_rust_str("b"))));
     let names = exchange.get_all_attribute_names();
     assert_eq!(names.len(), 2);
 }
@@ -89,14 +89,14 @@ fn exchange_attribute_count_and_names() {
 fn exchange_attribute_remove() {
     let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("tmp")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("tmp")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "x",
         )))),
     );
-    assert!(exchange.contains_attribute(Some(&JavaString::from_rust_str("tmp"))));
-    exchange.remove_attribute(Some(&JavaString::from_rust_str("tmp")));
-    assert!(!exchange.contains_attribute(Some(&JavaString::from_rust_str("tmp"))));
+    assert!(exchange.contains_attribute(Some(&Utf16String::from_rust_str("tmp"))));
+    exchange.remove_attribute(Some(&Utf16String::from_rust_str("tmp")));
+    assert!(!exchange.contains_attribute(Some(&Utf16String::from_rust_str("tmp"))));
 }
 
 // ===========================================================================
@@ -147,13 +147,13 @@ fn exchange_locale_available() {
 fn web_render_with_expression_and_attribute() {
     let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("user")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("user")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Alice",
         )))),
     );
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("show")),
+        Some(Utf16String::from_rust_str("show")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     let s = render_with_exchange(
@@ -167,11 +167,11 @@ fn web_render_with_expression_and_attribute() {
 fn web_render_loop_over_attribute() {
     let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     let items = vec![
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-        Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+        Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
     ];
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("items")),
+        Some(Utf16String::from_rust_str("items")),
         Some(Arc::new(TemplateValue::List(Arc::new(items)))),
     );
     let s = render_with_exchange(
@@ -197,13 +197,13 @@ fn separate_exchanges_do_not_share_attributes() {
     let exchange_a: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     let exchange_b: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
     exchange_a.set_attribute_value(
-        Some(JavaString::from_rust_str("only_a")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("only_a")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "yes",
         )))),
     );
-    assert!(exchange_a.contains_attribute(Some(&JavaString::from_rust_str("only_a"))));
-    assert!(!exchange_b.contains_attribute(Some(&JavaString::from_rust_str("only_a"))));
+    assert!(exchange_a.contains_attribute(Some(&Utf16String::from_rust_str("only_a"))));
+    assert!(!exchange_b.contains_attribute(Some(&Utf16String::from_rust_str("only_a"))));
 }
 
 // ===========================================================================
@@ -217,10 +217,10 @@ fn context_variables_share_identity_with_exchange_attributes() {
     //    把上下文变量写入 exchange 属性）；
     // ② exchange 属性 -> 模板 ${name} 可见（渲染读取 exchange 属性作为变量）。
     let exchange: Arc<dyn IWebExchange> = Arc::new(CorpusWebExchange::new());
-    let one = JavaString::from_rust_str("one");
-    let two = JavaString::from_rust_str("two values");
+    let one = Utf16String::from_rust_str("one");
+    let two = Utf16String::from_rust_str("two values");
 
-    let variables: Vec<(Option<JavaString>, Option<Arc<TemplateValue>>)> = vec![(
+    let variables: Vec<(Option<Utf16String>, Option<Arc<TemplateValue>>)> = vec![(
         Some(one.clone()),
         Some(Arc::new(TemplateValue::string(two.clone()))),
     )];
@@ -246,7 +246,7 @@ fn context_variables_share_identity_with_exchange_attributes() {
     // 方向 ①：WebContext.set_variable 后，exchange 属性 map 共享同一键值。
     let attribute = exchange
         .get_attribute_value(Some(&one))
-        .and_then(|value| value.to_java_string())
+        .and_then(|value| value.to_utf16_string())
         .map(|value| value.to_string_lossy());
     assert_eq!(
         attribute.as_deref(),
@@ -260,8 +260,8 @@ fn context_variables_share_identity_with_exchange_attributes() {
 
     // 方向 ②：exchange 属性在模板中作为变量可见（对称语义）。
     exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("greet")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("greet")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "hello from exchange",
         )))),
     );

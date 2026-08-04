@@ -4,10 +4,10 @@
 //! empty 表达式和无效输入。
 
 use thymeleaf::expression::FragmentExpression;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 // ===========================================================================

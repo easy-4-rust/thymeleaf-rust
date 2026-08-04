@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::ILinkBuilder;
 
@@ -18,7 +18,7 @@ use super::ILinkBuilder;
 ///
 /// 自 Thymeleaf 3.0.0 起提供。
 pub struct AbstractLinkBuilder<F> {
-    name: Option<JavaString>,
+    name: Option<Utf16String>,
     order: Option<i32>,
     build_link: F,
 }
@@ -38,7 +38,7 @@ impl<F> AbstractLinkBuilder<F> {
     /// 名称已初始化、顺序为空的抽象构建器等价对象。
     pub fn new(java_class_name: &'static str, build_link: F) -> Self {
         Self {
-            name: Some(JavaString::from_rust_str(java_class_name)),
+            name: Some(Utf16String::from_rust_str(java_class_name)),
             order: None,
             build_link,
         }
@@ -52,7 +52,7 @@ impl<F> AbstractLinkBuilder<F> {
     ///
     /// 当前名称；`None` 对应 Java `null`。
     #[must_use]
-    pub const fn get_name(&self) -> Option<&JavaString> {
+    pub const fn get_name(&self) -> Option<&Utf16String> {
         self.name.as_ref()
     }
 
@@ -63,7 +63,7 @@ impl<F> AbstractLinkBuilder<F> {
     /// # 参数
     ///
     /// - `name`：新的可空名称。
-    pub fn set_name(&mut self, name: Option<JavaString>) {
+    pub fn set_name(&mut self, name: Option<Utf16String>) {
         self.name = name;
     }
 
@@ -95,13 +95,13 @@ impl<F> ILinkBuilder for AbstractLinkBuilder<F>
 where
     F: Fn(
             &dyn IExpressionContext,
-            Option<&JavaString>,
-            Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-        ) -> Result<Option<JavaString>, TemplateProcessingException>
+            Option<&Utf16String>,
+            Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+        ) -> Result<Option<Utf16String>, TemplateProcessingException>
         + Send
         + Sync,
 {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.get_name()
     }
 
@@ -112,9 +112,9 @@ where
     fn build_link(
         &self,
         context: &dyn IExpressionContext,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         (self.build_link)(context, base, parameters)
     }
 }

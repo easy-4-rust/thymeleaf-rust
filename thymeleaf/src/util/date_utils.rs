@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::expression::{TemplateObject, TemplateValue};
 
-use super::{JavaLocale, JavaNumber, JavaString};
+use super::{JavaLocale, JavaNumber, Utf16String};
 
 /// Java `Date`/`Calendar` 的 Rust 时间值适配。
 /// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `JavaDate`。
@@ -96,9 +96,9 @@ impl TemplateObject for JavaDate {
         }
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         let local = self.local_date_time();
-        JavaString::from_rust_str(&format!(
+        Utf16String::from_rust_str(&format!(
             "{} {} {:02} {:02}:{:02}:{:02} {} {}",
             local.format("%a"),
             local.format("%b"),
@@ -117,7 +117,7 @@ impl TemplateObject for JavaDate {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, crate::expression::TemplateObjectPropertyError>>
     {
         (property_name.to_string_lossy() == "time").then(|| {
@@ -129,7 +129,7 @@ impl TemplateObject for JavaDate {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, crate::expression::TemplateObjectMethodError>>
     {
@@ -329,9 +329,9 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#format()`。
     pub fn format(
         target: Option<&JavaDate>,
-        pattern: Option<&JavaString>,
+        pattern: Option<&Utf16String>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, DateUtilsError> {
+    ) -> Result<Option<Utf16String>, DateUtilsError> {
         let Some(target) = target else {
             return Ok(None);
         };
@@ -369,8 +369,8 @@ impl DateUtils {
     pub fn month_name(
         target: Option<&JavaDate>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, DateUtilsError> {
-        Self::format(target, Some(&JavaString::from_rust_str("MMMM")), locale)
+    ) -> Result<Option<Utf16String>, DateUtilsError> {
+        Self::format(target, Some(&Utf16String::from_rust_str("MMMM")), locale)
     }
 
     /// 返回 Locale 对应的月份缩写。
@@ -379,8 +379,8 @@ impl DateUtils {
     pub fn month_name_short(
         target: Option<&JavaDate>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, DateUtilsError> {
-        Self::format(target, Some(&JavaString::from_rust_str("MMM")), locale)
+    ) -> Result<Option<Utf16String>, DateUtilsError> {
+        Self::format(target, Some(&Utf16String::from_rust_str("MMM")), locale)
     }
 
     /// 返回年份。
@@ -411,8 +411,8 @@ impl DateUtils {
     pub fn day_of_week_name(
         target: Option<&JavaDate>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, DateUtilsError> {
-        Self::format(target, Some(&JavaString::from_rust_str("EEEE")), locale)
+    ) -> Result<Option<Utf16String>, DateUtilsError> {
+        Self::format(target, Some(&Utf16String::from_rust_str("EEEE")), locale)
     }
 
     /// 返回 Locale 对应的星期缩写。
@@ -421,8 +421,8 @@ impl DateUtils {
     pub fn day_of_week_name_short(
         target: Option<&JavaDate>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, DateUtilsError> {
-        Self::format(target, Some(&JavaString::from_rust_str("EEE")), locale)
+    ) -> Result<Option<Utf16String>, DateUtilsError> {
+        Self::format(target, Some(&Utf16String::from_rust_str("EEE")), locale)
     }
 
     /// 返回 24 小时制小时。
@@ -457,10 +457,10 @@ impl DateUtils {
     /// `ZZZ` + `insert(26, ':')`，零偏移为 `+00:00` 而非 "Z"）。
     /// 对应 Java 语义：`DateUtils` 的 `format_iso` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn format_iso(target: Option<&JavaDate>) -> Option<JavaString> {
+    pub fn format_iso(target: Option<&JavaDate>) -> Option<Utf16String> {
         target.map(|target| {
             let local = target.local_date_time();
-            JavaString::from_rust_str(&format!(
+            Utf16String::from_rust_str(&format!(
                 "{}{}",
                 local.format("%Y-%m-%dT%H:%M:%S%.3f"),
                 iso_offset_colon(target.offset_seconds())
@@ -514,10 +514,10 @@ struct DateFormatKey {
 }
 
 impl DateFormatKey {
-    fn new(target: &JavaDate, format: Option<&JavaString>, locale: &JavaLocale) -> Self {
+    fn new(target: &JavaDate, format: Option<&Utf16String>, locale: &JavaLocale) -> Self {
         Self {
             format: format
-                .map(JavaString::to_string_lossy)
+                .map(Utf16String::to_string_lossy)
                 .unwrap_or_else(|| default_long_pattern(locale).to_owned()),
             time_zone: target.is_calendar().then(|| target.zone_display_name()),
             locale: locale.clone(),
@@ -705,7 +705,7 @@ fn format_java_pattern(
     zone_display_name: &str,
     pattern: &str,
     locale: &JavaLocale,
-) -> Result<JavaString, DateUtilsError> {
+) -> Result<Utf16String, DateUtilsError> {
     let mut output = String::new();
     let characters = pattern.chars().collect::<Vec<_>>();
     let mut index = 0usize;
@@ -746,7 +746,7 @@ fn format_java_pattern(
     if quoted {
         return Err(invalid("Unterminated quote in date pattern"));
     }
-    Ok(JavaString::from_rust_str(&output))
+    Ok(Utf16String::from_rust_str(&output))
 }
 
 fn append_pattern_field(
@@ -1075,7 +1075,7 @@ pub(crate) fn template_integer(
         Some(TemplateValue::Number(JavaNumber::Float(value))) => Ok(Some(*value as i32)),
         Some(TemplateValue::Number(JavaNumber::Double(value))) => Ok(Some(*value as i32)),
         Some(value) => value
-            .to_java_string()
+            .to_utf16_string()
             .and_then(|value| value.to_string_lossy().parse::<i32>().ok())
             .map(Some)
             .ok_or_else(|| invalid("Value cannot be evaluated as a number")),

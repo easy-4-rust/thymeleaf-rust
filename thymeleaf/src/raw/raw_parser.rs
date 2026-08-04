@@ -4,7 +4,7 @@ use std::io;
 use std::sync::{Mutex, OnceLock};
 use std::time::Instant;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IRawHandler, RawParseCause, RawParseException};
 
@@ -23,7 +23,7 @@ pub trait RawReader {
 /// 内存 Java String 的 Reader 实现。
 /// 对应 Java 语义：`RawParser` 的 Rust 侧类型 `RawStringReader`。
 pub struct RawStringReader {
-    value: JavaString,
+    value: Utf16String,
     position: usize,
     closed: bool,
 }
@@ -31,7 +31,7 @@ pub struct RawStringReader {
 impl RawStringReader {
     /// 创建从字符串起点读取的 Reader。
     #[must_use]
-    pub const fn new(value: JavaString) -> Self {
+    pub const fn new(value: Utf16String) -> Self {
         Self {
             value,
             position: 0,
@@ -134,7 +134,7 @@ impl RawParser {
     /// 对应 Java 语义：Java 接口/超类方法 `parseString()` 的 Rust 移植（`RawParser` 继承路径）。
     pub fn parse_string(
         &self,
-        document: Option<JavaString>,
+        document: Option<Utf16String>,
         handler: Option<&mut dyn IRawHandler>,
     ) -> Result<(), RawParserError> {
         let document =
@@ -259,7 +259,7 @@ fn nano_time() -> i64 {
 }
 
 fn wrap_io(error: io::Error) -> RawParseException {
-    let message = JavaString::from_rust_str(&error.to_string());
+    let message = Utf16String::from_rust_str(&error.to_string());
     RawParseException::with_cause(Some(RawParseCause::with_java_metadata(
         Box::new(error),
         "java.io.IOException",
@@ -271,7 +271,7 @@ fn wrap_java_runtime(class_name: &'static str, message: &'static str) -> RawPars
     RawParseException::with_cause(Some(RawParseCause::with_java_metadata(
         Box::new(JavaRuntimeError(message)),
         class_name,
-        Some(JavaString::from_rust_str(message)),
+        Some(Utf16String::from_rust_str(message)),
     )))
 }
 

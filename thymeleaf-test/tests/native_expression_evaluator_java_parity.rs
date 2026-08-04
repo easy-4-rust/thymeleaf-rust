@@ -10,11 +10,11 @@ use std::sync::Arc;
 use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::{TemplateObject, TemplateValue};
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn engine() -> TemplateEngine {
@@ -35,7 +35,7 @@ fn render(tmpl: &str, ctx: &dyn IContext) -> String {
 
 /// 测试用宿主对象：提供 JavaBean 风格属性与受控方法。
 struct Person {
-    name: JavaString,
+    name: Utf16String,
     age: i64,
 }
 
@@ -43,7 +43,7 @@ impl TemplateObject for Person {
     fn java_class_name(&self) -> &str {
         "com.example.Person"
     }
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         js(&format!("Person({})", self.name.to_string_lossy()))
     }
     fn as_any(&self) -> &dyn Any {
@@ -51,7 +51,7 @@ impl TemplateObject for Person {
     }
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
@@ -66,7 +66,7 @@ impl TemplateObject for Person {
     }
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         _arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectMethodError>>
     {

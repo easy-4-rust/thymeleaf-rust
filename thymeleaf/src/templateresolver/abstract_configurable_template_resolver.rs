@@ -7,7 +7,7 @@ use crate::cache::{
     AlwaysValidCacheEntryValidity, ICacheEntryValidity, NonCacheableCacheEntryValidity,
     TTLCacheEntryValidity,
 };
-use crate::util::{ContentTypeUtils, JavaString, PatternSpec, PatternSpecError};
+use crate::util::{ContentTypeUtils, PatternSpec, PatternSpecError, Utf16String};
 use crate::{TemplateMode, TemplateModeParseError};
 
 use super::{AbstractTemplateResolver, TemplateResolverError};
@@ -17,15 +17,15 @@ use super::{AbstractTemplateResolver, TemplateResolverError};
 /// 对应 Java: `org.thymeleaf.templateresolver.AbstractConfigurableTemplateResolver`。
 pub struct AbstractConfigurableTemplateResolver {
     resolver: AbstractTemplateResolver,
-    prefix: Option<JavaString>,
-    suffix: Option<JavaString>,
+    prefix: Option<Utf16String>,
+    suffix: Option<Utf16String>,
     force_suffix: bool,
-    character_encoding: Option<JavaString>,
+    character_encoding: Option<Utf16String>,
     template_mode: TemplateMode,
     force_template_mode: bool,
     cacheable: bool,
     cache_ttl_ms: Option<i64>,
-    template_aliases: HashMap<JavaString, JavaString>,
+    template_aliases: HashMap<Utf16String, Utf16String>,
     xml_template_mode_pattern_spec: PatternSpec,
     html_template_mode_pattern_spec: PatternSpec,
     text_template_mode_pattern_spec: PatternSpec,
@@ -86,23 +86,23 @@ impl AbstractConfigurableTemplateResolver {
 
     /// 返回资源名前缀。对应 Java: `AbstractConfigurableTemplateResolver#getPrefix()`。
     #[must_use]
-    pub fn get_prefix(&self) -> Option<&JavaString> {
+    pub fn get_prefix(&self) -> Option<&Utf16String> {
         self.prefix.as_ref()
     }
 
     /// 设置资源名前缀。对应 Java: `AbstractConfigurableTemplateResolver#setPrefix(String)`。
-    pub fn set_prefix(&mut self, prefix: Option<JavaString>) {
+    pub fn set_prefix(&mut self, prefix: Option<Utf16String>) {
         self.prefix = prefix;
     }
 
     /// 返回资源名后缀。对应 Java: `AbstractConfigurableTemplateResolver#getSuffix()`。
     #[must_use]
-    pub fn get_suffix(&self) -> Option<&JavaString> {
+    pub fn get_suffix(&self) -> Option<&Utf16String> {
         self.suffix.as_ref()
     }
 
     /// 设置资源名后缀。对应 Java: `AbstractConfigurableTemplateResolver#setSuffix(String)`。
-    pub fn set_suffix(&mut self, suffix: Option<JavaString>) {
+    pub fn set_suffix(&mut self, suffix: Option<Utf16String>) {
         self.suffix = suffix;
     }
 
@@ -121,14 +121,14 @@ impl AbstractConfigurableTemplateResolver {
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#getCharacterEncoding()`。
     #[must_use]
-    pub fn get_character_encoding(&self) -> Option<&JavaString> {
+    pub fn get_character_encoding(&self) -> Option<&Utf16String> {
         self.character_encoding.as_ref()
     }
 
     /// 设置读取资源使用的字符编码。
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#setCharacterEncoding(String)`。
-    pub fn set_character_encoding(&mut self, character_encoding: Option<JavaString>) {
+    pub fn set_character_encoding(&mut self, character_encoding: Option<Utf16String>) {
         self.character_encoding = character_encoding;
     }
 
@@ -224,7 +224,7 @@ impl AbstractConfigurableTemplateResolver {
 
     /// 返回模板别名表。
     #[must_use]
-    pub const fn get_template_aliases(&self) -> &HashMap<JavaString, JavaString> {
+    pub const fn get_template_aliases(&self) -> &HashMap<Utf16String, Utf16String> {
         &self.template_aliases
     }
 
@@ -234,7 +234,7 @@ impl AbstractConfigurableTemplateResolver {
     /// 并保持当前表不变。相同 alias 的新值覆盖旧值。
     pub fn set_template_aliases(
         &mut self,
-        template_aliases: Option<&HashMap<JavaString, JavaString>>,
+        template_aliases: Option<&HashMap<Utf16String, Utf16String>>,
     ) {
         if let Some(template_aliases) = template_aliases {
             self.template_aliases.extend(
@@ -248,7 +248,7 @@ impl AbstractConfigurableTemplateResolver {
     /// 增加或替换一个模板别名。
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#addTemplateAlias(String,String)`。
-    pub fn add_template_alias(&mut self, alias: JavaString, template_name: JavaString) {
+    pub fn add_template_alias(&mut self, alias: Utf16String, template_name: Utf16String) {
         self.template_aliases.insert(alias, template_name);
     }
 
@@ -262,8 +262,8 @@ impl AbstractConfigurableTemplateResolver {
     /// 先校验 alias，再校验模板名，保留 Java 的精确消息和失败顺序。
     pub fn add_template_alias_nullable(
         &mut self,
-        alias: Option<JavaString>,
-        template_name: Option<JavaString>,
+        alias: Option<Utf16String>,
+        template_name: Option<Utf16String>,
     ) -> Result<(), TemplateResolverError> {
         let alias = alias.ok_or_else(|| {
             TemplateResolverError::InvalidArgument("Alias cannot be null".to_owned())
@@ -440,7 +440,7 @@ impl AbstractConfigurableTemplateResolver {
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#computeResourceName(...)`。
     #[must_use]
-    pub fn compute_resource_name(&self, template: &JavaString) -> JavaString {
+    pub fn compute_resource_name(&self, template: &Utf16String) -> Utf16String {
         let unaliased_name = self
             .template_aliases
             .get(template)
@@ -466,14 +466,14 @@ impl AbstractConfigurableTemplateResolver {
         if should_apply_suffix {
             result.extend_from_slice(suffix.expect("suffix checked").as_utf16());
         }
-        JavaString::from_utf16(result)
+        Utf16String::from_utf16(result)
     }
 
     /// 按模式规格、资源扩展名和默认值计算模板模式。
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#computeTemplateMode(...)`。
     #[must_use]
-    pub fn compute_template_mode(&self, template: &JavaString) -> TemplateMode {
+    pub fn compute_template_mode(&self, template: &Utf16String) -> TemplateMode {
         let text = template.to_string_lossy();
         for (spec, template_mode) in [
             (&self.xml_template_mode_pattern_spec, TemplateMode::XML),
@@ -508,7 +508,7 @@ impl AbstractConfigurableTemplateResolver {
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#computeValidity(...)`。
     #[must_use]
-    pub fn compute_validity(&self, template: &JavaString) -> Arc<dyn ICacheEntryValidity> {
+    pub fn compute_validity(&self, template: &Utf16String) -> Arc<dyn ICacheEntryValidity> {
         let text = template.to_string_lossy();
         let cacheable = if self
             .cacheable_pattern_spec
@@ -549,7 +549,7 @@ impl std::ops::DerefMut for AbstractConfigurableTemplateResolver {
     }
 }
 
-fn is_empty_or_whitespace(value: &JavaString) -> bool {
+fn is_empty_or_whitespace(value: &Utf16String) -> bool {
     value.as_utf16().iter().all(|character| {
         matches!(
             *character,

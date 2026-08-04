@@ -146,7 +146,7 @@ pub use i_expression_object_factory::{ExpressionObjectNames, IExpressionObjectFa
 pub use i_expression_objects::IExpressionObjects;
 pub use i_standard_conversion_service::{
     IStandardConversionService, JavaConversionObject, JavaConversionResult, JavaConversionValue,
-    JavaStringConversionResult, JavaTargetClass, StandardConversionError,
+    JavaTargetClass, StandardConversionError, Utf16StringConversionResult,
 };
 pub use i_standard_expression::{
     IStandardExpression, StandardExpressionError, StandardExpressionResult,

@@ -10,14 +10,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::{AttributeValueQuotes, IModel, ITemplateEvent};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -35,10 +35,10 @@ impl ModelAttributeTagProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("model")),
+                Some(Utf16String::from_rust_str("model")),
                 true,
                 250,
                 true,
@@ -90,7 +90,7 @@ fn rename_model(
     context: &dyn ITemplateContext,
     model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     let first_event = model.get(0);
@@ -104,7 +104,7 @@ fn rename_model(
     if Arc::ptr_eq(&first_event, &last_event) {
         let standalone = factory
             .create_standalone_element_tag(
-                JavaString::from_rust_str("ctx"),
+                Utf16String::from_rust_str("ctx"),
                 Some(&attributes),
                 AttributeValueQuotes::DOUBLE,
                 false,
@@ -116,14 +116,14 @@ fn rename_model(
     } else {
         let open = factory
             .create_open_element_tag(
-                JavaString::from_rust_str("ctx"),
+                Utf16String::from_rust_str("ctx"),
                 Some(&attributes),
                 AttributeValueQuotes::DOUBLE,
                 false,
             )
             .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
         let close = factory
-            .create_close_element_tag(JavaString::from_rust_str("ctx"), false, false)
+            .create_close_element_tag(Utf16String::from_rust_str("ctx"), false, false)
             .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
         let open_event: Arc<dyn ITemplateEvent> = open;
         let close_event: Arc<dyn ITemplateEvent> = close;

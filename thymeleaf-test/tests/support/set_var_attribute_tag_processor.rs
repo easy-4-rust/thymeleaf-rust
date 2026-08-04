@@ -11,14 +11,14 @@ use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IProcessableElementTag;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &dyn IProcessableElementTag,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult;
 
@@ -36,10 +36,10 @@ impl SetVarAttributeTagProcessor {
         Self {
             processor: AbstractAttributeTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("setvar")),
+                Some(Utf16String::from_rust_str("setvar")),
                 true,
                 1,
                 true,
@@ -91,11 +91,11 @@ fn set_variable(
     _context: &dyn ITemplateContext,
     _tag: &dyn IProcessableElementTag,
     _attribute_name: &AttributeName,
-    attribute_value: Option<JavaString>,
+    attribute_value: Option<Utf16String>,
     structure_handler: &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult {
     structure_handler.set_local_variable(
-        JavaString::from_rust_str("var"),
+        Utf16String::from_rust_str("var"),
         attribute_value.map(TemplateValue::string).map(Arc::new),
     );
     Ok(())

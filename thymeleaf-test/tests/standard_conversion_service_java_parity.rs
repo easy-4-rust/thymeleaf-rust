@@ -6,10 +6,10 @@ use std::ptr;
 
 use thymeleaf::expression::{
     AbstractStandardConversionService, IStandardConversionService, JavaConversionObject,
-    JavaConversionResult, JavaConversionValue, JavaStringConversionResult, JavaTargetClass,
-    NoOpToken, StandardConversionError, StandardConversionService,
+    JavaConversionResult, JavaConversionValue, JavaTargetClass, NoOpToken, StandardConversionError,
+    StandardConversionService, Utf16StringConversionResult,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str =
@@ -30,7 +30,7 @@ fn standard_conversion_service_objects_match_java_golden() {
 fn cover_public_adapter_contracts() {
     let service = StandardConversionService::default();
     let created = StandardConversionService::new();
-    let source = JavaString::from_rust_str("source");
+    let source = Utf16String::from_rust_str("source");
     let context = ();
 
     assert!(matches!(
@@ -49,15 +49,15 @@ fn cover_public_adapter_contracts() {
     );
     assert_eq!(JavaTargetClass::String.get_name(), "java.lang.String");
 
-    let borrowed: JavaConversionResult<'_> = JavaStringConversionResult::Borrowed(&source).into();
+    let borrowed: JavaConversionResult<'_> = Utf16StringConversionResult::Borrowed(&source).into();
     assert!(matches!(
         borrowed,
         JavaConversionResult::BorrowedString(value) if ptr::eq(value, &source)
     ));
     let owned: JavaConversionResult<'_> =
-        JavaStringConversionResult::Owned(JavaString::from_rust_str("owned")).into();
+        Utf16StringConversionResult::Owned(Utf16String::from_rust_str("owned")).into();
     assert!(matches!(owned, JavaConversionResult::OwnedString(_)));
-    let null: JavaConversionResult<'_> = JavaStringConversionResult::Null.into();
+    let null: JavaConversionResult<'_> = Utf16StringConversionResult::Null.into();
     assert!(matches!(null, JavaConversionResult::Null));
 
     let borrowed_number = 9_i32;
@@ -99,7 +99,7 @@ fn emit_no_op_cases(output: &mut String) {
 
 fn emit_default_service_cases(output: &mut String) {
     let service: &dyn IStandardConversionService = &StandardConversionService::new();
-    let source = JavaString::from_rust_str("source");
+    let source = Utf16String::from_rust_str("source");
     let object = ToStringProbe::value("object");
     let null_object = ToStringProbe::null();
     let throwing_object = ToStringProbe::throwing();
@@ -142,7 +142,7 @@ fn emit_default_service_cases(output: &mut String) {
         ),
     );
     let borrowing_object = BorrowingProbe {
-        value: JavaString::from_rust_str("shared"),
+        value: Utf16String::from_rust_str("shared"),
     };
     emit(
         output,
@@ -203,7 +203,7 @@ fn emit_default_service_cases(output: &mut String) {
 fn emit_custom_service_cases(output: &mut String) {
     let service: &dyn IStandardConversionService = &CustomService;
     let context = ();
-    let source = JavaString::from_rust_str("source");
+    let source = Utf16String::from_rust_str("source");
     let object = ToStringProbe::value("object");
 
     emit_conversion(
@@ -266,13 +266,13 @@ fn emit_custom_service_cases(output: &mut String) {
 }
 
 struct ToStringProbe {
-    result: Result<Option<JavaString>, StandardConversionError>,
+    result: Result<Option<Utf16String>, StandardConversionError>,
 }
 
 impl ToStringProbe {
     fn value(value: &str) -> Self {
         Self {
-            result: Ok(Some(JavaString::from_rust_str(value))),
+            result: Ok(Some(Utf16String::from_rust_str(value))),
         }
     }
 
@@ -291,10 +291,10 @@ impl ToStringProbe {
 }
 
 impl JavaConversionObject for ToStringProbe {
-    fn java_to_string(&self) -> Result<JavaStringConversionResult<'_>, StandardConversionError> {
+    fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
         match &self.result {
-            Ok(Some(value)) => Ok(JavaStringConversionResult::Owned(value.clone())),
-            Ok(None) => Ok(JavaStringConversionResult::Null),
+            Ok(Some(value)) => Ok(Utf16StringConversionResult::Owned(value.clone())),
+            Ok(None) => Ok(Utf16StringConversionResult::Null),
             Err(StandardConversionError::Runtime {
                 exception_class_name,
                 message,
@@ -308,12 +308,12 @@ impl JavaConversionObject for ToStringProbe {
 }
 
 struct BorrowingProbe {
-    value: JavaString,
+    value: Utf16String,
 }
 
 impl JavaConversionObject for BorrowingProbe {
-    fn java_to_string(&self) -> Result<JavaStringConversionResult<'_>, StandardConversionError> {
-        Ok(JavaStringConversionResult::Borrowed(&self.value))
+    fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
+        Ok(Utf16StringConversionResult::Borrowed(&self.value))
     }
 }
 
@@ -324,19 +324,19 @@ impl AbstractStandardConversionService for CustomService {
         &self,
         context: Option<&dyn Any>,
         object: &'a dyn JavaConversionObject,
-    ) -> Result<JavaStringConversionResult<'a>, StandardConversionError> {
+    ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
         let value = match object.java_to_string()? {
-            JavaStringConversionResult::Null => "null".to_owned(),
-            JavaStringConversionResult::Borrowed(value) => value.to_string_lossy(),
-            JavaStringConversionResult::Owned(value) => value.to_string_lossy(),
+            Utf16StringConversionResult::Null => "null".to_owned(),
+            Utf16StringConversionResult::Borrowed(value) => value.to_string_lossy(),
+            Utf16StringConversionResult::Owned(value) => value.to_string_lossy(),
         };
         let prefix = if context.is_some() {
             "context:"
         } else {
             "null:"
         };
-        Ok(JavaStringConversionResult::Owned(
-            JavaString::from_rust_str(&format!("{prefix}{value}")),
+        Ok(Utf16StringConversionResult::Owned(
+            Utf16String::from_rust_str(&format!("{prefix}{value}")),
         ))
     }
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::model::IModel;
-use crate::util::{JavaString, Validate, ValidateError};
+use crate::util::{Utf16String, Validate, ValidateError};
 use crate::xmldeclaration::IXMLDeclarationStructureHandler;
 
 /// 引擎内部 XMLDeclaration 结构动作状态机。
@@ -9,10 +9,10 @@ use crate::xmldeclaration::IXMLDeclarationStructureHandler;
 /// 对应 Java: `org.thymeleaf.engine.XMLDeclarationStructureHandler`。
 pub(crate) struct XMLDeclarationStructureHandler {
     pub(crate) set_xml_declaration: bool,
-    pub(crate) set_xml_declaration_keyword: Option<JavaString>,
-    pub(crate) set_xml_declaration_version: Option<JavaString>,
-    pub(crate) set_xml_declaration_encoding: Option<JavaString>,
-    pub(crate) set_xml_declaration_standalone: Option<JavaString>,
+    pub(crate) set_xml_declaration_keyword: Option<Utf16String>,
+    pub(crate) set_xml_declaration_version: Option<Utf16String>,
+    pub(crate) set_xml_declaration_encoding: Option<Utf16String>,
+    pub(crate) set_xml_declaration_standalone: Option<Utf16String>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -45,10 +45,10 @@ impl XMLDeclarationStructureHandler {
     /// 方法先重置，再校验 keyword；其余三个属性允许为空。
     pub(crate) fn set_xml_declaration_nullable(
         &mut self,
-        keyword: Option<JavaString>,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
+        keyword: Option<Utf16String>,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
     ) -> Result<(), ValidateError> {
         self.reset();
         Validate::not_null(keyword.as_ref(), Some("Keyword cannot be null"))?;
@@ -91,10 +91,10 @@ impl IXMLDeclarationStructureHandler for XMLDeclarationStructureHandler {
 
     fn set_xml_declaration(
         &mut self,
-        keyword: JavaString,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
+        keyword: Utf16String,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
     ) {
         self.set_xml_declaration_nullable(Some(keyword), version, encoding, standalone)
             .expect("Rust non-null XML-declaration boundary must satisfy Java validation");

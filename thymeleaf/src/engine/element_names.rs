@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::{Arc, OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::templatemode::TemplateMode;
-use crate::util::{JavaString, java_case_fold_unit};
+use crate::util::{Utf16String, java_case_fold_unit};
 
 use super::{ElementName, ElementNameError, HTMLElementName, TextElementName, XMLElementName};
 
@@ -133,14 +133,14 @@ impl ElementNames {
             return Err(ElementNamesError::UnknownTemplateMode(mode));
         }
         let text = checked_buffer(buffer, offset, length, mode.is_text())?;
-        Self::for_name(Some(mode), Some(&JavaString::from_utf16(text.to_vec())))
+        Self::for_name(Some(mode), Some(&Utf16String::from_utf16(text.to_vec())))
     }
 
     /// 从完整 Java String 解析任意结构化模板模式的元素名。
     /// 对应 Java: `ElementNames#forName()`。
     pub fn for_name(
         template_mode: Option<TemplateMode>,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<ElementNameValue, ElementNamesError> {
         let mode = require_mode(template_mode)?;
         match mode {
@@ -155,8 +155,8 @@ impl ElementNames {
     /// 对应 Java 语义：`ElementNames` 的 `for_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_name_with_prefix(
         template_mode: Option<TemplateMode>,
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<ElementNameValue, ElementNamesError> {
         let mode = require_mode(template_mode)?;
         match mode {
@@ -176,7 +176,7 @@ impl ElementNames {
     /// 解析并缓存文本模式元素名；空字符串合法。
     /// 对应 Java: `ElementNames#forTextName()`。
     pub fn for_text_name(
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<TextElementName>, ElementNamesError> {
         let element_name = element_name.ok_or(ElementNamesError::IllegalArgument(
             "Name cannot be null or empty",
@@ -192,7 +192,7 @@ impl ElementNames {
     /// 解析并缓存 XML 元素名。
     /// 对应 Java 语义：`ElementNames` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<XMLElementName>, ElementNamesError> {
         let element_name = require_non_blank_name(element_name)?;
         match repository_get_or_store(TemplateMode::XML, element_name, || build_xml(element_name))?
@@ -205,7 +205,7 @@ impl ElementNames {
     /// 解析并缓存 HTML 元素名。
     /// 对应 Java 语义：`ElementNames` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<HTMLElementName>, ElementNamesError> {
         let element_name = require_non_blank_name(element_name)?;
         match repository_get_or_store(TemplateMode::HTML, element_name, || {
@@ -219,8 +219,8 @@ impl ElementNames {
     /// 使用显式 prefix 解析文本模式元素名。
     /// 对应 Java 语义：`ElementNames` 的 `for_text_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_text_name_with_prefix(
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<TextElementName>, ElementNamesError> {
         let element_name = element_name.ok_or(ElementNamesError::IllegalArgument(
             "Name cannot be null (nor empty if prefix is not empty)",
@@ -248,8 +248,8 @@ impl ElementNames {
     /// 使用显式 prefix 解析 XML 元素名。
     /// 对应 Java 语义：`ElementNames` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<XMLElementName>, ElementNamesError> {
         let element_name = require_non_blank_name(element_name)?;
         if !has_non_blank_prefix(prefix) {
@@ -270,8 +270,8 @@ impl ElementNames {
     /// 使用显式 prefix 解析 HTML 元素名。
     /// 对应 Java 语义：`ElementNames` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<HTMLElementName>, ElementNamesError> {
         let element_name = require_non_blank_name(element_name)?;
         if !has_non_blank_prefix(prefix) {
@@ -296,7 +296,7 @@ struct ElementNamesRepository {
 
 fn repository_get_or_store(
     mode: TemplateMode,
-    lookup: &JavaString,
+    lookup: &Utf16String,
     builder: impl FnOnce() -> Result<ElementNameValue, ElementNamesError>,
 ) -> Result<ElementNameValue, ElementNamesError> {
     let repository = repository(mode);
@@ -340,7 +340,7 @@ fn repository(mode: TemplateMode) -> &'static RwLock<ElementNamesRepository> {
     })
 }
 
-fn repository_key(mode: TemplateMode, value: &JavaString) -> Vec<u16> {
+fn repository_key(mode: TemplateMode, value: &Utf16String) -> Vec<u16> {
     if mode.is_case_sensitive() {
         value.as_utf16().to_vec()
     } else {
@@ -352,7 +352,7 @@ fn repository_key(mode: TemplateMode, value: &JavaString) -> Vec<u16> {
     }
 }
 
-fn build_text(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> {
+fn build_text(name: &Utf16String) -> Result<ElementNameValue, ElementNamesError> {
     let (prefix, local) = split_first(name, &[u16::from(b':')], false);
     Ok(ElementNameValue::Text(Arc::new(TextElementName::for_name(
         prefix,
@@ -360,7 +360,7 @@ fn build_text(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> 
     )?)))
 }
 
-fn build_xml(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> {
+fn build_xml(name: &Utf16String) -> Result<ElementNameValue, ElementNamesError> {
     let (prefix, local) = split_first(name, &[u16::from(b':')], false);
     Ok(ElementNameValue::Xml(Arc::new(XMLElementName::for_name(
         prefix,
@@ -368,7 +368,7 @@ fn build_xml(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> {
     )?)))
 }
 
-fn build_html(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> {
+fn build_html(name: &Utf16String) -> Result<ElementNameValue, ElementNamesError> {
     let units = name.as_utf16();
     let split = units.iter().position(|unit| matches!(*unit, 0x3a | 0x2d));
     let (prefix, local) = match split {
@@ -381,14 +381,14 @@ fn build_html(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> 
                 (None, name.clone())
             } else {
                 (
-                    Some(JavaString::from_utf16(units[..index].to_vec())),
-                    JavaString::from_utf16(units[index + 1..].to_vec()),
+                    Some(Utf16String::from_utf16(units[..index].to_vec())),
+                    Utf16String::from_utf16(units[index + 1..].to_vec()),
                 )
             }
         }
         Some(index) => (
-            Some(JavaString::from_utf16(units[..index].to_vec())),
-            JavaString::from_utf16(units[index + 1..].to_vec()),
+            Some(Utf16String::from_utf16(units[..index].to_vec())),
+            Utf16String::from_utf16(units[index + 1..].to_vec()),
         ),
     };
     Ok(ElementNameValue::Html(Arc::new(HTMLElementName::for_name(
@@ -398,16 +398,16 @@ fn build_html(name: &JavaString) -> Result<ElementNameValue, ElementNamesError> 
 }
 
 fn split_first(
-    name: &JavaString,
+    name: &Utf16String,
     separators: &[u16],
     _unused: bool,
-) -> (Option<JavaString>, JavaString) {
+) -> (Option<Utf16String>, Utf16String) {
     let units = name.as_utf16();
     match units.iter().position(|unit| separators.contains(unit)) {
         Some(0) | None => (None, name.clone()),
         Some(index) => (
-            Some(JavaString::from_utf16(units[..index].to_vec())),
-            JavaString::from_utf16(units[index + 1..].to_vec()),
+            Some(Utf16String::from_utf16(units[..index].to_vec())),
+            Utf16String::from_utf16(units[index + 1..].to_vec()),
         ),
     }
 }
@@ -418,7 +418,7 @@ fn require_mode(mode: Option<TemplateMode>) -> Result<TemplateMode, ElementNames
     ))
 }
 
-fn require_non_blank_name(name: Option<&JavaString>) -> Result<&JavaString, ElementNamesError> {
+fn require_non_blank_name(name: Option<&Utf16String>) -> Result<&Utf16String, ElementNamesError> {
     let name = name.ok_or(ElementNamesError::IllegalArgument(
         "Name cannot be null or empty",
     ))?;
@@ -458,19 +458,19 @@ fn checked_buffer(
     Ok(&buffer[start..start + count])
 }
 
-fn java_trim_is_empty(value: &JavaString) -> bool {
+fn java_trim_is_empty(value: &Utf16String) -> bool {
     value.as_utf16().iter().all(|unit| *unit <= 0x20)
 }
 
-fn has_non_blank_prefix(prefix: Option<&JavaString>) -> bool {
+fn has_non_blank_prefix(prefix: Option<&Utf16String>) -> bool {
     prefix.is_some_and(|value| !java_trim_is_empty(value))
 }
 
-fn namespaced(prefix: &JavaString, name: &JavaString) -> JavaString {
+fn namespaced(prefix: &Utf16String, name: &Utf16String) -> Utf16String {
     let mut result = prefix.as_utf16().to_vec();
     result.push(u16::from(b':'));
     result.extend_from_slice(name.as_utf16());
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
 fn equals_ascii_ignore_case(value: &[u16], expected: &str) -> bool {

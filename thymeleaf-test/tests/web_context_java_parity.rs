@@ -19,7 +19,7 @@ use thymeleaf::expression::{
     ExpressionObjectNames, IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult,
     TemplateValue,
 };
-use thymeleaf::util::{JavaLocale, JavaString, ValidateError};
+use thymeleaf::util::{JavaLocale, Utf16String, ValidateError};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{IEngineConfiguration, ITemplateEngine, TemplateEngine};
 
@@ -372,12 +372,16 @@ fn emit_names(output: &mut BTreeMap<String, String>, key: &str, context: &dyn IC
     emit_snapshot(output, key, context.get_variable_names().snapshot());
 }
 
-fn emit_snapshot(output: &mut BTreeMap<String, String>, key: &str, names: Vec<Option<JavaString>>) {
+fn emit_snapshot(
+    output: &mut BTreeMap<String, String>,
+    key: &str,
+    names: Vec<Option<Utf16String>>,
+) {
     let rendered = names
         .iter()
         .map(|name| {
             name.as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
         })
         .collect::<Vec<_>>()
         .join(", ");
@@ -387,7 +391,7 @@ fn emit_snapshot(output: &mut BTreeMap<String, String>, key: &str, names: Vec<Op
 fn emit_value(output: &mut BTreeMap<String, String>, key: &str, value: Option<Arc<TemplateValue>>) {
     let rendered = value
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy());
     emit(output, key, rendered);
 }
@@ -403,8 +407,8 @@ fn emit_error<T>(
     }
 }
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn locale(language_tag: &str, country: &str) -> JavaLocale {
@@ -472,7 +476,7 @@ impl IExpressionObjectFactory for ProbeFactory {
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         let Some(web_context) = context.as_web_context() else {
             panic!("factory lost IWebContext capability");
@@ -487,11 +491,11 @@ impl IExpressionObjectFactory for ProbeFactory {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context);
         let name =
-            expression_object_name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+            expression_object_name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         Ok(Some(string_value(&format!("Marker({name})"))))
     }
 
-    fn is_cacheable(&self, _expression_object_name: Option<&JavaString>) -> bool {
+    fn is_cacheable(&self, _expression_object_name: Option<&Utf16String>) -> bool {
         true
     }
 }

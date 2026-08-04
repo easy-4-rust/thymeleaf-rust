@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebApplication;
 use thymeleaf::{ClassLoaderTemplateResource, ITemplateResource, WebApplicationTemplateResource};
 
@@ -288,7 +288,7 @@ impl TestWebApplication {
 }
 
 impl IWebApplication for TestWebApplication {
-    fn contains_attribute(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -296,24 +296,24 @@ impl IWebApplication for TestWebApplication {
         0
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         IndexMap::new()
     }
 
-    fn get_attribute_value(&self, _name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, _name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         None
     }
 
-    fn set_attribute_value(&self, _name: Option<JavaString>, _value: Option<Arc<TemplateValue>>) {}
+    fn set_attribute_value(&self, _name: Option<Utf16String>, _value: Option<Arc<TemplateValue>>) {}
 
-    fn remove_attribute(&self, _name: Option<&JavaString>) {}
+    fn remove_attribute(&self, _name: Option<&Utf16String>) {}
 
-    fn resource_exists(&self, path: Option<&JavaString>) -> bool {
-        let path = path.map(JavaString::to_string_lossy);
+    fn resource_exists(&self, path: Option<&Utf16String>) -> bool {
+        let path = path.map(Utf16String::to_string_lossy);
         *self.last_exists_path.lock().expect("exists path lock") = path.clone();
         path.is_some_and(|path| {
             self.resources
@@ -323,8 +323,8 @@ impl IWebApplication for TestWebApplication {
         })
     }
 
-    fn get_resource_as_stream(&self, path: Option<&JavaString>) -> Option<Box<dyn Read + Send>> {
-        let path = path.map(JavaString::to_string_lossy);
+    fn get_resource_as_stream(&self, path: Option<&Utf16String>) -> Option<Box<dyn Read + Send>> {
+        let path = path.map(Utf16String::to_string_lossy);
         *self.last_reader_path.lock().expect("reader path lock") = path.clone();
         path.and_then(|path| {
             self.resources

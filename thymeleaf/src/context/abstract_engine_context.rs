@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
 use crate::model::IModelFactory;
-use crate::util::{JavaLocale, JavaString, ValidateError};
+use crate::util::{JavaLocale, Utf16String, ValidateError};
 use crate::{IEngineConfiguration, TemplateResolutionAttributes};
 
 use super::{IExpressionContext, ITemplateContext, IdentifierSequences};
@@ -117,10 +117,10 @@ impl AbstractEngineContext {
         &self,
         template_context: &dyn ITemplateContext,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         use_absent_message_representation: bool,
-    ) -> crate::messageresolver::MessageResolutionResult<Option<JavaString>> {
+    ) -> crate::messageresolver::MessageResolutionResult<Option<Utf16String>> {
         let message_resolvers = self.configuration.get_message_resolvers();
         for message_resolver in &message_resolvers {
             if let Some(message) = message_resolver.resolve_message(
@@ -155,15 +155,15 @@ impl AbstractEngineContext {
     pub fn build_link(
         &self,
         expression_context: &dyn IExpressionContext,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<JavaString, TemplateProcessingException> {
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Utf16String, TemplateProcessingException> {
         for link_builder in self.configuration.get_link_builders() {
             if let Some(link) = link_builder.build_link(expression_context, base, parameters)? {
                 return Ok(link);
             }
         }
-        let base = base.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+        let base = base.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         Err(TemplateProcessingException::new(Some(format!(
             "No configured link builder instance was able to build link with base \"{base}\" and \
              parameters {}",
@@ -182,7 +182,7 @@ impl AbstractEngineContext {
 }
 
 fn format_parameters(
-    parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 ) -> String {
     let Some(parameters) = parameters else {
         return "null".to_owned();
@@ -195,13 +195,13 @@ fn format_parameters(
         result.push_str(
             &name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
         result.push('=');
         result.push_str(
             &value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
         );
     }

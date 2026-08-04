@@ -5,7 +5,7 @@ use crate::exceptions::TemplateProcessingException;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
 use crate::serializer::StandardSerializers;
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{AbstractStandardInliner, IInliner, StandardInlinerEscaping};
@@ -30,9 +30,9 @@ impl StandardCSSInliner {
 }
 
 impl IInliner for StandardCSSInliner {
-    fn get_name(&self) -> &JavaString {
-        static NAME: OnceLock<JavaString> = OnceLock::new();
-        NAME.get_or_init(|| JavaString::from_rust_str("StandardCSSInliner"))
+    fn get_name(&self) -> &Utf16String {
+        static NAME: OnceLock<Utf16String> = OnceLock::new();
+        NAME.get_or_init(|| Utf16String::from_rust_str("StandardCSSInliner"))
     }
 
     fn inline_text(

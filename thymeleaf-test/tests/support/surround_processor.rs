@@ -10,14 +10,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::{IModel, ITemplateEvent};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -36,10 +36,10 @@ impl SurroundProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("surround")),
+                Some(Utf16String::from_rust_str("surround")),
                 true,
                 1000,
                 true,
@@ -93,16 +93,16 @@ fn surround_model(
     context: &dyn ITemplateContext,
     model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     let model_factory = context.get_model_factory();
     let after: Arc<dyn ITemplateEvent> = model_factory
-        .create_comment(JavaString::from_rust_str("surround"))
+        .create_comment(Utf16String::from_rust_str("surround"))
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
     model.add(Some(after)).map_err(model_error)?;
     let before: Arc<dyn ITemplateEvent> = model_factory
-        .create_comment(JavaString::from_rust_str("surround"))
+        .create_comment(Utf16String::from_rust_str("surround"))
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
     model.insert(0, Some(before)).map_err(model_error)
 }

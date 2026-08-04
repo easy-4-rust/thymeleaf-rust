@@ -5,7 +5,7 @@
 
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{IStandardExpression, StandardExpressionResult};
 
@@ -52,7 +52,7 @@ impl ExpressionSequence {
 
     /// 返回逗号连接且不插入空格的当前字符串表示。
     /// 对应 Java: `ExpressionSequence#getStringRepresentation()`。
-    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let expressions = read_recovering_poison(&self.expressions);
         let mut units = Vec::new();
         for (index, expression) in expressions.iter().enumerate() {
@@ -66,7 +66,7 @@ impl ExpressionSequence {
                 None => units.extend("null".encode_utf16()),
             }
         }
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 }
 

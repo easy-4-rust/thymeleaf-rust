@@ -9,7 +9,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, JavaLocale, JavaString};
+use thymeleaf::util::{JavaDate, JavaLocale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf_examples::business::calendar_util::calendar_for;
 use thymeleaf_examples::controllers::GtvgController;
@@ -31,11 +31,11 @@ fn fixed_today() -> JavaDate {
 /// 引擎装配 —— 对应 `GTVGFilter#buildTemplateEngine`。
 fn build_template_engine() -> TemplateEngine {
     let mut template_resolver = thymeleaf::templateresolver::FileTemplateResolver::new();
-    template_resolver.set_prefix(Some(JavaString::from_rust_str(concat!(
+    template_resolver.set_prefix(Some(Utf16String::from_rust_str(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/templates/"
     ))));
-    template_resolver.set_suffix(Some(JavaString::from_rust_str(".html")));
+    template_resolver.set_suffix(Some(Utf16String::from_rust_str(".html")));
     let engine = TemplateEngine::new();
     engine
         .set_template_resolver(Arc::new(template_resolver))
@@ -99,8 +99,8 @@ fn home_message_resolution_is_locale_sensitive() {
     let engine = build_template_engine();
     // home_en.properties 覆盖 home.properties（en Locale）
     let locale = JavaLocale::new(
-        JavaString::from_rust_str("en"),
-        JavaString::from_rust_str(""),
+        Utf16String::from_rust_str("en"),
+        Utf16String::from_rust_str(""),
     );
     let exchange: Arc<dyn IWebExchange> =
         Arc::new(GtvgWebExchange::new(GtvgWebRequest::new("/", &[]), locale));

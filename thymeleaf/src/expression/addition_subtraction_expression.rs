@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ComplexExpression, IStandardExpression};
 
@@ -8,13 +8,13 @@ use super::{ComplexExpression, IStandardExpression};
 /// `org.thymeleaf.standard.expression.AdditionSubtractionExpression`。
 pub trait AdditionSubtractionExpression: ComplexExpression {
     /// 加法操作符。
-    fn addition_operator() -> JavaString {
-        JavaString::from_rust_str("+")
+    fn addition_operator() -> Utf16String {
+        Utf16String::from_rust_str("+")
     }
 
     /// 减法操作符。
-    fn subtraction_operator() -> JavaString {
-        JavaString::from_rust_str("-")
+    fn subtraction_operator() -> Utf16String {
+        Utf16String::from_rust_str("-")
     }
 
     /// 判断左操作数是否符合上游解析约束。

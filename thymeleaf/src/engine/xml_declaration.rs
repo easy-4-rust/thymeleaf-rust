@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, ITemplateEvent, IXMLDeclaration};
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -18,11 +18,11 @@ const ATTRIBUTE_NAME_STANDALONE: &str = "standalone";
 /// 对应 Java: `org.thymeleaf.engine.XMLDeclaration`。
 pub struct XMLDeclaration {
     template_event: AbstractTemplateEvent,
-    keyword: Option<JavaString>,
-    version: Option<JavaString>,
-    encoding: Option<JavaString>,
-    standalone: Option<JavaString>,
-    xml_declaration: JavaString,
+    keyword: Option<Utf16String>,
+    version: Option<Utf16String>,
+    encoding: Option<Utf16String>,
+    standalone: Option<Utf16String>,
+    xml_declaration: Utf16String,
 }
 
 impl XMLDeclaration {
@@ -30,10 +30,10 @@ impl XMLDeclaration {
     ///
     /// 对应 Java: `XMLDeclaration#XMLDeclaration(String)`。
     #[must_use]
-    pub fn new(encoding: Option<JavaString>) -> Self {
+    pub fn new(encoding: Option<Utf16String>) -> Self {
         Self::with_components(
-            Some(JavaString::from_rust_str(DEFAULT_KEYWORD)),
-            Some(JavaString::from_rust_str(DEFAULT_VERSION)),
+            Some(Utf16String::from_rust_str(DEFAULT_KEYWORD)),
+            Some(Utf16String::from_rust_str(DEFAULT_VERSION)),
             encoding,
             None,
         )
@@ -45,10 +45,10 @@ impl XMLDeclaration {
     /// `XMLDeclaration#XMLDeclaration(String,String,String,String)`。
     #[must_use]
     pub fn with_components(
-        keyword: Option<JavaString>,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
+        keyword: Option<Utf16String>,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
     ) -> Self {
         let xml_declaration = compute_xml_declaration(
             keyword.as_ref(),
@@ -73,12 +73,12 @@ impl XMLDeclaration {
     #[allow(clippy::too_many_arguments)]
     #[must_use]
     pub fn with_location(
-        xml_declaration: Option<JavaString>,
-        keyword: Option<JavaString>,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
-        template_name: Option<JavaString>,
+        xml_declaration: Option<Utf16String>,
+        keyword: Option<Utf16String>,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -102,23 +102,23 @@ impl XMLDeclaration {
 }
 
 impl IXMLDeclaration for XMLDeclaration {
-    fn get_keyword(&self) -> Option<&JavaString> {
+    fn get_keyword(&self) -> Option<&Utf16String> {
         self.keyword.as_ref()
     }
 
-    fn get_version(&self) -> Option<&JavaString> {
+    fn get_version(&self) -> Option<&Utf16String> {
         self.version.as_ref()
     }
 
-    fn get_encoding(&self) -> Option<&JavaString> {
+    fn get_encoding(&self) -> Option<&Utf16String> {
         self.encoding.as_ref()
     }
 
-    fn get_standalone(&self) -> Option<&JavaString> {
+    fn get_standalone(&self) -> Option<&Utf16String> {
         self.standalone.as_ref()
     }
 
-    fn get_xml_declaration(&self) -> Option<&JavaString> {
+    fn get_xml_declaration(&self) -> Option<&Utf16String> {
         Some(&self.xml_declaration)
     }
 }
@@ -128,7 +128,7 @@ impl ITemplateEvent for XMLDeclaration {
         self.template_event.has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.template_event.get_template_name()
     }
 
@@ -165,11 +165,11 @@ impl Display for XMLDeclaration {
 }
 
 fn compute_xml_declaration(
-    keyword: Option<&JavaString>,
-    version: Option<&JavaString>,
-    encoding: Option<&JavaString>,
-    standalone: Option<&JavaString>,
-) -> JavaString {
+    keyword: Option<&Utf16String>,
+    version: Option<&Utf16String>,
+    encoding: Option<&Utf16String>,
+    standalone: Option<&Utf16String>,
+) -> Utf16String {
     let mut result = Vec::with_capacity(40);
     result.extend("<?".encode_utf16());
     append_nullable(&mut result, keyword);
@@ -177,10 +177,10 @@ fn compute_xml_declaration(
     append_attribute(&mut result, ATTRIBUTE_NAME_ENCODING, encoding);
     append_attribute(&mut result, ATTRIBUTE_NAME_STANDALONE, standalone);
     result.extend("?>".encode_utf16());
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
-fn append_attribute(result: &mut Vec<u16>, name: &str, value: Option<&JavaString>) {
+fn append_attribute(result: &mut Vec<u16>, name: &str, value: Option<&Utf16String>) {
     let Some(value) = value else {
         return;
     };
@@ -191,7 +191,7 @@ fn append_attribute(result: &mut Vec<u16>, name: &str, value: Option<&JavaString
     result.push(u16::from(b'"'));
 }
 
-fn append_nullable(result: &mut Vec<u16>, value: Option<&JavaString>) {
+fn append_nullable(result: &mut Vec<u16>, value: Option<&Utf16String>) {
     match value {
         Some(value) => result.extend_from_slice(value.as_utf16()),
         None => result.extend("null".encode_utf16()),

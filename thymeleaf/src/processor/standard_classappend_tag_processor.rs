@@ -1,7 +1,7 @@
 use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 
 use super::{
     AbstractStandardExpressionAttributeTagProcessor, delegate_standard_element_tag_processor,
@@ -23,13 +23,13 @@ impl StandardClassappendTagProcessor {
 
     /// 创建 Processor。
     /// 对应 Java 语义：`StandardClassappendTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(dialect_prefix: Option<JavaString>) -> Result<Self, TemplateProcessingException> {
-        let target_name = JavaString::from_rust_str(Self::TARGET_ATTR_NAME);
+    pub fn new(dialect_prefix: Option<Utf16String>) -> Result<Self, TemplateProcessingException> {
+        let target_name = Utf16String::from_rust_str(Self::TARGET_ATTR_NAME);
         Ok(Self {
             processor: AbstractStandardExpressionAttributeTagProcessor::with_restricted_execution(
                 TemplateMode::HTML,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 true,
                 false,
@@ -41,7 +41,7 @@ impl StandardClassappendTagProcessor {
                       structure_handler| {
                     let raw = expression_result
                         .as_deref()
-                        .and_then(TemplateValue::to_java_string);
+                        .and_then(TemplateValue::to_utf16_string);
                     let Some(mut escaped) = EscapedAttributeUtils::escape_attribute(
                         Some(TemplateMode::HTML),
                         raw.as_ref(),
@@ -72,10 +72,10 @@ impl StandardClassappendTagProcessor {
 
 delegate_standard_element_tag_processor!(StandardClassappendTagProcessor, processor);
 
-fn join_with_space(left: &JavaString, right: &JavaString) -> JavaString {
+fn join_with_space(left: &Utf16String, right: &Utf16String) -> Utf16String {
     let mut units = Vec::with_capacity(left.len() + right.len() + 1);
     units.extend_from_slice(left.as_utf16());
     units.push(0x20);
     units.extend_from_slice(right.as_utf16());
-    JavaString::from_utf16(units)
+    Utf16String::from_utf16(units)
 }

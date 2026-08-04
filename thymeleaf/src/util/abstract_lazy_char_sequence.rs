@@ -2,7 +2,7 @@ use std::io;
 use std::sync::RwLock;
 
 use super::{
-    IWritableCharSequence, JavaCharSequence, JavaHashCode, JavaString, JavaWriter, TextUtilsError,
+    IWritableCharSequence, JavaCharSequence, JavaHashCode, JavaWriter, TextUtilsError, Utf16String,
 };
 
 /// `AbstractLazyCharSequence` 子类提供的延迟解析与未解析写出行为。
@@ -12,7 +12,7 @@ pub trait LazyCharSequenceResolver: Send + Sync {
     fn java_class_name(&self) -> &str;
 
     /// 对应子类 `resolveText()`；允许返回 Java null。
-    fn resolve_text(&self) -> Option<JavaString>;
+    fn resolve_text(&self) -> Option<Utf16String>;
 
     /// 对应子类 `writeUnresolved(Writer)`。
     fn write_unresolved(&self, writer: &mut dyn JavaWriter) -> io::Result<()>;
@@ -26,7 +26,7 @@ pub trait LazyCharSequenceResolver: Send + Sync {
 /// resolvedText”这一关键语义；该能力使解析事件可以进入跨线程模板缓存。
 pub struct AbstractLazyCharSequence<R: LazyCharSequenceResolver> {
     resolver: R,
-    resolved_text: RwLock<Option<JavaString>>,
+    resolved_text: RwLock<Option<Utf16String>>,
 }
 
 impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
@@ -43,7 +43,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     ///
     /// 若 resolver 返回 null，缓存仍保持 null，后续访问会再次求值。
     /// 对应 Java: `AbstractLazyCharSequence#getText()`。
-    pub fn get_text(&self) -> Option<JavaString> {
+    pub fn get_text(&self) -> Option<Utf16String> {
         if let Some(value) = read_lock(&self.resolved_text).as_ref() {
             return Some(value.clone());
         }
@@ -75,8 +75,8 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     }
 
     /// 返回解析后的 Java String。
-    /// 对应 Java 语义：`AbstractLazyCharSequence` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> Result<JavaString, TextUtilsError> {
+    /// 对应 Java 语义：`AbstractLazyCharSequence` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.get_text().ok_or(TextUtilsError::NullPointer)
     }
 }
@@ -92,15 +92,15 @@ impl<R: LazyCharSequenceResolver> JavaCharSequence for AbstractLazyCharSequence<
             .java_char_at(index)
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
-        self.to_java_string()
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+        self.to_utf16_string()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.get_text()
             .ok_or(TextUtilsError::NullPointer)?
             .java_sub_sequence(start, end)

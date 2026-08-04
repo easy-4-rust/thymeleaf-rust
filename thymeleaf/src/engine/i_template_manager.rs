@@ -1,6 +1,6 @@
 use crate::context::{IContext, ITemplateContext};
 use crate::model::IModel;
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 use crate::{IThrottledTemplateProcessor, TemplateMode, TemplateSpec};
 
 use super::TemplateData;
@@ -12,13 +12,13 @@ pub trait ITemplateManager {
     /// 清理解析缓存和解耦逻辑缓存。
     fn clear_caches(&self);
     /// 清理指定模板的缓存项。
-    fn clear_caches_for(&self, template: &JavaString);
+    fn clear_caches_for(&self, template: &Utf16String);
     /// 独立解析模板。
     fn parse_standalone(
         &self,
         context: &dyn ITemplateContext,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         template_mode: Option<TemplateMode>,
         use_cache: bool,
         fail_if_not_exists: bool,
@@ -27,7 +27,7 @@ pub trait ITemplateManager {
     fn parse_string(
         &self,
         owner_template_data: &TemplateData,
-        template: &JavaString,
+        template: &Utf16String,
         line_offset: i32,
         col_offset: i32,
         template_mode: Option<TemplateMode>,

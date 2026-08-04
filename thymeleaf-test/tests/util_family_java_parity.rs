@@ -18,11 +18,11 @@
 use std::sync::Arc;
 
 use thymeleaf::util::{
-    AggregateCharSequence, JavaCharSequence, JavaHashCode, JavaString, TextUtils,
+    AggregateCharSequence, JavaCharSequence, JavaHashCode, TextUtils, Utf16String,
 };
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 // ===========================================================================
@@ -32,9 +32,9 @@ fn js(value: &str) -> JavaString {
 /// 与 Java 完全相同的穷举：全部 textLen × textx/texty 三组件切分组合，
 /// 逐项断言 toString/length/charAt/subSequence/hashCode/equals/contentEquals。
 #[test]
-fn aggregate_char_sequence_exhaustive_matches_java_string_semantics() {
+fn aggregate_char_sequence_exhaustive_matches_utf16_string_semantics() {
     let base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let mut old_text: Option<JavaString> = None;
+    let mut old_text: Option<Utf16String> = None;
 
     for text_len in 0..base.len() {
         let text = js(&base[..text_len]);
@@ -54,7 +54,7 @@ fn aggregate_char_sequence_exhaustive_matches_java_string_semantics() {
                 .expect("aggregate construction");
 
                 // assertEquals(text, as.toString())
-                assert_eq!(text, aggregate.to_java_string().expect("toString"));
+                assert_eq!(text, aggregate.to_utf16_string().expect("toString"));
                 // assertTrue(text.hashCode() == as.hashCode())
                 assert_eq!(
                     text.java_hash_code(),
@@ -83,7 +83,7 @@ fn aggregate_char_sequence_exhaustive_matches_java_string_semantics() {
                 for sub_x in 0..=text_len {
                     for sub_y in 0..=text_len - sub_x {
                         let expected =
-                            JavaString::from_utf16(text.as_utf16()[sub_x..sub_x + sub_y].to_vec());
+                            Utf16String::from_utf16(text.as_utf16()[sub_x..sub_x + sub_y].to_vec());
                         let actual = aggregate
                             .sub_sequence(sub_x as i32, (sub_x + sub_y) as i32)
                             .expect("subSequence");
@@ -232,7 +232,7 @@ fn expression_utils_member_forbidden_matches_java() {
         fn java_class_name(&self) -> &str {
             &self.class_name
         }
-        fn to_java_string(&self) -> JavaString {
+        fn to_utf16_string(&self) -> Utf16String {
             js(&self.class_name)
         }
         fn as_any(&self) -> &dyn Any {

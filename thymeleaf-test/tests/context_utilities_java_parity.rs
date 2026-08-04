@@ -16,7 +16,7 @@ use thymeleaf::context::{
     IdentifierSequencesError, LazyContextVariable, WebContext,
 };
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebExchange;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -330,7 +330,7 @@ fn emit_value(output: &mut BTreeMap<String, String>, key: &str, value: Option<Ar
         key,
         value
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
+            .and_then(TemplateValue::to_utf16_string)
             .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
     );
 }
@@ -350,8 +350,8 @@ fn parse_golden(input: &str) -> BTreeMap<String, String> {
         .collect()
 }
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {

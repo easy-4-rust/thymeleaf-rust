@@ -7,7 +7,7 @@ use std::sync::Arc;
 use thymeleaf::expression::{
     JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str = include_str!("../../thymeleaf/tests/fixtures/token_golden.txt");
@@ -33,16 +33,16 @@ fn cover_public_adapter_contracts() {
     assert!(matches!(
         owned.get_string_representation(),
         Ok(JavaTokenStringResult::Owned(value))
-            if value == JavaString::from_rust_str("owned")
+            if value == Utf16String::from_rust_str("owned")
     ));
 
     let runtime = TokenError::runtime("example.TokenException", "failure");
     assert_eq!(runtime.java_class_name(), "example.TokenException");
     assert_eq!(runtime.to_string(), "failure");
 
-    let one = JavaString::from_rust_str("a");
+    let one = Utf16String::from_rust_str("a");
     let index_error =
-        Token::<JavaString>::is_token_char(Some(&one), i32::MAX).expect_err("index error");
+        Token::<Utf16String>::is_token_char(Some(&one), i32::MAX).expect_err("index error");
     assert_eq!(
         index_error.java_class_name(),
         "java.lang.StringIndexOutOfBoundsException"
@@ -54,10 +54,10 @@ fn cover_public_adapter_contracts() {
 }
 
 fn emit_value_cases(output: &mut String) {
-    let source = Arc::new(JavaString::from_rust_str("source"));
+    let source = Arc::new(Utf16String::from_rust_str("source"));
     let string_token = Token::new(Some(Arc::clone(&source)));
     let shared_probe = Arc::new(SharedStringProbe {
-        shared: JavaString::from_rust_str("shared"),
+        shared: Utf16String::from_rust_str("shared"),
     });
     let object_token = Token::new(Some(Arc::clone(&shared_probe)));
 
@@ -117,7 +117,7 @@ fn emit_value_cases(output: &mut String) {
         ),
     );
 
-    let null_token = Token::<JavaString>::new(None);
+    let null_token = Token::<Utf16String>::new(None);
     emit(
         output,
         "value.nullGet",
@@ -152,24 +152,24 @@ fn emit_exception_cases(output: &mut String) {
     emit_boolean_outcome(
         output,
         "char.null",
-        Token::<JavaString>::is_token_char(None, 0),
+        Token::<Utf16String>::is_token_char(None, 0),
     );
-    let empty = JavaString::from_rust_str("");
+    let empty = Utf16String::from_rust_str("");
     emit_boolean_outcome(
         output,
         "char.negative",
-        Token::<JavaString>::is_token_char(Some(&empty), -1),
+        Token::<Utf16String>::is_token_char(Some(&empty), -1),
     );
     emit_boolean_outcome(
         output,
         "char.empty",
-        Token::<JavaString>::is_token_char(Some(&empty), 0),
+        Token::<Utf16String>::is_token_char(Some(&empty), 0),
     );
-    let one = JavaString::from_rust_str("a");
+    let one = Utf16String::from_rust_str("a");
     emit_boolean_outcome(
         output,
         "char.afterEnd",
-        Token::<JavaString>::is_token_char(Some(&one), 1),
+        Token::<Utf16String>::is_token_char(Some(&one), 1),
     );
     match TokenParsingTracer::trace(None) {
         Ok(_) => emit(output, "trace.null", "OK:unexpected"),
@@ -192,9 +192,9 @@ fn emit_readable_character_cases(output: &mut String) {
     ];
     let mut result = String::with_capacity(boundaries.len());
     for boundary in boundaries {
-        let context = JavaString::from_utf16([boundary]);
+        let context = Utf16String::from_utf16([boundary]);
         result.push(
-            if Token::<JavaString>::is_token_char(Some(&context), 0).expect("valid boundary") {
+            if Token::<Utf16String>::is_token_char(Some(&context), 0).expect("valid boundary") {
                 '1'
             } else {
                 '0'
@@ -208,7 +208,7 @@ fn emit_readable_character_cases(output: &mut String) {
         "a - b", "a-+b", "foo-bar", "12.3-4", "12.-x", "x-.12",
     ];
     for (index, context) in dash_contexts.iter().enumerate() {
-        let traced = TokenParsingTracer::trace(Some(&JavaString::from_rust_str(context)))
+        let traced = TokenParsingTracer::trace(Some(&Utf16String::from_rust_str(context)))
             .expect("dash trace");
         emit(
             output,
@@ -226,20 +226,20 @@ fn emit_exhaustive_character_cases(output: &mut String) {
 
     for code_unit in u16::MIN..=u16::MAX {
         all_bmp.push(code_unit);
-        let single = JavaString::from_utf16([code_unit]);
+        let single = Utf16String::from_utf16([code_unit]);
         single_hash = mix_boolean(
             single_hash,
-            Token::<JavaString>::is_token_char(Some(&single), 0).expect("single BMP"),
+            Token::<Utf16String>::is_token_char(Some(&single), 0).expect("single BMP"),
         );
-        let left_dash = JavaString::from_utf16([code_unit, u16::from(b'-')]);
+        let left_dash = Utf16String::from_utf16([code_unit, u16::from(b'-')]);
         left_dash_hash = mix_boolean(
             left_dash_hash,
-            Token::<JavaString>::is_token_char(Some(&left_dash), 1).expect("left dash BMP"),
+            Token::<Utf16String>::is_token_char(Some(&left_dash), 1).expect("left dash BMP"),
         );
-        let right_dash = JavaString::from_utf16([u16::from(b'-'), code_unit]);
+        let right_dash = Utf16String::from_utf16([u16::from(b'-'), code_unit]);
         right_dash_hash = mix_boolean(
             right_dash_hash,
-            Token::<JavaString>::is_token_char(Some(&right_dash), 0).expect("right dash BMP"),
+            Token::<Utf16String>::is_token_char(Some(&right_dash), 0).expect("right dash BMP"),
         );
     }
 
@@ -247,7 +247,7 @@ fn emit_exhaustive_character_cases(output: &mut String) {
     emit(output, "exhaustive.leftDashBmpHash", hex(left_dash_hash));
     emit(output, "exhaustive.rightDashBmpHash", hex(right_dash_hash));
 
-    let all_bmp_string = JavaString::from_utf16(all_bmp);
+    let all_bmp_string = Utf16String::from_utf16(all_bmp);
     let traced_bmp = TokenParsingTracer::trace(Some(&all_bmp_string)).expect("BMP trace");
     emit(
         output,
@@ -272,11 +272,11 @@ fn emit_exhaustive_character_cases(output: &mut String) {
                 .expect("pool index");
             units.push(pool[index]);
         }
-        let context = JavaString::from_utf16(units);
+        let context = Utf16String::from_utf16(units);
         for position in 0..length {
             decision_hash = mix_boolean(
                 decision_hash,
-                Token::<JavaString>::is_token_char(
+                Token::<Utf16String>::is_token_char(
                     Some(&context),
                     i32::try_from(position).expect("position"),
                 )
@@ -301,20 +301,20 @@ fn emit_trace_cases(output: &mut String) {
     emit(
         output,
         "trace.empty",
-        TokenParsingTracer::trace(Some(&JavaString::from_rust_str("")))
+        TokenParsingTracer::trace(Some(&Utf16String::from_rust_str("")))
             .expect("empty trace")
             .to_string_lossy(),
     );
     emit(
         output,
         "trace.mixed",
-        TokenParsingTracer::trace(Some(&JavaString::from_rust_str(
+        TokenParsingTracer::trace(Some(&Utf16String::from_rust_str(
             "foo-bar + 12-3 -- .-. ${x}",
         )))
         .expect("mixed trace")
         .to_string_lossy(),
     );
-    let utf16_trace = TokenParsingTracer::trace(Some(&JavaString::from_utf16([
+    let utf16_trace = TokenParsingTracer::trace(Some(&Utf16String::from_utf16([
         0x00B7, 0x037E, 0xD800, 0xF900,
     ])))
     .expect("UTF-16 trace");
@@ -322,7 +322,7 @@ fn emit_trace_cases(output: &mut String) {
 }
 
 struct SharedStringProbe {
-    shared: JavaString,
+    shared: Utf16String,
 }
 
 impl JavaTokenValue for SharedStringProbe {
@@ -354,7 +354,7 @@ struct OwnedProbe;
 
 impl JavaTokenValue for OwnedProbe {
     fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
-        Ok(JavaTokenStringResult::Owned(JavaString::from_rust_str(
+        Ok(JavaTokenStringResult::Owned(Utf16String::from_rust_str(
             "owned",
         )))
     }
@@ -411,7 +411,7 @@ const fn mix_boolean(hash: u64, value: bool) -> u64 {
     (hash ^ if value { 1 } else { 0 }).wrapping_mul(FNV_PRIME)
 }
 
-fn mix_string(mut hash: u64, value: &JavaString) -> u64 {
+fn mix_string(mut hash: u64, value: &Utf16String) -> u64 {
     for unit in value.as_utf16() {
         hash = (hash ^ u64::from(unit & 0x00FF)).wrapping_mul(FNV_PRIME);
         hash = (hash ^ u64::from(unit >> 8)).wrapping_mul(FNV_PRIME);
@@ -419,7 +419,7 @@ fn mix_string(mut hash: u64, value: &JavaString) -> u64 {
     hash
 }
 
-fn hash_string(value: &JavaString) -> u64 {
+fn hash_string(value: &Utf16String) -> u64 {
     mix_string(FNV_OFFSET, value)
 }
 
@@ -427,7 +427,7 @@ fn hex(value: u64) -> String {
     format!("{value:016x}")
 }
 
-fn to_utf16_hex(value: &JavaString) -> String {
+fn to_utf16_hex(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()

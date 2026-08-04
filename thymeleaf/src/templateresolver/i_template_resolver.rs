@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateResolutionAttributes};
 
 use super::{TemplateResolution, TemplateResolverError};
@@ -13,7 +13,7 @@ use super::{TemplateResolution, TemplateResolverError};
 /// 明确启用了存在性检查。
 pub trait ITemplateResolver: Send + Sync {
     /// 返回用于日志和配置诊断的可空 Resolver 名称。
-    fn get_name(&self) -> Option<&JavaString>;
+    fn get_name(&self) -> Option<&Utf16String>;
 
     /// 返回可空执行顺序。
     ///
@@ -41,8 +41,8 @@ pub trait ITemplateResolver: Send + Sync {
     fn resolve_template(
         &self,
         configuration: &dyn IEngineConfiguration,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError>;
 
@@ -66,8 +66,8 @@ pub trait ITemplateResolver: Send + Sync {
     fn resolve_template_nullable(
         &self,
         configuration: Option<&dyn IEngineConfiguration>,
-        owner_template: Option<&JavaString>,
-        template: Option<&JavaString>,
+        owner_template: Option<&Utf16String>,
+        template: Option<&Utf16String>,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         let configuration = configuration.ok_or_else(|| {

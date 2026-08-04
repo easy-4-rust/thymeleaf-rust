@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 use super::{CorpusWebApplication, CorpusWebRequest, CorpusWebSession};
@@ -15,7 +15,7 @@ pub struct CorpusWebExchange {
     request: CorpusWebRequest,
     session: Arc<CorpusWebSession>,
     application: Arc<CorpusWebApplication>,
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 impl CorpusWebExchange {
@@ -52,17 +52,17 @@ impl IWebExchange for CorpusWebExchange {
     }
     fn get_locale(&self) -> Option<JavaLocale> {
         Some(JavaLocale::new(
-            JavaString::from_rust_str("en"),
-            JavaString::from_rust_str(""),
+            Utf16String::from_rust_str("en"),
+            Utf16String::from_rust_str(""),
         ))
     }
-    fn get_content_type(&self) -> Option<JavaString> {
+    fn get_content_type(&self) -> Option<Utf16String> {
         None
     }
-    fn get_character_encoding(&self) -> Option<JavaString> {
-        Some(JavaString::from_rust_str("UTF-8"))
+    fn get_character_encoding(&self) -> Option<Utf16String> {
+        Some(Utf16String::from_rust_str("UTF-8"))
     }
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -74,7 +74,7 @@ impl IWebExchange for CorpusWebExchange {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .len() as i32
     }
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -82,13 +82,13 @@ impl IWebExchange for CorpusWebExchange {
             .cloned()
             .collect()
     }
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
     }
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -96,7 +96,7 @@ impl IWebExchange for CorpusWebExchange {
             .cloned()
             .flatten()
     }
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let mut attributes = self
             .attributes
             .write()
@@ -107,13 +107,13 @@ impl IWebExchange for CorpusWebExchange {
             attributes.shift_remove(&name);
         }
     }
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .shift_remove(&name.cloned());
     }
-    fn transform_url(&self, url: Option<&JavaString>) -> Option<JavaString> {
+    fn transform_url(&self, url: Option<&Utf16String>) -> Option<Utf16String> {
         url.cloned()
     }
 }

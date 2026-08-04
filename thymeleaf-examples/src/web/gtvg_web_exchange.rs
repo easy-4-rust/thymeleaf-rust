@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 use super::gtvg_web_application::GtvgWebApplication;
@@ -23,7 +23,7 @@ pub struct GtvgWebExchange {
     request: GtvgWebRequest,
     session: Arc<GtvgWebSession>,
     application: Arc<GtvgWebApplication>,
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     locale: JavaLocale,
 }
 
@@ -57,13 +57,13 @@ impl IWebExchange for GtvgWebExchange {
     fn get_locale(&self) -> Option<JavaLocale> {
         Some(self.locale.clone())
     }
-    fn get_content_type(&self) -> Option<JavaString> {
+    fn get_content_type(&self) -> Option<Utf16String> {
         None
     }
-    fn get_character_encoding(&self) -> Option<JavaString> {
+    fn get_character_encoding(&self) -> Option<Utf16String> {
         None
     }
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .expect("exchange lock")
@@ -72,7 +72,7 @@ impl IWebExchange for GtvgWebExchange {
     fn get_attribute_count(&self) -> i32 {
         self.attributes.read().expect("exchange lock").len() as i32
     }
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .expect("exchange lock")
@@ -80,10 +80,10 @@ impl IWebExchange for GtvgWebExchange {
             .cloned()
             .collect()
     }
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes.read().expect("exchange lock").clone()
     }
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .expect("exchange lock")
@@ -91,19 +91,19 @@ impl IWebExchange for GtvgWebExchange {
             .cloned()
             .flatten()
     }
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         self.attributes
             .write()
             .expect("exchange lock")
             .insert(name, value);
     }
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .expect("exchange lock")
             .shift_remove(&name.cloned());
     }
-    fn transform_url(&self, url: Option<&JavaString>) -> Option<JavaString> {
+    fn transform_url(&self, url: Option<&Utf16String>) -> Option<Utf16String> {
         url.cloned()
     }
 }

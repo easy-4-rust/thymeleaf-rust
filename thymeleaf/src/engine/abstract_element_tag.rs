@@ -1,5 +1,5 @@
 use crate::templatemode::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{AbstractTemplateEvent, ElementDefinition, ElementDefinitionValue};
 
@@ -13,7 +13,7 @@ pub struct AbstractElementTag {
     template_event: AbstractTemplateEvent,
     template_mode: TemplateMode,
     element_definition: ElementDefinitionValue,
-    element_complete_name: JavaString,
+    element_complete_name: Utf16String,
     synthetic: bool,
 }
 
@@ -26,7 +26,7 @@ impl AbstractElementTag {
     pub fn new(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
+        element_complete_name: Utf16String,
         synthetic: bool,
     ) -> Self {
         Self {
@@ -46,9 +46,9 @@ impl AbstractElementTag {
     pub fn with_location(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
+        element_complete_name: Utf16String,
         synthetic: bool,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -75,7 +75,7 @@ impl AbstractElementTag {
 
     /// 返回模板中原样书写的完整元素名。
     #[must_use]
-    pub const fn get_element_complete_name(&self) -> &JavaString {
+    pub const fn get_element_complete_name(&self) -> &Utf16String {
         &self.element_complete_name
     }
 

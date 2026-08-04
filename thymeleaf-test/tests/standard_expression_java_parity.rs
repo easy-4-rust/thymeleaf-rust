@@ -27,7 +27,7 @@ use thymeleaf::expression::{
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
 use thymeleaf::templateresolver::{ITemplateResolver, TemplateResolution, TemplateResolverError};
 use thymeleaf::templateresource::{ITemplateResource, StringTemplateResource};
-use thymeleaf::util::{JavaDate, JavaLocale, JavaNumber, JavaString};
+use thymeleaf::util::{JavaDate, JavaLocale, JavaNumber, Utf16String};
 use thymeleaf::{TemplateEngine, TemplateMode};
 
 const TEMPLATE: &str =
@@ -35,8 +35,8 @@ const TEMPLATE: &str =
 const RESULT_PREFIX: &str = "<!DOCTYPE html><html><body><span>";
 const RESULT_SUFFIX: &str = "</span></body></html>";
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {
@@ -49,7 +49,7 @@ fn string_value(value: &str) -> Arc<TemplateValue> {
 
 struct ExpressionTemplateResolver {
     template: &'static str,
-    name: JavaString,
+    name: Utf16String,
 }
 
 impl ExpressionTemplateResolver {
@@ -62,7 +62,7 @@ impl ExpressionTemplateResolver {
 }
 
 impl ITemplateResolver for ExpressionTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         Some(&self.name)
     }
 
@@ -73,8 +73,8 @@ impl ITemplateResolver for ExpressionTemplateResolver {
     fn resolve_template(
         &self,
         _configuration: &dyn thymeleaf::IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         _template_resolution_attributes: Option<&thymeleaf::TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         let placeholder = "{%%}";
@@ -107,7 +107,7 @@ impl ITemplateResolver for ExpressionTemplateResolver {
 // ===========================================================================
 
 struct ExpressionMessageResolver {
-    messages: HashMap<JavaString, JavaString>,
+    messages: HashMap<Utf16String, Utf16String>,
 }
 
 impl ExpressionMessageResolver {
@@ -134,7 +134,7 @@ impl ExpressionMessageResolver {
 }
 
 impl IMessageResolver for ExpressionMessageResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         None
     }
 
@@ -146,9 +146,9 @@ impl IMessageResolver for ExpressionMessageResolver {
         &self,
         context: Option<&dyn thymeleaf::context::ITemplateContext>,
         _origin: Option<std::any::TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let (Some(_context), Some(key)) = (context, key) else {
             return Ok(None);
         };
@@ -162,13 +162,13 @@ impl IMessageResolver for ExpressionMessageResolver {
         &self,
         context: Option<&dyn thymeleaf::context::ITemplateContext>,
         _origin: Option<std::any::TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         _message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let (Some(context), Some(key)) = (context, key) else {
             return Ok(None);
         };
-        Ok(Some(JavaString::from_rust_str(&format!(
+        Ok(Some(Utf16String::from_rust_str(&format!(
             "??{}_{}??",
             key.to_string_lossy(),
             context.get_locale()
@@ -178,9 +178,9 @@ impl IMessageResolver for ExpressionMessageResolver {
 
 /// 实现 Java MessageFormat 索引占位符与 `{i,date,pattern}` 子格式。
 fn format_message_like_java(
-    message: &JavaString,
+    message: &Utf16String,
     parameters: &[Option<Arc<TemplateValue>>],
-) -> JavaString {
+) -> Utf16String {
     let text = message.to_string_lossy();
     let characters = text.chars().collect::<Vec<_>>();
     let mut result = String::with_capacity(text.len());
@@ -262,13 +262,13 @@ fn format_message_like_java(
                             .to_string_lossy()
                         }
                         None => parameter
-                            .to_java_string()
+                            .to_utf16_string()
                             .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
                     }
                 } else {
                     parameter
                         .as_deref()
-                        .and_then(TemplateValue::to_java_string)
+                        .and_then(TemplateValue::to_utf16_string)
                         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
                 };
                 result.push_str(&rendered);
@@ -279,7 +279,7 @@ fn format_message_like_java(
         result.push(character);
         position += 1;
     }
-    JavaString::from_rust_str(&result)
+    Utf16String::from_rust_str(&result)
 }
 
 // ===========================================================================
@@ -296,7 +296,7 @@ impl TemplateObject for TestDepartment {
         "org.thymeleaf.standard.expression.ExpressionTest$Department"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         js(&format!("ExpressionTest$Department@{}", self.id))
     }
 
@@ -306,7 +306,7 @@ impl TemplateObject for TestDepartment {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         match property_name.to_string_lossy().as_str() {
             "id" => Some(Ok(Some(Arc::new(TemplateValue::Number(
@@ -334,7 +334,7 @@ impl TemplateObject for TestUser {
         "org.thymeleaf.standard.expression.ExpressionTest$User"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         js(&format!("ExpressionTest$User@{}", self.login))
     }
 
@@ -344,7 +344,7 @@ impl TemplateObject for TestUser {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         match property_name.to_string_lossy().as_str() {
             "login" => Some(Ok(Some(string_value(self.login)))),
@@ -374,7 +374,7 @@ impl TemplateObject for TestUser {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         (method_name.to_string_lossy() == "isAdmin" && arguments.is_empty())

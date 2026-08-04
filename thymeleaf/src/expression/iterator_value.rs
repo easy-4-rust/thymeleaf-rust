@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::sync::{Arc, Mutex};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -29,8 +29,8 @@ impl TemplateObject for IteratorValue {
         "java.util.Iterator"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("java.util.Iterator")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("java.util.Iterator")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -39,7 +39,7 @@ impl TemplateObject for IteratorValue {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         let method_name = method_name.to_string_lossy();

@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use crate::util::{JavaHashCode, JavaString};
+use crate::util::{JavaHashCode, Utf16String};
 
 /// `AttributeName` 的具体 Java 子类标识。
 ///
@@ -70,9 +70,9 @@ impl Error for AttributeNameError {}
 /// 而哈希只在构造时计算，完整保留 Java 暴露数组后可能出现的缓存不一致。
 pub struct AttributeName {
     kind: AttributeNameKind,
-    prefix: Option<JavaString>,
-    attribute_name: JavaString,
-    complete_attribute_names: Arc<RwLock<Vec<Option<JavaString>>>>,
+    prefix: Option<Utf16String>,
+    attribute_name: Utf16String,
+    complete_attribute_names: Arc<RwLock<Vec<Option<Utf16String>>>>,
     hash_code: i32,
 }
 
@@ -80,9 +80,9 @@ impl AttributeName {
     /// 对应 Java 语义：`AttributeName` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn new(
         kind: AttributeNameKind,
-        prefix: Option<JavaString>,
-        attribute_name: Option<JavaString>,
-        complete_attribute_names: Vec<Option<JavaString>>,
+        prefix: Option<Utf16String>,
+        attribute_name: Option<Utf16String>,
+        complete_attribute_names: Vec<Option<Utf16String>>,
     ) -> Result<Self, AttributeNameError> {
         let attribute_name = attribute_name.ok_or(AttributeNameError::InvalidAttributeName)?;
         if attribute_name.is_empty()
@@ -111,7 +111,7 @@ impl AttributeName {
 
     /// 返回不带命名空间的属性名。
     #[must_use]
-    pub const fn get_attribute_name(&self) -> &JavaString {
+    pub const fn get_attribute_name(&self) -> &Utf16String {
         &self.attribute_name
     }
 
@@ -123,14 +123,14 @@ impl AttributeName {
 
     /// 返回可空命名空间 prefix。
     #[must_use]
-    pub const fn get_prefix(&self) -> Option<&JavaString> {
+    pub const fn get_prefix(&self) -> Option<&Utf16String> {
         self.prefix.as_ref()
     }
 
     /// 返回内部 complete names 数组的共享可变句柄。
     #[must_use]
     /// 对应 Java: `AttributeName#getCompleteAttributeNames()`。
-    pub fn get_complete_attribute_names(&self) -> Arc<RwLock<Vec<Option<JavaString>>>> {
+    pub fn get_complete_attribute_names(&self) -> Arc<RwLock<Vec<Option<Utf16String>>>> {
         Arc::clone(&self.complete_attribute_names)
     }
 
@@ -171,8 +171,8 @@ impl AttributeName {
     /// # 错误
     ///
     /// complete names 数组为空时返回 Java 数组越界对应错误。
-    /// 对应 Java 语义：`AttributeName` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> Result<JavaString, AttributeNameError> {
+    /// 对应 Java 语义：`AttributeName` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Result<Utf16String, AttributeNameError> {
         let names = read_recovering_poison(&self.complete_attribute_names);
         let Some(first) = names.first() else {
             return Err(AttributeNameError::EmptyCompleteAttributeNames);
@@ -184,11 +184,11 @@ impl AttributeName {
             append_nullable(&mut result, name.as_ref());
         }
         result.push(u16::from(b'}'));
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 }
 
-fn arrays_hash_code(names: &[Option<JavaString>]) -> i32 {
+fn arrays_hash_code(names: &[Option<Utf16String>]) -> i32 {
     names.iter().fold(1_i32, |result, name| {
         result
             .wrapping_mul(31)
@@ -196,7 +196,7 @@ fn arrays_hash_code(names: &[Option<JavaString>]) -> i32 {
     })
 }
 
-fn append_nullable(target: &mut Vec<u16>, value: Option<&JavaString>) {
+fn append_nullable(target: &mut Vec<u16>, value: Option<&Utf16String>) {
     match value {
         Some(value) => target.extend_from_slice(value.as_utf16()),
         None => target.extend("null".encode_utf16()),

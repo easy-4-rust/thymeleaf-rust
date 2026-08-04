@@ -18,11 +18,11 @@ use std::sync::Arc;
 use thymeleaf::raw::{IRawHandler, RawParseCause, RawParseException, RawParser};
 use thymeleaf::serializer::StandardSerializers;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::{JavaString, StandardProcessorUtils};
+use thymeleaf::util::{StandardProcessorUtils, Utf16String};
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn engine() -> TemplateEngine {
@@ -225,15 +225,15 @@ fn standard_processor_utils_attribute_helpers_match_java() {
         fn reset(&mut self) {}
         fn set_local_variable(
             &mut self,
-            _name: JavaString,
+            _name: Utf16String,
             _value: Option<Arc<thymeleaf::expression::TemplateValue>>,
         ) {
         }
-        fn remove_local_variable(&mut self, _name: JavaString) {}
+        fn remove_local_variable(&mut self, _name: Utf16String) {}
         fn set_attribute(
             &mut self,
-            attribute_name: JavaString,
-            attribute_value: Option<JavaString>,
+            attribute_name: Utf16String,
+            attribute_value: Option<Utf16String>,
             _quotes: Option<thymeleaf::model::AttributeValueQuotes>,
         ) {
             self.log.push(format!(
@@ -247,15 +247,15 @@ fn standard_processor_utils_attribute_helpers_match_java() {
         fn replace_attribute(
             &mut self,
             old_attribute_name: thymeleaf::engine::AttributeNameValue,
-            attribute_name: JavaString,
-            attribute_value: Option<JavaString>,
+            attribute_name: Utf16String,
+            attribute_value: Option<Utf16String>,
             _quotes: Option<thymeleaf::model::AttributeValueQuotes>,
         ) {
             self.log.push(format!(
                 "replace({},{},{})",
                 old_attribute_name
                     .as_attribute_name()
-                    .to_java_string()
+                    .to_utf16_string()
                     .expect("name text")
                     .to_string_lossy(),
                 attribute_name.to_string_lossy(),
@@ -264,8 +264,12 @@ fn standard_processor_utils_attribute_helpers_match_java() {
                     .unwrap_or_default()
             ));
         }
-        fn remove_attribute(&mut self, _attribute_name: JavaString) {}
-        fn remove_attribute_with_prefix(&mut self, _prefix: Option<JavaString>, _name: JavaString) {
+        fn remove_attribute(&mut self, _attribute_name: Utf16String) {}
+        fn remove_attribute_with_prefix(
+            &mut self,
+            _prefix: Option<Utf16String>,
+            _name: Utf16String,
+        ) {
         }
         fn remove_attribute_name(
             &mut self,
@@ -279,7 +283,7 @@ fn standard_processor_utils_attribute_helpers_match_java() {
         }
         fn set_inliner(&mut self, _inliner: Option<Arc<dyn thymeleaf::inline::IInliner>>) {}
         fn set_template_data(&mut self, _template_data: Arc<thymeleaf::engine::TemplateData>) {}
-        fn set_body_text(&mut self, _text: JavaString, _processable: bool) {}
+        fn set_body_text(&mut self, _text: Utf16String, _processable: bool) {}
         fn set_body_sequence(
             &mut self,
             _text: Arc<dyn thymeleaf::util::JavaCharSequence>,
@@ -299,7 +303,7 @@ fn standard_processor_utils_attribute_helpers_match_java() {
             _processable: bool,
         ) {
         }
-        fn replace_with_text(&mut self, _text: JavaString, _processable: bool) {}
+        fn replace_with_text(&mut self, _text: Utf16String, _processable: bool) {}
         fn replace_with_model(
             &mut self,
             _model: Arc<dyn thymeleaf::model::IModel>,
@@ -312,8 +316,8 @@ fn standard_processor_utils_attribute_helpers_match_java() {
         fn remove_all_but_first_child(&mut self) {}
         fn iterate_element(
             &mut self,
-            _iter_variable_name: JavaString,
-            _iter_status_variable_name: Option<JavaString>,
+            _iter_variable_name: Utf16String,
+            _iter_status_variable_name: Option<Utf16String>,
             _iterated_object: Option<Arc<thymeleaf::expression::TemplateValue>>,
         ) -> Result<(), thymeleaf::util::ValidateError> {
             Ok(())

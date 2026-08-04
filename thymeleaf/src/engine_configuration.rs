@@ -28,7 +28,7 @@ use crate::processinginstruction::IProcessingInstructionProcessor;
 use crate::templateboundaries::ITemplateBoundariesProcessor;
 use crate::templateresolver::ITemplateResolver;
 use crate::text::ITextProcessor;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::xmldeclaration::IXMLDeclarationProcessor;
 use crate::{
     DialectConfiguration, DialectSetConfiguration, ExecutionAttributeValue, IEngineConfiguration,
@@ -275,7 +275,7 @@ impl IEngineConfiguration for EngineConfiguration {
     fn is_standard_dialect_present(&self) -> bool {
         self.dialect_set_configuration.is_standard_dialect_present()
     }
-    fn get_standard_dialect_prefix(&self) -> Option<&JavaString> {
+    fn get_standard_dialect_prefix(&self) -> Option<&Utf16String> {
         self.dialect_set_configuration.get_standard_dialect_prefix()
     }
     fn get_element_definitions(&self) -> &ElementDefinitions {
@@ -345,7 +345,7 @@ impl IEngineConfiguration for EngineConfiguration {
     }
     fn get_execution_attributes(
         &self,
-    ) -> &IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>> {
+    ) -> &IndexMap<Option<Utf16String>, Option<Arc<ExecutionAttributeValue>>> {
         self.dialect_set_configuration.get_execution_attributes()
     }
     fn get_expression_object_factory(&self) -> Arc<dyn IExpressionObjectFactory> {

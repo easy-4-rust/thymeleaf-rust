@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 static HTML_INSTANCE_NO_PREFIX: OnceLock<Arc<TemplateFragmentMarkupReferenceResolver>> =
     OnceLock::new();
@@ -26,7 +26,7 @@ const XML_FORMAT_WITHOUT_PREFIX: &str =
 /// 对应 Java:
 /// `org.thymeleaf.templateparser.markup.TemplateFragmentMarkupReferenceResolver`。
 pub struct TemplateFragmentMarkupReferenceResolver {
-    selectors_by_reference: RwLock<HashMap<JavaString, JavaString>>,
+    selectors_by_reference: RwLock<HashMap<Utf16String, Utf16String>>,
     resolver_format: String,
     placeholder_count: usize,
     html: bool,
@@ -38,8 +38,8 @@ impl TemplateFragmentMarkupReferenceResolver {
     ///
     /// 对应 Java: `TemplateFragmentMarkupReferenceResolver#forPrefix`。
     #[must_use]
-    pub fn for_prefix(html: bool, standard_dialect_prefix: Option<&JavaString>) -> Arc<Self> {
-        let prefix = standard_dialect_prefix.map(JavaString::to_string_lossy);
+    pub fn for_prefix(html: bool, standard_dialect_prefix: Option<&Utf16String>) -> Arc<Self> {
+        let prefix = standard_dialect_prefix.map(Utf16String::to_string_lossy);
         if prefix.as_deref().is_none_or(str::is_empty) {
             return if html {
                 HTML_INSTANCE_NO_PREFIX
@@ -76,7 +76,7 @@ impl TemplateFragmentMarkupReferenceResolver {
     /// 对应 Java:
     /// `TemplateFragmentMarkupReferenceResolver#resolveSelectorFromReference`。
     #[must_use]
-    pub fn resolve_selector_from_reference(&self, reference: &JavaString) -> JavaString {
+    pub fn resolve_selector_from_reference(&self, reference: &Utf16String) -> Utf16String {
         if let Some(selector) = read_lock(&self.selectors_by_reference).get(reference) {
             return selector.clone();
         }
@@ -85,9 +85,9 @@ impl TemplateFragmentMarkupReferenceResolver {
         for _ in 0..self.placeholder_count {
             selector = selector.replacen("%s", &reference, 1);
         }
-        let selector = JavaString::from_rust_str(&selector);
+        let selector = Utf16String::from_rust_str(&selector);
         write_lock(&self.selectors_by_reference)
-            .entry(JavaString::from_rust_str(&reference))
+            .entry(Utf16String::from_rust_str(&reference))
             .or_insert_with(|| selector.clone())
             .clone()
     }

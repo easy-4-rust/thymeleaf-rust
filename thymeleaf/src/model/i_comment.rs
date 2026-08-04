@@ -1,4 +1,4 @@
-use crate::util::{JavaCharSequence, JavaString, TextUtilsError};
+use crate::util::{JavaCharSequence, TextUtilsError, Utf16String};
 
 use super::ITemplateEvent;
 
@@ -12,8 +12,8 @@ pub trait IComment: ITemplateEvent + JavaCharSequence {
     }
 
     /// 返回包含前后缀的完整注释。
-    fn get_comment(&self) -> Result<Option<JavaString>, TextUtilsError>;
+    fn get_comment(&self) -> Result<Option<Utf16String>, TextUtilsError>;
 
     /// 返回不含前后缀的注释内容。
-    fn get_content(&self) -> Result<Option<JavaString>, TextUtilsError>;
+    fn get_content(&self) -> Result<Option<Utf16String>, TextUtilsError>;
 }

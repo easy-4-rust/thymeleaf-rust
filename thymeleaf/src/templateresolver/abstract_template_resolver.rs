@@ -3,7 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexSet;
 
 use crate::cache::ICacheEntryValidity;
-use crate::util::{JavaString, PatternSpec, PatternSpecError};
+use crate::util::{PatternSpec, PatternSpecError, Utf16String};
 use crate::{ITemplateResource, TemplateMode};
 
 use super::{TemplateResolution, TemplateResolverError};
@@ -12,7 +12,7 @@ use super::{TemplateResolution, TemplateResolverError};
 ///
 /// 对应 Java: `org.thymeleaf.templateresolver.AbstractTemplateResolver`。
 pub struct AbstractTemplateResolver {
-    name: Option<JavaString>,
+    name: Option<Utf16String>,
     order: Option<i32>,
     check_existence: bool,
     use_decoupled_logic: bool,
@@ -37,7 +37,7 @@ impl AbstractTemplateResolver {
     #[must_use]
     pub fn new(java_class_name: &str) -> Self {
         Self {
-            name: Some(JavaString::from_rust_str(java_class_name)),
+            name: Some(Utf16String::from_rust_str(java_class_name)),
             order: None,
             check_existence: Self::DEFAULT_EXISTENCE_CHECK,
             use_decoupled_logic: Self::DEFAULT_USE_DECOUPLED_LOGIC,
@@ -47,14 +47,14 @@ impl AbstractTemplateResolver {
 
     /// 返回解析器名称。对应 Java: `AbstractTemplateResolver#getName()`。
     #[must_use]
-    pub fn get_name(&self) -> Option<&JavaString> {
+    pub fn get_name(&self) -> Option<&Utf16String> {
         self.name.as_ref()
     }
 
     /// 设置解析器名称；`None` 保留 Java 可设置 null 的行为。
     ///
     /// 对应 Java: `AbstractTemplateResolver#setName(String)`。
-    pub fn set_name(&mut self, name: Option<JavaString>) {
+    pub fn set_name(&mut self, name: Option<Utf16String>) {
         self.name = name;
     }
 
@@ -135,7 +135,7 @@ impl AbstractTemplateResolver {
     /// 资源及解析结果构造错误原样传播。
     pub fn resolve_template<R, M, V>(
         &self,
-        template: &JavaString,
+        template: &Utf16String,
         compute_template_resource: R,
         compute_template_mode: M,
         compute_validity: V,
@@ -169,7 +169,7 @@ impl AbstractTemplateResolver {
     ///
     /// 对应 Java: `AbstractTemplateResolver#computeResolvable(String)`。
     #[must_use]
-    pub fn compute_resolvable(&self, template: &JavaString) -> bool {
+    pub fn compute_resolvable(&self, template: &Utf16String) -> bool {
         self.resolvable_pattern_spec.is_empty()
             || self
                 .resolvable_pattern_spec

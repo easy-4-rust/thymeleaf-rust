@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::util::string_case_utils::to_lower_case_default;
 
 use super::{ElementName, ElementNameError, ElementNameKind};
@@ -8,18 +8,18 @@ use super::{ElementName, ElementNameError, ElementNameKind};
 /// 对应 Java: `org.thymeleaf.engine.HTMLElementName`。
 pub struct HTMLElementName {
     element_name: ElementName,
-    complete_namespaced_element_name: JavaString,
-    complete_html5_element_name: JavaString,
+    complete_namespaced_element_name: Utf16String,
+    complete_html5_element_name: Utf16String,
 }
 
 impl HTMLElementName {
     /// 对应 Java: `HTMLElementName#forName()`。
     pub(super) fn for_name(
-        prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
+        prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
     ) -> Result<Self, ElementNameError> {
         let normalized_element = element_name.filter(|value| !value.is_empty()).map_or_else(
-            || JavaString::from_utf16(Vec::new()),
+            || Utf16String::from_utf16(Vec::new()),
             |value| to_lower_case_default(&value),
         );
         let normalized_prefix = prefix
@@ -62,26 +62,26 @@ impl HTMLElementName {
 
     /// 返回 `prefix:name` 形式的完整名称。
     #[must_use]
-    pub const fn get_complete_namespaced_element_name(&self) -> &JavaString {
+    pub const fn get_complete_namespaced_element_name(&self) -> &Utf16String {
         &self.complete_namespaced_element_name
     }
 
     /// 返回 `prefix-name` 形式的 HTML5 完整名称。
     #[must_use]
-    pub const fn get_complete_html5_element_name(&self) -> &JavaString {
+    pub const fn get_complete_html5_element_name(&self) -> &Utf16String {
         &self.complete_html5_element_name
     }
 }
 
 fn join(
-    prefix: &JavaString,
+    prefix: &Utf16String,
     separator: u8,
-    name: &JavaString,
+    name: &Utf16String,
     leading: Option<&str>,
-) -> JavaString {
+) -> Utf16String {
     let mut result = leading.map_or_else(Vec::new, |value| value.encode_utf16().collect());
     result.extend_from_slice(prefix.as_utf16());
     result.push(u16::from(separator));
     result.extend_from_slice(name.as_utf16());
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }

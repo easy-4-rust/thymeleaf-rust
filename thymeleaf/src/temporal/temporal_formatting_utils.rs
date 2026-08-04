@@ -2,7 +2,7 @@ use chrono::Timelike;
 use chrono_tz::Tz;
 use thiserror::Error;
 
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 
 use super::temporal_creation_utils::java_pattern;
 use super::temporal_objects::java_short_zone;
@@ -34,7 +34,7 @@ impl TemporalFormattingUtils {
         pattern: Option<&str>,
         locale: Option<&JavaLocale>,
         zone_id: Option<Tz>,
-    ) -> Result<Option<JavaString>, TemporalFormattingError> {
+    ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         let Some(target) = target else {
             return Ok(None);
         };
@@ -116,7 +116,7 @@ impl TemporalFormattingUtils {
         } else {
             formatted
         };
-        Ok(Some(JavaString::from_rust_str(&formatted)))
+        Ok(Some(Utf16String::from_rust_str(&formatted)))
     }
 
     /// 返回一个月中的日期。
@@ -149,7 +149,7 @@ impl TemporalFormattingUtils {
     pub fn month_name(
         &self,
         target: Option<&JavaTemporal>,
-    ) -> Result<Option<JavaString>, TemporalFormattingError> {
+    ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("MMMM"), None, None)
     }
 
@@ -159,7 +159,7 @@ impl TemporalFormattingUtils {
     pub fn month_name_short(
         &self,
         target: Option<&JavaTemporal>,
-    ) -> Result<Option<JavaString>, TemporalFormattingError> {
+    ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("MMM"), None, None)
     }
 
@@ -195,7 +195,7 @@ impl TemporalFormattingUtils {
     pub fn day_of_week_name(
         &self,
         target: Option<&JavaTemporal>,
-    ) -> Result<Option<JavaString>, TemporalFormattingError> {
+    ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("EEEE"), None, None)
     }
 
@@ -205,7 +205,7 @@ impl TemporalFormattingUtils {
     pub fn day_of_week_name_short(
         &self,
         target: Option<&JavaTemporal>,
-    ) -> Result<Option<JavaString>, TemporalFormattingError> {
+    ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("EEE"), None, None)
     }
 
@@ -254,7 +254,7 @@ impl TemporalFormattingUtils {
     pub fn format_iso(
         &self,
         target: Option<&JavaTemporal>,
-    ) -> Result<Option<JavaString>, TemporalFormattingError> {
+    ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         let Some(target) = target else {
             return Ok(None);
         };
@@ -272,7 +272,7 @@ impl TemporalFormattingUtils {
                 .format("%Y-%m-%dT%H:%M:%S%.3f%z")
                 .to_string(),
         };
-        Ok(Some(JavaString::from_rust_str(&formatted)))
+        Ok(Some(Utf16String::from_rust_str(&formatted)))
     }
 
     fn time_field(

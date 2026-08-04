@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    JavaLocale, JavaNumber, JavaString, NumberPointType, NumberUtils, NumberUtilsError,
+    JavaLocale, JavaNumber, NumberPointType, NumberUtils, NumberUtilsError, Utf16String,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -30,7 +30,7 @@ impl Numbers {
         target: Option<&JavaNumber>,
         min_integer_digits: i32,
         thousands_point_type: Option<NumberPointType>,
-    ) -> Result<Option<JavaString>, NumbersError> {
+    ) -> Result<Option<Utf16String>, NumbersError> {
         Ok(NumberUtils::format(
             target,
             Some(min_integer_digits),
@@ -50,7 +50,7 @@ impl Numbers {
         thousands_point_type: NumberPointType,
         decimal_digits: i32,
         decimal_point_type: NumberPointType,
-    ) -> Result<Option<JavaString>, NumbersError> {
+    ) -> Result<Option<Utf16String>, NumbersError> {
         Ok(NumberUtils::format(
             target,
             Some(min_integer_digits),
@@ -66,7 +66,7 @@ impl Numbers {
     pub fn format_currency(
         &self,
         target: Option<&JavaNumber>,
-    ) -> Result<Option<JavaString>, NumbersError> {
+    ) -> Result<Option<Utf16String>, NumbersError> {
         Ok(NumberUtils::format_currency(target, Some(&self.locale))?)
     }
 
@@ -77,7 +77,7 @@ impl Numbers {
         target: Option<&JavaNumber>,
         min_integer_digits: i32,
         decimal_digits: i32,
-    ) -> Result<Option<JavaString>, NumbersError> {
+    ) -> Result<Option<Utf16String>, NumbersError> {
         Ok(NumberUtils::format_percent(
             target,
             Some(min_integer_digits),
@@ -194,8 +194,8 @@ impl TemplateObject for Numbers {
         "org.thymeleaf.expression.Numbers"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.expression.Numbers")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.expression.Numbers")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -204,7 +204,7 @@ impl TemplateObject for Numbers {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         Some(
@@ -269,7 +269,7 @@ fn integer(value: &Option<Arc<TemplateValue>>) -> Result<i32, NumbersError> {
 fn point_type(value: &Option<Arc<TemplateValue>>) -> Result<NumberPointType, NumbersError> {
     let text = value
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     NumberPointType::match_name(text.as_deref()).ok_or_else(|| {
         NumbersError::new(format!(
@@ -286,7 +286,7 @@ fn list(value: &Option<Arc<TemplateValue>>) -> Result<&[Arc<TemplateValue>], Num
     }
 }
 
-fn string_value(value: Option<JavaString>) -> Option<Arc<TemplateValue>> {
+fn string_value(value: Option<Utf16String>) -> Option<Arc<TemplateValue>> {
     value.map(|value| Arc::new(TemplateValue::string(value)))
 }
 
@@ -313,8 +313,8 @@ fn collection_method(method_name: &str) -> Option<(bool, String)> {
 }
 
 fn contains_text(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateValue>) -> bool {
-    let candidate = candidate.to_java_string();
+    let candidate = candidate.to_utf16_string();
     values
         .iter()
-        .any(|value| value.to_java_string() == candidate)
+        .any(|value| value.to_utf16_string() == candidate)
 }

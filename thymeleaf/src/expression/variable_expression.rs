@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     IStandardExpression, IStandardVariableExpression, SimpleExpression,
@@ -15,7 +15,7 @@ use super::{
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.VariableExpression`。
 pub struct VariableExpression {
-    expression: JavaString,
+    expression: Utf16String,
     convert_to_string: bool,
     cached_expression: RwLock<Option<Arc<dyn Any + Send + Sync>>>,
 }
@@ -27,7 +27,7 @@ impl VariableExpression {
     /// - `expression`：`${}` 内部表达式；Java null 返回参数错误。
     ///
     /// 对应 Java 语义：`VariableExpression` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(expression: Option<JavaString>) -> Result<Self, ValidateError> {
+    pub fn new(expression: Option<Utf16String>) -> Result<Self, ValidateError> {
         Self::with_convert_to_string(expression, false)
     }
 
@@ -39,7 +39,7 @@ impl VariableExpression {
     ///
     /// 对应 Java 语义：`VariableExpression` 的 `with_convert_to_string` 行为（Rust 侧辅助/私有路径）。
     pub fn with_convert_to_string(
-        expression: Option<JavaString>,
+        expression: Option<Utf16String>,
         convert_to_string: bool,
     ) -> Result<Self, ValidateError> {
         let expression = expression.ok_or_else(|| ValidateError::IllegalArgument {
@@ -54,13 +54,13 @@ impl VariableExpression {
 
     /// 返回定界符内部表达式。
     /// 对应 Java 语义：`VariableExpression` 的 `get_expression_value` 行为（Rust 侧辅助/私有路径）。
-    pub fn get_expression_value(&self) -> &JavaString {
+    pub fn get_expression_value(&self) -> &Utf16String {
         &self.expression
     }
 
     /// 解析完整 `${...}` 文本；不匹配时返回 `None`。
     /// 对应 Java: `VariableExpression#parseVariableExpression()`。
-    pub(crate) fn parse_variable_expression(input: &JavaString) -> Option<Self> {
+    pub(crate) fn parse_variable_expression(input: &Utf16String) -> Option<Self> {
         parse_delimited(input, b'$' as u16).and_then(|(expression, convert)| {
             Self::with_convert_to_string(Some(expression), convert).ok()
         })
@@ -68,7 +68,7 @@ impl VariableExpression {
 }
 
 impl IStandardVariableExpression for VariableExpression {
-    fn get_expression(&self) -> Option<&JavaString> {
+    fn get_expression(&self) -> Option<&Utf16String> {
         Some(&self.expression)
     }
 
@@ -96,7 +96,7 @@ impl IStandardVariableExpression for VariableExpression {
 }
 
 impl IStandardExpression for VariableExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         Ok(build_representation(
             b'$' as u16,
             &self.expression,
@@ -116,7 +116,7 @@ impl IStandardExpression for VariableExpression {
 impl SimpleExpression for VariableExpression {}
 
 /// 对应 Java 语义：`VariableExpression` 的 `parse_delimited` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn parse_delimited(input: &JavaString, selector: u16) -> Option<(JavaString, bool)> {
+pub(crate) fn parse_delimited(input: &Utf16String, selector: u16) -> Option<(Utf16String, bool)> {
     let units = input.as_utf16();
     let mut start = 0;
     while start < units.len() && regex_whitespace(units[start]) {
@@ -139,19 +139,19 @@ pub(crate) fn parse_delimited(input: &JavaString, selector: u16) -> Option<(Java
     }
     if content.len() > 2 && content[0] == b'{' as u16 && content[content.len() - 1] == b'}' as u16 {
         return Some((
-            JavaString::from_utf16(content[1..content.len() - 1].to_vec()),
+            Utf16String::from_utf16(content[1..content.len() - 1].to_vec()),
             true,
         ));
     }
-    Some((JavaString::from_utf16(content.to_vec()), false))
+    Some((Utf16String::from_utf16(content.to_vec()), false))
 }
 
 /// 对应 Java 语义：`VariableExpression` 的 `build_representation` 行为（Rust 侧辅助/私有路径）。
 pub(crate) fn build_representation(
     selector: u16,
-    expression: &JavaString,
+    expression: &Utf16String,
     convert_to_string: bool,
-) -> JavaString {
+) -> Utf16String {
     let mut units = vec![selector, b'{' as u16];
     if convert_to_string {
         units.push(b'{' as u16);
@@ -161,7 +161,7 @@ pub(crate) fn build_representation(
         units.push(b'}' as u16);
     }
     units.push(b'}' as u16);
-    JavaString::from_utf16(units)
+    Utf16String::from_utf16(units)
 }
 
 /// 对应 Java 语义：`VariableExpression` 的 `execute_variable` 行为（Rust 侧辅助/私有路径）。

@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::util::string_case_utils::to_lower_case_default;
 
 use super::{AttributeName, AttributeNameError, AttributeNameKind};
@@ -8,15 +8,15 @@ use super::{AttributeName, AttributeNameError, AttributeNameKind};
 /// 对应 Java: `org.thymeleaf.engine.HTMLAttributeName`。
 pub struct HTMLAttributeName {
     attribute_name: AttributeName,
-    complete_namespaced_attribute_name: JavaString,
-    complete_html5_attribute_name: JavaString,
+    complete_namespaced_attribute_name: Utf16String,
+    complete_html5_attribute_name: Utf16String,
 }
 
 impl HTMLAttributeName {
     /// 对应 Java: `HTMLAttributeName#forName()`。
     pub(super) fn for_name(
-        prefix: Option<JavaString>,
-        attribute_name: Option<JavaString>,
+        prefix: Option<Utf16String>,
+        attribute_name: Option<Utf16String>,
     ) -> Result<Self, AttributeNameError> {
         let normalized_attribute = attribute_name
             .filter(|value| !value.is_empty())
@@ -64,26 +64,26 @@ impl HTMLAttributeName {
 
     /// 返回 `prefix:name` 形式的完整属性名。
     #[must_use]
-    pub const fn get_complete_namespaced_attribute_name(&self) -> &JavaString {
+    pub const fn get_complete_namespaced_attribute_name(&self) -> &Utf16String {
         &self.complete_namespaced_attribute_name
     }
 
     /// 返回 `data-prefix-name` 形式的 HTML5 属性名。
     #[must_use]
-    pub const fn get_complete_html5_attribute_name(&self) -> &JavaString {
+    pub const fn get_complete_html5_attribute_name(&self) -> &Utf16String {
         &self.complete_html5_attribute_name
     }
 }
 
 fn join(
-    prefix: &JavaString,
+    prefix: &Utf16String,
     separator: u8,
-    name: &JavaString,
+    name: &Utf16String,
     leading: Option<&str>,
-) -> JavaString {
+) -> Utf16String {
     let mut result = leading.map_or_else(Vec::new, |value| value.encode_utf16().collect());
     result.extend_from_slice(prefix.as_utf16());
     result.push(u16::from(separator));
     result.extend_from_slice(name.as_utf16());
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }

@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 上游类型元数据语料使用的 ByteArrayInputStream 宿主对象。
 ///
@@ -23,8 +23,8 @@ impl TemplateObject for CorpusByteArrayInputStream {
         "java.io.ByteArrayInputStream"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("java.io.ByteArrayInputStream")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("java.io.ByteArrayInputStream")
     }
 
     fn as_any(&self) -> &dyn Any {

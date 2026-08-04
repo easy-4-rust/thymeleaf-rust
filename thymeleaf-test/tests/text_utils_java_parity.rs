@@ -4,7 +4,7 @@ use std::fmt::{Display, Write};
 use std::sync::{Arc, RwLock};
 
 use thymeleaf::util::{
-    CharArrayWrapperSequence, JavaCharSequence, JavaString, TextUtils, TextUtilsError,
+    CharArrayWrapperSequence, JavaCharSequence, TextUtils, TextUtilsError, Utf16String,
 };
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -35,8 +35,8 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
     let chars = ['a' as u16];
     let length_failure = LengthFailure;
     let char_failure = CharFailure;
-    assert!(length_failure.as_java_string().is_none());
-    assert!(char_failure.as_java_string().is_none());
+    assert!(length_failure.as_utf16_string().is_none());
+    assert!(char_failure.as_utf16_string().is_none());
 
     let string_error = good.java_char_at(-1).unwrap_err();
     assert_eq!(
@@ -77,7 +77,7 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
     let wrapper = CharArrayWrapperSequence::with_range(Some(shared), 0, 1).unwrap();
     assert_eq!(wrapper.java_length(), Ok(1));
     assert_eq!(wrapper.java_char_at(0), Ok('a' as u16));
-    assert!(wrapper.as_java_string().is_none());
+    assert!(wrapper.as_utf16_string().is_none());
     error!(wrapper.java_char_at(1));
 
     error!(TextUtils::equals_sequences(false, None, Some(&good)));
@@ -403,8 +403,8 @@ fn cover_public_success_branches() {
 }
 
 fn emit_all_overloads(output: &mut String) {
-    let text = JavaString::from_rust_str("xxAb\u{0131}\u{03C2}zzyy");
-    let fragment = JavaString::from_rust_str("aB\u{0049}\u{03C3}");
+    let text = Utf16String::from_rust_str("xxAb\u{0131}\u{03C2}zzyy");
+    let fragment = Utf16String::from_rust_str("aB\u{0049}\u{03C3}");
     let text_chars = text.as_utf16();
     let fragment_chars = fragment.as_utf16();
 
@@ -999,7 +999,7 @@ fn emit_contains_corpus(output: &mut String) {
         java("ababab"),
         java("mississippi"),
         java("\u{0131}I\u{03C2}\u{03A3}"),
-        JavaString::from_utf16(vec![0xD800, 'x' as u16, 0xDC00]),
+        Utf16String::from_utf16(vec![0xD800, 'x' as u16, 0xDC00]),
         java("0123456789"),
     ];
     let fragments = [
@@ -1010,8 +1010,8 @@ fn emit_contains_corpus(output: &mut String) {
         java("issi"),
         java("ssip"),
         java("I\u{03A3}"),
-        JavaString::from_utf16(vec![0xD800, 'x' as u16]),
-        JavaString::from_utf16(vec![0xDC00]),
+        Utf16String::from_utf16(vec![0xD800, 'x' as u16]),
+        Utf16String::from_utf16(vec![0xDC00]),
         java("xyz"),
     ];
     let mut digest = 0xcbf29ce484222325_u64;
@@ -1048,8 +1048,8 @@ fn emit_contains_corpus(output: &mut String) {
     emit(output, "digest.contains_cases", &cases.to_string());
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn java_case_map(source: u16, upper: bool) -> u16 {
@@ -1132,7 +1132,7 @@ fn emit(output: &mut String, key: &str, value: &str) {
 }
 
 fn exercise_prefix_failures(
-    good: &JavaString,
+    good: &Utf16String,
     chars: &[u16],
     length_failure: &LengthFailure,
     char_failure: &CharFailure,
@@ -1180,7 +1180,7 @@ fn exercise_prefix_failures(
 }
 
 fn exercise_suffix_failures(
-    good: &JavaString,
+    good: &Utf16String,
     chars: &[u16],
     length_failure: &LengthFailure,
     char_failure: &CharFailure,
@@ -1228,7 +1228,7 @@ fn exercise_suffix_failures(
 }
 
 fn exercise_contains_failures(
-    good: &JavaString,
+    good: &Utf16String,
     chars: &[u16],
     length_failure: &LengthFailure,
     char_failure: &CharFailure,
@@ -1272,7 +1272,7 @@ fn exercise_contains_failures(
 }
 
 fn exercise_compare_failures(
-    good: &JavaString,
+    good: &Utf16String,
     chars: &[u16],
     length_failure: &LengthFailure,
     char_failure: &CharFailure,
@@ -1307,7 +1307,7 @@ fn exercise_compare_failures(
     );
 }
 
-fn exercise_binary_failures(good: &JavaString, chars: &[u16], length_failure: &LengthFailure) {
+fn exercise_binary_failures(good: &Utf16String, chars: &[u16], length_failure: &LengthFailure) {
     let char_values = [Some(chars)];
     let sequence_values: [Option<&dyn JavaCharSequence>; 1] = [Some(good)];
     assert!(
@@ -1490,7 +1490,7 @@ impl JavaCharSequence for LengthFailure {
         })
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 }
@@ -1509,13 +1509,13 @@ impl JavaCharSequence for CharFailure {
         })
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 }
 
 struct ProbeSequence {
-    value: JavaString,
+    value: Utf16String,
     trace: std::sync::Mutex<String>,
 }
 
@@ -1543,7 +1543,7 @@ impl JavaCharSequence for ProbeSequence {
         self.value.java_char_at(index)
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 }

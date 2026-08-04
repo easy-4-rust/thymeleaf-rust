@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::cdatasection::ICDATASectionStructureHandler;
 use crate::model::IModel;
-use crate::util::{JavaCharSequence, JavaString, Validate, ValidateError};
+use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
 
 /// 引擎内部 CDATASection 结构动作状态机。
 ///
@@ -73,7 +73,7 @@ impl ICDATASectionStructureHandler for CDATASectionStructureHandler {
         self.remove_cdata_section = false;
     }
 
-    fn set_content(&mut self, content: JavaString) {
+    fn set_content(&mut self, content: Utf16String) {
         self.set_content_nullable(Some(Arc::new(content)))
             .expect("Rust non-null content boundary must satisfy Java validation");
     }

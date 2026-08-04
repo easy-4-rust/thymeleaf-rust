@@ -8,7 +8,7 @@ use thiserror::Error;
 
 use crate::expression::{JavaObjectArray, LiteralValue};
 
-use super::{JavaBigDecimal, JavaNumber, JavaString, ValidateError};
+use super::{JavaBigDecimal, JavaNumber, Utf16String, ValidateError};
 
 const JAVA_BMP_DECIMAL_ZEROES: &[u16] = &[
     0x0030, 0x0660, 0x06F0, 0x07C0, 0x0966, 0x09E6, 0x0A66, 0x0AE6, 0x0B66, 0x0BE6, 0x0C66, 0x0CE6,
@@ -33,7 +33,7 @@ pub enum JavaEvaluationValue {
     /// `java.lang.Character` 的 UTF-16 代码单元。
     Character(u16),
     /// `java.lang.String`。
-    String(JavaString),
+    String(Utf16String),
     /// `LiteralValue` 对象；`Arc` 保留 Java 引用身份及共享语义。
     LiteralValue(Arc<LiteralValue>),
     /// 其他 Java 对象及其运行时类名。
@@ -106,7 +106,7 @@ impl JavaHashCode for String {
     }
 }
 
-impl JavaHashCode for JavaString {
+impl JavaHashCode for Utf16String {
     fn java_hash_code(&self) -> i32 {
         self.as_utf16().iter().fold(0_i32, |hash, unit| {
             hash.wrapping_mul(31).wrapping_add(i32::from(*unit))
@@ -633,7 +633,7 @@ fn number_is_non_zero(number: &JavaNumber) -> bool {
     }
 }
 
-fn string_is_true(value: &JavaString) -> bool {
+fn string_is_true(value: &Utf16String) -> bool {
     let trimmed = java_trim(value.as_utf16());
     !equals_ascii_ignore_case(trimmed, b"false")
         && !equals_ascii_ignore_case(trimmed, b"off")
@@ -675,7 +675,7 @@ fn number_as_decimal(
     Ok(Some(JavaBigDecimalResult::Owned(result)))
 }
 
-fn parse_java_big_decimal(value: &JavaString) -> Option<JavaBigDecimal> {
+fn parse_java_big_decimal(value: &Utf16String) -> Option<JavaBigDecimal> {
     let units = value.as_utf16();
     // 公共入口已经按 Java `String#length() > 0` 完成该前置检查。
     let first = units[0];

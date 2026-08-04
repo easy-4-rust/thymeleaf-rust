@@ -9,7 +9,7 @@ use num_bigint::BigInt;
 use thymeleaf::context::{ExpressionContext, IExpressionContext, WebExpressionContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::linkbuilder::{AbstractLinkBuilder, ILinkBuilder, StandardLinkBuilder};
-use thymeleaf::util::{JavaBigDecimal, JavaLocale, JavaNumber, JavaString, ValidateError};
+use thymeleaf::util::{JavaBigDecimal, JavaLocale, JavaNumber, Utf16String, ValidateError};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateProcessingException,
@@ -18,7 +18,7 @@ use thymeleaf::{
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str = include_str!("../../thymeleaf/tests/fixtures/link_builder_golden.txt");
 
-type LinkParameters = IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+type LinkParameters = IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>;
 
 #[test]
 fn standard_link_builder_matches_java_golden() {
@@ -47,16 +47,16 @@ fn abstract_link_builder_preserves_subclass_state_and_nullable_contract() {
     let mut builder = AbstractLinkBuilder::new(
         "com.example.TestLinkBuilder",
         move |_context: &dyn IExpressionContext,
-              base: Option<&JavaString>,
+              base: Option<&Utf16String>,
               _parameters: Option<&LinkParameters>|
-              -> Result<Option<JavaString>, TemplateProcessingException> {
+              -> Result<Option<Utf16String>, TemplateProcessingException> {
             observed_calls.fetch_add(1, Ordering::SeqCst);
             Ok(base.cloned())
         },
     );
 
     assert_eq!(
-        builder.get_name().map(JavaString::to_string_lossy),
+        builder.get_name().map(Utf16String::to_string_lossy),
         Some("com.example.TestLinkBuilder".to_owned())
     );
     assert_eq!(builder.get_order(), None);
@@ -535,7 +535,7 @@ fn export_escaping(output: &mut String, context: &dyn IExpressionContext) {
         Some("path/{v}"),
         Some(&unicode),
     );
-    let isolated = JavaString::from_utf16(vec![u16::from(b'a'), 0xd800, u16::from(b'b'), 0xdc00]);
+    let isolated = Utf16String::from_utf16(vec![u16::from(b'a'), 0xd800, u16::from(b'b'), 0xdc00]);
     emit(output, "escape.isolated.input_units", &utf16_hex(&isolated));
     let isolated_parameter = map("v", Some(Arc::new(TemplateValue::string(isolated.clone()))));
     emit_build_units(
@@ -593,7 +593,7 @@ fn export_web_and_extension_points(
     let process_calls = Arc::new(AtomicUsize::new(0));
     let original_identity = Arc::new(AtomicUsize::new(0));
     let original_size = Arc::new(AtomicUsize::new(0));
-    let process_input = Arc::new(Mutex::new(None::<JavaString>));
+    let process_input = Arc::new(Mutex::new(None::<Utf16String>));
     let context_calls_hook = Arc::clone(&context_calls);
     let original_identity_hook = Arc::clone(&original_identity);
     let original_size_hook = Arc::clone(&original_size);
@@ -702,7 +702,7 @@ fn emit_build_units(
 fn emit_processing_failure(
     output: &mut String,
     key: &str,
-    result: Result<Option<JavaString>, thymeleaf::TemplateProcessingException>,
+    result: Result<Option<Utf16String>, thymeleaf::TemplateProcessingException>,
 ) {
     let error = result.expect_err("Java contract requires processing failure");
     emit(
@@ -726,8 +726,8 @@ fn web_context(
     WebExpressionContext::new(Some(configuration), Some(exchange)).expect("web expression context")
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn text_value(value: &str) -> Option<Arc<TemplateValue>> {
@@ -753,7 +753,7 @@ fn parameter_text(parameters: &LinkParameters, name: &str) -> String {
     parameters
         .get(&Some(java(name)))
         .and_then(Option::as_deref)
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
 }
 
@@ -764,7 +764,7 @@ fn emit(output: &mut String, key: &str, value: &str) {
     output.push('\n');
 }
 
-fn emit_optional_java(output: &mut String, key: &str, value: Option<JavaString>) {
+fn emit_optional_java(output: &mut String, key: &str, value: Option<Utf16String>) {
     emit(
         output,
         key,
@@ -780,7 +780,7 @@ fn emit_optional_i32(output: &mut String, key: &str, value: Option<i32>) {
     );
 }
 
-fn utf16_hex(value: &JavaString) -> String {
+fn utf16_hex(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()
@@ -792,7 +792,7 @@ fn utf16_hex(value: &JavaString) -> String {
 struct TestWebApplication;
 
 impl IWebApplication for TestWebApplication {
-    fn contains_attribute(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -800,7 +800,7 @@ impl IWebApplication for TestWebApplication {
         0
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
@@ -808,37 +808,37 @@ impl IWebApplication for TestWebApplication {
         LinkParameters::new()
     }
 
-    fn get_attribute_value(&self, _name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, _name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         None
     }
 
-    fn set_attribute_value(&self, _name: Option<JavaString>, _value: Option<Arc<TemplateValue>>) {}
+    fn set_attribute_value(&self, _name: Option<Utf16String>, _value: Option<Arc<TemplateValue>>) {}
 
-    fn remove_attribute(&self, _name: Option<&JavaString>) {}
+    fn remove_attribute(&self, _name: Option<&Utf16String>) {}
 
-    fn resource_exists(&self, _path: Option<&JavaString>) -> bool {
+    fn resource_exists(&self, _path: Option<&Utf16String>) -> bool {
         false
     }
 
-    fn get_resource_as_stream(&self, _path: Option<&JavaString>) -> Option<Box<dyn Read + Send>> {
+    fn get_resource_as_stream(&self, _path: Option<&Utf16String>) -> Option<Box<dyn Read + Send>> {
         None
     }
 }
 
 struct TestWebRequest {
-    application_path: Option<JavaString>,
+    application_path: Option<Utf16String>,
 }
 
 impl IWebRequest for TestWebRequest {
-    fn get_method(&self) -> Option<JavaString> {
+    fn get_method(&self) -> Option<Utf16String> {
         None
     }
 
-    fn get_scheme(&self) -> Option<JavaString> {
+    fn get_scheme(&self) -> Option<Utf16String> {
         None
     }
 
-    fn get_server_name(&self) -> Option<JavaString> {
+    fn get_server_name(&self) -> Option<Utf16String> {
         None
     }
 
@@ -846,19 +846,19 @@ impl IWebRequest for TestWebRequest {
         None
     }
 
-    fn get_application_path(&self) -> Option<JavaString> {
+    fn get_application_path(&self) -> Option<Utf16String> {
         self.application_path.clone()
     }
 
-    fn get_path_within_application(&self) -> Option<JavaString> {
+    fn get_path_within_application(&self) -> Option<Utf16String> {
         None
     }
 
-    fn get_query_string(&self) -> Option<JavaString> {
+    fn get_query_string(&self) -> Option<Utf16String> {
         None
     }
 
-    fn contains_header(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_header(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -866,19 +866,19 @@ impl IWebRequest for TestWebRequest {
         0
     }
 
-    fn get_all_header_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_header_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
-    fn get_header_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>> {
+    fn get_header_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
         IndexMap::new()
     }
 
-    fn get_header_values(&self, _name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+    fn get_header_values(&self, _name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>> {
         None
     }
 
-    fn contains_parameter(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_parameter(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -886,19 +886,22 @@ impl IWebRequest for TestWebRequest {
         0
     }
 
-    fn get_all_parameter_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_parameter_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
-    fn get_parameter_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>> {
+    fn get_parameter_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
         IndexMap::new()
     }
 
-    fn get_parameter_values(&self, _name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+    fn get_parameter_values(
+        &self,
+        _name: Option<&Utf16String>,
+    ) -> Option<Vec<Option<Utf16String>>> {
         None
     }
 
-    fn contains_cookie(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_cookie(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -906,15 +909,15 @@ impl IWebRequest for TestWebRequest {
         0
     }
 
-    fn get_all_cookie_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_cookie_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
-    fn get_cookie_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>> {
+    fn get_cookie_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
         IndexMap::new()
     }
 
-    fn get_cookie_values(&self, _name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>> {
+    fn get_cookie_values(&self, _name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>> {
         None
     }
 }
@@ -956,15 +959,15 @@ impl IWebExchange for TestWebExchange {
         None
     }
 
-    fn get_content_type(&self) -> Option<JavaString> {
+    fn get_content_type(&self) -> Option<Utf16String> {
         None
     }
 
-    fn get_character_encoding(&self) -> Option<JavaString> {
+    fn get_character_encoding(&self) -> Option<Utf16String> {
         None
     }
 
-    fn contains_attribute(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -972,7 +975,7 @@ impl IWebExchange for TestWebExchange {
         0
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
@@ -980,15 +983,15 @@ impl IWebExchange for TestWebExchange {
         LinkParameters::new()
     }
 
-    fn get_attribute_value(&self, _name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, _name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         None
     }
 
-    fn set_attribute_value(&self, _name: Option<JavaString>, _value: Option<Arc<TemplateValue>>) {}
+    fn set_attribute_value(&self, _name: Option<Utf16String>, _value: Option<Arc<TemplateValue>>) {}
 
-    fn remove_attribute(&self, _name: Option<&JavaString>) {}
+    fn remove_attribute(&self, _name: Option<&Utf16String>) {}
 
-    fn transform_url(&self, url: Option<&JavaString>) -> Option<JavaString> {
+    fn transform_url(&self, url: Option<&Utf16String>) -> Option<Utf16String> {
         url.map(|url| java(&format!("T[{}]", url.to_string_lossy())))
     }
 }

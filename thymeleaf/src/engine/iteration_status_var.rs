@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
-use crate::util::{JavaNumber, JavaString};
+use crate::util::{JavaNumber, Utf16String};
 
 /// 迭代状态访问时产生的 Java 运行时错误。
 ///
@@ -134,8 +134,8 @@ impl IterationStatusVar {
 
     /// 按 Java `toString()` 布局生成状态文本。
     #[must_use]
-    /// 对应 Java 语义：`IterationStatusVar` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> JavaString {
+    /// 对应 Java 语义：`IterationStatusVar` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Utf16String {
         let state = read_state(&self.state);
         let size = state
             .size
@@ -143,9 +143,9 @@ impl IterationStatusVar {
         let current = state
             .current
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
+            .and_then(TemplateValue::to_utf16_string)
             .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy());
-        JavaString::from_rust_str(&format!(
+        Utf16String::from_rust_str(&format!(
             "{{index = {}, count = {}, size = {size}, current = {current}}}",
             state.index,
             state.index.wrapping_add(1)
@@ -169,8 +169,8 @@ impl TemplateObject for IterationStatusVar {
         "org.thymeleaf.engine.IterationStatusVar"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        Self::to_java_string(self)
+    fn to_utf16_string(&self) -> Utf16String {
+        Self::to_utf16_string(self)
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -179,7 +179,7 @@ impl TemplateObject for IterationStatusVar {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
             "index" => Some(integer_value(self.get_index())),
@@ -223,7 +223,7 @@ mod tests {
 
     use super::IterationStatusVar;
     use crate::expression::{TemplateObject, TemplateValue};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[test]
     fn status_machine_overflow_and_java_bean_properties_match_java_golden() {
@@ -244,19 +244,19 @@ mod tests {
         assert_property(&unknown, "odd", Some("true"));
         assert_property(&unknown, "first", Some("true"));
         let last = unknown
-            .java_get_property(&JavaString::from_rust_str("last"))
+            .java_get_property(&Utf16String::from_rust_str("last"))
             .expect("last property accessor")
             .expect_err("last property must preserve Java null-unboxing error");
         assert_eq!(last.to_string(), unknown_last_error());
         assert!(
             unknown
-                .java_get_property(&JavaString::from_rust_str("missing"))
+                .java_get_property(&Utf16String::from_rust_str("missing"))
                 .is_none()
         );
 
         let known = IterationStatusVar::new(Some(3));
         known.set_current(Some(Arc::new(TemplateValue::string(
-            JavaString::from_rust_str("value"),
+            Utf16String::from_rust_str("value"),
         ))));
         assert_golden("known0", &record(&known));
         assert_property(&known, "last", Some("false"));
@@ -287,7 +287,7 @@ mod tests {
             nullable(
                 status
                     .get_current()
-                    .and_then(|value| value.to_java_string())
+                    .and_then(|value| value.to_utf16_string())
                     .map(|value| value.to_string_lossy())
             ),
             status.is_even(),
@@ -300,7 +300,7 @@ mod tests {
             .unwrap_or_else(|error| format!("{}:{}", error.java_class_name(), error));
         format!(
             "{values},last={last},text={}",
-            status.to_java_string().to_string_lossy()
+            status.to_utf16_string().to_string_lossy()
         )
     }
 
@@ -314,10 +314,10 @@ mod tests {
 
     fn assert_property(status: &IterationStatusVar, property: &str, expected: Option<&str>) {
         let actual = status
-            .java_get_property(&JavaString::from_rust_str(property))
+            .java_get_property(&Utf16String::from_rust_str(property))
             .expect("known JavaBean property")
             .expect("known property must not fail")
-            .and_then(|value| value.to_java_string())
+            .and_then(|value| value.to_utf16_string())
             .map(|value| value.to_string_lossy());
         assert_eq!(actual.as_deref(), expected, "property {property}");
     }

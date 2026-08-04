@@ -14,7 +14,7 @@ use crate::expression::{
     StandardExpressions, TemplateObject, TemplateValue,
 };
 use crate::model::{IModel, IProcessableElementTag};
-use crate::util::{EscapedAttributeUtils, JavaString, JavaWriter};
+use crate::util::{EscapedAttributeUtils, JavaWriter, Utf16String};
 
 use super::{
     IProcessor, StandardAttributeCallback, expression_processing_error, is_empty_or_java_whitespace,
@@ -39,8 +39,8 @@ impl AbstractStandardFragmentInsertionTagProcessor {
     /// 对应 Java 语义：`AbstractStandardFragmentInsertionTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         replace_host: bool,
         processor_class_name: &'static str,
@@ -61,8 +61,8 @@ impl AbstractStandardFragmentInsertionTagProcessor {
     /// 对应 Java 语义：`AbstractStandardFragmentInsertionTagProcessor` 的 `with_insert_only_contents` 行为（Rust 侧辅助/私有路径）。
     pub fn with_insert_only_contents(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         replace_host: bool,
         insert_only_contents: bool,
@@ -85,7 +85,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
                         context
                             .get_template_data()
                             .get_template()
-                            .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                            .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
                         attribute_value.to_string_lossy()
                     )))));
                 }
@@ -132,7 +132,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
                     let first_event = fragment_model.get(1);
                     if let Some(fragment_holder) = first_event.into_processable_element_tag() {
                         let prefix = attribute_name.get_prefix();
-                        let fragment_name = JavaString::from_rust_str(Self::FRAGMENT_ATTR_NAME);
+                        let fragment_name = Utf16String::from_rust_str(Self::FRAGMENT_ATTR_NAME);
                         if fragment_holder
                             .has_attribute_with_prefix(prefix, &fragment_name)
                             .map_err(attribute_error)?
@@ -187,7 +187,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
                             attribute_value.to_string_lossy(),
                             fragment_model.get_template_mode(),
                             attribute_name
-                                .to_java_string()
+                                .to_utf16_string()
                                 .map_or_else(|_| String::new(), |value| value.to_string_lossy())
                         )))));
                     }
@@ -271,7 +271,7 @@ impl AbstractStandardFragmentInsertionTagProcessor {
     /// 判断旧式输入是否应包裹为 `~{...}` Fragment 表达式。
     #[must_use]
     /// 对应 Java: `AbstractStandardFragmentInsertionTagProcessor#shouldBeWrappedAsFragmentExpression()`。
-    pub fn should_be_wrapped_as_fragment_expression(input: &JavaString) -> bool {
+    pub fn should_be_wrapped_as_fragment_expression(input: &Utf16String) -> bool {
         let input = input.as_utf16();
         if input.len() > 2
             && input[0] == FragmentExpression::SELECTOR
@@ -365,7 +365,7 @@ enum ComputedFragment {
 
 fn compute_fragment(
     context: &dyn crate::context::ITemplateContext,
-    input: &JavaString,
+    input: &Utf16String,
 ) -> Result<ComputedFragment, Box<dyn TemplateEngineException>> {
     let parser = StandardExpressions::get_expression_parser(context.get_configuration()).map_err(
         |error| expression_processing_error("Could not obtain Standard Expression parser", error),
@@ -377,7 +377,7 @@ fn compute_fragment(
         let mut units = vec![u16::from(b'~'), u16::from(b'{')];
         units.extend_from_slice(trimmed.as_utf16());
         units.push(u16::from(b'}'));
-        let wrapped = JavaString::from_utf16(units);
+        let wrapped = Utf16String::from_utf16(units);
         let expression = parser
             .parse_expression(context, Some(&wrapped))
             .map_err(|error| {
@@ -462,7 +462,7 @@ fn resolved_to_computed(
 fn process_fragment_to_string(
     context: &dyn crate::context::ITemplateContext,
     fragment_model: &dyn IModel,
-) -> Result<JavaString, Box<dyn TemplateEngineException>> {
+) -> Result<Utf16String, Box<dyn TemplateEngineException>> {
     let output = Arc::new(Mutex::new(Vec::new()));
     context
         .get_configuration()
@@ -479,7 +479,7 @@ fn process_fragment_to_string(
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .clone();
-    Ok(JavaString::from_utf16(units))
+    Ok(Utf16String::from_utf16(units))
 }
 
 fn remove_fragment_envelopes(
@@ -519,7 +519,7 @@ fn model_error(error: crate::model::IModelError) -> Box<dyn TemplateEngineExcept
     ))
 }
 
-fn invalid_fragment(input: &JavaString) -> Box<dyn TemplateEngineException> {
+fn invalid_fragment(input: &Utf16String) -> Box<dyn TemplateEngineException> {
     Box::new(TemplateProcessingException::new(Some(format!(
         "Invalid fragment specification: \"{}\": expression does not return a Fragment object",
         input.to_string_lossy()
@@ -533,7 +533,7 @@ fn attribute_error(error: crate::engine::AttributesError) -> Box<dyn TemplateEng
     ))
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
+fn java_trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()
@@ -543,7 +543,7 @@ fn java_trim(input: &JavaString) -> JavaString {
         .iter()
         .rposition(|unit| *unit > 0x20)
         .map_or(start, |position| position + 1);
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }
 
 fn read_parameters(
@@ -556,13 +556,13 @@ fn read_parameters(
 
 fn enrich_fragment_error(
     mut error: Box<dyn TemplateEngineException>,
-    template_name: Option<&JavaString>,
+    template_name: Option<&Utf16String>,
     line: i32,
     col: i32,
 ) -> Box<dyn TemplateEngineException> {
     if let Some(processing) = error.as_processing_exception_mut() {
         if !processing.has_template_name() {
-            processing.set_template_name(template_name.map(JavaString::to_string_lossy));
+            processing.set_template_name(template_name.map(Utf16String::to_string_lossy));
         }
         if !processing.has_line_and_col() {
             processing.set_line_and_col(line, col);

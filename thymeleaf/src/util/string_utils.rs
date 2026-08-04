@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use thiserror::Error;
 
-use super::{JavaLocale, JavaString, ValidateError};
+use super::{JavaLocale, Utf16String, ValidateError};
 
 static RANDOM_STATE: AtomicU64 = AtomicU64::new(0);
 const ALPHA_NUMERIC: &[u8] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -32,16 +32,16 @@ impl StringUtils {
     /// 对可空对象文本执行 null-safe `toString()`。
     /// 对应 Java: `StringUtils#toString()`。
     #[must_use]
-    pub fn to_string(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn to_string(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.cloned()
     }
 
     /// 把超长文本截成 `max_size - 3` 个 UTF-16 单元并追加省略号。
     /// 对应 Java: `StringUtils#abbreviate()`。
     pub fn abbreviate(
-        target: Option<&JavaString>,
+        target: Option<&Utf16String>,
         max_size: i32,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         require(max_size >= 3, "Maximum size must be greater or equal to 3")?;
         let Some(target) = target else {
             return Ok(None);
@@ -52,20 +52,20 @@ impl StringUtils {
         }
         let mut units = target.as_utf16()[..max_size - 3].to_vec();
         units.extend("...".encode_utf16());
-        Ok(Some(JavaString::from_utf16(units)))
+        Ok(Some(Utf16String::from_utf16(units)))
     }
 
     /// 按 Java `toString()` 文本执行 null-safe相等比较。
     /// 对应 Java: `StringUtils#equals()`。
     #[must_use]
-    pub fn equals(first: Option<&JavaString>, second: Option<&JavaString>) -> bool {
+    pub fn equals(first: Option<&Utf16String>, second: Option<&Utf16String>) -> bool {
         first == second
     }
 
     /// 按 Java `String#equalsIgnoreCase` 执行 null-safe比较。
     /// 对应 Java: `StringUtils#equalsIgnoreCase()`。
     #[must_use]
-    pub fn equals_ignore_case(first: Option<&JavaString>, second: Option<&JavaString>) -> bool {
+    pub fn equals_ignore_case(first: Option<&Utf16String>, second: Option<&Utf16String>) -> bool {
         match (first, second) {
             (None, None) => true,
             (Some(first), Some(second)) => first
@@ -78,8 +78,8 @@ impl StringUtils {
     /// 判断文本是否包含片段。
     /// 对应 Java: `StringUtils#contains()`。
     pub fn contains(
-        target: Option<&JavaString>,
-        fragment: Option<&JavaString>,
+        target: Option<&Utf16String>,
+        fragment: Option<&Utf16String>,
     ) -> Result<bool, StringUtilsError> {
         let target = required(target, "Cannot apply contains on null")?;
         let fragment = required(fragment, "Fragment cannot be null")?;
@@ -89,8 +89,8 @@ impl StringUtils {
     /// 使用指定 Locale 的大小写规则判断是否包含片段。
     /// 对应 Java: `StringUtils#containsIgnoreCase()`。
     pub fn contains_ignore_case(
-        target: Option<&JavaString>,
-        fragment: Option<&JavaString>,
+        target: Option<&Utf16String>,
+        fragment: Option<&Utf16String>,
         locale: Option<&JavaLocale>,
     ) -> Result<bool, StringUtilsError> {
         let target = required(target, "Cannot apply containsIgnoreCase on null")?;
@@ -104,8 +104,8 @@ impl StringUtils {
     /// 判断文本是否以前缀开始。
     /// 对应 Java: `StringUtils#startsWith()`。
     pub fn starts_with(
-        target: Option<&JavaString>,
-        prefix: Option<&JavaString>,
+        target: Option<&Utf16String>,
+        prefix: Option<&Utf16String>,
     ) -> Result<bool, StringUtilsError> {
         Ok(required(target, "Cannot apply startsWith on null")?
             .as_utf16()
@@ -115,8 +115,8 @@ impl StringUtils {
     /// 判断文本是否以后缀结束。
     /// 对应 Java: `StringUtils#endsWith()`。
     pub fn ends_with(
-        target: Option<&JavaString>,
-        suffix: Option<&JavaString>,
+        target: Option<&Utf16String>,
+        suffix: Option<&Utf16String>,
     ) -> Result<bool, StringUtilsError> {
         Ok(required(target, "Cannot apply endsWith on null")?
             .as_utf16()
@@ -126,10 +126,10 @@ impl StringUtils {
     /// 返回 `[begin_index,end_index)` UTF-16 子串。
     /// 对应 Java: `StringUtils#substring()`。
     pub fn substring(
-        target: Option<&JavaString>,
+        target: Option<&Utf16String>,
         begin_index: i32,
         end_index: i32,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let Some(target) = target else {
             return Ok(None);
         };
@@ -139,7 +139,7 @@ impl StringUtils {
         if begin > end || end > target.len() {
             return Err(StringUtilsError::IndexOutOfBounds { index: end_index });
         }
-        Ok(Some(JavaString::from_utf16(
+        Ok(Some(Utf16String::from_utf16(
             target.as_utf16()[begin..end].to_vec(),
         )))
     }
@@ -147,9 +147,9 @@ impl StringUtils {
     /// 返回从指定 UTF-16 下标到末尾的子串。
     /// 对应 Java 语义：`StringUtils` 的 `substring_from` 行为（Rust 侧辅助/私有路径）。
     pub fn substring_from(
-        target: Option<&JavaString>,
+        target: Option<&Utf16String>,
         begin_index: i32,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let Some(target) = target else {
             return Ok(None);
         };
@@ -157,7 +157,7 @@ impl StringUtils {
             begin_index >= 0 && usize::try_from(begin_index).is_ok_and(|v| v < target.len()),
             &format!("beginIndex must be >= 0 and < {}", target.len()),
         )?;
-        Ok(Some(JavaString::from_utf16(
+        Ok(Some(Utf16String::from_utf16(
             target.as_utf16()[begin_index as usize..].to_vec(),
         )))
     }
@@ -165,16 +165,16 @@ impl StringUtils {
     /// 返回第一次出现片段之后的文本；未出现时返回 null。
     /// 对应 Java: `StringUtils#substringAfter()`。
     pub fn substring_after(
-        target: Option<&JavaString>,
-        substring: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+        target: Option<&Utf16String>,
+        substring: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let substring = required(substring, "Parameter substring cannot be null")?;
         let Some(target) = target else {
             return Ok(None);
         };
         Ok(
             find_utf16(target.as_utf16(), substring.as_utf16(), 0).map(|index| {
-                JavaString::from_utf16(target.as_utf16()[index + substring.len()..].to_vec())
+                Utf16String::from_utf16(target.as_utf16()[index + substring.len()..].to_vec())
             }),
         )
     }
@@ -182,23 +182,23 @@ impl StringUtils {
     /// 返回第一次出现片段之前的文本；未出现时返回 null。
     /// 对应 Java: `StringUtils#substringBefore()`。
     pub fn substring_before(
-        target: Option<&JavaString>,
-        substring: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+        target: Option<&Utf16String>,
+        substring: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let substring = required(substring, "Parameter substring cannot be null")?;
         let Some(target) = target else {
             return Ok(None);
         };
         Ok(find_utf16(target.as_utf16(), substring.as_utf16(), 0)
-            .map(|index| JavaString::from_utf16(target.as_utf16()[..index].to_vec())))
+            .map(|index| Utf16String::from_utf16(target.as_utf16()[..index].to_vec())))
     }
 
     /// 在非空目标前追加前缀。
     /// 对应 Java: `StringUtils#prepend()`。
     pub fn prepend(
-        target: Option<&JavaString>,
-        prefix: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+        target: Option<&Utf16String>,
+        prefix: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let prefix = required(prefix, "Prefix cannot be null")?;
         Ok(target.map(|target| concatenate(prefix, target)))
     }
@@ -206,9 +206,9 @@ impl StringUtils {
     /// 在非空目标后追加后缀。
     /// 对应 Java: `StringUtils#append()`。
     pub fn append(
-        target: Option<&JavaString>,
-        suffix: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+        target: Option<&Utf16String>,
+        suffix: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let suffix = required(suffix, "Suffix cannot be null")?;
         Ok(target.map(|target| concatenate(target, suffix)))
     }
@@ -216,44 +216,44 @@ impl StringUtils {
     /// 重复目标指定次数。
     /// 对应 Java: `StringUtils#repeat()`。
     #[must_use]
-    pub fn repeat(target: Option<&JavaString>, times: i32) -> Option<JavaString> {
+    pub fn repeat(target: Option<&Utf16String>, times: i32) -> Option<Utf16String> {
         target.map(|target| {
             let mut units = Vec::new();
             for _ in 0..times.max(0) {
                 units.extend_from_slice(target.as_utf16());
             }
-            JavaString::from_utf16(units)
+            Utf16String::from_utf16(units)
         })
     }
 
     /// 拼接所有值，以空串替代 null。
     /// 对应 Java: `StringUtils#concat()`。
     #[must_use]
-    pub fn concat(values: Option<&[Option<JavaString>]>) -> JavaString {
-        Self::concat_replace_nulls(Some(&JavaString::from_rust_str("")), values)
+    pub fn concat(values: Option<&[Option<Utf16String>]>) -> Utf16String {
+        Self::concat_replace_nulls(Some(&Utf16String::from_rust_str("")), values)
     }
 
     /// 拼接所有值，以指定文本替代 null。
     /// 对应 Java: `StringUtils#concatReplaceNulls()`。
     #[must_use]
     pub fn concat_replace_nulls(
-        null_value: Option<&JavaString>,
-        values: Option<&[Option<JavaString>]>,
-    ) -> JavaString {
+        null_value: Option<&Utf16String>,
+        values: Option<&[Option<Utf16String>]>,
+    ) -> Utf16String {
         let mut units = Vec::new();
         for value in values.unwrap_or(&[]) {
             if let Some(value) = value.as_ref().or(null_value) {
                 units.extend_from_slice(value.as_utf16());
             }
         }
-        JavaString::from_utf16(units)
+        Utf16String::from_utf16(units)
     }
 
     /// 返回片段第一次出现的 UTF-16 下标，未出现时返回 -1。
     /// 对应 Java: `StringUtils#indexOf()`。
     pub fn index_of(
-        target: Option<&JavaString>,
-        fragment: Option<&JavaString>,
+        target: Option<&Utf16String>,
+        fragment: Option<&Utf16String>,
     ) -> Result<i32, StringUtilsError> {
         let target = required(target, "Cannot apply indexOf on null")?;
         let fragment = required(fragment, "Fragment cannot be null")?;
@@ -265,14 +265,14 @@ impl StringUtils {
     /// 判断字符串为 null 或零长度。
     /// 对应 Java: `StringUtils#isEmpty()`。
     #[must_use]
-    pub fn is_empty(target: Option<&JavaString>) -> bool {
-        target.is_none_or(JavaString::is_empty)
+    pub fn is_empty(target: Option<&Utf16String>) -> bool {
+        target.is_none_or(Utf16String::is_empty)
     }
 
     /// 判断字符串为 null、空或全部为 Java whitespace。
     /// 对应 Java: `StringUtils#isEmptyOrWhitespace()`。
     #[must_use]
-    pub fn is_empty_or_whitespace(target: Option<&JavaString>) -> bool {
+    pub fn is_empty_or_whitespace(target: Option<&Utf16String>) -> bool {
         target.is_none_or(|target| {
             target.is_empty()
                 || target
@@ -285,14 +285,14 @@ impl StringUtils {
     /// 使用分隔符连接值；null 元素按文本 `null`。
     /// 对应 Java: `StringUtils#join()`。
     pub fn join(
-        target: Option<&[Option<JavaString>]>,
-        separator: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+        target: Option<&[Option<Utf16String>]>,
+        separator: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let separator = required(separator, "Separator cannot be null")?;
         let Some(target) = target else {
             return Ok(None);
         };
-        let null = JavaString::from_rust_str("null");
+        let null = Utf16String::from_rust_str("null");
         let mut units = Vec::new();
         for (index, value) in target.iter().enumerate() {
             if index != 0 {
@@ -300,15 +300,15 @@ impl StringUtils {
             }
             units.extend_from_slice(value.as_ref().unwrap_or(&null).as_utf16());
         }
-        Ok(Some(JavaString::from_utf16(units)))
+        Ok(Some(Utf16String::from_utf16(units)))
     }
 
     /// 按 Java `StringTokenizer` 的“分隔符字符集合”规则拆分文本。
     /// 对应 Java: `StringUtils#split()`。
     pub fn split(
-        target: Option<&JavaString>,
-        separator: Option<&JavaString>,
-    ) -> Result<Option<Vec<JavaString>>, StringUtilsError> {
+        target: Option<&Utf16String>,
+        separator: Option<&Utf16String>,
+    ) -> Result<Option<Vec<Utf16String>>, StringUtilsError> {
         let separator = required(separator, "Separator cannot be null")?;
         let Some(target) = target else {
             return Ok(None);
@@ -319,14 +319,14 @@ impl StringUtils {
                 .as_utf16()
                 .split(|unit| delimiters.contains(unit))
                 .filter(|token| !token.is_empty())
-                .map(|token| JavaString::from_utf16(token.to_vec()))
+                .map(|token| Utf16String::from_utf16(token.to_vec()))
                 .collect(),
         ))
     }
 
     /// 返回 `toString()` 后的 UTF-16 长度。
     /// 对应 Java: `StringUtils#length()`。
-    pub fn length(target: Option<&JavaString>) -> Result<i32, StringUtilsError> {
+    pub fn length(target: Option<&Utf16String>) -> Result<i32, StringUtilsError> {
         let target = required(target, "Cannot apply length on null")?;
         Ok(i32::try_from(target.len()).unwrap_or(i32::MAX))
     }
@@ -334,10 +334,10 @@ impl StringUtils {
     /// 非正则地替换全部非重叠片段。
     /// 对应 Java: `StringUtils#replace()`。
     pub fn replace(
-        target: Option<&JavaString>,
-        before: Option<&JavaString>,
-        after: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+        target: Option<&Utf16String>,
+        before: Option<&Utf16String>,
+        after: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let before = required(before, "Parameter \"before\" cannot be null")?;
         let after = required(after, "Parameter \"after\" cannot be null")?;
         let Some(target) = target else {
@@ -357,15 +357,15 @@ impl StringUtils {
             return Ok(Some(target.clone()));
         }
         result.extend_from_slice(&target.as_utf16()[last..]);
-        Ok(Some(JavaString::from_utf16(result)))
+        Ok(Some(Utf16String::from_utf16(result)))
     }
 
     /// 使用 Locale 转为大写。
     /// 对应 Java: `StringUtils#toUpperCase()`。
     pub fn to_upper_case(
-        target: Option<&JavaString>,
+        target: Option<&Utf16String>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let locale = required(locale, "Locale cannot be null")?;
         Ok(target.map(|target| to_upper_case_for_locale(target, locale)))
     }
@@ -373,9 +373,9 @@ impl StringUtils {
     /// 使用 Locale 转为小写。
     /// 对应 Java: `StringUtils#toLowerCase()`。
     pub fn to_lower_case(
-        target: Option<&JavaString>,
+        target: Option<&Utf16String>,
         locale: Option<&JavaLocale>,
-    ) -> Result<Option<JavaString>, StringUtilsError> {
+    ) -> Result<Option<Utf16String>, StringUtilsError> {
         let locale = required(locale, "Locale cannot be null")?;
         Ok(target.map(|target| to_lower_case_for_locale(target, locale)))
     }
@@ -383,7 +383,7 @@ impl StringUtils {
     /// 按 Java `String#trim` 删除首尾 `<= U+0020` 的单元。
     /// 对应 Java: `StringUtils#trim()`。
     #[must_use]
-    pub fn trim(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn trim(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(|target| {
             let units = target.as_utf16();
             let start = units
@@ -394,16 +394,16 @@ impl StringUtils {
                 .iter()
                 .rposition(|unit| *unit > 0x20)
                 .map_or(start, |index| index + 1);
-            JavaString::from_utf16(units[start..end].to_vec())
+            Utf16String::from_utf16(units[start..end].to_vec())
         })
     }
 
     /// 删除全部 whitespace/控制字符并按默认 Locale 小写。
     /// 对应 Java: `StringUtils#pack()`。
     #[must_use]
-    pub fn pack(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn pack(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(|target| {
-            let compact = JavaString::from_utf16(
+            let compact = Utf16String::from_utf16(
                 target
                     .as_utf16()
                     .iter()
@@ -418,14 +418,14 @@ impl StringUtils {
     /// 把第一个 UTF-16 字符转为 title case。
     /// 对应 Java: `StringUtils#capitalize()`。
     #[must_use]
-    pub fn capitalize(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn capitalize(target: Option<&Utf16String>) -> Option<Utf16String> {
         change_first_case(target, true)
     }
 
     /// 把第一个 UTF-16 字符转为小写。
     /// 对应 Java: `StringUtils#unCapitalize()`。
     #[must_use]
-    pub fn un_capitalize(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn un_capitalize(target: Option<&Utf16String>) -> Option<Utf16String> {
         change_first_case(target, false)
     }
 
@@ -433,11 +433,11 @@ impl StringUtils {
     /// 对应 Java: `StringUtils#capitalizeWords()`。
     #[must_use]
     pub fn capitalize_words(
-        target: Option<&JavaString>,
-        delimiters: Option<&JavaString>,
-    ) -> Option<JavaString> {
+        target: Option<&Utf16String>,
+        delimiters: Option<&Utf16String>,
+    ) -> Option<Utf16String> {
         target.map(|target| {
-            let delimiters = delimiters.map(JavaString::as_utf16);
+            let delimiters = delimiters.map(Utf16String::as_utf16);
             let mut units = target.as_utf16().to_vec();
             let mut at_word_start = true;
             for unit in &mut units {
@@ -450,49 +450,49 @@ impl StringUtils {
                     at_word_start = false;
                 }
             }
-            JavaString::from_utf16(units)
+            Utf16String::from_utf16(units)
         })
     }
 
     /// 按 HTML4/XML 兼容规则转义文本。
     /// 对应 Java: `StringUtils#escapeXml()`。
     #[must_use]
-    pub fn escape_xml(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn escape_xml(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(|target| escape_common(target, EscapeKind::Xml))
     }
 
     /// 按 JavaScript 字符串规则转义文本。
     /// 对应 Java: `StringUtils#escapeJavaScript()`。
     #[must_use]
-    pub fn escape_java_script(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn escape_java_script(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(|target| escape_common(target, EscapeKind::JavaScript))
     }
 
     /// 按 Java 字符串规则转义文本。
     /// 对应 Java: `StringUtils#escapeJava()`。
     #[must_use]
-    pub fn escape_java(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn escape_java(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(|target| escape_common(target, EscapeKind::Java))
     }
 
     /// 反解 JavaScript 字符串转义。
     /// 对应 Java: `StringUtils#unescapeJavaScript()`。
     #[must_use]
-    pub fn unescape_java_script(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn unescape_java_script(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(unescape_backslashes)
     }
 
     /// 反解 Java 字符串转义。
     /// 对应 Java: `StringUtils#unescapeJava()`。
     #[must_use]
-    pub fn unescape_java(target: Option<&JavaString>) -> Option<JavaString> {
+    pub fn unescape_java(target: Option<&Utf16String>) -> Option<Utf16String> {
         target.map(unescape_backslashes)
     }
 
     /// 返回只含数字和大写英文字母的随机文本。
     /// 对应 Java: `StringUtils#randomAlphanumeric()`。
     #[must_use]
-    pub fn random_alphanumeric(count: i32) -> JavaString {
+    pub fn random_alphanumeric(count: i32) -> Utf16String {
         let count = usize::try_from(count).unwrap_or(0);
         let mut state = next_random_seed();
         let mut bytes = Vec::with_capacity(count);
@@ -501,7 +501,7 @@ impl StringUtils {
             bytes.push(ALPHA_NUMERIC[((state >> 16) as usize) % ALPHA_NUMERIC.len()]);
         }
         RANDOM_STATE.store(state, Ordering::Relaxed);
-        JavaString::from_rust_str(&String::from_utf8(bytes).expect("ASCII"))
+        Utf16String::from_rust_str(&String::from_utf8(bytes).expect("ASCII"))
     }
 }
 
@@ -536,10 +536,10 @@ fn find_utf16(haystack: &[u16], needle: &[u16], from: usize) -> Option<usize> {
         .map(|position| position + from)
 }
 
-fn concatenate(first: &JavaString, second: &JavaString) -> JavaString {
+fn concatenate(first: &Utf16String, second: &Utf16String) -> Utf16String {
     let mut units = first.as_utf16().to_vec();
     units.extend_from_slice(second.as_utf16());
-    JavaString::from_utf16(units)
+    Utf16String::from_utf16(units)
 }
 
 fn is_java_whitespace(unit: u16) -> bool {
@@ -568,7 +568,7 @@ fn locale_is_turkic(locale: &JavaLocale) -> bool {
     )
 }
 
-fn to_upper_case_for_locale(value: &JavaString, locale: &JavaLocale) -> JavaString {
+fn to_upper_case_for_locale(value: &Utf16String, locale: &JavaLocale) -> Utf16String {
     let turkic = locale_is_turkic(locale);
     let text = value.to_string_lossy();
     let mut result = String::new();
@@ -581,10 +581,10 @@ fn to_upper_case_for_locale(value: &JavaString, locale: &JavaLocale) -> JavaStri
             result.extend(character.to_uppercase());
         }
     }
-    JavaString::from_rust_str(&result)
+    Utf16String::from_rust_str(&result)
 }
 
-fn to_lower_case_for_locale(value: &JavaString, locale: &JavaLocale) -> JavaString {
+fn to_lower_case_for_locale(value: &Utf16String, locale: &JavaLocale) -> Utf16String {
     let turkic = locale_is_turkic(locale);
     let text = value.to_string_lossy();
     let mut result = String::new();
@@ -597,10 +597,10 @@ fn to_lower_case_for_locale(value: &JavaString, locale: &JavaLocale) -> JavaStri
             result.extend(character.to_lowercase());
         }
     }
-    JavaString::from_rust_str(&result)
+    Utf16String::from_rust_str(&result)
 }
 
-fn change_first_case(target: Option<&JavaString>, title: bool) -> Option<JavaString> {
+fn change_first_case(target: Option<&Utf16String>, title: bool) -> Option<Utf16String> {
     target.map(|target| {
         let mut units = target.as_utf16().to_vec();
         if let Some(first) = units.first_mut() {
@@ -612,7 +612,7 @@ fn change_first_case(target: Option<&JavaString>, title: bool) -> Option<JavaStr
                     .map_or(*first, |character| character as u16)
             };
         }
-        JavaString::from_utf16(units)
+        Utf16String::from_utf16(units)
     })
 }
 
@@ -628,7 +628,7 @@ enum EscapeKind {
     Java,
 }
 
-fn escape_common(target: &JavaString, kind: EscapeKind) -> JavaString {
+fn escape_common(target: &Utf16String, kind: EscapeKind) -> Utf16String {
     let mut result = String::new();
     for character in target.to_string_lossy().chars() {
         match (character, &kind) {
@@ -652,10 +652,10 @@ fn escape_common(target: &JavaString, kind: EscapeKind) -> JavaString {
             (character, _) => result.push(character),
         }
     }
-    JavaString::from_rust_str(&result)
+    Utf16String::from_rust_str(&result)
 }
 
-fn unescape_backslashes(target: &JavaString) -> JavaString {
+fn unescape_backslashes(target: &Utf16String) -> Utf16String {
     let units = target.as_utf16();
     let mut result = Vec::with_capacity(units.len());
     let mut index = 0usize;
@@ -692,7 +692,7 @@ fn unescape_backslashes(target: &JavaString) -> JavaString {
             index += 2;
         }
     }
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
 fn next_random_seed() -> u64 {

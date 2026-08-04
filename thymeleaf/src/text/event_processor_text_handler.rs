@@ -4,7 +4,7 @@ use std::panic::panic_any;
 use std::rc::Rc;
 
 use super::{AbstractChainedTextHandler, ITextHandler, TextParseException};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const DEFAULT_STACK_LEN: usize = 10;
 const DEFAULT_ATTRIBUTE_NAMES_LEN: usize = 3;
@@ -22,28 +22,28 @@ const REPOSITORY_INITIAL_INC: usize = 5;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct EventProcessorTextHandlerRuntimeError {
     java_class_name: &'static str,
-    java_message: JavaString,
+    java_message: Utf16String,
 }
 
 impl EventProcessorTextHandlerRuntimeError {
     fn illegal_argument(message: &'static str) -> Self {
         Self {
             java_class_name: "java.lang.IllegalArgumentException",
-            java_message: JavaString::from_rust_str(message),
+            java_message: Utf16String::from_rust_str(message),
         }
     }
 
     fn negative_array_size(len: i32) -> Self {
         Self {
             java_class_name: "java.lang.NegativeArraySizeException",
-            java_message: JavaString::from_rust_str(&len.to_string()),
+            java_message: Utf16String::from_rust_str(&len.to_string()),
         }
     }
 
     fn array_index(index: i32, length: usize) -> Self {
         Self {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: JavaString::from_rust_str(&format!(
+            java_message: Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             )),
         }
@@ -52,7 +52,7 @@ impl EventProcessorTextHandlerRuntimeError {
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: JavaString::from_rust_str(&format!(
+            java_message: Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             )),
         }
@@ -61,7 +61,7 @@ impl EventProcessorTextHandlerRuntimeError {
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: JavaString::from_rust_str(&format!(
+            java_message: Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             )),
         }
@@ -82,7 +82,7 @@ impl EventProcessorTextHandlerRuntimeError {
     /// # 返回
     /// 与固定 JDK Oracle 对齐的消息。
     #[must_use]
-    pub(crate) const fn java_message(&self) -> &JavaString {
+    pub(crate) const fn java_message(&self) -> &Utf16String {
         &self.java_message
     }
 }
@@ -166,7 +166,7 @@ impl EventProcessorTextHandler {
         }
 
         let message = if peek.is_empty() {
-            JavaString::from_rust_str("Malformed template: unnamed element is never closed")
+            Utf16String::from_rust_str("Malformed template: unnamed element is never closed")
         } else {
             quoted_message(
                 "Malformed template: element \"",
@@ -650,16 +650,16 @@ fn copy_array_range(text: &[u16], offset: i32, len: i32) -> Vec<u16> {
     text[offset as usize..last as usize].to_vec()
 }
 
-fn quoted_message(prefix: &str, name: &[u16], suffix: &str) -> JavaString {
-    let mut message = JavaString::from_rust_str(prefix).as_utf16().to_vec();
+fn quoted_message(prefix: &str, name: &[u16], suffix: &str) -> Utf16String {
+    let mut message = Utf16String::from_rust_str(prefix).as_utf16().to_vec();
     message.extend_from_slice(name);
-    message.extend_from_slice(JavaString::from_rust_str(suffix).as_utf16());
-    JavaString::from_utf16(message)
+    message.extend_from_slice(Utf16String::from_rust_str(suffix).as_utf16());
+    Utf16String::from_utf16(message)
 }
 
 fn text_parse_at(message: &str, line: i32, col: i32) -> Box<TextParseException> {
     Box::new(TextParseException::with_message_at(
-        Some(&JavaString::from_rust_str(message)),
+        Some(&Utf16String::from_rust_str(message)),
         line,
         col,
     ))
@@ -680,7 +680,7 @@ mod tests {
         EventProcessorTextHandler, EventProcessorTextHandlerRuntimeError, ITextHandler,
         StructureNamesRepository, TextParseException,
     };
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_GOLDEN: &str =
         include_str!("../../tests/fixtures/event_processor_text_handler_golden.txt");
@@ -728,7 +728,7 @@ mod tests {
             }
             if state.fail_event == Some(event) {
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_rust_str(&format!("downstream-{event}"))),
+                    Some(&Utf16String::from_rust_str(&format!("downstream-{event}"))),
                     71,
                     72,
                 )));

@@ -25,12 +25,12 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn value(value: &str) -> Arc<TemplateValue> {
@@ -75,7 +75,7 @@ fn web_context(name: &str, mode: TemplateMode) -> (Arc<WebEngineContext>, Arc<dy
 fn variable(context: &dyn IContext, name: &str) -> String {
     context
         .get_variable(Some(&js(name)))
-        .and_then(|value| value.to_java_string())
+        .and_then(|value| value.to_utf16_string())
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
 }
 
@@ -664,7 +664,7 @@ fn web_engine_context_test12_selection_cleared_by_level_matches_java() {
     assert!(vm.has_selection_target());
     assert_eq!(
         vm.get_selection_target()
-            .and_then(|value| value.to_java_string())
+            .and_then(|value| value.to_utf16_string())
             .map(|value| value.to_string_lossy()),
         Some("FORM".to_owned())
     );

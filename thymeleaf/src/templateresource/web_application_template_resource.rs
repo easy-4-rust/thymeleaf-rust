@@ -95,11 +95,11 @@ impl ITemplateResource for WebApplicationTemplateResource {
 
     fn exists(&self) -> bool {
         self.web_application
-            .resource_exists(Some(&crate::util::JavaString::from_rust_str(&self.path)))
+            .resource_exists(Some(&crate::util::Utf16String::from_rust_str(&self.path)))
     }
 
     fn reader(&self) -> io::Result<Box<dyn Read>> {
-        let path = crate::util::JavaString::from_rust_str(&self.path);
+        let path = crate::util::Utf16String::from_rust_str(&self.path);
         let input = self
             .web_application
             .get_resource_as_stream(Some(&path))

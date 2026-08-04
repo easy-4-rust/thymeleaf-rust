@@ -2,7 +2,7 @@ use super::{
     AbstractStandardDoubleAttributeModifierTagProcessor, delegate_standard_element_tag_processor,
 };
 use crate::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 /// 同时设置 `lang` 和 `xml:lang` 的 Processor。对应 Java: `org.thymeleaf.standard.processor.StandardLangXmlLangTagProcessor`。
 pub struct StandardLangXmlLangTagProcessor {
     processor: AbstractStandardDoubleAttributeModifierTagProcessor,
@@ -15,16 +15,16 @@ impl StandardLangXmlLangTagProcessor {
     /// 创建 Processor。
     /// 对应 Java 语义：`StandardLangXmlLangTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardDoubleAttributeModifierTagProcessor::new(
                 TemplateMode::HTML,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
-                JavaString::from_rust_str("lang"),
-                JavaString::from_rust_str("xml:lang"),
+                Utf16String::from_rust_str("lang"),
+                Utf16String::from_rust_str("xml:lang"),
                 true,
                 "org.thymeleaf.standard.processor.StandardLangXmlLangTagProcessor",
             )?,

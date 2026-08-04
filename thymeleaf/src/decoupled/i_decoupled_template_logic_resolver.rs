@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::templateresource::{ITemplateResource, TemplateResourceError};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 /// 解析与主模板资源配套的解耦逻辑资源。
@@ -16,9 +16,9 @@ pub trait IDecoupledTemplateLogicResolver: Send + Sync {
     fn resolve_decoupled_template_logic(
         &self,
         configuration: &dyn IEngineConfiguration,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         resource: &dyn ITemplateResource,
         template_mode: TemplateMode,
     ) -> Result<Option<Arc<dyn ITemplateResource>>, TemplateResourceError>;

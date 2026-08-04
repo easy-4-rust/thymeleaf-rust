@@ -5,7 +5,7 @@ use crate::TemplateMode;
 use crate::exceptions::TemplateEngineException;
 use crate::model::AttributeValueQuotes;
 use crate::text::{ITextHandler, TextParseCause, TextParseException};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     Attribute, Attributes, CloseElementTag, ITemplateHandler, OpenElementTag, StandaloneElementTag,
@@ -22,7 +22,7 @@ const DEFAULT_OPERATOR: &[u16] = &[0x003D];
 ///
 /// 对应 Java: `org.thymeleaf.engine.TemplateHandlerAdapterTextHandler`。
 pub struct TemplateHandlerAdapterTextHandler {
-    template_name: Option<JavaString>,
+    template_name: Option<Utf16String>,
     template_handler: Box<dyn ITemplateHandler>,
     configuration: Arc<dyn IEngineConfiguration>,
     template_mode: TemplateMode,
@@ -41,7 +41,7 @@ impl TemplateHandlerAdapterTextHandler {
     #[must_use]
     /// 对应 Java 语义：`TemplateHandlerAdapterTextHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         template_handler: Box<dyn ITemplateHandler>,
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,
@@ -86,7 +86,7 @@ impl TemplateHandlerAdapterTextHandler {
         if self.current_element_attributes.is_empty() {
             return None;
         }
-        let spaces = vec![JavaString::from_rust_str(" "); self.current_element_attributes.len()];
+        let spaces = vec![Utf16String::from_rust_str(" "); self.current_element_attributes.len()];
         Some(Attributes::new(
             Some(self.current_element_attributes.clone()),
             Some(spaces),
@@ -327,7 +327,7 @@ impl ITextHandler for TemplateHandlerAdapterTextHandler {
         let operator = if operator_len > 0 {
             let value = slice(buffer, operator_offset, operator_len, name_line, name_col)?;
             Some(if value.as_utf16() == DEFAULT_OPERATOR {
-                JavaString::from_rust_str("=")
+                Utf16String::from_rust_str("=")
             } else {
                 value
             })
@@ -383,7 +383,7 @@ fn slice(
     len: i32,
     line: i32,
     col: i32,
-) -> Result<JavaString, Box<TextParseException>> {
+) -> Result<Utf16String, Box<TextParseException>> {
     let buffer = buffer.ok_or_else(|| invalid_range(line, col))?;
     let start = usize::try_from(offset).map_err(|_| invalid_range(line, col))?;
     let len = usize::try_from(len).map_err(|_| invalid_range(line, col))?;
@@ -391,12 +391,12 @@ fn slice(
         .checked_add(len)
         .filter(|end| *end <= buffer.len())
         .ok_or_else(|| invalid_range(line, col))?;
-    Ok(JavaString::from_utf16(buffer[start..end].to_vec()))
+    Ok(Utf16String::from_utf16(buffer[start..end].to_vec()))
 }
 
 fn invalid_range(line: i32, col: i32) -> Box<TextParseException> {
     Box::new(TextParseException::with_message_at(
-        Some(&JavaString::from_rust_str("Invalid text buffer range")),
+        Some(&Utf16String::from_rust_str("Invalid text buffer range")),
         line,
         col,
     ))

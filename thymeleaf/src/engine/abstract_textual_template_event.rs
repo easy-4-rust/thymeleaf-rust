@@ -1,7 +1,7 @@
 use std::io;
 use std::sync::{Arc, RwLock};
 
-use crate::util::{JavaCharSequence, JavaString, JavaWriter, TextUtilsError};
+use crate::util::{JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTemplateEvent, engine_event_utils::compute_inlineable};
 
@@ -11,9 +11,9 @@ use super::{AbstractTemplateEvent, engine_event_utils::compute_inlineable};
 pub struct AbstractTextualTemplateEvent {
     template_event: AbstractTemplateEvent,
     content: Option<Arc<dyn JavaCharSequence>>,
-    content_string: Option<JavaString>,
+    content_string: Option<Utf16String>,
     content_length: i32,
-    computed_content_string: RwLock<Option<JavaString>>,
+    computed_content_string: RwLock<Option<Utf16String>>,
     computed_content_length: RwLock<i32>,
     computed_whitespace: RwLock<Option<bool>>,
     computed_inlineable: RwLock<Option<bool>>,
@@ -32,13 +32,13 @@ impl AbstractTextualTemplateEvent {
     /// 对应 Java 语义：`AbstractTextualTemplateEvent` 的 `with_location` 行为（Rust 侧辅助/私有路径）。
     pub fn with_location(
         content: Option<Arc<dyn JavaCharSequence>>,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
         let content_string = content
             .as_ref()
-            .and_then(|value| value.as_java_string())
+            .and_then(|value| value.as_utf16_string())
             .cloned();
         let content_length = content_string
             .as_ref()
@@ -63,7 +63,7 @@ impl AbstractTextualTemplateEvent {
 
     /// 按 Java 缓存语义取得可空内容字符串。
     /// 对应 Java: `AbstractTextualTemplateEvent#getContentText()`。
-    pub fn get_content_text(&self) -> Result<Option<JavaString>, TextUtilsError> {
+    pub fn get_content_text(&self) -> Result<Option<Utf16String>, TextUtilsError> {
         if self.content_string.is_some() || self.content.is_none() {
             return Ok(self.content_string.clone());
         }
@@ -104,7 +104,11 @@ impl AbstractTextualTemplateEvent {
 
     /// 返回指定 UTF-16 子序列。
     /// 对应 Java: `AbstractTextualTemplateEvent#contentSubSequence()`。
-    pub fn content_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    pub fn content_sub_sequence(
+        &self,
+        start: i32,
+        end: i32,
+    ) -> Result<Utf16String, TextUtilsError> {
         if let Some(value) = self.content_string.as_ref() {
             return value.java_sub_sequence(start, end);
         }
@@ -152,7 +156,7 @@ impl AbstractTextualTemplateEvent {
         }
         let text = self
             .get_content_text()?
-            .unwrap_or_else(|| JavaString::from_utf16(Vec::new()));
+            .unwrap_or_else(|| Utf16String::from_utf16(Vec::new()));
         let result = compute_inlineable(&text)?;
         *write_lock(&self.computed_inlineable) = Some(result);
         Ok(result)

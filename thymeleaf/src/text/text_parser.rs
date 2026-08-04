@@ -14,7 +14,7 @@ use super::{
     TextParsingElementError, TextParsingElementUtil, TextParsingLiteralUtil, TextParsingUtil,
     TextParsingUtilError,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const DOCUMENT_NULL_MESSAGE: &str = "Document cannot be null";
 const READER_NULL_MESSAGE: &str = "Reader cannot be null";
@@ -41,28 +41,28 @@ const MAX_CONSECUTIVE_ZERO_READS: usize = 1024;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct TextParserRuntimeError {
     java_class_name: &'static str,
-    java_message: Option<JavaString>,
+    java_message: Option<Utf16String>,
 }
 
 impl TextParserRuntimeError {
     fn illegal_argument(message: &'static str) -> Self {
         Self {
             java_class_name: "java.lang.IllegalArgumentException",
-            java_message: Some(JavaString::from_rust_str(message)),
+            java_message: Some(Utf16String::from_rust_str(message)),
         }
     }
 
     fn negative_array_size(size: i32) -> Self {
         Self {
             java_class_name: "java.lang.NegativeArraySizeException",
-            java_message: Some(JavaString::from_rust_str(&size.to_string())),
+            java_message: Some(Utf16String::from_rust_str(&size.to_string())),
         }
     }
 
     fn array_index(index: i32, length: usize) -> Self {
         Self {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             ))),
         }
@@ -71,7 +71,7 @@ impl TextParserRuntimeError {
     fn string_range(offset: i32, len: i32, length: usize) -> Self {
         Self {
             java_class_name: "java.lang.StringIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "Range [{offset}, {offset} + {len}) out of bounds for length {length}"
             ))),
         }
@@ -80,7 +80,7 @@ impl TextParserRuntimeError {
     fn arraycopy_negative_length(length: i32) -> Self {
         Self::with_java_metadata(
             "java.lang.ArrayIndexOutOfBoundsException",
-            Some(JavaString::from_rust_str(&format!(
+            Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: length {length} is negative"
             ))),
         )
@@ -89,7 +89,7 @@ impl TextParserRuntimeError {
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self::with_java_metadata(
             "java.lang.ArrayIndexOutOfBoundsException",
-            Some(JavaString::from_rust_str(&format!(
+            Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             ))),
         )
@@ -98,7 +98,7 @@ impl TextParserRuntimeError {
     fn arraycopy_destination_index(index: i32, length: usize) -> Self {
         Self::with_java_metadata(
             "java.lang.ArrayIndexOutOfBoundsException",
-            Some(JavaString::from_rust_str(&format!(
+            Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: destination index {index} out of bounds for char[{length}]"
             ))),
         )
@@ -107,7 +107,7 @@ impl TextParserRuntimeError {
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self::with_java_metadata(
             "java.lang.ArrayIndexOutOfBoundsException",
-            Some(JavaString::from_rust_str(&format!(
+            Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             ))),
         )
@@ -116,7 +116,7 @@ impl TextParserRuntimeError {
     fn arraycopy_last_destination(index: i64, length: usize) -> Self {
         Self::with_java_metadata(
             "java.lang.ArrayIndexOutOfBoundsException",
-            Some(JavaString::from_rust_str(&format!(
+            Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last destination index {index} out of bounds for char[{length}]"
             ))),
         )
@@ -125,7 +125,7 @@ impl TextParserRuntimeError {
     fn null_reader() -> Self {
         Self {
             java_class_name: "java.lang.NullPointerException",
-            java_message: Some(JavaString::from_rust_str(
+            java_message: Some(Utf16String::from_rust_str(
                 NULL_PARSE_DOCUMENT_READER_MESSAGE,
             )),
         }
@@ -134,7 +134,7 @@ impl TextParserRuntimeError {
     fn null_handler() -> Self {
         Self {
             java_class_name: "java.lang.NullPointerException",
-            java_message: Some(JavaString::from_rust_str(
+            java_message: Some(Utf16String::from_rust_str(
                 NULL_PARSE_DOCUMENT_HANDLER_MESSAGE,
             )),
         }
@@ -150,7 +150,7 @@ impl TextParserRuntimeError {
     #[must_use]
     pub(crate) fn with_java_metadata(
         java_class_name: &'static str,
-        java_message: Option<JavaString>,
+        java_message: Option<Utf16String>,
     ) -> Self {
         Self {
             java_class_name,
@@ -167,7 +167,7 @@ impl TextParserRuntimeError {
     /// 返回 Java `Throwable#getMessage()`。
     /// 对应 Java 语义：`TextParser` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub(crate) fn java_message(&self) -> Option<JavaString> {
+    pub(crate) fn java_message(&self) -> Option<Utf16String> {
         self.java_message.clone()
     }
 }
@@ -178,7 +178,7 @@ impl Display for TextParserRuntimeError {
             &self
                 .java_message
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
     }
 }
@@ -192,14 +192,14 @@ impl Error for TextParserRuntimeError {}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TextParserReaderError {
     java_class_name: String,
-    java_message: Option<JavaString>,
+    java_message: Option<Utf16String>,
 }
 
 impl TextParserReaderError {
     /// 创建带 Java 元数据的 Reader 失败。
     /// 对应 Java 语义：`TextParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn new(java_class_name: &str, java_message: Option<JavaString>) -> Self {
+    pub fn new(java_class_name: &str, java_message: Option<Utf16String>) -> Self {
         Self {
             java_class_name: java_class_name.to_owned(),
             java_message,
@@ -212,7 +212,7 @@ impl TextParserReaderError {
     pub fn io(message: &str) -> Self {
         Self::new(
             "java.io.IOException",
-            Some(JavaString::from_rust_str(message)),
+            Some(Utf16String::from_rust_str(message)),
         )
     }
 
@@ -226,7 +226,7 @@ impl TextParserReaderError {
     /// 返回可空 Java 消息。
     /// 对应 Java 语义：`TextParser` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_message(&self) -> Option<JavaString> {
+    pub fn java_message(&self) -> Option<Utf16String> {
         self.java_message.clone()
     }
 }
@@ -237,7 +237,7 @@ impl Display for TextParserReaderError {
             &self
                 .java_message
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
     }
 }
@@ -277,7 +277,7 @@ struct StringTextParserReader {
 }
 
 impl StringTextParserReader {
-    fn new(document: &JavaString) -> Self {
+    fn new(document: &Utf16String) -> Self {
         Self {
             input: document.as_utf16().to_vec(),
             position: 0,
@@ -431,7 +431,7 @@ impl TextParser {
     /// 文档通过独立 `StringReader` 进入 Reader 重载。
     pub fn parse(
         &self,
-        document: Option<&JavaString>,
+        document: Option<&Utf16String>,
         handler: Option<Box<dyn ITextHandler>>,
     ) -> Result<(), Box<TextParseException>> {
         let Some(document) = document else {
@@ -603,7 +603,7 @@ impl TextParser {
                     consecutive_zero_reads = consecutive_zero_reads.saturating_add(1);
                     if consecutive_zero_reads > MAX_CONSECUTIVE_ZERO_READS {
                         return Err(Box::new(TextParseException::with_message_at(
-                            Some(&JavaString::from_rust_str(&format!(
+                            Some(&Utf16String::from_rust_str(&format!(
                                 "Text parser reader made no progress after {MAX_CONSECUTIVE_ZERO_READS} consecutive zero-length reads"
                             ))),
                             status.line,
@@ -626,14 +626,14 @@ impl TextParser {
         if last_len > 0 {
             let active = &mut allocated_buffer.as_mut().expect("active buffer").buffer;
             if status.in_structure && !status.in_comment_line {
-                let source = java_string_from_range(active, last_start, last_len);
+                let source = utf16_string_from_range(active, last_start, last_len);
                 let mut message = "Incomplete structure: \""
                     .encode_utf16()
                     .collect::<Vec<_>>();
                 message.extend_from_slice(source.as_utf16());
                 message.push(u16::from(b'"'));
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_utf16(message)),
+                    Some(&Utf16String::from_utf16(message)),
                     status.line,
                     status.col,
                 )));
@@ -673,7 +673,7 @@ impl TextParser {
         let next_buffer_size = i64::from(buffer_size).saturating_mul(2);
         if buffer_size <= 0 || next_buffer_size > i64::from(MAX_UNCONSUMED_BUFFER_SIZE) {
             return Err(Box::new(TextParseException::with_message_at(
-                Some(&JavaString::from_rust_str(&format!(
+                Some(&Utf16String::from_rust_str(&format!(
                     "Text parser retained an unconsumed structure beyond {MAX_UNCONSUMED_BUFFER_SIZE} UTF-16 code units"
                 ))),
                 line,
@@ -1068,7 +1068,7 @@ fn java_char_array(size: i32) -> Vec<u16> {
     vec![0; size as usize]
 }
 
-fn java_string_from_range(buffer: &[u16], offset: i32, len: i32) -> JavaString {
+fn utf16_string_from_range(buffer: &[u16], offset: i32, len: i32) -> Utf16String {
     if offset < 0 || len < 0 {
         panic_runtime(TextParserRuntimeError::string_range(
             offset,
@@ -1084,7 +1084,7 @@ fn java_string_from_range(buffer: &[u16], offset: i32, len: i32) -> JavaString {
             buffer.len(),
         ));
     }
-    JavaString::from_utf16(buffer[offset as usize..end as usize].to_vec())
+    Utf16String::from_utf16(buffer[offset as usize..end as usize].to_vec())
 }
 
 fn array_unit(buffer: &[u16], index: i32) -> u16 {
@@ -1328,12 +1328,12 @@ mod tests {
     use std::rc::Rc;
 
     use super::{
-        AllocatedBuffer, BufferPool, ITextHandler, JavaString, MAX_CONSECUTIVE_ZERO_READS,
+        AllocatedBuffer, BufferPool, ITextHandler, MAX_CONSECUTIVE_ZERO_READS,
         MAX_UNCONSUMED_BUFFER_SIZE, ParsingLocatorError, StringTextParserReader,
         TextParseException, TextParser, TextParserReader, TextParserReaderError,
-        TextParserRuntimeError, array_unit, comment_bool_value, comment_parse, count_locator,
-        element_bool_value, element_parse, java_arraycopy, java_arraycopy_within,
-        java_string_from_range, panic_payload_to_cause, util_i32_value,
+        TextParserRuntimeError, Utf16String, array_unit, comment_bool_value, comment_parse,
+        count_locator, element_bool_value, element_parse, java_arraycopy, java_arraycopy_within,
+        panic_payload_to_cause, utf16_string_from_range, util_i32_value,
     };
     use crate::text::{
         AbstractChainedTextHandler, AbstractTextHandler, CommentProcessorTextHandlerRuntimeError,
@@ -1369,7 +1369,7 @@ mod tests {
 
     impl ScriptedReader {
         fn new(
-            input: JavaString,
+            input: Utf16String,
             max_chunk: usize,
             zero_reads: i32,
             fail_call: i32,
@@ -1493,7 +1493,7 @@ mod tests {
             }
             if state.fail_event == Some(event) {
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_rust_str(&format!("checked-{event}"))),
+                    Some(&Utf16String::from_rust_str(&format!("checked-{event}"))),
                     71,
                     72,
                 )));
@@ -1501,7 +1501,7 @@ mod tests {
             if state.runtime_fail_event == Some(event) {
                 panic_any(TextParserRuntimeError::with_java_metadata(
                     "java.lang.IllegalStateException",
-                    Some(JavaString::from_rust_str(&format!("runtime-{event}"))),
+                    Some(Utf16String::from_rust_str(&format!("runtime-{event}"))),
                 ));
             }
             if state.unknown_runtime_fail_event == Some(event) {
@@ -1705,7 +1705,7 @@ mod tests {
     }
 
     fn scripted_reader(
-        input: &JavaString,
+        input: &Utf16String,
         max_chunk: usize,
         zero_reads: i32,
         fail_call: i32,
@@ -1785,7 +1785,7 @@ mod tests {
             java("`[#not]` [#yes/]"),
             java("/[#not]/ [#yes/]"),
         ];
-        documents.push(JavaString::from_utf16(vec![
+        documents.push(Utf16String::from_utf16(vec![
             0xd800,
             u16::from(b'['),
             u16::from(b'#'),
@@ -1838,7 +1838,7 @@ mod tests {
                     write!(
                         digest,
                         "{}:{};",
-                        java_string_hash(&actual),
+                        utf16_string_hash(&actual),
                         actual.encode_utf16().count()
                     )
                     .unwrap();
@@ -1846,14 +1846,14 @@ mod tests {
                 emit(
                     output,
                     &format!("split.{index}.{process_comments}"),
-                    format!("{expected};matrixHash={}", java_string_hash(&digest)),
+                    format!("{expected};matrixHash={}", utf16_string_hash(&digest)),
                 );
             }
         }
     }
 
     fn parse_with_buffer(
-        document: &JavaString,
+        document: &Utf16String,
         buffer_size: i32,
         process_comments: bool,
     ) -> String {
@@ -1948,7 +1948,7 @@ mod tests {
     fn run_reader(
         output: &mut String,
         key: &str,
-        input: &JavaString,
+        input: &Utf16String,
         max_chunk: usize,
         zero_reads: i32,
         fail_call: i32,
@@ -2266,11 +2266,11 @@ mod tests {
         }
     }
 
-    fn java(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn java(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
-    fn java_string_hash(value: &str) -> i32 {
+    fn utf16_string_hash(value: &str) -> i32 {
         value.encode_utf16().fold(0_i32, |hash, unit| {
             hash.wrapping_mul(31).wrapping_add(i32::from(unit))
         })
@@ -2423,10 +2423,10 @@ mod tests {
             let _ = array_unit(&[1], -1);
         });
         assert_runtime_error(|| {
-            let _ = java_string_from_range(&[1], -1, 1);
+            let _ = utf16_string_from_range(&[1], -1, 1);
         });
         assert_runtime_error(|| {
-            let _ = java_string_from_range(&[1], 0, 2);
+            let _ = utf16_string_from_range(&[1], 0, 2);
         });
 
         let mut destination = [0_u16; 2];
@@ -2616,14 +2616,14 @@ mod tests {
         });
 
         let checked = Box::new(TextParseException::with_message(Some(
-            JavaString::from_rust_str("checked"),
+            Utf16String::from_rust_str("checked"),
         )));
         assert!(element_parse(Err(TextParsingElementError::TextParse(checked))).is_err());
         assert_runtime_payload::<TextParsingElementError>(|| {
             let _ = element_parse(Err(TextParsingElementError::NullArrayLoad));
         });
         let checked = Box::new(TextParseException::with_message(Some(
-            JavaString::from_rust_str("checked"),
+            Utf16String::from_rust_str("checked"),
         )));
         assert!(comment_parse(Err(TextParsingCommentError::TextParse(checked))).is_err());
         assert_runtime_payload::<TextParsingCommentError>(|| {

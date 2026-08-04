@@ -1,7 +1,7 @@
 use std::sync::{Arc, Weak};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{StandardExpressionError, StandardExpressionResult, TemplateValue};
 
@@ -31,7 +31,7 @@ impl Ids {
     }
 
     /// 返回当前序号并递增。对应 Java: `Ids#seq(Object)`。
-    pub fn seq(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
+    pub fn seq(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<Utf16String> {
         let id = id_to_string(id)?;
         let context = self.context()?;
         let value = context
@@ -44,7 +44,7 @@ impl Ids {
     }
 
     /// 返回下一序号但不递增。对应 Java: `Ids#next(Object)`。
-    pub fn next(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
+    pub fn next(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<Utf16String> {
         let id = id_to_string(id)?;
         let context = self.context()?;
         let value = context
@@ -57,7 +57,7 @@ impl Ids {
     }
 
     /// 返回最近一次已分配序号。对应 Java: `Ids#prev(Object)`。
-    pub fn prev(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
+    pub fn prev(&self, id: Option<&TemplateValue>) -> StandardExpressionResult<Utf16String> {
         let id = id_to_string(id)?;
         let context = self.context()?;
         let value = context
@@ -79,18 +79,18 @@ impl Ids {
     }
 }
 
-fn id_to_string(id: Option<&TemplateValue>) -> StandardExpressionResult<JavaString> {
+fn id_to_string(id: Option<&TemplateValue>) -> StandardExpressionResult<Utf16String> {
     id.ok_or_else(|| {
         Box::new(ValidateError::IllegalArgument {
             message: Some("ID cannot be null".to_owned()),
         }) as StandardExpressionError
     })?
-    .to_java_string()
+    .to_utf16_string()
     .ok_or_else(|| Box::new(crate::expression::TokenError::NullPointer) as StandardExpressionError)
 }
 
-fn append_number(id: &JavaString, value: i32) -> JavaString {
+fn append_number(id: &Utf16String, value: i32) -> Utf16String {
     let mut units = id.as_utf16().to_vec();
     units.extend(value.to_string().encode_utf16());
-    JavaString::from_utf16(units)
+    Utf16String::from_utf16(units)
 }

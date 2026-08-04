@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::util::{AggregateUtils, EvaluationUtils, JavaNumber, JavaString};
+use crate::util::{AggregateUtils, EvaluationUtils, JavaNumber, Utf16String};
 
 use super::binary_operation_expression::{compare_java_values, java_values_equal};
 use super::{
@@ -17,7 +17,7 @@ use super::{
 pub(crate) fn invoke_stateless_expression_object(
     object: &dyn Any,
     class_name: &str,
-    method_name: &JavaString,
+    method_name: &Utf16String,
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError> {
     let method_name = method_name.to_string_lossy();
@@ -51,7 +51,7 @@ pub(crate) fn invoke_stateless_expression_object(
 /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
 pub(crate) fn get_standard_expression_object_property(
     object: &dyn Any,
-    property_name: &JavaString,
+    property_name: &Utf16String,
 ) -> Option<Arc<TemplateValue>> {
     let execution_info = object.downcast_ref::<ExecutionInfo>()?;
     match property_name.to_string_lossy().as_str() {
@@ -156,7 +156,7 @@ fn invoke_messages(
         let mut output = Vec::with_capacity(keys.len());
         for key in keys {
             let key = key
-                .to_java_string()
+                .to_utf16_string()
                 .ok_or_else(|| invocation_error("Message key cannot be null"))?;
             let value = if use_absent {
                 messages.msg_with_params(&key, parameters)
@@ -231,10 +231,10 @@ fn invoke_conversions(
                         .downcast::<TemplateValue>()
                         .expect("type checked before downcast"),
                 ))
-            } else if value.is::<JavaString>() {
+            } else if value.is::<Utf16String>() {
                 Some(Arc::new(TemplateValue::string(
                     *value
-                        .downcast::<JavaString>()
+                        .downcast::<Utf16String>()
                         .expect("type checked before downcast"),
                 )))
             } else {
@@ -597,21 +597,21 @@ fn required_list(
     }
 }
 
-fn optional_string(value: &Option<Arc<TemplateValue>>) -> Option<JavaString> {
+fn optional_string(value: &Option<Arc<TemplateValue>>) -> Option<Utf16String> {
     match value.as_deref() {
         None | Some(TemplateValue::Null) => None,
-        Some(value) => value.to_java_string(),
+        Some(value) => value.to_utf16_string(),
     }
 }
 
 fn required_string(
     value: &Option<Arc<TemplateValue>>,
     message: &str,
-) -> Result<JavaString, InvocationError> {
+) -> Result<Utf16String, InvocationError> {
     optional_string(value).ok_or_else(|| invocation_error(message))
 }
 
-fn string_or_null(value: Option<JavaString>) -> Arc<TemplateValue> {
+fn string_or_null(value: Option<Utf16String>) -> Arc<TemplateValue> {
     value.map_or_else(
         || Arc::new(TemplateValue::Null),
         |value| Arc::new(TemplateValue::string(value)),

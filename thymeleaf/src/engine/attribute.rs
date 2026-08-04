@@ -4,7 +4,7 @@ use std::io;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::model::{AttributeValueQuotes, IAttribute};
-use crate::util::{FastStringWriter, JavaString, JavaWriter};
+use crate::util::{FastStringWriter, JavaWriter, Utf16String};
 
 use super::{AttributeDefinition, AttributeDefinitionValue};
 
@@ -18,11 +18,11 @@ const DEFAULT_OPERATOR: &str = "=";
 /// 字符串，也不负责计算 HTML 布尔属性；这些职责与 Java 版一致，属于 Processor。
 pub struct Attribute {
     definition: AttributeDefinitionValue,
-    complete_name: JavaString,
-    operator: Option<JavaString>,
-    value: Option<JavaString>,
+    complete_name: Utf16String,
+    operator: Option<Utf16String>,
+    value: Option<Utf16String>,
     value_quotes: Option<AttributeValueQuotes>,
-    template_name: Option<JavaString>,
+    template_name: Option<Utf16String>,
     line: i32,
     col: i32,
     // IStandardExpression 的完整执行合同将在标准表达式闭包中接入。这里保存同一
@@ -44,17 +44,17 @@ impl Attribute {
     /// 对应 Java 语义：`Attribute` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         definition: AttributeDefinitionValue,
-        complete_name: JavaString,
-        operator: Option<JavaString>,
-        value: Option<JavaString>,
+        complete_name: Utf16String,
+        operator: Option<Utf16String>,
+        value: Option<Utf16String>,
         value_quotes: Option<AttributeValueQuotes>,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
         let operator = value
             .as_ref()
-            .map(|_| operator.unwrap_or_else(|| JavaString::from_rust_str(DEFAULT_OPERATOR)));
+            .map(|_| operator.unwrap_or_else(|| Utf16String::from_rust_str(DEFAULT_OPERATOR)));
         let value_quotes = value.as_ref().map(|value| match value_quotes {
             None => AttributeValueQuotes::DOUBLE,
             Some(AttributeValueQuotes::NONE) if value.is_empty() => AttributeValueQuotes::DOUBLE,
@@ -97,8 +97,8 @@ impl Attribute {
     pub(crate) fn modify(
         &self,
         definition: Option<AttributeDefinitionValue>,
-        complete_name: Option<JavaString>,
-        value: Option<JavaString>,
+        complete_name: Option<Utf16String>,
+        value: Option<Utf16String>,
         value_quotes: Option<AttributeValueQuotes>,
     ) -> Self {
         Self::new(
@@ -115,8 +115,8 @@ impl Attribute {
 
     /// 返回 Java `toString()` 对应的 UTF-16 属性表示。
     #[must_use]
-    /// 对应 Java 语义：`Attribute` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> JavaString {
+    /// 对应 Java 语义：`Attribute` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Utf16String {
         let mut writer = FastStringWriter::new();
         // 内存 Writer 的完整切片写入不可能失败；Java 版同样把此分支视为不可达。
         self.write(&mut writer)
@@ -126,7 +126,7 @@ impl Attribute {
 }
 
 impl IAttribute for Attribute {
-    fn get_attribute_complete_name(&self) -> &JavaString {
+    fn get_attribute_complete_name(&self) -> &Utf16String {
         &self.complete_name
     }
 
@@ -134,11 +134,11 @@ impl IAttribute for Attribute {
         self.definition.as_attribute_definition()
     }
 
-    fn get_operator(&self) -> Option<&JavaString> {
+    fn get_operator(&self) -> Option<&Utf16String> {
         self.operator.as_ref()
     }
 
-    fn get_value(&self) -> Option<&JavaString> {
+    fn get_value(&self) -> Option<&Utf16String> {
         self.value.as_ref()
     }
 
@@ -150,7 +150,7 @@ impl IAttribute for Attribute {
         self.template_name.is_some() && self.line != -1 && self.col != -1
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.template_name.as_ref()
     }
 
@@ -189,7 +189,7 @@ impl IAttribute for Attribute {
 
 impl Display for Attribute {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.to_java_string().to_string_lossy())
+        formatter.write_str(&self.to_utf16_string().to_string_lossy())
     }
 }
 

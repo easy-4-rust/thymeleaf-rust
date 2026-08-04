@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 调用测试方法时稳定抛出 `Kapow!!` 的宿主对象。
 ///
@@ -16,8 +16,8 @@ impl TemplateObject for ExceptionThrowingBean {
         "org.thymeleaf.templateengine.attrprocessors.model.ExceptionThrowingBean"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.java_class_name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.java_class_name())
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -26,7 +26,7 @@ impl TemplateObject for ExceptionThrowingBean {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         (arguments.is_empty()

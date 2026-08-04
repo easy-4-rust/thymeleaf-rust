@@ -1,5 +1,5 @@
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     LiteralSubstitutionUtil, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -16,8 +16,8 @@ impl StandardExpressionPreprocessor {
     /// 对应 Java: `StandardExpressionPreprocessor#preprocess()`。
     pub(crate) fn preprocess(
         context: &dyn IExpressionContext,
-        input: &JavaString,
-    ) -> StandardExpressionResult<JavaString> {
+        input: &Utf16String,
+    ) -> StandardExpressionResult<Utf16String> {
         if !input.as_utf16().contains(&(b'_' as u16)) {
             return Ok(input.clone());
         }
@@ -38,7 +38,7 @@ impl StandardExpressionPreprocessor {
             found = true;
             output.extend_from_slice(&unescape_marks(&units[current..start]));
             let expression_text =
-                JavaString::from_utf16(unescape_marks(&units[expression_start..end]));
+                Utf16String::from_utf16(unescape_marks(&units[expression_start..end]));
             let substituted =
                 LiteralSubstitutionUtil::perform_literal_substitution(Some(&expression_text))
                     .expect("non-null input remains non-null");
@@ -47,13 +47,13 @@ impl StandardExpressionPreprocessor {
                 .execute_with_context(context, StandardExpressionExecutionContext::RESTRICTED)?;
             let result_text = result
                 .as_deref()
-                .and_then(super::TemplateValue::to_java_string)
-                .unwrap_or_else(|| JavaString::from_rust_str("null"));
+                .and_then(super::TemplateValue::to_utf16_string)
+                .unwrap_or_else(|| Utf16String::from_rust_str("null"));
             output.extend_from_slice(result_text.as_utf16());
             current = end + 2;
         }
         if !found {
-            return Ok(JavaString::from_utf16(unescape_marks(units)));
+            return Ok(Utf16String::from_utf16(unescape_marks(units)));
         }
         output.extend_from_slice(&unescape_marks(&units[current..]));
         Ok(java_trim_owned(output))
@@ -82,7 +82,7 @@ fn unescape_marks(input: &[u16]) -> Vec<u16> {
     output
 }
 
-fn java_trim_owned(input: Vec<u16>) -> JavaString {
+fn java_trim_owned(input: Vec<u16>) -> Utf16String {
     let start = input
         .iter()
         .position(|unit| *unit > 0x20)
@@ -91,5 +91,5 @@ fn java_trim_owned(input: Vec<u16>) -> JavaString {
         .iter()
         .rposition(|unit| *unit > 0x20)
         .map_or(start, |position| position + 1);
-    JavaString::from_utf16(input[start..end].to_vec())
+    Utf16String::from_utf16(input[start..end].to_vec())
 }

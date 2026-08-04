@@ -10,14 +10,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::{IModel, ITemplateEvent};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::{EscapedAttributeUtils, FastStringWriter, JavaString};
+use thymeleaf::util::{EscapedAttributeUtils, FastStringWriter, Utf16String};
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -35,10 +35,10 @@ impl MarkupPrintBeforeElementModelProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("printbefore")),
+                Some(Utf16String::from_rust_str("printbefore")),
                 true,
                 500,
                 true,
@@ -90,7 +90,7 @@ fn print_model(
     context: &dyn ITemplateContext,
     model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     let markup = escaped_model(model)?;
@@ -102,7 +102,7 @@ fn print_model(
         .get_model_factory()
         .set_attribute(
             tag,
-            JavaString::from_rust_str("aggbefore"),
+            Utf16String::from_rust_str("aggbefore"),
             Some(markup),
             None,
         )
@@ -111,7 +111,7 @@ fn print_model(
     model.replace(0, Some(event)).map_err(model_error)
 }
 
-fn escaped_model(model: &dyn IModel) -> Result<JavaString, Box<dyn TemplateEngineException>> {
+fn escaped_model(model: &dyn IModel) -> Result<Utf16String, Box<dyn TemplateEngineException>> {
     let mut writer = FastStringWriter::new();
     model.write(&mut writer).map_err(|error| {
         Box::new(TemplateProcessingException::with_cause(
@@ -123,7 +123,7 @@ fn escaped_model(model: &dyn IModel) -> Result<JavaString, Box<dyn TemplateEngin
     let normalized = normalized.replace(['\r', '\n'], "\\n");
     EscapedAttributeUtils::escape_attribute(
         Some(TemplateMode::HTML),
-        Some(&JavaString::from_rust_str(&normalized)),
+        Some(&Utf16String::from_rust_str(&normalized)),
     )
     .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?
     .ok_or_else(|| processing_error("Escaped model unexpectedly became null"))

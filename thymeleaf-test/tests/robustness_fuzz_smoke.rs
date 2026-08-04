@@ -4,7 +4,7 @@
 //!   控制字符）必须返回 `Result`，允许 `Err` 但不允许 panic。
 //! - 表达式：通过引擎渲染含表达式模板的 smoke（表达式解析/求值在引擎内执行）。
 //! - 资源入口为 `&str`（合法 Rust Unicode）；孤立 UTF-16 代理项由语料运行器与
-//!   `JavaString` 级差分覆盖。
+//!   `Utf16String` 级差分覆盖。
 //!
 //! proptest 用例数默认 64；本地加深：
 //! `PROPTEST_CASES=10000 cargo test -p thymeleaf-test --test robustness_fuzz_smoke`。
@@ -25,11 +25,11 @@ use serial_test::serial;
 use thymeleaf::markup::HTMLTemplateParser;
 use thymeleaf::templateparser::ITemplateParser;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 /// 惰性引擎配置（proptest 每用例复用）。

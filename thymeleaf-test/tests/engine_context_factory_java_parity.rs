@@ -16,7 +16,7 @@ use thymeleaf::context::{
 use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, JavaNumber, JavaString};
+use thymeleaf::util::{JavaLocale, JavaNumber, Utf16String};
 use thymeleaf::{
     ITemplateEngine, TemplateEngine, TemplateMode, TemplateResolutionAttributeValue,
     TemplateResolutionAttributes,
@@ -32,16 +32,16 @@ fn golden() -> BTreeMap<String, String> {
         .collect()
 }
 
-fn java_string(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn utf16_string(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn locale(language_tag: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(java_string(language_tag), java_string(country))
+    JavaLocale::new(utf16_string(language_tag), utf16_string(country))
 }
 
 fn string_value(value: &str) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::string(java_string(value))))
+    Some(Arc::new(TemplateValue::string(utf16_string(value))))
 }
 
 fn integer_value(value: i32) -> Option<Arc<TemplateValue>> {
@@ -50,7 +50,7 @@ fn integer_value(value: i32) -> Option<Arc<TemplateValue>> {
 
 fn template_data(name: &str) -> TemplateData {
     TemplateData::new(
-        Some(java_string(name)),
+        Some(utf16_string(name)),
         None,
         Some(Arc::new(
             StringTemplateResource::new(Some(name)).expect("string resource"),
@@ -86,8 +86,8 @@ fn variable_names(context: &dyn IContext) -> String {
 
 fn variable_text(context: &dyn IContext, name: &str) -> String {
     context
-        .get_variable(Some(&java_string(name)))
-        .and_then(|value| value.to_java_string())
+        .get_variable(Some(&utf16_string(name)))
+        .and_then(|value| value.to_utf16_string())
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
 }
 
@@ -162,10 +162,10 @@ fn standard_engine_context_factory_matches_java_golden() {
     );
 
     let mut variables = IndexMap::new();
-    variables.insert(Some(java_string("second")), integer_value(2));
-    variables.insert(Some(java_string("first")), string_value("one"));
+    variables.insert(Some(utf16_string("second")), integer_value(2));
+    variables.insert(Some(utf16_string("first")), string_value("one"));
     variables.insert(
-        Some(java_string("nullable")),
+        Some(utf16_string("nullable")),
         Some(Arc::new(TemplateValue::Null)),
     );
     let populated = TraceContext::new(locale("ja-JP", "JP"), variables);
@@ -207,8 +207,8 @@ fn every_builtin_web_context_capability_creates_web_engine_context() {
     let factory = StandardEngineContextFactory::new();
     let exchange: Arc<dyn thymeleaf::web::IWebExchange> = Arc::new(CorpusWebExchange::new());
     let variables = vec![
-        (Some(java_string("webSecond")), integer_value(22)),
-        (Some(java_string("webFirst")), string_value("one")),
+        (Some(utf16_string("webSecond")), integer_value(22)),
+        (Some(utf16_string("webFirst")), string_value("one")),
     ];
 
     let web_context = thymeleaf::context::WebContext::with_locale_and_variables(
@@ -276,7 +276,7 @@ fn stateless_standard_factory_is_thread_safe_and_creates_fresh_contexts() {
     let engine = TemplateEngine::new();
     let configuration = engine.get_configuration().expect("engine configuration");
     let factory = StandardEngineContextFactory::new();
-    let variables = vec![(Some(java_string("shared")), string_value("value"))];
+    let variables = vec![(Some(utf16_string("shared")), string_value("value"))];
     let context = Arc::new(Context::with_locale_and_variables(
         Some(locale("en-US", "US")),
         Some(variables.as_slice()),
@@ -317,14 +317,14 @@ fn stateless_standard_factory_is_thread_safe_and_creates_fresh_contexts() {
 
 struct TraceContext {
     locale: JavaLocale,
-    variables: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     trace: Mutex<Vec<String>>,
 }
 
 impl TraceContext {
     fn new(
         locale: JavaLocale,
-        variables: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+        variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     ) -> Self {
         Self {
             locale,
@@ -354,7 +354,7 @@ impl IContext for TraceContext {
         self.locale.clone()
     }
 
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool {
         self.variables.contains_key(&name.cloned())
     }
 
@@ -368,8 +368,8 @@ impl IContext for TraceContext {
         })
     }
 
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
-        let rendered_name = name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
+        let rendered_name = name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         self.trace
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -379,7 +379,7 @@ impl IContext for TraceContext {
 }
 
 struct TraceVariableNames {
-    names: Vec<Option<JavaString>>,
+    names: Vec<Option<Utf16String>>,
 }
 
 impl IContextVariableNames for TraceVariableNames {
@@ -387,15 +387,15 @@ impl IContextVariableNames for TraceVariableNames {
         self.names.len()
     }
 
-    fn contains(&self, name: Option<&JavaString>) -> bool {
+    fn contains(&self, name: Option<&Utf16String>) -> bool {
         self.names.contains(&name.cloned())
     }
 
-    fn snapshot(&self) -> Vec<Option<JavaString>> {
+    fn snapshot(&self) -> Vec<Option<Utf16String>> {
         self.names.clone()
     }
 
-    fn remove(&self, _name: Option<&JavaString>) -> bool {
+    fn remove(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 }

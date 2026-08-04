@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::TemplateResolutionAttributes;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::web::IWebApplication;
 use crate::{IEngineConfiguration, ITemplateResource, WebApplicationTemplateResource};
 
@@ -71,7 +71,7 @@ impl std::ops::DerefMut for WebApplicationTemplateResolver {
 }
 
 impl ITemplateResolver for WebApplicationTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.resolver.get_name()
     }
 
@@ -82,8 +82,8 @@ impl ITemplateResolver for WebApplicationTemplateResolver {
     fn resolve_template(
         &self,
         _configuration: &dyn IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
@@ -95,7 +95,7 @@ impl ITemplateResolver for WebApplicationTemplateResolver {
                     Some(&resource_name.to_string_lossy()),
                     self.resolver
                         .get_character_encoding()
-                        .map(JavaString::to_string_lossy)
+                        .map(Utf16String::to_string_lossy)
                         .as_deref(),
                 )
                 .map(|resource| Some(Arc::new(resource) as Arc<dyn ITemplateResource>))

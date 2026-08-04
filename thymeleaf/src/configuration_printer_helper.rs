@@ -4,7 +4,7 @@ use crate::dialect::IDialect;
 use crate::postprocessor::IPostProcessor;
 use crate::preprocessor::IPreProcessor;
 use crate::processor::IProcessor;
-use crate::util::{JavaString, ProcessorComparators};
+use crate::util::{ProcessorComparators, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode, Thymeleaf};
 
 /// 模板引擎配置的诊断日志格式化器。
@@ -182,7 +182,7 @@ fn print_debug_configuration(
     {
         log.line("[THYMELEAF]     * Expression Objects:");
         for name in names.iter() {
-            let name = name.as_ref().map(JavaString::to_string_lossy);
+            let name = name.as_ref().map(Utf16String::to_string_lossy);
             log.optional_parameter(
                 "[THYMELEAF]         * #{}",
                 name.as_ref().map(|value| value as &dyn Display),
@@ -326,7 +326,7 @@ fn print_element_processor(log: &mut ConfigLogBuilder, processor: &dyn IProcesso
         || "*".to_owned(),
         |value| {
             value
-                .to_java_string()
+                .to_utf16_string()
                 .expect("configured matching element name remains valid")
                 .to_string_lossy()
         },
@@ -335,7 +335,7 @@ fn print_element_processor(log: &mut ConfigLogBuilder, processor: &dyn IProcesso
         || "*".to_owned(),
         |value| {
             value
-                .to_java_string()
+                .to_utf16_string()
                 .expect("configured matching attribute name remains valid")
                 .to_string_lossy()
         },
@@ -429,9 +429,9 @@ fn print_post_processors_for_template_mode(
 fn resolver_line(
     log: &mut ConfigLogBuilder,
     order: Option<i32>,
-    name: Option<&crate::util::JavaString>,
+    name: Option<&crate::util::Utf16String>,
 ) {
-    let name = name.map(crate::util::JavaString::to_string_lossy);
+    let name = name.map(crate::util::Utf16String::to_string_lossy);
     if let Some(order) = order {
         log.optional_parameters(
             "[THYMELEAF]     * [{}] {}",

@@ -22,11 +22,11 @@ use thymeleaf::model::{
     ITemplateEnd, ITemplateStart, IText, IXMLDeclaration,
 };
 use thymeleaf::templateresource::{ITemplateResource, StringTemplateResource};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn engine() -> TemplateEngine {
@@ -167,7 +167,7 @@ fn xml_attrs(input: &str) -> Arc<Attributes> {
 
 /// Java `Attributes#toString()`。
 fn attrs_text(attrs: &Arc<Attributes>) -> String {
-    attrs.to_java_string().to_string_lossy()
+    attrs.to_utf16_string().to_string_lossy()
 }
 
 /// Java `getAttributeMap().keySet().toString()`。

@@ -12,7 +12,7 @@ use crate::expression::{
 };
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::{JavaLocale, JavaNumber, JavaString};
+use crate::util::{JavaLocale, JavaNumber, Utf16String};
 use crate::web::IWebExchange;
 use crate::{IEngineConfiguration, TemplateMode, TemplateResolutionAttributes};
 
@@ -50,7 +50,7 @@ type ExchangeAttributeMap = WebEngineContext;
 
 struct WebLevelChanges {
     level: i32,
-    changes: IndexMap<Option<JavaString>, WebVariableChange>,
+    changes: IndexMap<Option<Utf16String>, WebVariableChange>,
 }
 
 struct WebVariableChange {
@@ -95,7 +95,7 @@ impl WebEngineContext {
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
         web_exchange: Arc<dyn IWebExchange>,
         locale: JavaLocale,
-        variables: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+        variables: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     ) -> Arc<ExchangeAttributeMap> {
         let core_variables = variables.map(|variables| {
             variables
@@ -149,7 +149,7 @@ impl WebEngineContext {
         // 重推导，丢弃被 request 直写覆盖的条目（newValue 与当前 exchange 值不再
         // 同一），基座从活 exchange + 恢复值构建。
         let mut representation = self.core.get_string_representation_by_level();
-        let mut old_values_sum: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> =
+        let mut old_values_sum: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> =
             IndexMap::new();
         // Java 从最深层向基座循环；core 骨架保留各层 selection/inliner/template。
         for level in read_changes(&self.local_changes).iter().rev() {
@@ -165,7 +165,7 @@ impl WebEngineContext {
         representation
     }
 
-    fn set_web_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_web_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let value = normalize_web_value(value);
         let level = self.core.level();
         if level > 0 {
@@ -200,9 +200,9 @@ impl WebEngineContext {
         self.web_exchange.set_attribute_value(name, value);
     }
 
-    fn assert_not_reserved(name: Option<&JavaString>, operation: &str) {
+    fn assert_not_reserved(name: Option<&Utf16String>, operation: &str) {
         if is_reserved(name) {
-            let name = name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+            let name = name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
             panic!(
                 "Cannot {operation} variable called '{name}' {} web variables map: such name is a \
                  reserved word",
@@ -221,7 +221,7 @@ impl IContext for WebEngineContext {
         self.core.get_locale()
     }
 
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool {
         if is_named(name, SESSION_VARIABLE_NAME) {
             return true;
         }
@@ -235,7 +235,7 @@ impl IContext for WebEngineContext {
         Arc::new(WebEngineVariableNames { context: self })
     }
 
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         if is_named(name, SESSION_VARIABLE_NAME) {
             return Some(Arc::new(TemplateValue::Object(
                 self.session_attribute_map.clone(),
@@ -347,10 +347,10 @@ impl ITemplateContext for WebEngineContext {
     fn get_message(
         &self,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         use_absent_message_representation: bool,
-    ) -> crate::messageresolver::MessageResolutionResult<Option<JavaString>> {
+    ) -> crate::messageresolver::MessageResolutionResult<Option<Utf16String>> {
         self.core.get_message(
             origin,
             key,
@@ -361,15 +361,15 @@ impl ITemplateContext for WebEngineContext {
 
     fn build_link(
         &self,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<JavaString, TemplateProcessingException> {
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Utf16String, TemplateProcessingException> {
         for link_builder in self.get_configuration().get_link_builders() {
             if let Some(link) = link_builder.build_link(self, base, parameters)? {
                 return Ok(link);
             }
         }
-        let base = base.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+        let base = base.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         Err(TemplateProcessingException::new(Some(format!(
             "No configured link builder instance was able to build link with base \"{base}\" and \
              parameters {}",
@@ -383,12 +383,12 @@ impl ITemplateContext for WebEngineContext {
 }
 
 impl IEngineContext for WebEngineContext {
-    fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         Self::assert_not_reserved(name.as_ref(), "set");
         self.set_web_variable(name, value);
     }
 
-    fn set_variables(&self, variables: &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>) {
+    fn set_variables(&self, variables: &IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>) {
         for name in variables.keys() {
             Self::assert_not_reserved(name.as_ref(), "set");
         }
@@ -397,7 +397,7 @@ impl IEngineContext for WebEngineContext {
         }
     }
 
-    fn remove_variable(&self, name: Option<&JavaString>) {
+    fn remove_variable(&self, name: Option<&Utf16String>) {
         Self::assert_not_reserved(name, "remove");
         self.set_web_variable(name.cloned(), None);
     }
@@ -424,7 +424,7 @@ impl IEngineContext for WebEngineContext {
         self.core.get_element_stack_above(context_level)
     }
 
-    fn is_variable_local(&self, name: Option<&JavaString>) -> bool {
+    fn is_variable_local(&self, name: Option<&Utf16String>) -> bool {
         read_changes(&self.local_changes)
             .iter()
             .rev()
@@ -481,7 +481,7 @@ impl Display for WebEngineContext {
                 &self
                     .get_selection_target()
                     .as_deref()
-                    .and_then(TemplateValue::to_java_string)
+                    .and_then(TemplateValue::to_utf16_string)
                     .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
             )?;
             formatter.write_str(">")?;
@@ -494,7 +494,7 @@ impl Display for WebEngineContext {
             "({})",
             self.get_template_data()
                 .get_template()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
         )
     }
 }
@@ -508,15 +508,15 @@ impl IContextVariableNames for WebEngineVariableNames<'_> {
         self.context.web_exchange.get_all_attribute_names().len()
     }
 
-    fn contains(&self, name: Option<&JavaString>) -> bool {
+    fn contains(&self, name: Option<&Utf16String>) -> bool {
         self.context.web_exchange.contains_attribute(name)
     }
 
-    fn snapshot(&self) -> Vec<Option<JavaString>> {
+    fn snapshot(&self) -> Vec<Option<Utf16String>> {
         self.context.web_exchange.get_all_attribute_names()
     }
 
-    fn remove(&self, name: Option<&JavaString>) -> bool {
+    fn remove(&self, name: Option<&Utf16String>) -> bool {
         let existed = self.context.web_exchange.contains_attribute(name);
         if existed {
             self.context.remove_variable(name);
@@ -543,8 +543,8 @@ impl TemplateObject for RequestParameterMap {
         "org.thymeleaf.context.WebEngineContext$RequestParameterMap"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&format_parameter_map(
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&format_parameter_map(
             &self.web_exchange.get_request().get_parameter_map(),
         ))
     }
@@ -555,7 +555,7 @@ impl TemplateObject for RequestParameterMap {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         let values = self
             .web_exchange
@@ -570,7 +570,7 @@ impl TemplateObject for RequestParameterMap {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         if method_name.to_string_lossy() == "size" && arguments.is_empty() {
@@ -602,13 +602,13 @@ impl TemplateObject for SessionAttributeMap {
         "org.thymeleaf.context.WebEngineContext$SessionAttributeMap"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         let attributes = self
             .web_exchange
             .get_session()
             .map(|session| session.get_attribute_map())
             .unwrap_or_default();
-        JavaString::from_rust_str(&format_attribute_map(&attributes))
+        Utf16String::from_rust_str(&format_attribute_map(&attributes))
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -617,7 +617,7 @@ impl TemplateObject for SessionAttributeMap {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         Some(Ok(self
             .web_exchange
@@ -628,7 +628,7 @@ impl TemplateObject for SessionAttributeMap {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         if method_name.to_string_lossy() == "size" && arguments.is_empty() {
@@ -662,8 +662,8 @@ impl TemplateObject for ApplicationAttributeMap {
         "org.thymeleaf.context.WebEngineContext$ApplicationAttributeMap"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&format_attribute_map(
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&format_attribute_map(
             &self.web_exchange.get_application().get_attribute_map(),
         ))
     }
@@ -674,7 +674,7 @@ impl TemplateObject for ApplicationAttributeMap {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         Some(Ok(self
             .web_exchange
@@ -685,7 +685,7 @@ impl TemplateObject for ApplicationAttributeMap {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         if method_name.to_string_lossy() == "size" && arguments.is_empty() {
@@ -708,7 +708,7 @@ fn integer_value(value: i32) -> Arc<TemplateValue> {
 /// 单值参数直接格式化为唯一元素，多值参数使用 Java List 风格。对应 Java:
 /// `WebEngineContext.RequestParameterValues`。
 pub struct RequestParameterValues {
-    parameter_values: Vec<Option<JavaString>>,
+    parameter_values: Vec<Option<Utf16String>>,
     /// 与 Java 公共 `length` 字段一致的元素数量。
     pub length: i32,
 }
@@ -718,7 +718,7 @@ impl RequestParameterValues {
     ///
     /// 对应 Java: `RequestParameterValues#RequestParameterValues(String[])`。
     #[must_use]
-    pub fn new(parameter_values: Vec<Option<JavaString>>) -> Self {
+    pub fn new(parameter_values: Vec<Option<Utf16String>>) -> Self {
         let length = i32::try_from(parameter_values.len()).unwrap_or(i32::MAX);
         Self {
             parameter_values,
@@ -738,7 +738,7 @@ impl RequestParameterValues {
     ///
     /// 对应 Java: `RequestParameterValues#get(int)`。
     #[must_use]
-    pub fn get(&self, index: usize) -> Option<&JavaString> {
+    pub fn get(&self, index: usize) -> Option<&Utf16String> {
         self.parameter_values.get(index).and_then(Option::as_ref)
     }
 
@@ -746,7 +746,7 @@ impl RequestParameterValues {
     ///
     /// 对应 Java: `RequestParameterValues#indexOf(Object)`。
     #[must_use]
-    pub fn index_of(&self, value: Option<&JavaString>) -> i32 {
+    pub fn index_of(&self, value: Option<&Utf16String>) -> i32 {
         self.parameter_values
             .iter()
             .position(|candidate| candidate.as_ref() == value)
@@ -758,7 +758,7 @@ impl RequestParameterValues {
     ///
     /// 对应 Java: `RequestParameterValues#contains(Object)`。
     #[must_use]
-    pub fn contains(&self, value: Option<&JavaString>) -> bool {
+    pub fn contains(&self, value: Option<&Utf16String>) -> bool {
         self.index_of(value) >= 0
     }
 }
@@ -768,16 +768,16 @@ impl TemplateObject for RequestParameterValues {
         "org.thymeleaf.context.WebEngineContext$RequestParameterValues"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         if self.parameter_values.is_empty() {
-            return JavaString::from_rust_str("");
+            return Utf16String::from_rust_str("");
         }
         if self.parameter_values.len() == 1 {
             return self.parameter_values[0]
                 .clone()
-                .unwrap_or_else(|| JavaString::from_rust_str("null"));
+                .unwrap_or_else(|| Utf16String::from_rust_str("null"));
         }
-        JavaString::from_rust_str(&format_parameter_values(&self.parameter_values))
+        Utf16String::from_rust_str(&format_parameter_values(&self.parameter_values))
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -800,11 +800,11 @@ impl TemplateObject for RequestParameterValues {
     }
 }
 
-fn is_named(name: Option<&JavaString>, expected: &str) -> bool {
+fn is_named(name: Option<&Utf16String>, expected: &str) -> bool {
     name.is_some_and(|name| name.to_string_lossy() == expected)
 }
 
-fn is_reserved(name: Option<&JavaString>) -> bool {
+fn is_reserved(name: Option<&Utf16String>) -> bool {
     is_named(name, PARAM_VARIABLE_NAME)
         || is_named(name, SESSION_VARIABLE_NAME)
         || is_named(name, APPLICATION_VARIABLE_NAME)
@@ -844,7 +844,7 @@ fn write_changes(
 }
 
 fn format_attribute_map(
-    attributes: &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    attributes: &IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
 ) -> String {
     let mut output = String::from("{");
     for (index, (name, value)) in attributes.iter().enumerate() {
@@ -854,13 +854,13 @@ fn format_attribute_map(
         output.push_str(
             &name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
         output.push('=');
         output.push_str(
             &value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
         );
     }
@@ -869,7 +869,7 @@ fn format_attribute_map(
 }
 
 fn format_parameter_map(
-    parameters: &IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>>,
+    parameters: &IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>>,
 ) -> String {
     let mut output = String::from("{");
     for (index, (name, values)) in parameters.iter().enumerate() {
@@ -879,7 +879,7 @@ fn format_parameter_map(
         output.push_str(
             &name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
         output.push('=');
         output.push_str(&values.as_ref().map_or_else(
@@ -891,7 +891,7 @@ fn format_parameter_map(
     output
 }
 
-fn format_parameter_values(values: &[Option<JavaString>]) -> String {
+fn format_parameter_values(values: &[Option<Utf16String>]) -> String {
     let mut output = String::from("[");
     for (index, value) in values.iter().enumerate() {
         if index != 0 {
@@ -900,7 +900,7 @@ fn format_parameter_values(values: &[Option<JavaString>]) -> String {
         output.push_str(
             &value
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
     }
     output.push(']');
@@ -908,7 +908,7 @@ fn format_parameter_values(values: &[Option<JavaString>]) -> String {
 }
 
 fn format_link_parameters(
-    parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 ) -> String {
     let Some(parameters) = parameters else {
         return "null".to_owned();
@@ -921,13 +921,13 @@ fn format_link_parameters(
         result.push_str(
             &name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
         result.push('=');
         result.push_str(
             &value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
         );
     }
@@ -937,8 +937,8 @@ fn format_link_parameters(
 
 /// Java `ExchangeAttributeMap` 单层重推导：丢弃被 exchange 直写覆盖的条目。
 fn format_web_level_changes_exchange_aware(
-    changes: &IndexMap<Option<JavaString>, WebVariableChange>,
-    old_values_sum: &mut IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    changes: &IndexMap<Option<Utf16String>, WebVariableChange>,
+    old_values_sum: &mut IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     exchange: &dyn crate::web::IWebExchange,
 ) -> String {
     let mut output = String::from("{");
@@ -971,14 +971,14 @@ fn format_web_level_changes_exchange_aware(
         output.push_str(
             &name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
         output.push('=');
         output.push_str(
             &change
                 .new_value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
         );
         written += 1;
@@ -991,9 +991,9 @@ fn format_web_level_changes_exchange_aware(
 /// Java 基座（level 0）：从活 exchange 属性 + 恢复值表构建。
 fn format_web_base_exchange_aware(
     exchange: &dyn crate::web::IWebExchange,
-    old_values_sum: &mut IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    old_values_sum: &mut IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
 ) -> String {
-    let mut base: IndexMap<JavaString, Option<Arc<TemplateValue>>> = IndexMap::new();
+    let mut base: IndexMap<Utf16String, Option<Arc<TemplateValue>>> = IndexMap::new();
     for name in exchange.get_all_attribute_names() {
         let Some(name) = name else {
             continue;
@@ -1024,7 +1024,7 @@ fn format_web_base_exchange_aware(
         output.push_str(
             &value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
                 .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
         );
     }

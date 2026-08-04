@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ComplexExpression, IStandardExpression};
 
@@ -7,20 +7,20 @@ use super::{ComplexExpression, IStandardExpression};
 /// 对应 Java: `org.thymeleaf.standard.expression.GreaterLesserExpression`。
 pub trait GreaterLesserExpression: ComplexExpression {
     /// `>`。
-    fn greater_than_operator() -> JavaString {
-        JavaString::from_rust_str(">")
+    fn greater_than_operator() -> Utf16String {
+        Utf16String::from_rust_str(">")
     }
     /// `>=`。
-    fn greater_or_equal_to_operator() -> JavaString {
-        JavaString::from_rust_str(">=")
+    fn greater_or_equal_to_operator() -> Utf16String {
+        Utf16String::from_rust_str(">=")
     }
     /// `<`。
-    fn less_than_operator() -> JavaString {
-        JavaString::from_rust_str("<")
+    fn less_than_operator() -> Utf16String {
+        Utf16String::from_rust_str("<")
     }
     /// `<=`。
-    fn less_or_equal_to_operator() -> JavaString {
-        JavaString::from_rust_str("<=")
+    fn less_or_equal_to_operator() -> Utf16String {
+        Utf16String::from_rust_str("<=")
     }
     /// 判断左操作数解析约束。
     fn is_left_allowed(left: Option<&dyn IStandardExpression>) -> bool {

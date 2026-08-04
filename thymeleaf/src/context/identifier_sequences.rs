@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::{Mutex, MutexGuard};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 标识符序列参数或状态错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -12,7 +12,7 @@ pub enum IdentifierSequencesError {
     /// `Validate.notNull` 对应的参数错误。
     NullId,
     /// 尚未生成过该 ID，无法取得 previous 值。
-    MissingPrevious(JavaString),
+    MissingPrevious(Utf16String),
 }
 
 impl IdentifierSequencesError {
@@ -45,7 +45,7 @@ impl Error for IdentifierSequencesError {}
 ///
 /// 对应 Java: `org.thymeleaf.context.IdentifierSequences`。
 pub struct IdentifierSequences {
-    id_counts: Mutex<HashMap<JavaString, i32>>,
+    id_counts: Mutex<HashMap<Utf16String, i32>>,
 }
 
 impl IdentifierSequences {
@@ -80,7 +80,7 @@ impl IdentifierSequences {
     /// `id` 为空时返回 Java `IllegalArgumentException` 等价错误。
     pub fn get_and_increment_id_seq(
         &self,
-        id: Option<&JavaString>,
+        id: Option<&Utf16String>,
     ) -> Result<i32, IdentifierSequencesError> {
         let id = id.ok_or(IdentifierSequencesError::NullId)?;
         let mut id_counts = lock_recovering_poison(&self.id_counts);
@@ -102,7 +102,7 @@ impl IdentifierSequences {
     /// 返回当前保存的下一计数，未见 ID 返回 `1`。
     pub fn get_next_id_seq(
         &self,
-        id: Option<&JavaString>,
+        id: Option<&Utf16String>,
     ) -> Result<i32, IdentifierSequencesError> {
         let id = id.ok_or(IdentifierSequencesError::NullId)?;
         Ok(lock_recovering_poison(&self.id_counts)
@@ -128,7 +128,7 @@ impl IdentifierSequences {
     /// 未分配过该 ID 时返回 Java `TemplateProcessingException` 等价错误。
     pub fn get_previous_id_seq(
         &self,
-        id: Option<&JavaString>,
+        id: Option<&Utf16String>,
     ) -> Result<i32, IdentifierSequencesError> {
         let id = id.ok_or(IdentifierSequencesError::NullId)?;
         lock_recovering_poison(&self.id_counts)
@@ -154,13 +154,13 @@ fn lock_recovering_poison<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
 #[cfg(test)]
 mod tests {
     use super::{IdentifierSequences, IdentifierSequencesError, lock_recovering_poison};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[test]
     fn preserves_java_int_wrap_and_exact_error_categories() {
         let sequences = IdentifierSequences::new();
-        let maximum = JavaString::from_rust_str("max");
-        let missing = JavaString::from_rust_str("missing");
+        let maximum = Utf16String::from_rust_str("max");
+        let missing = Utf16String::from_rust_str("missing");
         lock_recovering_poison(&sequences.id_counts).insert(maximum.clone(), i32::MAX);
 
         assert_eq!(

@@ -10,7 +10,7 @@ use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IProcessableElementTag;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -34,8 +34,8 @@ impl AddContextVariableElementProcessor {
         Self {
             processor: AbstractElementTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
-                Some(JavaString::from_rust_str("add-context-variable")),
+                dialect_prefix.map(Utf16String::from_rust_str),
+                Some(Utf16String::from_rust_str("add-context-variable")),
                 true,
                 None,
                 false,
@@ -103,27 +103,27 @@ fn add_context_variables(
     })?;
 
     engine_context.set_variable(
-        Some(JavaString::from_rust_str("newvar0")),
+        Some(Utf16String::from_rust_str("newvar0")),
         string_value("LocalVariablesNewVar0"),
     );
     engine_context.set_variable(
-        Some(JavaString::from_rust_str("newvar1")),
+        Some(Utf16String::from_rust_str("newvar1")),
         string_value("LocalVariablesNewVar1"),
     );
     web_exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("newvar2")),
+        Some(Utf16String::from_rust_str("newvar2")),
         string_value("RequestAttributesNewVar2"),
     );
     web_exchange.set_attribute_value(
-        Some(JavaString::from_rust_str("newvar3")),
+        Some(Utf16String::from_rust_str("newvar3")),
         string_value("RequestAttributesNewVar3"),
     );
     web_exchange.get_application().set_attribute_value(
-        Some(JavaString::from_rust_str("newvar4")),
+        Some(Utf16String::from_rust_str("newvar4")),
         string_value("ApplicationAttributesNewVar4"),
     );
     web_exchange.get_application().set_attribute_value(
-        Some(JavaString::from_rust_str("newvar5")),
+        Some(Utf16String::from_rust_str("newvar5")),
         string_value("ApplicationAttributesNewVar5"),
     );
     let session = web_exchange.get_session().ok_or_else(|| {
@@ -132,20 +132,20 @@ fn add_context_variables(
         ))) as Box<dyn TemplateEngineException>
     })?;
     session.set_attribute_value(
-        Some(JavaString::from_rust_str("newvar6")),
+        Some(Utf16String::from_rust_str("newvar6")),
         string_value("SessionAttributesNewVar6"),
     );
     session.set_attribute_value(
-        Some(JavaString::from_rust_str("newvar7")),
+        Some(Utf16String::from_rust_str("newvar7")),
         string_value("SessionAttributesNewVar7"),
     );
-    structure_handler.set_local_variable(JavaString::from_rust_str("one"), string_value("one"));
+    structure_handler.set_local_variable(Utf16String::from_rust_str("one"), string_value("one"));
     structure_handler.remove_element();
     Ok(())
 }
 
 fn string_value(value: &str) -> Option<Arc<TemplateValue>> {
-    Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+    Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
         value,
     ))))
 }

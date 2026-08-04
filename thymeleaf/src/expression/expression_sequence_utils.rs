@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     ExpressionCache, ExpressionSequence, StandardExpressionPreprocessor, StandardExpressionResult,
@@ -19,7 +19,7 @@ impl ExpressionSequenceUtils {
     /// 对应 Java: `ExpressionSequenceUtils#parseExpressionSequence()`。
     pub fn parse_expression_sequence(
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<ExpressionSequence>> {
         let input = input.ok_or_else(|| {
             Box::new(ValidateError::IllegalArgument {
@@ -52,13 +52,13 @@ impl ExpressionSequenceUtils {
     /// 不执行预处理和缓存，直接解析表达式序列。
     /// 对应 Java: `ExpressionSequenceUtils#internalParseExpressionSequence()`。
     pub(crate) fn internal_parse_expression_sequence(
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<ExpressionSequence> {
         ExpressionParsingUtil::parse_expression_sequence(input)
     }
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
+fn java_trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()
@@ -68,5 +68,5 @@ fn java_trim(input: &JavaString) -> JavaString {
         .iter()
         .rposition(|unit| *unit > 0x20)
         .map_or(start, |position| position + 1);
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }

@@ -6,7 +6,7 @@ use crate::engine::TemplateData;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::ITemplateContext;
 
@@ -15,11 +15,11 @@ use super::ITemplateContext;
 /// 对应 Java: `org.thymeleaf.context.IEngineContext`。
 pub trait IEngineContext: ITemplateContext {
     /// 在当前上下文层设置变量。
-    fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>);
+    fn set_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>);
     /// 批量设置变量。
-    fn set_variables(&self, variables: &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>);
+    fn set_variables(&self, variables: &IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>);
     /// 删除变量。
-    fn remove_variable(&self, name: Option<&JavaString>);
+    fn remove_variable(&self, name: Option<&Utf16String>);
     /// 设置 selection target。
     fn set_selection_target(&self, selection_target: Option<Arc<TemplateValue>>);
     /// 设置当前内联器。
@@ -31,7 +31,7 @@ pub trait IEngineContext: ITemplateContext {
     /// 返回指定层级之上的元素栈。
     fn get_element_stack_above(&self, context_level: i32) -> Vec<Arc<dyn IProcessableElementTag>>;
     /// 判断变量是否定义于局部层。
-    fn is_variable_local(&self, name: Option<&JavaString>) -> bool;
+    fn is_variable_local(&self, name: Option<&Utf16String>) -> bool;
     /// 增加上下文层级。
     fn increase_level(&self);
     /// 减少上下文层级并恢复局部状态。

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     ComplexExpression, IStandardExpression, StandardExpressionExecutionContext,
@@ -49,12 +49,12 @@ impl DefaultExpression {
 }
 
 impl IStandardExpression for DefaultExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = Vec::new();
         append(&mut units, self.queried_expression.as_ref())?;
         units.extend_from_slice(&[b' ' as u16, b'?' as u16, b':' as u16, b' ' as u16]);
         append(&mut units, self.default_expression.as_ref())?;
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
     fn execute_with_context(
         &self,

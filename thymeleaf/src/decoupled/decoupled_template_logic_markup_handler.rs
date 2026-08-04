@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{DecoupledInjectedAttribute, DecoupledTemplateLogic};
 
@@ -41,7 +41,7 @@ impl DecoupledTemplateLogicMarkupHandler {
     #[must_use]
     pub fn process_injected_attributes(
         &self,
-        selectors: Option<&[JavaString]>,
+        selectors: Option<&[Utf16String]>,
     ) -> Vec<Arc<DecoupledInjectedAttribute>> {
         if !self.inject_attributes {
             return Vec::new();

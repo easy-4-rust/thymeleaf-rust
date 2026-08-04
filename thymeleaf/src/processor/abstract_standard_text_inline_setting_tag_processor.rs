@@ -9,7 +9,7 @@ use crate::element::{
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::inline::{IInliner, StandardInlineMode};
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IProcessor, StandardAttributeCallback};
 
@@ -26,8 +26,8 @@ impl AbstractStandardTextInlineSettingTagProcessor {
     /// 对应 Java 语义：`AbstractStandardTextInlineSettingTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new<F>(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         get_inliner: F,
         processor_class_name: &'static str,

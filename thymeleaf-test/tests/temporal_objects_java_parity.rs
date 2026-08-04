@@ -17,30 +17,30 @@ use chrono::{FixedOffset, NaiveDate, NaiveTime, TimeZone, Utc};
 use chrono_tz::Tz;
 use thymeleaf::expression::{TemplateObject, TemplateValue, Temporals};
 use thymeleaf::temporal::JavaTemporal;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn locale_us() -> JavaLocale {
     JavaLocale::new(
-        JavaString::from_rust_str("en"),
-        JavaString::from_rust_str("US"),
+        Utf16String::from_rust_str("en"),
+        Utf16String::from_rust_str("US"),
     )
 }
 
 fn locale_de() -> JavaLocale {
     JavaLocale::new(
-        JavaString::from_rust_str("de"),
-        JavaString::from_rust_str("DE"),
+        Utf16String::from_rust_str("de"),
+        Utf16String::from_rust_str("DE"),
     )
 }
 
 fn locale_ca() -> JavaLocale {
     JavaLocale::new(
-        JavaString::from_rust_str("en"),
-        JavaString::from_rust_str("CA"),
+        Utf16String::from_rust_str("en"),
+        Utf16String::from_rust_str("CA"),
     )
 }
 
@@ -75,7 +75,7 @@ fn assert_integer(temporals: &Temporals, method: &str, value: JavaTemporal, expe
     let result = call(temporals, method, &[arg(value)]);
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(
         actual.as_deref(),
@@ -89,7 +89,7 @@ fn assert_text(temporals: &Temporals, method: &str, value: JavaTemporal, expecte
     let result = call(temporals, method, &[arg(value)]);
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some(expected), "{method} 返回值");
 }
@@ -182,7 +182,7 @@ fn temporals_format_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("2015-12-31 23:59:00"));
 
@@ -199,7 +199,7 @@ fn temporals_format_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("Donnerstag, 31 Dezember, 2015"));
 
@@ -224,7 +224,7 @@ fn temporals_format_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("2015-12-31 18:59:00"));
 
@@ -358,7 +358,7 @@ fn temporals_standard_patterns_matches_java() {
         );
         let actual = result
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
+            .and_then(TemplateValue::to_utf16_string)
             .map(|value| value.to_string_lossy());
         assert_eq!(actual.as_deref(), Some(expected), "pattern {pattern}");
     }
@@ -381,7 +381,7 @@ fn temporals_standard_patterns_matches_java() {
         );
         let actual = result
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
+            .and_then(TemplateValue::to_utf16_string)
             .map(|value| value.to_string_lossy());
         assert_eq!(
             actual
@@ -421,7 +421,7 @@ fn temporals_standard_pattern_datetime_matches_java() {
         );
         let actual = result
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
+            .and_then(TemplateValue::to_utf16_string)
             .map(|value| value.to_string_lossy());
         assert_eq!(
             actual
@@ -448,7 +448,7 @@ fn temporals_specific_types_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("23:59:45"));
 
@@ -472,7 +472,7 @@ fn temporals_specific_types_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("12/31/2015 23:59:45"));
 
@@ -491,7 +491,7 @@ fn temporals_specific_types_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("23:59:45"));
 
@@ -504,7 +504,7 @@ fn temporals_specific_types_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("2015"));
 
@@ -520,7 +520,7 @@ fn temporals_specific_types_with_pattern_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("12/2015"));
 }
@@ -601,7 +601,7 @@ fn temporals_format_iso_and_issue17_matches_java() {
     let result = call(&temporals, "formatISO", &[arg(offset_max)]);
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("2015-12-31T23:59:45.000+1800"));
     assert_null(&temporals, "formatISO");
@@ -618,7 +618,7 @@ fn temporals_format_iso_and_issue17_matches_java() {
     );
     let actual = result
         .as_deref()
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map(|value| value.to_string_lossy());
     assert_eq!(actual.as_deref(), Some("1970-01-01"));
 }

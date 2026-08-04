@@ -1,7 +1,7 @@
 use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractStandardExpressionAttributeTagProcessor, delegate_standard_element_tag_processor,
@@ -23,18 +23,18 @@ impl StandardRemoveTagProcessor {
     /// 对应 Java 语义：`StandardRemoveTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardExpressionAttributeTagProcessor::with_restricted_execution(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 true,
                 false,
                 |_context, _tag, attribute_name, attribute_value, result, structure_handler| {
-                    let Some(value) = result.as_deref().and_then(TemplateValue::to_java_string)
+                    let Some(value) = result.as_deref().and_then(TemplateValue::to_utf16_string)
                     else {
                         return Ok(());
                     };
@@ -48,10 +48,10 @@ impl StandardRemoveTagProcessor {
                             return Err(Box::new(TemplateProcessingException::new(Some(format!(
                                 "Invalid value specified for \"{}\": only 'all', 'tag', 'body', 'none' and 'all-but-first' are allowed, but \"{}\" was specified.",
                                 attribute_name
-                                    .to_java_string()
+                                    .to_utf16_string()
                                     .map_or_else(|_| String::new(), |name| name.to_string_lossy()),
                                 attribute_value
-                                    .map_or_else(String::new, JavaString::to_string_lossy)
+                                    .map_or_else(String::new, Utf16String::to_string_lossy)
                             ))))
                                 as Box<dyn TemplateEngineException>);
                         }

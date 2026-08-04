@@ -1,5 +1,5 @@
 use crate::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractStandardFragmentInsertionTagProcessor, delegate_standard_element_tag_processor,
@@ -21,13 +21,13 @@ impl StandardInsertTagProcessor {
     /// 对应 Java 语义：`StandardInsertTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardFragmentInsertionTagProcessor::new(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 false,
                 "org.thymeleaf.standard.processor.StandardInsertTagProcessor",

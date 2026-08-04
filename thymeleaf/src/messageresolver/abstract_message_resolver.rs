@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 保存消息解析器名称和执行顺序的抽象基类状态。
 ///
@@ -8,7 +8,7 @@ use crate::util::JavaString;
 /// 状态，不提供消息解析逻辑。Rust 使用组合代替继承，由具体解析器持有本对象。
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AbstractMessageResolver {
-    name: Option<JavaString>,
+    name: Option<Utf16String>,
     order: Option<i32>,
 }
 
@@ -28,7 +28,7 @@ impl AbstractMessageResolver {
     #[must_use]
     pub fn new(java_class_name: &str) -> Self {
         Self {
-            name: Some(JavaString::from_rust_str(java_class_name)),
+            name: Some(Utf16String::from_rust_str(java_class_name)),
             order: None,
         }
     }
@@ -41,7 +41,7 @@ impl AbstractMessageResolver {
     ///
     /// 当前名称；`None` 对应 Java `null`。
     #[must_use]
-    pub const fn get_name(&self) -> Option<&JavaString> {
+    pub const fn get_name(&self) -> Option<&Utf16String> {
         self.name.as_ref()
     }
 
@@ -52,7 +52,7 @@ impl AbstractMessageResolver {
     /// # 参数
     ///
     /// - `name`：新名称；允许用 `None` 保留 Java 可空语义。
-    pub fn set_name(&mut self, name: Option<JavaString>) {
+    pub fn set_name(&mut self, name: Option<Utf16String>) {
         self.name = name;
     }
 
@@ -82,7 +82,7 @@ impl AbstractMessageResolver {
 
 #[cfg(test)]
 mod tests {
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     use super::AbstractMessageResolver;
 
@@ -91,7 +91,7 @@ mod tests {
         let mut resolver = AbstractMessageResolver::new("example.ChildResolver");
         assert_eq!(
             resolver.get_name(),
-            Some(&JavaString::from_rust_str("example.ChildResolver"))
+            Some(&Utf16String::from_rust_str("example.ChildResolver"))
         );
         assert_eq!(resolver.get_order(), None);
 

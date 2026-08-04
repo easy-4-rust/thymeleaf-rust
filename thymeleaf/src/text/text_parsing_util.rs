@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use super::{ParsingLocatorUtil, parsing_locator_util::ParsingLocatorError};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 通用文本扫描中的 Java 运行时异常适配。
 ///
@@ -52,7 +52,7 @@ impl TextParsingUtilError {
     ///
     /// `None` 仅对应 null text 的无消息 NPE。
     /// 对应 Java 语义：`TextParsingUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> Option<JavaString> {
+    pub(crate) fn java_message(&self) -> Option<Utf16String> {
         let message = match self {
             Self::NullText => return None,
             Self::NullDirectLocator => {
@@ -68,7 +68,7 @@ impl TextParsingUtilError {
                 format!("Index {index} out of bounds for length {length}")
             }
         };
-        Some(JavaString::from_rust_str(&message))
+        Some(Utf16String::from_rust_str(&message))
     }
 }
 
@@ -526,7 +526,7 @@ mod tests {
     use std::fmt::Write;
 
     use super::{TextParsingUtil, TextParsingUtilError};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
     const JAVA_GOLDEN: &str = include_str!("../../tests/fixtures/text_parsing_util_golden.txt");
@@ -1466,7 +1466,7 @@ mod tests {
                 to_utf16_hex(
                     &error
                         .java_message()
-                        .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                        .unwrap_or_else(|| Utf16String::from_rust_str("null"))
                 )
             ),
         };
@@ -1532,7 +1532,7 @@ mod tests {
         )
     }
 
-    fn to_utf16_hex(value: &JavaString) -> String {
+    fn to_utf16_hex(value: &Utf16String) -> String {
         value
             .as_utf16()
             .iter()

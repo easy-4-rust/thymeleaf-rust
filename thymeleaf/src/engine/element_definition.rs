@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::{Arc, RwLock};
 
 use crate::element::{ElementProcessorSet, IElementProcessor, UnmodifiableElementProcessorSet};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ElementNameError, ElementNameValue};
 
@@ -151,11 +151,11 @@ impl ElementDefinition {
     /// # 错误
     ///
     /// complete names 数组为空时传播对应错误。
-    /// 对应 Java 语义：`ElementDefinition` 的 `to_java_string` 行为（Rust 侧辅助/私有路径）。
-    pub fn to_java_string(&self) -> Result<JavaString, ElementDefinitionError> {
+    /// 对应 Java 语义：`ElementDefinition` 的 `to_utf16_string` 行为（Rust 侧辅助/私有路径）。
+    pub fn to_utf16_string(&self) -> Result<Utf16String, ElementDefinitionError> {
         self.element_name
             .as_element_name()
-            .to_java_string()
+            .to_utf16_string()
             .map_err(ElementDefinitionError::ElementName)
     }
 }

@@ -15,10 +15,10 @@ use thymeleaf::engine::{
     AttributeNameValue, AttributeNames, ElementNameValue, ElementNames, TextAttributeName,
     TextElementName,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn as_utf16(value: &str) -> Vec<u16> {
@@ -29,7 +29,7 @@ fn as_utf16(value: &str) -> Vec<u16> {
 fn attribute_to_string(value: &AttributeNameValue) -> String {
     value
         .as_attribute_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("attribute name to string")
         .to_string_lossy()
 }
@@ -38,7 +38,7 @@ fn attribute_to_string(value: &AttributeNameValue) -> String {
 fn text_attribute_to_string(value: &Arc<TextAttributeName>) -> String {
     value
         .as_attribute_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("text attribute name to string")
         .to_string_lossy()
 }
@@ -47,7 +47,7 @@ fn text_attribute_to_string(value: &Arc<TextAttributeName>) -> String {
 fn text_element_to_string(value: &Arc<TextElementName>) -> String {
     value
         .as_element_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("text element name to string")
         .to_string_lossy()
 }
@@ -56,7 +56,7 @@ fn text_element_to_string(value: &Arc<TextElementName>) -> String {
 fn element_to_string(value: &ElementNameValue) -> String {
     value
         .as_element_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("element name to string")
         .to_string_lossy()
 }
@@ -280,7 +280,7 @@ fn attribute_names_html_string() {
     let name = AttributeNames::for_html_name(Some(&js("data-something"))).expect("name");
     assert_eq!(
         name.as_attribute_name()
-            .to_java_string()
+            .to_utf16_string()
             .expect("toString")
             .to_string_lossy(),
         "{data-something}"

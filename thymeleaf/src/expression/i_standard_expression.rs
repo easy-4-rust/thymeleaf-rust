@@ -2,7 +2,7 @@ use std::error::Error;
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{StandardExpressionExecutionContext, TemplateValue};
 
@@ -17,7 +17,7 @@ pub type StandardExpressionResult<T> = Result<T, StandardExpressionError>;
 /// 对应 Java: `org.thymeleaf.standard.expression.IStandardExpression`。
 pub trait IStandardExpression: Send + Sync {
     /// 返回表达式的规范 UTF-16 字符串表示。
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString>;
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String>;
 
     /// 使用 NORMAL 执行上下文求值。
     fn execute(

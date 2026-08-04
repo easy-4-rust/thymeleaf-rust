@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const RAW_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.raw.RawParseException";
 
@@ -15,8 +15,8 @@ const RAW_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.raw.RawPar
 pub struct RawParseCause {
     error: Box<dyn Error + Send + Sync>,
     java_class_name: String,
-    java_message: Option<JavaString>,
-    raw_parse_location: Option<(i32, i32, JavaString)>,
+    java_message: Option<Utf16String>,
+    raw_parse_location: Option<(i32, i32, Utf16String)>,
 }
 
 impl RawParseCause {
@@ -36,7 +36,7 @@ impl RawParseCause {
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
         java_class_name: impl Into<String>,
-        java_message: Option<JavaString>,
+        java_message: Option<Utf16String>,
     ) -> Self {
         Self {
             error,
@@ -107,7 +107,7 @@ impl Debug for RawParseCause {
 /// 位置的同类型异常时，按 Java 私有 `message` 方法继承位置并重组消息。
 #[derive(Debug)]
 pub struct RawParseException {
-    message: Option<JavaString>,
+    message: Option<Utf16String>,
     line: Option<i32>,
     col: Option<i32>,
     cause: Option<RawParseCause>,
@@ -133,7 +133,7 @@ impl RawParseException {
     #[must_use]
     ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message` 行为（Rust 侧辅助/私有路径）。
-    pub fn with_message(message: Option<JavaString>) -> Self {
+    pub fn with_message(message: Option<Utf16String>) -> Self {
         Self {
             message,
             line: None,
@@ -152,7 +152,7 @@ impl RawParseException {
     ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message_and_cause` 行为（Rust 侧辅助/私有路径）。
     pub fn with_message_and_cause(
-        message: Option<JavaString>,
+        message: Option<Utf16String>,
         cause: Option<RawParseCause>,
     ) -> Self {
         let (line, col) = inherited_location(cause.as_ref());
@@ -207,7 +207,7 @@ impl RawParseException {
     ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message_and_cause_at` 行为（Rust 侧辅助/私有路径）。
     pub fn with_message_and_cause_at(
-        message: Option<&JavaString>,
+        message: Option<&Utf16String>,
         cause: Option<RawParseCause>,
         line: i32,
         col: i32,
@@ -230,7 +230,7 @@ impl RawParseException {
     #[must_use]
     ///
     /// 对应 Java 语义：`RawParseException` 的 `with_message_at` 行为（Rust 侧辅助/私有路径）。
-    pub fn with_message_at(message: Option<&JavaString>, line: i32, col: i32) -> Self {
+    pub fn with_message_at(message: Option<&Utf16String>, line: i32, col: i32) -> Self {
         Self::with_message_and_cause_at(message, None, line, col)
     }
 
@@ -256,7 +256,7 @@ impl RawParseException {
     /// 返回构造器最终保存的可空 Java UTF-16 消息。
     #[must_use]
     /// 对应 Java 语义：Java 接口/超类方法 `getMessage()` 的 Rust 移植（`RawParseException` 继承路径）。
-    pub fn get_message(&self) -> Option<&JavaString> {
+    pub fn get_message(&self) -> Option<&Utf16String> {
         self.message.as_ref()
     }
 
@@ -291,7 +291,7 @@ impl Display for RawParseException {
             &self
                 .message
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
     }
 }
@@ -309,9 +309,9 @@ fn inherited_location(cause: Option<&RawParseCause>) -> (Option<i32>, Option<i32
 }
 
 fn compose_inherited_message(
-    message: Option<&JavaString>,
+    message: Option<&Utf16String>,
     cause: Option<&RawParseCause>,
-) -> Option<JavaString> {
+) -> Option<Utf16String> {
     if let Some(cause) = cause
         && let Some((line, col, cause_message)) = cause.raw_parse_location.as_ref()
     {
@@ -323,7 +323,7 @@ fn compose_inherited_message(
             }
             None => result.extend_from_slice(cause_message.as_utf16()),
         }
-        return Some(JavaString::from_utf16(result));
+        return Some(Utf16String::from_utf16(result));
     }
     if let Some(message) = message {
         return Some(message.clone());
@@ -331,16 +331,16 @@ fn compose_inherited_message(
     cause.and_then(|cause| cause.java_message.clone())
 }
 
-fn message_prefix(line: i32, col: i32) -> JavaString {
-    JavaString::from_rust_str(&format!("(Line = {line}, Column = {col})"))
+fn message_prefix(line: i32, col: i32) -> Utf16String {
+    Utf16String::from_rust_str(&format!("(Line = {line}, Column = {col})"))
 }
 
-fn prefix_with_message(line: i32, col: i32, message: Option<&JavaString>) -> JavaString {
+fn prefix_with_message(line: i32, col: i32, message: Option<&Utf16String>) -> Utf16String {
     let mut result = message_prefix(line, col).as_utf16().to_vec();
     result.push(u16::from(b' '));
     match message {
         Some(message) => result.extend_from_slice(message.as_utf16()),
         None => result.extend("null".encode_utf16()),
     }
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }

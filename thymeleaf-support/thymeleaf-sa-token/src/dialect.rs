@@ -17,7 +17,7 @@ use thymeleaf::dialect::{
 use thymeleaf::exceptions::TemplateProcessingException;
 use thymeleaf::expression::IExpressionObjectFactory;
 use thymeleaf::processor::{IProcessor, ProcessorSet};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 use crate::expression_object::SaTokenExpressionObjectFactory;
 use crate::processor::{SecAuthenticationTagProcessor, SecAuthorizeTagProcessor};
@@ -39,18 +39,18 @@ impl SaTokenDialect {
     /// 创建使用默认 `sec` 前缀的安全方言。
     #[must_use]
     pub fn new() -> Self {
-        Self::with_prefix(Some(JavaString::from_rust_str(DIALECT_PREFIX)))
+        Self::with_prefix(Some(Utf16String::from_rust_str(DIALECT_PREFIX)))
     }
 
     /// 创建使用指定前缀的安全方言。
     #[must_use]
-    pub fn with_prefix(dialect_prefix: Option<JavaString>) -> Self {
+    pub fn with_prefix(dialect_prefix: Option<Utf16String>) -> Self {
         Self {
             base: AbstractProcessorDialect::new(
                 Some(DIALECT_NAME),
                 dialect_prefix
                     .as_ref()
-                    .map(JavaString::to_string_lossy)
+                    .map(Utf16String::to_string_lossy)
                     .as_deref(),
                 PROCESSOR_PRECEDENCE,
             )
@@ -63,7 +63,7 @@ impl SaTokenDialect {
     pub fn create_processors_set(
         dialect_prefix: Option<&str>,
     ) -> Result<ProcessorSet, TemplateProcessingException> {
-        let prefix = dialect_prefix.map(JavaString::from_rust_str);
+        let prefix = dialect_prefix.map(Utf16String::from_rust_str);
         let mut processors = ProcessorSet::new();
         for mode in [
             TemplateMode::HTML,

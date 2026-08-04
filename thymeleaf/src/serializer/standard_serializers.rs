@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::IEngineConfiguration;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IStandardCSSSerializer, IStandardJavaScriptSerializer};
 
@@ -53,7 +53,7 @@ where
 {
     configuration
         .get_execution_attributes()
-        .get(&Some(JavaString::from_rust_str(name)))
+        .get(&Some(Utf16String::from_rust_str(name)))
         .and_then(Option::as_deref)
         .and_then(|attribute| attribute.downcast_ref::<T>())
         .cloned()

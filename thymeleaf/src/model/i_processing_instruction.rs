@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::ITemplateEvent;
 
@@ -7,9 +7,9 @@ use super::ITemplateEvent;
 /// 对应 Java: `org.thymeleaf.model.IProcessingInstruction`。
 pub trait IProcessingInstruction: ITemplateEvent {
     /// 返回 processing instruction target。
-    fn get_target(&self) -> Option<&JavaString>;
+    fn get_target(&self) -> Option<&Utf16String>;
     /// 返回 processing instruction 内容。
-    fn get_content(&self) -> Option<&JavaString>;
+    fn get_content(&self) -> Option<&Utf16String>;
     /// 返回包含边界的完整 processing instruction。
-    fn get_processing_instruction(&self) -> Option<&JavaString>;
+    fn get_processing_instruction(&self) -> Option<&Utf16String>;
 }

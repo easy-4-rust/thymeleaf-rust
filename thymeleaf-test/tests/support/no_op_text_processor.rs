@@ -5,7 +5,7 @@ use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IText;
 use thymeleaf::processor::IProcessor;
 use thymeleaf::text::{AbstractTextProcessor, ITextProcessor, ITextStructureHandler};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback =
@@ -79,14 +79,14 @@ fn process_text(
                 error,
             )) as Box<dyn TemplateEngineException>
         })?
-        .unwrap_or_else(|| JavaString::from_rust_str(""));
-    if text == JavaString::from_rust_str("...") {
+        .unwrap_or_else(|| Utf16String::from_rust_str(""));
+    if text == Utf16String::from_rust_str("...") {
         return Ok(());
     }
     let valid = ["noop-tag", "noop-model"].iter().any(|name| {
         matches!(
             context
-                .get_variable(Some(&JavaString::from_rust_str(name)))
+                .get_variable(Some(&Utf16String::from_rust_str(name)))
                 .as_deref(),
             Some(TemplateValue::Boolean(true))
         )
@@ -96,6 +96,6 @@ fn process_text(
             "Local variable has not reached from one no-op operator to the body text".to_owned(),
         ))));
     }
-    structure_handler.set_text(JavaString::from_rust_str("processed!"));
+    structure_handler.set_text(Utf16String::from_rust_str("processed!"));
     Ok(())
 }

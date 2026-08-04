@@ -195,7 +195,7 @@ mod tests {
     use crate::model::{AttributeValueQuotes, IProcessableElementTag};
     use crate::processor::IProcessor;
     use crate::templatemode::TemplateMode;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     /// 对应 Java: `ProcessorAggregationTestDialect.TestElementProcessor`。
     ///
@@ -236,8 +236,8 @@ mod tests {
         }
     }
 
-    fn java(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn java(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
     fn processor(
@@ -459,7 +459,7 @@ mod tests {
 
     /// Java `TestElementProcessor#toString` 的完整追踪：
     /// `N-ELEMENT-{precedence}-{matchingElementName|null}-{matchingAttributeName}`
-    /// （`MatchingElementName`/`MatchingAttributeName` 的 `to_java_string` 渲染
+    /// （`MatchingElementName`/`MatchingAttributeName` 的 `to_utf16_string` 渲染
     /// 完整名称集，如 `{a}`、`{th:src,data-th-src}`）。
     fn next_trace(iterator: &mut ElementProcessorIterator, tag: &OpenElementTag) -> String {
         let Some(processor) = iterator
@@ -474,7 +474,7 @@ mod tests {
         let element = processor
             .get_matching_element_name()
             .map(|name| {
-                name.to_java_string()
+                name.to_utf16_string()
                     .map(|value| value.to_string_lossy())
                     .expect("matching element name string")
             })
@@ -482,7 +482,7 @@ mod tests {
         let attribute = processor
             .get_matching_attribute_name()
             .map(|name| {
-                name.to_java_string()
+                name.to_utf16_string()
                     .map(|value| value.to_string_lossy())
                     .expect("matching attribute name string")
             })

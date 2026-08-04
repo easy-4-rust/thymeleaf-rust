@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use super::{JavaString, JavaWriter};
+use super::{JavaWriter, Utf16String};
 
 const NULL_TEXT: &str = "null";
 const NULL_CHAR_ARRAY_MESSAGE: &str =
@@ -63,17 +63,17 @@ impl FastStringWriterError {
     /// 有消息时返回独立 UTF-16 Java 字符串；`CharArrayRange` 返回 `None`，对应
     /// `Throwable#getMessage()` 为 null。
     #[must_use]
-    pub fn message(&self) -> Option<JavaString> {
+    pub fn message(&self) -> Option<Utf16String> {
         match self {
-            Self::NegativeBufferSize => Some(JavaString::from_rust_str("Negative buffer size")),
+            Self::NegativeBufferSize => Some(Utf16String::from_rust_str("Negative buffer size")),
             Self::StringRange { start, end, length }
             | Self::StringSubsequenceRange { start, end, length } => {
-                Some(JavaString::from_rust_str(&format!(
+                Some(Utf16String::from_rust_str(&format!(
                     "Range [{start}, {end}) out of bounds for length {length}"
                 )))
             }
             Self::CharArrayRange => None,
-            Self::NullCharArray => Some(JavaString::from_rust_str(NULL_CHAR_ARRAY_MESSAGE)),
+            Self::NullCharArray => Some(Utf16String::from_rust_str(NULL_CHAR_ARRAY_MESSAGE)),
         }
     }
 }
@@ -151,8 +151,8 @@ impl FastStringWriter {
     /// # 参数
     /// - `string`：UTF-16 字符串；`None` 按 `StringBuilder#append(String)` 写入
     ///   `"null"`。
-    pub fn write_string(&mut self, string: Option<&JavaString>) {
-        self.builder.extend(java_string_or_null(string));
+    pub fn write_string(&mut self, string: Option<&Utf16String>) {
+        self.builder.extend(utf16_string_or_null(string));
     }
 
     /// 写入 Java 字符串的 UTF-16 子范围。
@@ -169,11 +169,11 @@ impl FastStringWriter {
     /// `int` 回绕加法。
     pub fn write_string_range(
         &mut self,
-        string: Option<&JavaString>,
+        string: Option<&Utf16String>,
         offset: i32,
         length: i32,
     ) -> Result<(), FastStringWriterError> {
-        let source = java_string_or_null(string);
+        let source = utf16_string_or_null(string);
         let end = offset.wrapping_add(length);
         let source_length = source.len();
         let invalid = offset < 0
@@ -261,8 +261,8 @@ impl FastStringWriter {
     /// # 返回
     /// 包含当前全部 UTF-16 代码单元的新对象，后续写入不会改变该快照。
     #[must_use]
-    pub fn to_string(&self) -> JavaString {
-        JavaString::from_utf16(self.builder.clone())
+    pub fn to_string(&self) -> Utf16String {
+        Utf16String::from_utf16(self.builder.clone())
     }
 
     /// 追加完整 Java `CharSequence` 并返回同一写入器。
@@ -274,7 +274,7 @@ impl FastStringWriter {
     ///
     /// # 返回
     /// `self` 的同一可变引用，保留链式调用身份。
-    pub fn append_sequence(&mut self, sequence: Option<&JavaString>) -> &mut Self {
+    pub fn append_sequence(&mut self, sequence: Option<&Utf16String>) -> &mut Self {
         self.write_string(sequence);
         self
     }
@@ -292,11 +292,11 @@ impl FastStringWriter {
     /// 非法范围返回 `StringIndexOutOfBoundsException` 对应错误。
     pub fn append_sequence_range(
         &mut self,
-        sequence: Option<&JavaString>,
+        sequence: Option<&Utf16String>,
         start: i32,
         end: i32,
     ) -> Result<&mut Self, FastStringWriterError> {
-        let source = java_string_or_null(sequence);
+        let source = utf16_string_or_null(sequence);
         let source_length = source.len();
         let invalid = start < 0
             || start > end
@@ -342,14 +342,14 @@ impl JavaWriter for FastStringWriter {
     }
 }
 
-fn java_string_or_null(string: Option<&JavaString>) -> &[u16] {
+fn utf16_string_or_null(string: Option<&Utf16String>) -> &[u16] {
     static NULL_UTF16: [u16; 4] = [b'n' as u16, b'u' as u16, b'l' as u16, b'l' as u16];
-    string.map_or(&NULL_UTF16, JavaString::as_utf16)
+    string.map_or(&NULL_UTF16, Utf16String::as_utf16)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{FastStringWriter, FastStringWriterError, JavaString};
+    use super::{FastStringWriter, FastStringWriterError, Utf16String};
 
     #[test]
     fn preserves_utf16_null_snapshot_and_lifecycle_semantics() {
@@ -362,7 +362,7 @@ mod tests {
         let snapshot = writer.to_string();
         writer.close();
         writer.flush();
-        writer.write_string(Some(&JavaString::from_rust_str("tail")));
+        writer.write_string(Some(&Utf16String::from_rust_str("tail")));
 
         assert_eq!(
             snapshot.as_utf16(),
@@ -385,7 +385,7 @@ mod tests {
 
         let mut writer = FastStringWriter::new();
         let string_error = writer
-            .write_string_range(Some(&JavaString::from_rust_str("abc")), i32::MAX, 1)
+            .write_string_range(Some(&Utf16String::from_rust_str("abc")), i32::MAX, 1)
             .expect_err("overflowing Java range");
         assert_eq!(
             string_error.java_class_name(),

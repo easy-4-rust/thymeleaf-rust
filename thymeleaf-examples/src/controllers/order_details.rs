@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, JavaString};
+use thymeleaf::util::{JavaDate, Utf16String};
 use thymeleaf::web::IWebExchange;
 
 use crate::business::services::OrderService;
@@ -27,7 +27,7 @@ impl GtvgController for OrderDetailsController {
         // Java: Integer.valueOf(webExchange.getRequest().getParameterValue("orderId"))
         let order_id = web_exchange
             .get_request()
-            .get_parameter_value(Some(&JavaString::from_rust_str("orderId")))
+            .get_parameter_value(Some(&Utf16String::from_rust_str("orderId")))
             .ok_or_else(|| ControllerError("missing orderId parameter".to_owned()))?;
         let order_id: i32 = order_id
             .to_string_lossy()

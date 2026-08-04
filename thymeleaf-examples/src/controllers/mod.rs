@@ -14,11 +14,11 @@ use std::sync::Arc;
 use thymeleaf::TemplateEngine;
 use thymeleaf::context::WebContext;
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::{JavaDate, JavaString};
+use thymeleaf::util::{JavaDate, Utf16String};
 use thymeleaf::web::IWebExchange;
 
 /// 控制器处理结果：渲染出的完整 HTML（对应 Java `Writer` 输出）。
-pub type ControllerResult = Result<JavaString, ControllerError>;
+pub type ControllerResult = Result<Utf16String, ControllerError>;
 
 /// 控制器错误（对应 Java `process(...) throws Exception`）。
 #[derive(Debug)]
@@ -73,5 +73,5 @@ fn build_web_context(web_exchange: &Arc<dyn IWebExchange>) -> WebContext {
 
 /// `IContext#setVariable(String, Object)` 的便捷入口。
 fn set_variable(context: &WebContext, name: &str, value: Option<Arc<TemplateValue>>) {
-    context.set_variable(Some(JavaString::from_rust_str(name)), value);
+    context.set_variable(Some(Utf16String::from_rust_str(name)), value);
 }

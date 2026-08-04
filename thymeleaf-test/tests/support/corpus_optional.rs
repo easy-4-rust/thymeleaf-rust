@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 上游语料所需的 Java Optional 族只读宿主值。
 ///
@@ -35,14 +35,14 @@ impl TemplateObject for CorpusOptional {
         self.class_name
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         self.value.as_ref().map_or_else(
-            || JavaString::from_rust_str("Optional.empty"),
+            || Utf16String::from_rust_str("Optional.empty"),
             |value| {
-                JavaString::from_rust_str(&format!(
+                Utf16String::from_rust_str(&format!(
                     "Optional[{}]",
                     value
-                        .to_java_string()
+                        .to_utf16_string()
                         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
                 ))
             },
@@ -59,7 +59,7 @@ impl TemplateObject for CorpusOptional {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         match (method_name.to_string_lossy().as_str(), arguments) {

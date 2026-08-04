@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::context::IExpressionContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     IStandardExpression, StandardExpressionExecutionContext, StandardExpressionResult,
@@ -12,11 +12,11 @@ use super::{
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.GenericTokenExpression`。
 pub struct GenericTokenExpression {
-    value: Arc<JavaString>,
+    value: Arc<Utf16String>,
 }
 
 impl GenericTokenExpression {
-    fn new(value: JavaString) -> Self {
+    fn new(value: Utf16String) -> Self {
         Self {
             value: Arc::new(value),
         }
@@ -24,11 +24,11 @@ impl GenericTokenExpression {
 
     /// 所有码元均满足 `Token#isTokenChar` 时创建通用 Token。
     /// 对应 Java: `GenericTokenExpression#parseGenericTokenExpression()`。
-    pub fn parse_generic_token_expression(input: Option<&JavaString>) -> Option<Self> {
+    pub fn parse_generic_token_expression(input: Option<&Utf16String>) -> Option<Self> {
         let input = input?;
         for position in 0..input.len() {
             let position = i32::try_from(position).ok()?;
-            if !Token::<JavaString>::is_token_char(Some(input), position).ok()? {
+            if !Token::<Utf16String>::is_token_char(Some(input), position).ok()? {
                 return None;
             }
         }
@@ -37,13 +37,13 @@ impl GenericTokenExpression {
 
     /// 返回 Token 保存的同一字符串。
     /// 对应 Java 语义：Java 接口/超类方法 `getValue()` 的 Rust 移植（`GenericTokenExpression` 继承路径）。
-    pub fn get_value(&self) -> &JavaString {
+    pub fn get_value(&self) -> &Utf16String {
         self.value.as_ref()
     }
 }
 
 impl IStandardExpression for GenericTokenExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         Ok(self.value.as_ref().clone())
     }
 

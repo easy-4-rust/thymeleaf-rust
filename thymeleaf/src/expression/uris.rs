@@ -1,7 +1,7 @@
 use encoding_rs::Encoding;
 use thiserror::Error;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// URI path、segment、fragment 与 query 参数转义工具。
 ///
@@ -18,8 +18,8 @@ impl Uris {
     /// 对应 Java: `Uris#escapePath()`。
     pub fn escape_path(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, None, UriComponent::Path)
     }
 
@@ -27,9 +27,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `escape_path_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_path_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, encoding, UriComponent::Path)
     }
 
@@ -37,8 +37,8 @@ impl Uris {
     /// 对应 Java: `Uris#unescapePath()`。
     pub fn unescape_path(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, None)
     }
 
@@ -46,9 +46,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `unescape_path_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_path_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, encoding)
     }
 
@@ -56,8 +56,8 @@ impl Uris {
     /// 对应 Java: `Uris#escapePathSegment()`。
     pub fn escape_path_segment(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, None, UriComponent::PathSegment)
     }
 
@@ -65,9 +65,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `escape_path_segment_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_path_segment_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, encoding, UriComponent::PathSegment)
     }
 
@@ -75,8 +75,8 @@ impl Uris {
     /// 对应 Java: `Uris#unescapePathSegment()`。
     pub fn unescape_path_segment(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, None)
     }
 
@@ -84,9 +84,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `unescape_path_segment_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_path_segment_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, encoding)
     }
 
@@ -94,8 +94,8 @@ impl Uris {
     /// 对应 Java: `Uris#escapeFragmentId()`。
     pub fn escape_fragment_id(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, None, UriComponent::Fragment)
     }
 
@@ -103,9 +103,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `escape_fragment_id_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_fragment_id_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, encoding, UriComponent::Fragment)
     }
 
@@ -113,8 +113,8 @@ impl Uris {
     /// 对应 Java: `Uris#unescapeFragmentId()`。
     pub fn unescape_fragment_id(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, None)
     }
 
@@ -122,9 +122,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `unescape_fragment_id_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_fragment_id_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, encoding)
     }
 
@@ -132,8 +132,8 @@ impl Uris {
     /// 对应 Java: `Uris#escapeQueryParam()`。
     pub fn escape_query_param(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, None, UriComponent::QueryParameter)
     }
 
@@ -141,9 +141,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `escape_query_param_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn escape_query_param_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         escape(text, encoding, UriComponent::QueryParameter)
     }
 
@@ -151,8 +151,8 @@ impl Uris {
     /// 对应 Java: `Uris#unescapeQueryParam()`。
     pub fn unescape_query_param(
         &self,
-        text: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, None)
     }
 
@@ -160,9 +160,9 @@ impl Uris {
     /// 对应 Java 语义：`Uris` 的 `unescape_query_param_with_encoding` 行为（Rust 侧辅助/私有路径）。
     pub fn unescape_query_param_with_encoding(
         &self,
-        text: Option<&JavaString>,
-        encoding: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, UriExpressionError> {
+        text: Option<&Utf16String>,
+        encoding: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, UriExpressionError> {
         unescape(text, encoding)
     }
 }
@@ -182,10 +182,10 @@ enum UriComponent {
 }
 
 fn escape(
-    text: Option<&JavaString>,
-    encoding: Option<&JavaString>,
+    text: Option<&Utf16String>,
+    encoding: Option<&Utf16String>,
     component: UriComponent,
-) -> Result<Option<JavaString>, UriExpressionError> {
+) -> Result<Option<Utf16String>, UriExpressionError> {
     let Some(text) = text else {
         return Ok(None);
     };
@@ -202,13 +202,13 @@ fn escape(
             output.push(hex(byte & 0x0F));
         }
     }
-    Ok(Some(JavaString::from_rust_str(&output)))
+    Ok(Some(Utf16String::from_rust_str(&output)))
 }
 
 fn unescape(
-    text: Option<&JavaString>,
-    encoding: Option<&JavaString>,
-) -> Result<Option<JavaString>, UriExpressionError> {
+    text: Option<&Utf16String>,
+    encoding: Option<&Utf16String>,
+) -> Result<Option<Utf16String>, UriExpressionError> {
     let Some(text) = text else {
         return Ok(None);
     };
@@ -249,11 +249,11 @@ fn unescape(
             output.push_str(&decoded);
         }
     }
-    Ok(Some(JavaString::from_rust_str(&output)))
+    Ok(Some(Utf16String::from_rust_str(&output)))
 }
 
 fn resolve_encoding(
-    encoding: Option<&JavaString>,
+    encoding: Option<&Utf16String>,
 ) -> Result<&'static Encoding, UriExpressionError> {
     let Some(encoding) = encoding else {
         return Ok(encoding_rs::UTF_8);

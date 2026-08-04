@@ -11,7 +11,7 @@ use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{StandardExpressionExecutionContext, TemplateValue};
 use crate::model::IProcessableElementTag;
 use crate::processor::IProcessor;
-use crate::util::{EscapedAttributeUtils, JavaString, JavaWriter};
+use crate::util::{EscapedAttributeUtils, JavaWriter, Utf16String};
 
 use super::{StandardAttributeCallback, expression_processing_error};
 
@@ -102,8 +102,8 @@ impl StandardDOMEventAttributeTagProcessor {
     /// 创建指定 DOM 事件属性 Processor。
     /// 对应 Java 语义：`StandardDOMEventAttributeTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
     ) -> Result<Self, TemplateProcessingException> {
         let target_name = attr_name.clone();
         let callback: StandardAttributeCallback = Box::new(
@@ -150,11 +150,11 @@ impl StandardDOMEventAttributeTagProcessor {
                 }
                 let raw = expression_result
                     .as_deref()
-                    .and_then(TemplateValue::to_java_string);
+                    .and_then(TemplateValue::to_utf16_string);
                 let escaped =
                     EscapedAttributeUtils::escape_attribute(Some(TemplateMode::HTML), raw.as_ref())
                         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
-                if escaped.as_ref().is_none_or(JavaString::is_empty) {
+                if escaped.as_ref().is_none_or(Utf16String::is_empty) {
                     structure_handler.remove_attribute(target_name.clone());
                     structure_handler.remove_attribute_with_prefix(
                         attribute_name.get_prefix().cloned(),
@@ -230,8 +230,8 @@ fn process_javascript_fragment(
     context: &dyn crate::context::ITemplateContext,
     tag: &dyn IProcessableElementTag,
     attribute_name: &crate::engine::AttributeName,
-    attribute_value: &JavaString,
-) -> Result<JavaString, Box<dyn TemplateEngineException>> {
+    attribute_value: &Utf16String,
+) -> Result<Utf16String, Box<dyn TemplateEngineException>> {
     let attribute = tag.get_attribute_by_name(attribute_name).ok_or_else(|| {
         Box::new(TemplateProcessingException::new(Some(
             "DOM event attribute is not present in the tag".to_owned(),
@@ -271,7 +271,7 @@ fn process_javascript_fragment(
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .clone();
-    Ok(JavaString::from_utf16(units))
+    Ok(Utf16String::from_utf16(units))
 }
 
 struct SharedWriter {

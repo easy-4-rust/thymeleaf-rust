@@ -5,7 +5,7 @@ use std::fmt::Write;
 use std::ptr;
 
 use thymeleaf::expression::{LiteralValue, StandardExpressionExecutionContext};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str =
@@ -21,8 +21,8 @@ fn standard_expression_foundation_matches_java_golden() {
 }
 
 fn emit_literal_value_cases(output: &mut String) {
-    let literal = LiteralValue::new(Some(JavaString::from_rust_str("4")));
-    let same_text = LiteralValue::new(Some(JavaString::from_rust_str("4")));
+    let literal = LiteralValue::new(Some(Utf16String::from_rust_str("4")));
+    let same_text = LiteralValue::new(Some(Utf16String::from_rust_str("4")));
     let null_literal = LiteralValue::new(None);
     let other = String::from("object");
     let other_object = &other as &dyn Any;
@@ -44,7 +44,7 @@ fn emit_literal_value_cases(output: &mut String) {
         output,
         "unwrap.literal",
         LiteralValue::unwrap(Some(&literal as &dyn Any))
-            .and_then(|value| value.downcast_ref::<JavaString>())
+            .and_then(|value| value.downcast_ref::<Utf16String>())
             .expect("unwrapped string")
             .to_string_lossy(),
     );

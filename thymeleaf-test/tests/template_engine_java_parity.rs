@@ -10,7 +10,7 @@ use thymeleaf::dialect::IDialect;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::standard::StandardDialect;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{
     ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode, TemplateResolutionAttributes,
     TemplateSpec,
@@ -43,8 +43,8 @@ fn create_engine_with_mode(mode: TemplateMode) -> TemplateEngine {
 fn ctx_with_var(name: &str, value: &str) -> Context {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str(name)),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str(name)),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             value,
         )))),
     );
@@ -54,7 +54,7 @@ fn ctx_with_var(name: &str, value: &str) -> Context {
 fn ctx_with_bool(name: &str, value: bool) -> Context {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str(name)),
+        Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::Boolean(value))),
     );
     ctx
@@ -64,10 +64,10 @@ fn ctx_with_string_list(name: &str, values: &[&str]) -> Context {
     let ctx = Context::new();
     let list: Vec<Arc<TemplateValue>> = values
         .iter()
-        .map(|v| Arc::new(TemplateValue::string(JavaString::from_rust_str(v))))
+        .map(|v| Arc::new(TemplateValue::string(Utf16String::from_rust_str(v))))
         .collect();
     ctx.set_variable(
-        Some(JavaString::from_rust_str(name)),
+        Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::List(Arc::new(list)))),
     );
     ctx
@@ -147,7 +147,7 @@ fn engine_add_dialect_with_prefix() {
         .add_dialect_with_prefix(Some("custom"), d)
         .expect("add dialect");
     let by_prefix = engine.get_dialects_by_prefix();
-    assert!(by_prefix.contains_key(&Some(JavaString::from_rust_str("custom"))));
+    assert!(by_prefix.contains_key(&Some(Utf16String::from_rust_str("custom"))));
 }
 
 #[test]
@@ -494,14 +494,14 @@ fn nested_variable_access() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("greeting")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("greeting")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("user")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("user")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Alice",
         )))),
     );
@@ -667,14 +667,14 @@ fn string_concatenation_expression() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("a")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("b")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("b")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "World",
         )))),
     );
@@ -771,12 +771,12 @@ fn multiple_th_attributes_on_same_element() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("show")),
+        Some(Utf16String::from_rust_str("show")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("text")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("text")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello",
         )))),
     );
@@ -794,14 +794,14 @@ fn nested_th_elements_with_different_attributes() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("outer")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("outer")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Outer",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("inner")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("inner")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Inner",
         )))),
     );
@@ -845,14 +845,14 @@ fn mixed_static_and_dynamic_content() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("title")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("title")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "My Page",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("content")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("content")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Welcome!",
         )))),
     );
@@ -967,7 +967,7 @@ fn clear_template_cache_for_specific_template() {
     let ctx = Context::new();
     let _ = engine.process_template("<p>test</p>", &ctx);
     engine
-        .clear_template_cache_for(&JavaString::from_rust_str("<p>test</p>"))
+        .clear_template_cache_for(&Utf16String::from_rust_str("<p>test</p>"))
         .expect("clear specific cache");
 }
 
@@ -1057,7 +1057,7 @@ fn th_text_with_number_variable() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("count")),
+        Some(Utf16String::from_rust_str("count")),
         Some(Arc::new(TemplateValue::Number(
             thymeleaf::util::JavaNumber::Integer(42),
         ))),
@@ -1105,7 +1105,7 @@ fn th_if_with_zero_number_is_false() {
     let engine = create_engine_with_resolver();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("count")),
+        Some(Utf16String::from_rust_str("count")),
         Some(Arc::new(TemplateValue::Number(
             thymeleaf::util::JavaNumber::Integer(0),
         ))),

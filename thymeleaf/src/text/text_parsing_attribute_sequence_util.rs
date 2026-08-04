@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use super::{ITextHandler, TextParseException, TextParsingUtil, TextParsingUtilError};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const NULL_HANDLER_MESSAGE: &str = "Cannot invoke \"org.thymeleaf.templateparser.text.ITextHandler.handleAttribute(char[], int, int, int, int, int, int, int, int, int, int, int, int, int, int)\" because \"<parameter6>\" is null";
 
@@ -42,21 +42,21 @@ impl TextParsingAttributeSequenceError {
 
     /// 返回 Java `String.valueOf(Throwable#getMessage())` 的 UTF-16 表示。
     /// 对应 Java 语义：`TextParsingAttributeSequenceUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> JavaString {
+    pub(crate) fn java_message(&self) -> Utf16String {
         match self {
             Self::TextParse(exception) => exception
                 .get_message()
                 .cloned()
-                .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             Self::Scanning(error) => error
                 .java_message()
-                .unwrap_or_else(|| JavaString::from_rust_str("null")),
-            Self::NullHandler => JavaString::from_rust_str(NULL_HANDLER_MESSAGE),
+                .unwrap_or_else(|| Utf16String::from_rust_str("null")),
+            Self::NullHandler => Utf16String::from_rust_str(NULL_HANDLER_MESSAGE),
             Self::StringRange {
                 offset,
                 len,
                 length,
-            } => JavaString::from_rust_str(&format!(
+            } => Utf16String::from_rust_str(&format!(
                 "Range [{offset}, {offset} + {len}) out of bounds for length {length}"
             )),
         }
@@ -181,7 +181,7 @@ impl TextParsingAttributeSequenceUtil {
                 continue;
             }
             if attribute_name_end <= current {
-                let source = java_string_from_range(
+                let source = utf16_string_from_range(
                     buffer
                         .as_deref()
                         .expect("成功扫描属性名意味着 buffer 非 null"),
@@ -195,7 +195,7 @@ impl TextParsingAttributeSequenceUtil {
                 message
                     .extend("\": attribute names cannot start with an equals sign".encode_utf16());
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_utf16(message)),
+                    Some(&Utf16String::from_utf16(message)),
                     artifact_line,
                     artifact_col,
                 ))
@@ -449,7 +449,7 @@ fn value_content_range(buffer: &[u16], offset: i32, len: i32) -> (i32, i32) {
     (offset, len)
 }
 
-fn java_string_from_range(
+fn utf16_string_from_range(
     buffer: &[u16],
     offset: i32,
     len: i32,
@@ -476,7 +476,7 @@ mod tests {
 
     use super::{TextParsingAttributeSequenceError, TextParsingAttributeSequenceUtil};
     use crate::text::{ITextHandler, TextParseException};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
     const JAVA_GOLDEN: &str =
@@ -660,7 +660,7 @@ mod tests {
                 || (self.mode == Mode::CheckedSecond && self.call_count == 2)
             {
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_rust_str("handler")),
+                    Some(&Utf16String::from_rust_str("handler")),
                     41,
                     43,
                 )));
@@ -901,7 +901,7 @@ mod tests {
                 u16::from(b'='),
                 u16::from(b'c'),
             ];
-            whitespace_hash = mix_java_string(
+            whitespace_hash = mix_utf16_string(
                 whitespace_hash,
                 &outcome(Some(&mut buffer), 0, 5, 3, 5, Mode::Normal),
             );
@@ -925,7 +925,7 @@ mod tests {
                 u16::from(b'='),
                 u16::from(b'z'),
             ];
-            quoted_hash = mix_java_string(
+            quoted_hash = mix_utf16_string(
                 quoted_hash,
                 &outcome(Some(&mut buffer), 0, 9, 7, 11, Mode::Normal),
             );
@@ -951,7 +951,7 @@ mod tests {
                             );
                             let mut buffer = text.encode_utf16().collect::<Vec<_>>();
                             let len = buffer.len() as i32;
-                            grammar_hash = mix_java_string(
+                            grammar_hash = mix_utf16_string(
                                 grammar_hash,
                                 &outcome(Some(&mut buffer), 0, len, -7, i32::MAX, Mode::Normal),
                             );
@@ -971,7 +971,7 @@ mod tests {
         for offset in -2..=range_source.len() as i32 + 2 {
             for len in -2..=range_source.len() as i32 + 4 {
                 let mut buffer = range_source.clone();
-                range_hash = mix_java_string(
+                range_hash = mix_utf16_string(
                     range_hash,
                     &outcome(Some(&mut buffer), offset, len, 13, 17, Mode::Normal),
                 );
@@ -1027,7 +1027,7 @@ mod tests {
         line: i32,
         col: i32,
         mode: Mode,
-    ) -> JavaString {
+    ) -> Utf16String {
         let mut buffer = buffer;
         let mut handler = RecordingHandler::new(mode);
         let result = catch_unwind(AssertUnwindSafe(|| {
@@ -1045,11 +1045,11 @@ mod tests {
             Ok(Err(error)) => format!("{}:{}", describe_error(&error), handler.calls),
             Err(_) => format!(
                 "ERR:java.lang.IllegalStateException:{}:{}",
-                to_utf16_hex(&JavaString::from_rust_str("runtime")),
+                to_utf16_hex(&Utf16String::from_rust_str("runtime")),
                 handler.calls
             ),
         };
-        JavaString::from_rust_str(&format!("{prefix}:{}", describe_buffer(buffer.as_deref())))
+        Utf16String::from_rust_str(&format!("{prefix}:{}", describe_buffer(buffer.as_deref())))
     }
 
     fn describe_error(error: &TextParsingAttributeSequenceError) -> String {
@@ -1063,11 +1063,11 @@ mod tests {
     fn describe_buffer(buffer: Option<&[u16]>) -> String {
         buffer.map_or_else(
             || "null".to_owned(),
-            |buffer| to_utf16_hex(&JavaString::from_utf16(buffer.to_vec())),
+            |buffer| to_utf16_hex(&Utf16String::from_utf16(buffer.to_vec())),
         )
     }
 
-    fn mix_java_string(mut hash: u64, value: &JavaString) -> u64 {
+    fn mix_utf16_string(mut hash: u64, value: &Utf16String) -> u64 {
         for unit in value.as_utf16() {
             hash = mix(hash, i32::from((*unit & 0x00ff) as u8));
             hash = mix(hash, i32::from((*unit >> 8) as u8));
@@ -1079,7 +1079,7 @@ mod tests {
         (hash ^ value as i64 as u64).wrapping_mul(FNV_PRIME)
     }
 
-    fn to_utf16_hex(value: &JavaString) -> String {
+    fn to_utf16_hex(value: &Utf16String) -> String {
         value
             .as_utf16()
             .iter()

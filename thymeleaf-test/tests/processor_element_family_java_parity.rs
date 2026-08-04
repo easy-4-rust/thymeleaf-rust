@@ -21,11 +21,11 @@ use thymeleaf::element::{
 use thymeleaf::engine::{AttributeNames, ElementNames};
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::{IModel, IProcessableElementTag};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{IProcessor, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn attribute_name(name: &str) -> thymeleaf::engine::AttributeNameValue {
@@ -50,7 +50,7 @@ fn matching_attribute_name_rules_match_java() {
     .expect("matching attribute name");
     assert_eq!(
         matching
-            .to_java_string()
+            .to_utf16_string()
             .expect("to java string")
             .to_string_lossy(),
         "{th:value,data-th-value}"
@@ -133,7 +133,7 @@ fn matching_element_name_rules_match_java() {
             .expect("matching element name");
     assert_eq!(
         matching
-            .to_java_string()
+            .to_utf16_string()
             .expect("to java string")
             .to_string_lossy(),
         "{div}"
@@ -215,7 +215,7 @@ type AttrTagProcessFn = dyn Fn(
         &dyn ITemplateContext,
         &dyn IProcessableElementTag,
         &thymeleaf::engine::AttributeName,
-        Option<JavaString>,
+        Option<Utf16String>,
         &mut dyn IElementTagStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>>
     + Send
@@ -226,7 +226,7 @@ fn noop_attr_tag_process() -> Box<AttrTagProcessFn> {
         |_ctx: &dyn ITemplateContext,
          _tag: &dyn IProcessableElementTag,
          _attribute_name: &thymeleaf::engine::AttributeName,
-         _attribute_value: Option<JavaString>,
+         _attribute_value: Option<Utf16String>,
          _structure_handler: &mut dyn IElementTagStructureHandler|
          -> Result<(), Box<dyn TemplateEngineException>> { Ok(()) },
     )
@@ -258,7 +258,7 @@ fn abstract_attribute_tag_processor_contract_matches_java() {
         processor
             .get_matching_attribute_name()
             .expect("matching attribute name")
-            .to_java_string()
+            .to_utf16_string()
             .expect("matching text")
             .to_string_lossy(),
         "{th:mytagattr,data-th-mytagattr}"
@@ -324,7 +324,7 @@ fn abstract_element_tag_processor_contract_matches_java() {
         processor
             .get_matching_element_name()
             .expect("matching element name")
-            .to_java_string()
+            .to_utf16_string()
             .expect("matching text")
             .to_string_lossy(),
         "{th:myelem,th-myelem}"
@@ -397,7 +397,7 @@ fn abstract_element_model_processor_contract_matches_java() {
         processor
             .get_matching_element_name()
             .expect("matching element name")
-            .to_java_string()
+            .to_utf16_string()
             .expect("matching text")
             .to_string_lossy(),
         "{th:mymodelelem,th-mymodelelem}"
@@ -439,7 +439,7 @@ fn element_processor_interfaces_downcast_match_java() {
     assert_eq!(
         tag.get_matching_element_name()
             .expect("matching element name")
-            .to_java_string()
+            .to_utf16_string()
             .expect("matching text")
             .to_string_lossy(),
         "{th:div,th-div}"
@@ -466,7 +466,7 @@ fn element_processor_interfaces_downcast_match_java() {
         model
             .get_matching_element_name()
             .expect("matching element name")
-            .to_java_string()
+            .to_utf16_string()
             .expect("matching text")
             .to_string_lossy(),
         "{th:mymodel,th-mymodel}"

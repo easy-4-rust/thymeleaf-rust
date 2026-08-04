@@ -1,6 +1,6 @@
 use crate::TemplateMode;
 use crate::element::AbstractElementTagProcessor;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{StandardElementCallback, delegate_standard_element_tag_processor};
 
@@ -20,14 +20,14 @@ impl StandardFragmentTagProcessor {
     /// 对应 Java 语义：`StandardFragmentTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         let callback_prefix = dialect_prefix.clone();
         let callback: StandardElementCallback =
             Box::new(move |_context, _tag, structure_handler| {
                 structure_handler.remove_attribute_with_prefix(
                     callback_prefix.clone(),
-                    JavaString::from_rust_str(Self::ATTR_NAME),
+                    Utf16String::from_rust_str(Self::ATTR_NAME),
                 );
                 Ok(())
             });
@@ -37,7 +37,7 @@ impl StandardFragmentTagProcessor {
                 dialect_prefix,
                 None,
                 false,
-                Some(JavaString::from_rust_str(Self::ATTR_NAME)),
+                Some(Utf16String::from_rust_str(Self::ATTR_NAME)),
                 true,
                 Self::PRECEDENCE,
                 "org.thymeleaf.standard.processor.StandardFragmentTagProcessor",

@@ -4,7 +4,7 @@ use crate::engine::{AttributeNames, ElementNames};
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::IProcessableElementTag;
 use crate::processor::{AbstractProcessorAdapter, IProcessor};
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     IElementProcessor, IElementTagProcessor, IElementTagStructureHandler, MatchingAttributeName,
@@ -16,7 +16,7 @@ use super::{
 /// 对应 Java: `org.thymeleaf.processor.element.AbstractElementTagProcessor`。
 pub struct AbstractElementTagProcessor<F> {
     adapter: AbstractProcessorAdapter<F>,
-    dialect_prefix: Option<JavaString>,
+    dialect_prefix: Option<Utf16String>,
     matching_element_name: Option<MatchingElementName>,
     matching_attribute_name: Option<MatchingAttributeName>,
 }
@@ -27,10 +27,10 @@ impl<F> AbstractElementTagProcessor<F> {
     /// 对应 Java 语义：`AbstractElementTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: Option<TemplateMode>,
-        dialect_prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
         prefix_element_name: bool,
-        attribute_name: Option<JavaString>,
+        attribute_name: Option<Utf16String>,
         prefix_attribute_name: bool,
         precedence: i32,
         processor_class_name: &'static str,
@@ -86,7 +86,7 @@ impl<F> AbstractElementTagProcessor<F> {
 
     /// 返回构造时保存的可空方言前缀。
     /// 对应 Java: `AbstractElementTagProcessor#getDialectPrefix()`。
-    pub fn get_dialect_prefix(&self) -> Option<&JavaString> {
+    pub fn get_dialect_prefix(&self) -> Option<&Utf16String> {
         self.dialect_prefix.as_ref()
     }
 }

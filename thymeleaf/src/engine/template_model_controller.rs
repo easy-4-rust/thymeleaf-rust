@@ -11,7 +11,7 @@ use crate::model::{
     IProcessableElementTag, IProcessingInstruction, IStandaloneElementTag, ITemplateEvent, IText,
     IXMLDeclaration,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::TemplateHandlerHandle;
 use super::gathering_model_processable::GatheringModelProcessable;
@@ -174,8 +174,8 @@ impl TemplateModelController {
         &mut self,
         first_tag: Arc<dyn IOpenElementTag>,
         processor_execution_vars: &ProcessorExecutionVars,
-        iter_variable_name: JavaString,
-        iter_status_variable_name: Option<JavaString>,
+        iter_variable_name: Utf16String,
+        iter_status_variable_name: Option<Utf16String>,
         iterated_object: Option<Arc<crate::expression::TemplateValue>>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         self.model_level = self.model_level.checked_sub(1).ok_or_else(|| {
@@ -213,8 +213,8 @@ impl TemplateModelController {
         &mut self,
         first_tag: Arc<dyn IStandaloneElementTag>,
         processor_execution_vars: &ProcessorExecutionVars,
-        iter_variable_name: JavaString,
-        iter_status_variable_name: Option<JavaString>,
+        iter_variable_name: Utf16String,
+        iter_status_variable_name: Option<Utf16String>,
         iterated_object: Option<Arc<crate::expression::TemplateValue>>,
     ) -> Result<(), Box<dyn TemplateEngineException>> {
         let gathered_skip_body =
@@ -633,7 +633,7 @@ fn is_iteration_whitespace_applicable(element: &dyn IElementTag) -> bool {
     name.get_prefix().is_none()
         && NAMES
             .iter()
-            .any(|candidate| name.get_element_name() == &JavaString::from_rust_str(candidate))
+            .any(|candidate| name.get_element_name() == &Utf16String::from_rust_str(candidate))
 }
 
 fn is_java_whitespace(unit: u16) -> bool {

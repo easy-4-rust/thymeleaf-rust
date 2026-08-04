@@ -17,7 +17,7 @@ use http_body::Frame;
 use crate::context::IContext;
 use crate::engine::{DataDrivenTemplateIterator, DataDrivenTemplateSignal};
 use crate::expression::TemplateValue;
-use crate::util::{Charset, ContentTypeUtils, JavaString};
+use crate::util::{Charset, ContentTypeUtils, Utf16String};
 use crate::{IEngineConfiguration, ITemplateEngine, TemplateMode, TemplateSpec};
 
 use super::{RenderError, RenderedTemplate, RenderedTemplateBody};
@@ -67,7 +67,7 @@ impl ThymeleafRenderer {
             .process(template_spec, context)
             .map_err(|error| RenderError::new(error.to_string()))?;
         let mut metadata = render_metadata(template_spec, self.engine.as_ref())?;
-        let bytes = encode_java_string(&output, &metadata.charset)?;
+        let bytes = encode_utf16_string(&output, &metadata.charset)?;
         metadata.headers.insert(
             CONTENT_LENGTH,
             HeaderValue::from_str(&bytes.len().to_string())
@@ -271,7 +271,7 @@ fn default_content_type(template_mode: Option<TemplateMode>, charset: &Charset) 
     format!("{mime_type};charset={charset}")
 }
 
-fn encode_java_string(value: &JavaString, charset: &Charset) -> Result<Bytes, RenderError> {
+fn encode_utf16_string(value: &Utf16String, charset: &Charset) -> Result<Bytes, RenderError> {
     let encoding = Encoding::for_label(charset.name().as_bytes())
         .ok_or_else(|| RenderError::new(format!("Unsupported charset: {charset}")))?;
     let mut encoder = encoding.new_encoder();

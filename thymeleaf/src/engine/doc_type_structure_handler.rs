@@ -2,18 +2,18 @@ use std::sync::Arc;
 
 use crate::doctype::IDocTypeStructureHandler;
 use crate::model::IModel;
-use crate::util::{JavaString, Validate, ValidateError};
+use crate::util::{Utf16String, Validate, ValidateError};
 
 /// 引擎内部 DocType 结构动作状态机。
 ///
 /// 对应 Java: `org.thymeleaf.engine.DocTypeStructureHandler`。
 pub(crate) struct DocTypeStructureHandler {
     pub(crate) set_doc_type: bool,
-    pub(crate) set_doc_type_keyword: Option<JavaString>,
-    pub(crate) set_doc_type_element_name: Option<JavaString>,
-    pub(crate) set_doc_type_public_id: Option<JavaString>,
-    pub(crate) set_doc_type_system_id: Option<JavaString>,
-    pub(crate) set_doc_type_internal_subset: Option<JavaString>,
+    pub(crate) set_doc_type_keyword: Option<Utf16String>,
+    pub(crate) set_doc_type_element_name: Option<Utf16String>,
+    pub(crate) set_doc_type_public_id: Option<Utf16String>,
+    pub(crate) set_doc_type_system_id: Option<Utf16String>,
+    pub(crate) set_doc_type_internal_subset: Option<Utf16String>,
     pub(crate) replace_with_model: bool,
     pub(crate) replace_with_model_value: Option<Arc<dyn IModel>>,
     pub(crate) replace_with_model_processable: bool,
@@ -47,11 +47,11 @@ impl DocTypeStructureHandler {
     /// `public_id`、`system_id` 与 `internal_subset` 均允许为空。
     pub(crate) fn set_doc_type_nullable(
         &mut self,
-        keyword: Option<JavaString>,
-        element_name: Option<JavaString>,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
+        keyword: Option<Utf16String>,
+        element_name: Option<Utf16String>,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
     ) -> Result<(), ValidateError> {
         self.reset();
         Validate::not_null(keyword.as_ref(), Some("Keyword cannot be null"))?;
@@ -97,11 +97,11 @@ impl IDocTypeStructureHandler for DocTypeStructureHandler {
 
     fn set_doc_type(
         &mut self,
-        keyword: JavaString,
-        element_name: JavaString,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
+        keyword: Utf16String,
+        element_name: Utf16String,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
     ) {
         self.set_doc_type_nullable(
             Some(keyword),

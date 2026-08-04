@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 use super::{ITextHandler, TextParseException};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 文本注释解析中的 checked exception 与 Java 运行时异常适配。
 ///
@@ -35,22 +35,22 @@ impl TextParsingCommentError {
 
     /// 返回 Java `Throwable#getMessage()` 的 UTF-16 表示。
     /// 对应 Java 语义：`TextParsingCommentUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> JavaString {
+    pub(crate) fn java_message(&self) -> Utf16String {
         match self {
             Self::TextParse(exception) => exception
                 .get_message()
                 .cloned()
-                .unwrap_or_else(|| JavaString::from_rust_str("null")),
-            Self::NullArrayLoad => JavaString::from_rust_str(
+                .unwrap_or_else(|| Utf16String::from_rust_str("null")),
+            Self::NullArrayLoad => Utf16String::from_rust_str(
                 "Cannot load from char array because \"<parameter1>\" is null",
             ),
             Self::NullStringValue => {
-                JavaString::from_rust_str("Cannot read the array length because \"value\" is null")
+                Utf16String::from_rust_str("Cannot read the array length because \"value\" is null")
             }
-            Self::ArrayIndex { index, size } => {
-                JavaString::from_rust_str(&format!("Index {index} out of bounds for length {size}"))
-            }
-            Self::StringRange { offset, len, size } => JavaString::from_rust_str(&format!(
+            Self::ArrayIndex { index, size } => Utf16String::from_rust_str(&format!(
+                "Index {index} out of bounds for length {size}"
+            )),
+            Self::StringRange { offset, len, size } => Utf16String::from_rust_str(&format!(
                 "Range [{offset}, {offset} + {len}) out of bounds for length {size}"
             )),
         }
@@ -104,14 +104,14 @@ impl TextParsingCommentUtil {
             && Self::is_comment_block_start(buffer.as_deref(), offset, maxi)?
             && Self::is_comment_block_end(buffer.as_deref(), maxi.wrapping_sub(2), maxi)?;
         if !valid {
-            let source = java_string_from_range(buffer.as_deref(), offset, len)?;
+            let source = utf16_string_from_range(buffer.as_deref(), offset, len)?;
             let mut message = "Could not parse as a well-formed Comment: \""
                 .encode_utf16()
                 .collect::<Vec<_>>();
             message.extend_from_slice(&source);
             message.push(u16::from(b'"'));
             return Err(Box::new(TextParseException::with_message_at(
-                Some(&JavaString::from_utf16(message)),
+                Some(&Utf16String::from_utf16(message)),
                 line,
                 col,
             ))
@@ -187,7 +187,7 @@ fn array_unit(buffer: &[u16], index: i32) -> Result<u16, TextParsingCommentError
         })
 }
 
-fn java_string_from_range(
+fn utf16_string_from_range(
     buffer: Option<&[u16]>,
     offset: i32,
     len: i32,
@@ -273,7 +273,7 @@ mod tests {
             }
             if self.fail {
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&crate::util::JavaString::from_rust_str("handler")),
+                    Some(&crate::util::Utf16String::from_rust_str("handler")),
                     41,
                     43,
                 )));

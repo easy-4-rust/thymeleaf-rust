@@ -3,7 +3,7 @@ use std::sync::Arc;
 use thiserror::Error;
 
 use crate::context::IContext;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::TemplateValue;
 
@@ -29,11 +29,11 @@ impl NativeContextPropertyAccessor {
         &self,
         restrict_expression_objects: bool,
         target: &dyn IContext,
-        name: Option<&JavaString>,
+        name: Option<&Utf16String>,
     ) -> Result<Option<Arc<TemplateValue>>, NativeContextPropertyError> {
         if restrict_expression_objects
             && name.is_some_and(|name| {
-                name == &JavaString::from_rust_str(
+                name == &Utf16String::from_rust_str(
                     Self::REQUEST_PARAMETERS_RESTRICTED_VARIABLE_NAME,
                 )
             })
@@ -50,7 +50,7 @@ impl NativeContextPropertyAccessor {
     pub fn set_property(
         &self,
         _target: &dyn IContext,
-        _name: Option<&JavaString>,
+        _name: Option<&Utf16String>,
         _value: Option<Arc<TemplateValue>>,
     ) -> Result<(), NativeContextPropertyError> {
         Err(NativeContextPropertyError::ReadOnly)

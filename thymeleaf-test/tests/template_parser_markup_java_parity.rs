@@ -28,7 +28,7 @@ use thymeleaf::templateparser::ITemplateParser;
 use thymeleaf::templateresource::{
     ITemplateResource, StringTemplateResource, TemplateResourceError,
 };
-use thymeleaf::util::{JavaString, JavaWriter};
+use thymeleaf::util::{JavaWriter, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode,
 };
@@ -37,8 +37,8 @@ use thymeleaf::{
 // 通用辅助
 // ===========================================================================
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn fixtures_dir() -> PathBuf {
@@ -315,7 +315,7 @@ fn html_block_selector_matches_java() {
         let block_selector = result_lines[0];
         let expected = result_lines[1..].join("\n");
 
-        let selectors: Vec<JavaString> = block_selector.split(',').map(js).collect();
+        let selectors: Vec<Utf16String> = block_selector.split(',').map(js).collect();
 
         let resource: Arc<dyn ITemplateResource> =
             Arc::new(StringTemplateResource::new(Some(&test_contents)).expect("string resource"));

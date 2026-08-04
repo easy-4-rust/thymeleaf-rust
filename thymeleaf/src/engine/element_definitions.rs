@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::element::ElementProcessorSet;
 use crate::templatemode::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     ElementDefinition, ElementDefinitionError, ElementNameValue, ElementNames, ElementNamesError,
@@ -17,7 +17,7 @@ use super::{
 ///
 /// 对应 Java: `ElementDefinitions.ElementDefinitionRepository`。Rust 使用读写锁保护
 /// 哈希索引，等价保留 Java 的并发读取、缺失后加写锁创建与别名共同缓存语义。
-type ElementDefinitionRepository = RwLock<HashMap<JavaString, ElementDefinitionValue>>;
+type ElementDefinitionRepository = RwLock<HashMap<Utf16String, ElementDefinitionValue>>;
 
 /// 标准 HTML 元素名称及类别的初始化规格。
 ///
@@ -140,7 +140,7 @@ impl ElementDefinitions {
         };
         for (name, element_type) in STANDARD_HTML_ELEMENT_SPECS {
             let spec = HTMLElementDefinitionSpec::new(name, *element_type);
-            let name = ElementNames::for_html_name(Some(&JavaString::from_rust_str(spec.name)))?;
+            let name = ElementNames::for_html_name(Some(&Utf16String::from_rust_str(spec.name)))?;
             manager.get_or_build(
                 TemplateMode::HTML,
                 ElementNameValue::Html(name),
@@ -167,7 +167,7 @@ impl ElementDefinitions {
     pub fn for_name(
         &self,
         template_mode: Option<TemplateMode>,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<ElementDefinitionValue, ElementDefinitionsError> {
         let mode = require_mode(template_mode)?;
         match mode {
@@ -189,8 +189,8 @@ impl ElementDefinitions {
     pub fn for_name_with_prefix(
         &self,
         template_mode: Option<TemplateMode>,
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<ElementDefinitionValue, ElementDefinitionsError> {
         let mode = require_mode(template_mode)?;
         let name = ElementNames::for_name_with_prefix(Some(mode), prefix, element_name)?;
@@ -223,7 +223,7 @@ impl ElementDefinitions {
     /// 对应 Java 语义：`ElementDefinitions` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
         &self,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<HTMLElementDefinition>, ElementDefinitionsError> {
         let name = ElementNames::for_html_name(element_name)?;
         let element_type = html_element_type(name.as_element_name());
@@ -239,8 +239,8 @@ impl ElementDefinitions {
     /// 对应 Java 语义：`ElementDefinitions` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<HTMLElementDefinition>, ElementDefinitionsError> {
         let name = ElementNames::for_html_name_with_prefix(prefix, element_name)?;
         let element_type = html_element_type(name.as_element_name());
@@ -256,7 +256,7 @@ impl ElementDefinitions {
     /// 对应 Java 语义：`ElementDefinitions` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
         &self,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<XMLElementDefinition>, ElementDefinitionsError> {
         let name = ElementNames::for_xml_name(element_name)?;
         self.get_or_build(
@@ -271,8 +271,8 @@ impl ElementDefinitions {
     /// 对应 Java 语义：`ElementDefinitions` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        element_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<XMLElementDefinition>, ElementDefinitionsError> {
         let name = ElementNames::for_xml_name_with_prefix(prefix, element_name)?;
         self.get_or_build(
@@ -287,7 +287,7 @@ impl ElementDefinitions {
     /// 对应 Java: `ElementDefinitions#forTextName()`。
     pub fn for_text_name(
         &self,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<TextElementDefinition>, ElementDefinitionsError> {
         self.for_text_mode_name(TemplateMode::TEXT, element_name)
     }
@@ -296,7 +296,7 @@ impl ElementDefinitions {
     /// 对应 Java 语义：`ElementDefinitions` 的 `for_javascript_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_javascript_name(
         &self,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<TextElementDefinition>, ElementDefinitionsError> {
         self.for_text_mode_name(TemplateMode::JAVASCRIPT, element_name)
     }
@@ -305,7 +305,7 @@ impl ElementDefinitions {
     /// 对应 Java 语义：`ElementDefinitions` 的 `for_css_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_css_name(
         &self,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<TextElementDefinition>, ElementDefinitionsError> {
         self.for_text_mode_name(TemplateMode::CSS, element_name)
     }
@@ -313,7 +313,7 @@ impl ElementDefinitions {
     fn for_text_mode_name(
         &self,
         mode: TemplateMode,
-        element_name: Option<&JavaString>,
+        element_name: Option<&Utf16String>,
     ) -> Result<Arc<TextElementDefinition>, ElementDefinitionsError> {
         let name = ElementNames::for_text_name(element_name)?;
         self.get_or_build(mode, ElementNameValue::Text(name), HTMLElementType::NORMAL)?
@@ -399,7 +399,7 @@ impl ElementDefinitions {
     fn repository(
         &self,
         mode: TemplateMode,
-    ) -> &RwLock<HashMap<JavaString, ElementDefinitionValue>> {
+    ) -> &RwLock<HashMap<Utf16String, ElementDefinitionValue>> {
         match mode {
             TemplateMode::HTML => &self.html_repository,
             TemplateMode::XML => &self.xml_repository,
@@ -442,7 +442,7 @@ impl ElementDefinitionValue {
 
 fn html_element_type(name: &super::ElementName) -> HTMLElementType {
     let value = name
-        .to_java_string()
+        .to_utf16_string()
         .map_or_else(|_| String::new(), |value| value.to_string_lossy());
     STANDARD_HTML_ELEMENT_SPECS
         .iter()
@@ -452,7 +452,7 @@ fn html_element_type(name: &super::ElementName) -> HTMLElementType {
 
 fn complete_element_names(
     definition: &ElementDefinition,
-) -> Result<Vec<JavaString>, ElementDefinitionsError> {
+) -> Result<Vec<Utf16String>, ElementDefinitionsError> {
     let values = definition
         .get_element_name()
         .as_element_name()

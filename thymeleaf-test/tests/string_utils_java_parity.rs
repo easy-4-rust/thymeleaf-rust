@@ -1,9 +1,9 @@
 //! `StringUtils` Java Golden 差分测试。
 
-use thymeleaf::util::{JavaString, StringUtils};
+use thymeleaf::util::{StringUtils, Utf16String};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn concat_with_nulls() {
 
 #[test]
 fn concat_empty() {
-    let values: Vec<Option<JavaString>> = vec![];
+    let values: Vec<Option<Utf16String>> = vec![];
     let result = StringUtils::concat(Some(&values));
     assert_eq!(result.to_string_lossy(), "");
 }
@@ -234,8 +234,8 @@ fn pack_none() {
 // capitalizeWords/substring/pack 边界与 null/空串/空白变体）
 // ===========================================================================
 
-/// 把 Option<JavaString> 压成可比较文本（None -> "<null>"）。
-fn text(value: Option<JavaString>) -> String {
+/// 把 Option<Utf16String> 压成可比较文本（None -> "<null>"）。
+fn text(value: Option<Utf16String>) -> String {
     value
         .map(|value| value.to_string_lossy())
         .unwrap_or_else(|| "<null>".to_owned())

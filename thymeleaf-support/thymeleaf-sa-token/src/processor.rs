@@ -21,7 +21,7 @@ use thymeleaf::processor::{
     AbstractStandardConditionalVisibilityTagProcessor,
     AbstractStandardExpressionAttributeTagProcessor, IProcessor,
 };
-use thymeleaf::util::{EvaluationUtils, JavaEvaluationValue, JavaString};
+use thymeleaf::util::{EvaluationUtils, JavaEvaluationValue, Utf16String};
 
 use crate::expression_object::read_authentication;
 
@@ -48,13 +48,13 @@ impl SecAuthorizeTagProcessor {
     /// 处理器配置非法时返回模板处理异常。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardConditionalVisibilityTagProcessor::new(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(AUTHORIZE_ATTR_NAME),
+                Utf16String::from_rust_str(AUTHORIZE_ATTR_NAME),
                 AUTHORIZE_PRECEDENCE,
                 |context, _tag, _attribute_name, attribute_value| {
                     evaluate_authorize_expression(context, attribute_value)
@@ -78,13 +78,13 @@ impl SecAuthenticationTagProcessor {
     /// 处理器配置非法时返回模板处理异常。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardExpressionAttributeTagProcessor::new(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(AUTHENTICATION_ATTR_NAME),
+                Utf16String::from_rust_str(AUTHENTICATION_ATTR_NAME),
                 AUTHENTICATION_PRECEDENCE,
                 true,
                 thymeleaf::expression::StandardExpressionExecutionContext::NORMAL,
@@ -96,14 +96,14 @@ impl SecAuthenticationTagProcessor {
                  structure_handler| {
                     // Java 只接受字面属性名（"name"）；若值是标准表达式则求值字符串
                     let property = attribute_value
-                        .map_or_else(|| JavaString::from_rust_str("name"), JavaString::clone);
+                        .map_or_else(|| Utf16String::from_rust_str("name"), Utf16String::clone);
                     let value = read_authentication(context);
                     let text = match property.to_string_lossy().as_str() {
                         "name" | "loginId" | "login_id" => value.login_id().map_or_else(
-                            || JavaString::from_rust_str(""),
-                            JavaString::from_rust_str,
+                            || Utf16String::from_rust_str(""),
+                            Utf16String::from_rust_str,
                         ),
-                        "roles" => JavaString::from_rust_str(&value.roles().join(",")),
+                        "roles" => Utf16String::from_rust_str(&value.roles().join(",")),
                         _ => {
                             return Err(Box::new(TemplateProcessingException::new(Some(format!(
                                 "Unknown authentication property: {}",
@@ -160,7 +160,7 @@ impl std::error::Error for StandardExpressionCause {
 /// 为 crate 内部，这里在外部 integration crate 复刻同一逻辑）。
 fn evaluate_expression_as_boolean(
     context: &dyn ITemplateContext,
-    input: Option<&JavaString>,
+    input: Option<&Utf16String>,
 ) -> Result<bool, Box<dyn TemplateEngineException>> {
     let parser = StandardExpressions::get_expression_parser(context.get_configuration()).map_err(
         |error| expression_processing_error("Could not obtain Standard Expression parser", error),
@@ -195,7 +195,7 @@ fn evaluate_expression_as_boolean(
 /// 裸表达式仅在属性值不以 `${` 开头时尝试解析；否则交给标准表达式求值。
 fn evaluate_authorize_expression(
     context: &dyn ITemplateContext,
-    input: Option<&JavaString>,
+    input: Option<&Utf16String>,
 ) -> Result<bool, Box<dyn TemplateEngineException>> {
     let Some(input) = input else {
         return Ok(false);

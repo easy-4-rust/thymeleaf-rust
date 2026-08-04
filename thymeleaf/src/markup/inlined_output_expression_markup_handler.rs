@@ -15,7 +15,7 @@ use crate::model::{
     IProcessableElementTag, IProcessingInstruction, IStandaloneElementTag, ITemplateEnd,
     ITemplateStart, IText, IXMLDeclaration,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 /// 在 markup parser 与 Engine Handler 之间执行 Standard Dialect 输出表达式预处理。
@@ -40,7 +40,7 @@ impl InlinedOutputExpressionMarkupHandler {
     pub fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,
-        standard_dialect_prefix: Option<&JavaString>,
+        standard_dialect_prefix: Option<&Utf16String>,
         next: Box<dyn ITemplateHandler>,
     ) -> Result<Self, TemplateProcessingException> {
         let next = Rc::new(RefCell::new(next));
@@ -313,10 +313,10 @@ struct GeneratedEventState {
     active: Cell<bool>,
     configuration: Arc<dyn IEngineConfiguration>,
     template_mode: TemplateMode,
-    template_name: RefCell<Option<JavaString>>,
-    element_name: RefCell<Option<JavaString>>,
-    attribute_name: RefCell<Option<JavaString>>,
-    attribute_value: RefCell<Option<JavaString>>,
+    template_name: RefCell<Option<Utf16String>>,
+    element_name: RefCell<Option<Utf16String>>,
+    attribute_name: RefCell<Option<Utf16String>>,
+    attribute_value: RefCell<Option<Utf16String>>,
     line: Cell<i32>,
     col: Cell<i32>,
 }
@@ -375,7 +375,7 @@ impl InlineMarkupAdapterPreProcessorHandler {
                 let attribute = Arc::new(Attribute::new(
                     definition,
                     attribute_name,
-                    Some(JavaString::from_rust_str("=")),
+                    Some(Utf16String::from_rust_str("=")),
                     self.generated.attribute_value.borrow().clone(),
                     Some(AttributeValueQuotes::DOUBLE),
                     self.generated.template_name.borrow().clone(),
@@ -384,7 +384,7 @@ impl InlineMarkupAdapterPreProcessorHandler {
                 ));
                 Attributes::new(
                     Some(vec![attribute]),
-                    Some(vec![JavaString::from_rust_str(" ")]),
+                    Some(vec![Utf16String::from_rust_str(" ")]),
                 )
             });
         let event = Arc::new(OpenElementTag::with_location(
@@ -623,11 +623,11 @@ impl IInlinePreProcessorHandler for InlineMarkupAdapterPreProcessorHandler {
     }
 }
 
-fn slice(buffer: Option<&[u16]>, offset: i32, len: i32) -> JavaString {
+fn slice(buffer: Option<&[u16]>, offset: i32, len: i32) -> Utf16String {
     let buffer = buffer.expect("inline parser buffer cannot be null");
     let start = usize::try_from(offset).expect("inline offset cannot be negative");
     let length = usize::try_from(len).expect("inline length cannot be negative");
-    JavaString::from_utf16(buffer[start..start + length].to_vec())
+    Utf16String::from_utf16(buffer[start..start + length].to_vec())
 }
 
 fn i32_len(value: usize) -> i32 {

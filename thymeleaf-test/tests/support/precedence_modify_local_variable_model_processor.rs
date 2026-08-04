@@ -10,14 +10,14 @@ use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IModel;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &thymeleaf::engine::AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -35,10 +35,10 @@ impl PrecedenceModifyLocalVariableModelProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("modify-local-variable-model")),
+                Some(Utf16String::from_rust_str("modify-local-variable-model")),
                 true,
                 1300,
                 true,
@@ -97,12 +97,12 @@ fn process_model(
     _context: &dyn ITemplateContext,
     _model: &mut dyn IModel,
     _attribute_name: &thymeleaf::engine::AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     structure_handler.set_local_variable(
-        JavaString::from_rust_str("local"),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Utf16String::from_rust_str("local"),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "modified!",
         )))),
     );

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::model::IModel;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// XMLDeclaration Processor 的结构变更合同。
 ///
@@ -16,10 +16,10 @@ pub trait IXMLDeclarationStructureHandler {
     /// String, String, String)`。keyword 非空，其他属性允许为空。
     fn set_xml_declaration(
         &mut self,
-        keyword: JavaString,
-        version: Option<JavaString>,
-        encoding: Option<JavaString>,
-        standalone: Option<JavaString>,
+        keyword: Utf16String,
+        version: Option<Utf16String>,
+        encoding: Option<Utf16String>,
+        standalone: Option<Utf16String>,
     );
     /// 使用模型替换当前事件。对应 Java:
     /// `IXMLDeclarationStructureHandler#replaceWith(IModel, boolean)`。

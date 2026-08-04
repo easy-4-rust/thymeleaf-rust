@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::TemplateResolutionAttributes;
 use crate::cache::{ICacheEntryValidity, NonCacheableCacheEntryValidity};
 use crate::templateresource::UrlResourceConnectionHandler;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, ITemplateResource, TemplateResourceError, UrlTemplateResource};
 
 use super::{
@@ -64,7 +64,7 @@ impl UrlTemplateResolver {
     ///
     /// 对应 Java: `UrlTemplateResolver#computeValidity(...)`。
     #[must_use]
-    pub fn compute_validity(&self, template: &JavaString) -> Arc<dyn ICacheEntryValidity> {
+    pub fn compute_validity(&self, template: &Utf16String) -> Arc<dyn ICacheEntryValidity> {
         let text = template.to_string_lossy();
         let java_dot_matches_entire_template = !text.chars().any(|character| {
             matches!(
@@ -99,7 +99,7 @@ impl std::ops::DerefMut for UrlTemplateResolver {
 }
 
 impl ITemplateResolver for UrlTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.resolver.get_name()
     }
 
@@ -110,8 +110,8 @@ impl ITemplateResolver for UrlTemplateResolver {
     fn resolve_template(
         &self,
         _configuration: &dyn IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
@@ -122,7 +122,7 @@ impl ITemplateResolver for UrlTemplateResolver {
                 let character_encoding = self
                     .resolver
                     .get_character_encoding()
-                    .map(JavaString::to_string_lossy);
+                    .map(Utf16String::to_string_lossy);
                 let resource = self.connection_handler.as_ref().map_or_else(
                     || {
                         UrlTemplateResource::new(

@@ -9,7 +9,7 @@ use crate::exceptions::{
 };
 use crate::expression::ExpressionSequenceUtils;
 use crate::model::IProcessableElementTag;
-use crate::util::{EvaluationUtils, JavaString};
+use crate::util::{EvaluationUtils, Utf16String};
 
 use super::{
     IProcessor, StandardAttributeCallback, expression_processing_error, is_empty_or_java_whitespace,
@@ -27,8 +27,8 @@ impl AbstractStandardAssertionTagProcessor {
     /// 对应 Java 语义：`AbstractStandardAssertionTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         processor_class_name: &'static str,
     ) -> Result<Self, TemplateProcessingException> {
@@ -75,7 +75,7 @@ impl AbstractStandardAssertionTagProcessor {
                         return Err(Box::new(TemplateAssertionException::with_location(
                             Some(&representation.to_string_lossy()),
                             tag.get_template_name()
-                                .map(JavaString::to_string_lossy)
+                                .map(Utf16String::to_string_lossy)
                                 .as_deref(),
                             line,
                             col,

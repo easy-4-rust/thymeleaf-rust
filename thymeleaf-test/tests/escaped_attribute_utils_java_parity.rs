@@ -4,10 +4,10 @@
 //! null 输入与错误路径。
 
 use thymeleaf::TemplateMode;
-use thymeleaf::util::{EscapedAttributeUtils, JavaString};
+use thymeleaf::util::{EscapedAttributeUtils, Utf16String};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 // ===========================================================================

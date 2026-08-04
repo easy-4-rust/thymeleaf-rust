@@ -10,10 +10,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use thymeleaf::engine::{AttributeDefinitions, HTMLAttributeDefinition};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn definitions() -> AttributeDefinitions {
@@ -27,7 +27,7 @@ fn html_name(value: &Arc<HTMLAttributeDefinition>) -> String {
         .as_attribute_definition()
         .get_attribute_name()
         .as_attribute_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("toString")
         .to_string_lossy()
 }
@@ -37,7 +37,7 @@ fn xml_name(value: &Arc<thymeleaf::engine::XMLAttributeDefinition>) -> String {
         .as_attribute_definition()
         .get_attribute_name()
         .as_attribute_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("toString")
         .to_string_lossy()
 }
@@ -47,7 +47,7 @@ fn text_name(value: &Arc<thymeleaf::engine::TextAttributeDefinition>) -> String 
         .as_attribute_definition()
         .get_attribute_name()
         .as_attribute_name()
-        .to_java_string()
+        .to_utf16_string()
         .expect("toString")
         .to_string_lossy()
 }

@@ -12,7 +12,7 @@ use thymeleaf::cache::ICacheEntryValidity;
 use thymeleaf::context::Context;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresource::UrlResourceConnectionHandler;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebApplication;
 use thymeleaf::{
     AbstractConfigurableTemplateResolver, ClassLoaderTemplateResolver, DefaultTemplateResolver,
@@ -306,9 +306,9 @@ fn export_configurable_resolver(output: &mut String) {
         .expect_err("null template alias value");
     emit_resolver_failure(output, "config.alias.value_null", &error);
 
-    let isolated = JavaString::from_utf16(vec![u16::from(b'p'), 0xD800, u16::from(b'x')]);
-    resolver.set_prefix(Some(JavaString::from_utf16(vec![0xD801])));
-    resolver.set_suffix(Some(JavaString::from_utf16(vec![0xD802])));
+    let isolated = Utf16String::from_utf16(vec![u16::from(b'p'), 0xD800, u16::from(b'x')]);
+    resolver.set_prefix(Some(Utf16String::from_utf16(vec![0xD801])));
+    resolver.set_suffix(Some(Utf16String::from_utf16(vec![0xD802])));
     resolver.set_force_suffix(true);
     emit(
         output,
@@ -712,7 +712,7 @@ impl std::ops::DerefMut for ProbeResolver {
 }
 
 impl ITemplateResolver for ProbeResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.resolver.get_name()
     }
 
@@ -723,8 +723,8 @@ impl ITemplateResolver for ProbeResolver {
     fn resolve_template(
         &self,
         _configuration: &dyn IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolver().resolve_template(
@@ -752,7 +752,7 @@ impl ITemplateResolver for ProbeResolver {
 }
 
 struct ProbeResource {
-    description: JavaString,
+    description: Utf16String,
     exists: bool,
 }
 
@@ -789,7 +789,7 @@ impl ITemplateResource for ProbeResource {
 struct TestWebApplication;
 
 impl IWebApplication for TestWebApplication {
-    fn contains_attribute(&self, _name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, _name: Option<&Utf16String>) -> bool {
         false
     }
 
@@ -797,27 +797,27 @@ impl IWebApplication for TestWebApplication {
         0
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         Vec::new()
     }
 
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         IndexMap::new()
     }
 
-    fn get_attribute_value(&self, _name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, _name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         None
     }
 
-    fn set_attribute_value(&self, _name: Option<JavaString>, _value: Option<Arc<TemplateValue>>) {}
+    fn set_attribute_value(&self, _name: Option<Utf16String>, _value: Option<Arc<TemplateValue>>) {}
 
-    fn remove_attribute(&self, _name: Option<&JavaString>) {}
+    fn remove_attribute(&self, _name: Option<&Utf16String>) {}
 
-    fn resource_exists(&self, _path: Option<&JavaString>) -> bool {
+    fn resource_exists(&self, _path: Option<&Utf16String>) -> bool {
         false
     }
 
-    fn get_resource_as_stream(&self, _path: Option<&JavaString>) -> Option<Box<dyn Read + Send>> {
+    fn get_resource_as_stream(&self, _path: Option<&Utf16String>) -> Option<Box<dyn Read + Send>> {
         None
     }
 }
@@ -879,12 +879,12 @@ fn emit_none_resolution(output: &mut String, key: &str, resolution: Option<Templ
     emit(output, key, "null");
 }
 
-fn emit_optional_java(output: &mut String, key: &str, value: Option<&JavaString>) {
+fn emit_optional_java(output: &mut String, key: &str, value: Option<&Utf16String>) {
     emit(
         output,
         key,
         value
-            .map_or("null".to_owned(), JavaString::to_string_lossy)
+            .map_or("null".to_owned(), Utf16String::to_string_lossy)
             .as_str(),
     );
 }
@@ -921,7 +921,7 @@ fn emit_mode(output: &mut String, key: &str, value: TemplateMode) {
     emit(output, key, &value.to_string());
 }
 
-fn emit_java(output: &mut String, key: &str, value: &JavaString) {
+fn emit_java(output: &mut String, key: &str, value: &Utf16String) {
     emit(output, key, &value.to_string_lossy());
 }
 
@@ -932,7 +932,7 @@ fn emit(output: &mut String, key: &str, value: &str) {
     output.push('\n');
 }
 
-fn code_units(value: &JavaString) -> String {
+fn code_units(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()
@@ -941,8 +941,8 @@ fn code_units(value: &JavaString) -> String {
         .join(",")
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn temporary_directory(name: &str) -> PathBuf {

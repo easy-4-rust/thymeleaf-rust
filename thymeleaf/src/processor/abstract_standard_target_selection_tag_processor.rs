@@ -10,7 +10,7 @@ use crate::engine::AttributeName;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{IStandardExpression, StandardExpressions, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IProcessor, StandardAttributeCallback, expression_processing_error};
 
@@ -27,8 +27,8 @@ impl AbstractStandardTargetSelectionTagProcessor {
     /// 对应 Java 语义：`AbstractStandardTargetSelectionTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new<V, L>(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         validate_selection_value: V,
         compute_additional_local_variables: L,
@@ -39,7 +39,7 @@ impl AbstractStandardTargetSelectionTagProcessor {
                 &dyn ITemplateContext,
                 &dyn IProcessableElementTag,
                 &AttributeName,
-                Option<&JavaString>,
+                Option<&Utf16String>,
                 &dyn IStandardExpression,
             ) -> Result<(), Box<dyn TemplateEngineException>>
             + Send
@@ -49,10 +49,10 @@ impl AbstractStandardTargetSelectionTagProcessor {
                 &dyn ITemplateContext,
                 &dyn IProcessableElementTag,
                 &AttributeName,
-                Option<&JavaString>,
+                Option<&Utf16String>,
                 &dyn IStandardExpression,
             ) -> Result<
-                Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>>,
+                Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>>,
                 Box<dyn TemplateEngineException>,
             > + Send
             + Sync

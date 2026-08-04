@@ -6,7 +6,7 @@ use crate::cache::{
     TTLCacheEntryValidity,
 };
 use crate::exceptions::ConfigurationException;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{
     IEngineConfiguration, ITemplateResource, StringTemplateResource, TemplateMode,
     TemplateModeParseError,
@@ -168,7 +168,7 @@ impl std::ops::DerefMut for StringTemplateResolver {
 }
 
 impl ITemplateResolver for StringTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.resolver.get_name()
     }
 
@@ -179,8 +179,8 @@ impl ITemplateResolver for StringTemplateResolver {
     fn resolve_template(
         &self,
         _configuration: &dyn IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         _template_resolution_attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         self.resolver.resolve_template(

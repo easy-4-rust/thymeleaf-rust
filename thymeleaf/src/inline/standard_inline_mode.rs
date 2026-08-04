@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use thiserror::Error;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 标准方言支持的文本内联模式。
 ///
@@ -50,7 +50,7 @@ impl StandardInlineMode {
     ///
     /// # 错误
     /// null、经 Java `trim()` 后为空及未识别名称分别保留精确异常消息。
-    pub fn parse(mode: Option<&JavaString>) -> Result<Self, StandardInlineModeParseError> {
+    pub fn parse(mode: Option<&Utf16String>) -> Result<Self, StandardInlineModeParseError> {
         let Some(mode) = mode else {
             return Err(StandardInlineModeParseError::NullOrEmpty);
         };
@@ -110,7 +110,7 @@ pub enum StandardInlineModeParseError {
     NullOrEmpty,
     /// 输入非空但不是受支持的内联模式。
     #[error("Unrecognized inline mode: {}", .0.to_string_lossy())]
-    Unrecognized(JavaString),
+    Unrecognized(Utf16String),
 }
 
 impl StandardInlineModeParseError {
@@ -129,15 +129,15 @@ impl StandardInlineModeParseError {
     /// 精确保留固定前缀和未识别输入，包括孤立代理 code unit。
     #[must_use]
     /// 对应 Java 语义：Java 接口/超类方法 `message()` 的 Rust 移植（`StandardInlineMode` 继承路径）。
-    pub fn message(&self) -> JavaString {
+    pub fn message(&self) -> Utf16String {
         match self {
-            Self::NullOrEmpty => JavaString::from_rust_str("Inline mode cannot be null or empty"),
+            Self::NullOrEmpty => Utf16String::from_rust_str("Inline mode cannot be null or empty"),
             Self::Unrecognized(mode) => {
-                let mut message = JavaString::from_rust_str("Unrecognized inline mode: ")
+                let mut message = Utf16String::from_rust_str("Unrecognized inline mode: ")
                     .as_utf16()
                     .to_vec();
                 message.extend_from_slice(mode.as_utf16());
-                JavaString::from_utf16(message)
+                Utf16String::from_utf16(message)
             }
         }
     }
@@ -174,14 +174,14 @@ fn java_code_unit_equals_ascii_ignore_case(actual: u16, expected: u8) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{StandardInlineMode, StandardInlineModeParseError};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     #[test]
     fn preserves_values_ordinals_display_and_ascii_case_parsing() {
         for (ordinal, value) in StandardInlineMode::VALUES.into_iter().enumerate() {
             assert_eq!(value.ordinal(), ordinal);
             assert_eq!(
-                StandardInlineMode::parse(Some(&JavaString::from_rust_str(
+                StandardInlineMode::parse(Some(&Utf16String::from_rust_str(
                     &value.to_string().to_ascii_lowercase()
                 ))),
                 Ok(value)
@@ -199,8 +199,8 @@ mod tests {
     fn preserves_java_trim_unicode_case_and_error_messages() {
         for input in [
             None,
-            Some(JavaString::from_rust_str("")),
-            Some(JavaString::from_utf16([0x0000, 0x0020])),
+            Some(Utf16String::from_rust_str("")),
+            Some(Utf16String::from_utf16([0x0000, 0x0020])),
         ] {
             assert_eq!(
                 StandardInlineMode::parse(input.as_ref()),
@@ -208,15 +208,17 @@ mod tests {
             );
         }
         assert_eq!(
-            StandardInlineMode::parse(Some(&JavaString::from_utf16(
-                [b'C' as u16, 0x017F, 0x017F,]
-            ))),
+            StandardInlineMode::parse(Some(&Utf16String::from_utf16([
+                b'C' as u16,
+                0x017F,
+                0x017F,
+            ]))),
             Ok(StandardInlineMode::CSS)
         );
         assert_eq!(
-            StandardInlineMode::parse(Some(&JavaString::from_rust_str(" HTML "))),
+            StandardInlineMode::parse(Some(&Utf16String::from_rust_str(" HTML "))),
             Err(StandardInlineModeParseError::Unrecognized(
-                JavaString::from_rust_str(" HTML ")
+                Utf16String::from_rust_str(" HTML ")
             ))
         );
         assert_eq!(
@@ -224,7 +226,7 @@ mod tests {
             "Inline mode cannot be null or empty"
         );
         assert_eq!(
-            StandardInlineModeParseError::Unrecognized(JavaString::from_rust_str("RAW"))
+            StandardInlineModeParseError::Unrecognized(Utf16String::from_rust_str("RAW"))
                 .to_string(),
             "Unrecognized inline mode: RAW"
         );
@@ -234,10 +236,10 @@ mod tests {
         );
         assert_eq!(
             StandardInlineModeParseError::NullOrEmpty.message(),
-            JavaString::from_rust_str("Inline mode cannot be null or empty")
+            Utf16String::from_rust_str("Inline mode cannot be null or empty")
         );
         assert_eq!(
-            StandardInlineModeParseError::Unrecognized(JavaString::from_utf16([0xD800]))
+            StandardInlineModeParseError::Unrecognized(Utf16String::from_utf16([0xD800]))
                 .message()
                 .as_utf16()
                 .last(),

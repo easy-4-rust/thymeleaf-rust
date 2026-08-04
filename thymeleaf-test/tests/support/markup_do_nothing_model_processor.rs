@@ -8,14 +8,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::IModel;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -33,10 +33,10 @@ impl MarkupDoNothingModelProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("donothing")),
+                Some(Utf16String::from_rust_str("donothing")),
                 true,
                 1000,
                 true,
@@ -88,7 +88,7 @@ fn do_nothing(
     _context: &dyn ITemplateContext,
     _model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     Ok(())

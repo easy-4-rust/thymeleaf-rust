@@ -10,7 +10,7 @@ use thymeleaf::engine::Text;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::{IProcessableElementTag, ITemplateEvent};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -33,8 +33,8 @@ impl Dialect01DivProcessor {
         Self {
             processor: AbstractElementTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
-                Some(JavaString::from_rust_str("div")),
+                dialect_prefix.map(Utf16String::from_rust_str),
+                Some(Utf16String::from_rust_str("div")),
                 true,
                 None,
                 false,
@@ -97,7 +97,7 @@ fn process_div(
 ) -> ProcessResult {
     let mut markup = context.get_model_factory().create_model();
     let text: Arc<dyn ITemplateEvent> = Arc::new(Text::new(Some(Arc::new(
-        JavaString::from_rust_str("[From Dialect 01]"),
+        Utf16String::from_rust_str("[From Dialect 01]"),
     ))));
     markup.add(Some(text)).map_err(|error| {
         Box::new(TemplateProcessingException::with_cause(

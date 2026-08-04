@@ -4,7 +4,7 @@ use crate::doctype::{AbstractDocTypeProcessor, IDocTypeProcessor, IDocTypeStruct
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::IDocType;
 use crate::processor::IProcessor;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 type DocTypeCallback = Box<
     dyn Fn(
@@ -50,13 +50,13 @@ impl StandardTranslationDocTypeProcessor {
                 doc_type
                     .get_keyword()
                     .cloned()
-                    .unwrap_or_else(|| JavaString::from_rust_str("DOCTYPE")),
+                    .unwrap_or_else(|| Utf16String::from_rust_str("DOCTYPE")),
                 doc_type
                     .get_element_name()
                     .cloned()
-                    .unwrap_or_else(|| JavaString::from_rust_str("html")),
-                Some(JavaString::from_rust_str(public_id)),
-                Some(JavaString::from_rust_str(translated_system_id)),
+                    .unwrap_or_else(|| Utf16String::from_rust_str("html")),
+                Some(Utf16String::from_rust_str(public_id)),
+                Some(Utf16String::from_rust_str(translated_system_id)),
                 doc_type.get_internal_subset().cloned(),
             );
             Ok(())

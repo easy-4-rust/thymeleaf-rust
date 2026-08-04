@@ -1,7 +1,7 @@
 use std::sync::{Arc, Weak};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     JavaConversionResult, JavaConversionValue, JavaTargetClass, StandardConversionError,
@@ -33,7 +33,7 @@ impl Conversions {
     pub fn convert_by_class_name<'a>(
         &'a self,
         target: Option<&'a TemplateValue>,
-        class_name: Option<&JavaString>,
+        class_name: Option<&Utf16String>,
     ) -> Result<JavaConversionResult<'a>, StandardConversionError> {
         let class_name = class_name.ok_or_else(|| {
             StandardConversionError::Validation(ValidateError::IllegalArgument {

@@ -8,7 +8,7 @@ use crate::element::{
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{IStandardExpression, StandardExpressions, TemplateObject, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{IProcessor, StandardAttributeCallback, expression_processing_error};
 
@@ -56,8 +56,8 @@ impl TemplateObject for SwitchStructure {
     fn java_class_name(&self) -> &str {
         "org.thymeleaf.standard.processor.StandardSwitchTagProcessor$SwitchStructure"
     }
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.java_class_name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.java_class_name())
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
@@ -82,7 +82,7 @@ impl StandardSwitchTagProcessor {
     /// 对应 Java 语义：`StandardSwitchTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         let callback: StandardAttributeCallback = Box::new(
             |context, _tag, _attribute_name, attribute_value, structure_handler| {
@@ -100,7 +100,7 @@ impl StandardSwitchTagProcessor {
                         expression_processing_error("Could not parse switch expression", error)
                     })?;
                 structure_handler.set_local_variable(
-                    JavaString::from_rust_str(Self::SWITCH_VARIABLE_NAME),
+                    Utf16String::from_rust_str(Self::SWITCH_VARIABLE_NAME),
                     Some(Arc::new(TemplateValue::Object(Arc::new(
                         SwitchStructure::new(expression),
                     )))),
@@ -114,7 +114,7 @@ impl StandardSwitchTagProcessor {
                 dialect_prefix,
                 None,
                 false,
-                Some(JavaString::from_rust_str(Self::ATTR_NAME)),
+                Some(Utf16String::from_rust_str(Self::ATTR_NAME)),
                 true,
                 Self::PRECEDENCE,
                 true,

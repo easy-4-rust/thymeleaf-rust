@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use thiserror::Error;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// Token 值执行 Java `toString()` 时的可空、借用或新建结果。
 ///
@@ -12,9 +12,9 @@ pub enum JavaTokenStringResult<'a> {
     /// Java null。
     Null,
     /// 借用的既有 Java 字符串。
-    Borrowed(&'a JavaString),
+    Borrowed(&'a Utf16String),
     /// 新建 Java 字符串。
-    Owned(JavaString),
+    Owned(Utf16String),
 }
 
 /// 可被 `Token` 保存并按 Java 规则转换为字符串的值。
@@ -30,7 +30,7 @@ pub trait JavaTokenValue {
     fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError>;
 }
 
-impl JavaTokenValue for JavaString {
+impl JavaTokenValue for Utf16String {
     fn java_token_to_string(&self) -> Result<JavaTokenStringResult<'_>, TokenError> {
         Ok(JavaTokenStringResult::Borrowed(self))
     }
@@ -177,7 +177,7 @@ impl<T: JavaTokenValue> Token<T> {
     ///
     /// # 错误
     /// context 为 null 或 pos 越界时，保留 Java 异常类别和校验顺序。
-    pub fn is_token_char(context: Option<&JavaString>, pos: i32) -> Result<bool, TokenError> {
+    pub fn is_token_char(context: Option<&Utf16String>, pos: i32) -> Result<bool, TokenError> {
         let context = context.ok_or(TokenError::NullPointer)?;
         let position = position_in(context, pos)?;
         Ok(is_token_char_at(context.as_utf16(), position))
@@ -210,7 +210,7 @@ impl TokenParsingTracer {
     ///
     /// # 错误
     /// 输入为 null 时返回 Java NullPointer 类别。
-    pub fn trace(input: Option<&JavaString>) -> Result<JavaString, TokenError> {
+    pub fn trace(input: Option<&Utf16String>) -> Result<Utf16String, TokenError> {
         let input = input.ok_or(TokenError::NullPointer)?;
         let input_units = input.as_utf16();
         let mut traced = Vec::with_capacity(input_units.len().saturating_add(1));
@@ -221,11 +221,11 @@ impl TokenParsingTracer {
                 traced.push(input_units[position]);
             }
         }
-        Ok(JavaString::from_utf16(traced))
+        Ok(Utf16String::from_utf16(traced))
     }
 }
 
-fn position_in(context: &JavaString, position: i32) -> Result<usize, TokenError> {
+fn position_in(context: &Utf16String, position: i32) -> Result<usize, TokenError> {
     let Ok(position_usize) = usize::try_from(position) else {
         return Err(TokenError::StringIndexOutOfBounds { position });
     };
@@ -328,7 +328,7 @@ const fn is_ascii_digit(value: u16) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{JavaTokenStringResult, JavaTokenValue, Token, TokenError, TokenParsingTracer};
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     struct Probe {
         result: ProbeResult,
@@ -336,7 +336,7 @@ mod tests {
 
     enum ProbeResult {
         Null,
-        Value(JavaString),
+        Value(Utf16String),
         Error,
     }
 
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn preserves_value_identity_nullable_string_and_runtime_errors() {
-        let string = JavaString::from_rust_str("token");
+        let string = Utf16String::from_rust_str("token");
         let token = Token::new(Some(string.clone()));
         assert_eq!(token.get_value(), Some(&string));
         assert!(matches!(
@@ -363,7 +363,7 @@ mod tests {
             Ok(JavaTokenStringResult::Borrowed(value)) if value == &string
         ));
 
-        let null_token = Token::<JavaString>::new(None);
+        let null_token = Token::<Utf16String>::new(None);
         assert_eq!(
             null_token.get_string_representation().err(),
             Some(TokenError::NullPointer)
@@ -377,10 +377,10 @@ mod tests {
             std::mem::discriminant(&JavaTokenStringResult::Null)
         );
         let owned_result = Token::new(Some(Probe {
-            result: ProbeResult::Value(JavaString::from_rust_str("owned")),
+            result: ProbeResult::Value(Utf16String::from_rust_str("owned")),
         }));
         let borrowed_result = owned_result.get_string_representation().unwrap();
-        let expected_borrowed_value = JavaString::from_rust_str("expected");
+        let expected_borrowed_value = Utf16String::from_rust_str("expected");
         assert_eq!(
             std::mem::discriminant(&borrowed_result),
             std::mem::discriminant(&JavaTokenStringResult::Borrowed(&expected_borrowed_value))
@@ -399,12 +399,12 @@ mod tests {
     #[test]
     fn preserves_null_index_and_trace_boundaries() {
         assert_eq!(
-            Token::<JavaString>::is_token_char(None, 0).err(),
+            Token::<Utf16String>::is_token_char(None, 0).err(),
             Some(TokenError::NullPointer)
         );
-        let empty = JavaString::from_rust_str("");
+        let empty = Utf16String::from_rust_str("");
         for position in [-1, 0, i32::MAX] {
-            let error = Token::<JavaString>::is_token_char(Some(&empty), position)
+            let error = Token::<Utf16String>::is_token_char(Some(&empty), position)
                 .expect_err("index failure");
             assert_eq!(
                 error.java_class_name(),

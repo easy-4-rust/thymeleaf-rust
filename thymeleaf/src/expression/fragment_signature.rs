@@ -1,21 +1,21 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 /// `th:fragment` 的名称与可选参数名称序列。
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.FragmentSignature`。
 pub struct FragmentSignature {
-    fragment_name: JavaString,
-    parameter_names: Option<Arc<RwLock<Vec<Option<JavaString>>>>>,
+    fragment_name: Utf16String,
+    parameter_names: Option<Arc<RwLock<Vec<Option<Utf16String>>>>>,
 }
 
 impl FragmentSignature {
     /// 创建签名；参数列表保留原始共享身份，与 Java 直接保存 List 引用一致。
     /// 对应 Java 语义：`FragmentSignature` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        fragment_name: Option<JavaString>,
-        parameter_names: Option<Arc<RwLock<Vec<Option<JavaString>>>>>,
+        fragment_name: Option<Utf16String>,
+        parameter_names: Option<Arc<RwLock<Vec<Option<Utf16String>>>>>,
     ) -> Result<Self, ValidateError> {
         let fragment_name = fragment_name
             .filter(|value| !value.is_empty())
@@ -30,7 +30,7 @@ impl FragmentSignature {
 
     /// 返回 Fragment 名称。
     /// 对应 Java: `FragmentSignature#getFragmentName()`。
-    pub fn get_fragment_name(&self) -> &JavaString {
+    pub fn get_fragment_name(&self) -> &Utf16String {
         &self.fragment_name
     }
 
@@ -44,7 +44,7 @@ impl FragmentSignature {
 
     /// 返回原共享参数列表的实时只读视图。
     /// 对应 Java: `FragmentSignature#getParameterNames()`。
-    pub fn get_parameter_names(&self) -> Option<RwLockReadGuard<'_, Vec<Option<JavaString>>>> {
+    pub fn get_parameter_names(&self) -> Option<RwLockReadGuard<'_, Vec<Option<Utf16String>>>> {
         self.parameter_names
             .as_ref()
             .map(|parameters| read_recovering_poison(parameters))
@@ -52,7 +52,7 @@ impl FragmentSignature {
 
     /// 返回与 Java `StringUtils.join` 一致的当前签名文本。
     /// 对应 Java: `FragmentSignature#getStringRepresentation()`。
-    pub fn get_string_representation(&self) -> JavaString {
+    pub fn get_string_representation(&self) -> Utf16String {
         let Some(parameter_names) = self.parameter_names.as_ref() else {
             return self.fragment_name.clone();
         };
@@ -72,7 +72,7 @@ impl FragmentSignature {
             }
         }
         units.push(b')' as u16);
-        JavaString::from_utf16(units)
+        Utf16String::from_utf16(units)
     }
 }
 

@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 use crate::web::IWebExchange;
 
 /// `IContext#getVariableNames()` 返回的可变 Set 视图合同。
@@ -36,26 +36,26 @@ pub trait IContextVariableNames: Send + Sync {
     /// # 返回值
     ///
     /// 支撑 Context 包含该名称时返回 `true`，包括显式 null 名称。
-    fn contains(&self, name: Option<&JavaString>) -> bool;
+    fn contains(&self, name: Option<&Utf16String>) -> bool;
 
     /// 返回当前迭代顺序的独立名称快照。
     ///
     /// # 返回值
     ///
     /// 返回保留 Java Set 迭代顺序的独立快照；后续 Context 修改不会改变该 Vec。
-    fn snapshot(&self) -> Vec<Option<JavaString>>;
+    fn snapshot(&self) -> Vec<Option<Utf16String>>;
 
     /// 从支撑 Context 删除名称及其变量。
     ///
     /// # 返回
     ///
     /// 名称原先存在时返回 `true`。
-    fn remove(&self, name: Option<&JavaString>) -> bool;
+    fn remove(&self, name: Option<&Utf16String>) -> bool;
 
     /// 判断视图是否包含给定全部名称。
     ///
     /// 对应 Java `Set#containsAll(Collection)`；空输入返回 `true`。
-    fn contains_all(&self, names: &[Option<JavaString>]) -> bool {
+    fn contains_all(&self, names: &[Option<Utf16String>]) -> bool {
         names.iter().all(|name| self.contains(name.as_ref()))
     }
 
@@ -66,7 +66,7 @@ pub trait IContextVariableNames: Send + Sync {
     /// # 返回值
     ///
     /// 至少删除一个变量时返回 `true`。
-    fn remove_all(&self, names: &[Option<JavaString>]) -> bool {
+    fn remove_all(&self, names: &[Option<Utf16String>]) -> bool {
         let mut changed = false;
         for name in names {
             changed |= self.remove(name.as_ref());
@@ -81,7 +81,7 @@ pub trait IContextVariableNames: Send + Sync {
     /// # 返回值
     ///
     /// 变量集合发生变化时返回 `true`。
-    fn retain_all(&self, names: &[Option<JavaString>]) -> bool {
+    fn retain_all(&self, names: &[Option<Utf16String>]) -> bool {
         let mut changed = false;
         for current in self.snapshot() {
             if !names.contains(&current) {
@@ -127,7 +127,7 @@ pub trait IContext: Any + Send + Sync {
     /// # 返回值
     ///
     /// 变量 Map 包含该键时返回 `true`；即使对应值是显式 Java null 也返回 `true`。
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool;
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool;
 
     /// 返回由 Context 变量 Map 支撑的实时名称视图。
     ///
@@ -149,7 +149,7 @@ pub trait IContext: Any + Send + Sync {
     /// # 返回值
     ///
     /// 返回共享变量值；键不存在时返回 `None`。
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>>;
 
     /// 返回可选 Web exchange capability。
     ///

@@ -21,7 +21,7 @@ use thymeleaf::expression::{
 };
 use thymeleaf::postprocessor::IPostProcessor;
 use thymeleaf::preprocessor::IPreProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{
     DialectConfiguration, DialectSetConfiguration, DialectSetConfigurationError,
     ExecutionAttributeValue, ITemplateEngine, StandardDialect, TemplateEngine, TemplateMode,
@@ -261,7 +261,7 @@ fn export_empty(output: &mut String) {
         "empty.prefix",
         configuration
             .get_standard_dialect_prefix()
-            .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+            .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
     );
     emit(output, "empty.attributes", "{}");
     emit_names(
@@ -339,13 +339,13 @@ fn export_execution_attributes(output: &mut String) {
         output,
         "attributes.null.value",
         configuration
-            .get_execution_attribute(Some(&JavaString::from_rust_str("null-value")))
+            .get_execution_attribute(Some(&Utf16String::from_rust_str("null-value")))
             .map_or_else(|| "null".to_owned(), |_| "<value>".to_owned()),
     );
     emit(
         output,
         "attributes.missing.present",
-        configuration.has_execution_attribute(Some(&JavaString::from_rust_str("missing"))),
+        configuration.has_execution_attribute(Some(&Utf16String::from_rust_str("missing"))),
     );
 
     let duplicate = Some(vec![(
@@ -395,26 +395,26 @@ fn export_expression_factories(output: &mut String) {
         "expression.multi.shared",
         factory.build_object(
             Arc::clone(&context),
-            Some(&JavaString::from_rust_str("shared")),
+            Some(&Utf16String::from_rust_str("shared")),
         ),
     );
     emit_object(
         output,
         "expression.multi.a",
-        factory.build_object(Arc::clone(&context), Some(&JavaString::from_rust_str("a"))),
+        factory.build_object(Arc::clone(&context), Some(&Utf16String::from_rust_str("a"))),
     );
     emit_object(
         output,
         "expression.multi.unknown",
         factory.build_object(
             Arc::clone(&context),
-            Some(&JavaString::from_rust_str("unknown")),
+            Some(&Utf16String::from_rust_str("unknown")),
         ),
     );
     emit(
         output,
         "expression.multi.cache.shared",
-        factory.is_cacheable(Some(&JavaString::from_rust_str("shared"))),
+        factory.is_cacheable(Some(&Utf16String::from_rust_str("shared"))),
     );
     emit(
         output,
@@ -440,13 +440,13 @@ fn export_expression_factories(output: &mut String) {
         "expression.single.unknown",
         single_aggregate.build_object(
             Arc::clone(&context),
-            Some(&JavaString::from_rust_str("unknown")),
+            Some(&Utf16String::from_rust_str("unknown")),
         ),
     );
     emit(
         output,
         "expression.single.cache.unknown",
-        single_aggregate.is_cacheable(Some(&JavaString::from_rust_str("unknown"))),
+        single_aggregate.is_cacheable(Some(&Utf16String::from_rust_str("unknown"))),
     );
     emit(
         output,
@@ -793,10 +793,10 @@ fn expression_context() -> Arc<dyn IExpressionContext> {
     ExpressionContext::new(Some(configuration)).expect("non-null expression-context configuration")
 }
 
-fn names(values: &[&str]) -> Vec<Option<JavaString>> {
+fn names(values: &[&str]) -> Vec<Option<Utf16String>> {
     values
         .iter()
-        .map(|value| Some(JavaString::from_rust_str(value)))
+        .map(|value| Some(Utf16String::from_rust_str(value)))
         .collect()
 }
 
@@ -844,14 +844,14 @@ fn new_probe_handler() -> Result<Box<dyn ITemplateHandler>, TemplateHandlerConst
 }
 
 fn format_execution_attributes(
-    attributes: &indexmap::IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>>,
+    attributes: &indexmap::IndexMap<Option<Utf16String>, Option<Arc<ExecutionAttributeValue>>>,
 ) -> String {
     let entries = attributes
         .iter()
         .map(|(key, value)| {
             let key = key
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
             let value = value.as_ref().map_or_else(
                 || "null".to_owned(),
                 |value| {
@@ -915,7 +915,7 @@ fn emit_names(output: &mut String, key: &str, names: Option<ExpressionObjectName
                     .iter()
                     .map(|name| name
                         .as_ref()
-                        .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy))
+                        .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy))
                     .collect::<Vec<_>>()
                     .join(", ")
             )
@@ -931,7 +931,7 @@ fn emit_object(
 ) {
     let value = result
         .expect("ProbeFactory does not fail")
-        .and_then(|value| value.to_java_string())
+        .and_then(|value| value.to_utf16_string())
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy());
     emit(output, key, value);
 }
@@ -1000,7 +1000,7 @@ struct ProbeFactory {
 }
 
 impl ProbeFactory {
-    fn new(id: &'static str, names: Option<Vec<Option<JavaString>>>, cacheable: bool) -> Self {
+    fn new(id: &'static str, names: Option<Vec<Option<Utf16String>>>, cacheable: bool) -> Self {
         Self {
             id,
             names: names.map(Into::into),
@@ -1018,17 +1018,17 @@ impl IExpressionObjectFactory for ProbeFactory {
     fn build_object(
         &self,
         _context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         self.calls.fetch_add(1, Ordering::SeqCst);
         let name =
-            expression_object_name.map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+            expression_object_name.map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
         Ok(Some(Arc::new(TemplateValue::string(
-            JavaString::from_rust_str(&format!("{}:{name}", self.id)),
+            Utf16String::from_rust_str(&format!("{}:{name}", self.id)),
         ))))
     }
 
-    fn is_cacheable(&self, _expression_object_name: Option<&JavaString>) -> bool {
+    fn is_cacheable(&self, _expression_object_name: Option<&Utf16String>) -> bool {
         self.calls.fetch_add(1, Ordering::SeqCst);
         self.cacheable
     }

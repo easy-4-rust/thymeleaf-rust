@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::model::IModel;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// DOCTYPE Processor 的结构变更合同。
 ///
@@ -15,11 +15,11 @@ pub trait IDocTypeStructureHandler {
     /// String, String)`。keyword 与 element name 非空；其余三个参数允许为空。
     fn set_doc_type(
         &mut self,
-        keyword: JavaString,
-        element_name: JavaString,
-        public_id: Option<JavaString>,
-        system_id: Option<JavaString>,
-        internal_subset: Option<JavaString>,
+        keyword: Utf16String,
+        element_name: Utf16String,
+        public_id: Option<Utf16String>,
+        system_id: Option<Utf16String>,
+        internal_subset: Option<Utf16String>,
     );
     /// 使用模型替换当前事件。对应 Java:
     /// `IDocTypeStructureHandler#replaceWith(IModel, boolean)`。

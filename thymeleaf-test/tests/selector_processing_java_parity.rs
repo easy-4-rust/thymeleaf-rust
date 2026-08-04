@@ -5,7 +5,7 @@ use std::sync::Arc;
 use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode, TemplateSpec};
 
 fn create_engine() -> TemplateEngine {
@@ -81,7 +81,7 @@ fn th_block_removed() {
 fn th_block_conditional() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("show")),
+        Some(Utf16String::from_rust_str("show")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     let s = render(
@@ -200,8 +200,8 @@ fn unicode_preserved() {
 fn unicode_variable() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("msg")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("msg")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "こんにちは",
         )))),
     );
@@ -225,14 +225,14 @@ fn large_template_200_elements() {
 fn mixed_static_dynamic() {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("title")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("title")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "My Page",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("body")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("body")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Welcome",
         )))),
     );

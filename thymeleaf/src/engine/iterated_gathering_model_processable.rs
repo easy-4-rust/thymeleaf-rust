@@ -10,7 +10,7 @@ use crate::model::{
     ICDATASection, ICloseElementTag, IComment, IDocType, IModel, IOpenElementTag,
     IProcessingInstruction, IStandaloneElementTag, ITemplateEvent, IText, IXMLDeclaration,
 };
-use crate::util::{JavaCharSequence, JavaNumber, JavaString};
+use crate::util::{JavaCharSequence, JavaNumber, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::abstract_gathering_model_processable::AbstractGatheringModelProcessable;
@@ -50,8 +50,8 @@ pub(crate) struct IteratedGatheringModelProcessable {
     base: AbstractGatheringModelProcessable,
     context: Arc<dyn IEngineContext>,
     template_mode: TemplateMode,
-    iter_variable_name: JavaString,
-    iter_status_variable_name: JavaString,
+    iter_variable_name: Utf16String,
+    iter_status_variable_name: Utf16String,
     iter_status_variable: Arc<IterationStatusVar>,
     iterator: VecDeque<Arc<TemplateValue>>,
     data_driven_iterator: Option<Arc<dyn TemplateObject>>,
@@ -77,8 +77,8 @@ impl IteratedGatheringModelProcessable {
         gathered_skip_body: SkipBody,
         gathered_skip_close_tag: bool,
         processor_execution_vars: &ProcessorExecutionVars,
-        iter_variable_name: JavaString,
-        iter_status_variable_name: Option<JavaString>,
+        iter_variable_name: Utf16String,
+        iter_status_variable_name: Option<Utf16String>,
         iterated_object: Option<Arc<TemplateValue>>,
         preceding_whitespace: Option<Arc<dyn IText>>,
     ) -> Self {
@@ -89,7 +89,7 @@ impl IteratedGatheringModelProcessable {
             .unwrap_or_else(|| {
                 let mut units = iter_variable_name.as_utf16().to_vec();
                 units.extend(DEFAULT_STATUS_VAR_SUFFIX.encode_utf16());
-                JavaString::from_utf16(units)
+                Utf16String::from_utf16(units)
             });
         Self {
             base: AbstractGatheringModelProcessable::new(
@@ -567,19 +567,19 @@ impl TemplateObject for MapEntryTemplateObject {
         "java.util.Map$Entry"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         let key = self
             .key
-            .to_java_string()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"));
+            .to_utf16_string()
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"));
         let value = self
             .value
-            .to_java_string()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"));
+            .to_utf16_string()
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"));
         let mut units = key.as_utf16().to_vec();
         units.push(u16::from(b'='));
         units.extend_from_slice(value.as_utf16());
-        JavaString::from_utf16(units)
+        Utf16String::from_utf16(units)
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -588,7 +588,7 @@ impl TemplateObject for MapEntryTemplateObject {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         match property_name.to_string_lossy().as_str() {
             "key" => Some(Ok(Some(self.key.clone()))),
@@ -685,7 +685,7 @@ fn lock_data_driven(
 fn replace_text(
     model: &mut Model,
     index: usize,
-    text: Result<JavaString, crate::util::TextUtilsError>,
+    text: Result<Utf16String, crate::util::TextUtilsError>,
 ) -> Result<(), Box<dyn TemplateEngineException>> {
     let text = text.map_err(text_error)?;
     let event: Arc<dyn ITemplateEvent> = Arc::new(Text::new(Some(Arc::new(text))));
@@ -731,7 +731,7 @@ fn is_java_whitespace(unit: u16) -> bool {
     )
 }
 
-fn is_empty_or_whitespace(value: &JavaString) -> bool {
+fn is_empty_or_whitespace(value: &Utf16String) -> bool {
     value.is_empty()
         || value
             .as_utf16()

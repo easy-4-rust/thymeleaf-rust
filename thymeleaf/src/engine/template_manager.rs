@@ -20,7 +20,7 @@ use crate::raw::RawTemplateParser;
 use crate::templateparser::{ITemplateParser, TemplateParserError};
 use crate::templateresolver::TemplateResolution;
 use crate::text::{CSSTemplateParser, JavaScriptTemplateParser, TextTemplateParser};
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 use crate::{
     IEngineConfiguration, IThrottledTemplateProcessor, TemplateMode, TemplateResolutionAttributes,
     TemplateSelectorSet, TemplateSpec,
@@ -103,7 +103,7 @@ impl TemplateManager {
         )
     }
 
-    fn clean_selectors(template_selectors: Option<&[JavaString]>) -> Option<Vec<JavaString>> {
+    fn clean_selectors(template_selectors: Option<&[Utf16String]>) -> Option<Vec<Utf16String>> {
         let mut selectors = template_selectors
             .filter(|selectors| !selectors.is_empty())?
             .to_vec();
@@ -112,7 +112,7 @@ impl TemplateManager {
         Some(selectors)
     }
 
-    fn cache_selectors(selectors: Option<&[JavaString]>) -> Option<Arc<TemplateSelectorSet>> {
+    fn cache_selectors(selectors: Option<&[Utf16String]>) -> Option<Arc<TemplateSelectorSet>> {
         selectors.map(|selectors| {
             Arc::new(
                 selectors
@@ -125,8 +125,8 @@ impl TemplateManager {
 
     fn resolve_template(
         &self,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
         fail_if_not_exists: bool,
     ) -> Result<Option<TemplateResolution>, TemplateInputException> {
@@ -163,8 +163,8 @@ impl TemplateManager {
 
     fn build_template_data(
         resolution: &TemplateResolution,
-        template: &JavaString,
-        selectors: Option<&[JavaString]>,
+        template: &Utf16String,
+        selectors: Option<&[Utf16String]>,
         template_mode: Option<TemplateMode>,
         use_cache: bool,
     ) -> Arc<TemplateData> {
@@ -176,7 +176,7 @@ impl TemplateManager {
         };
         Arc::new(TemplateData::new(
             Some(template.clone()),
-            selectors.map(<[JavaString]>::to_vec),
+            selectors.map(<[Utf16String]>::to_vec),
             Some(resolution.get_template_resource_arc()),
             Some(definitive_mode),
             Some(validity),
@@ -196,9 +196,9 @@ impl TemplateManager {
 
     fn parse_resource_model(
         &self,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
-        selectors: Option<&[JavaString]>,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
+        selectors: Option<&[Utf16String]>,
         resolution: &TemplateResolution,
         template_data: Arc<TemplateData>,
     ) -> Result<TemplateModel, TemplateInputException> {
@@ -373,7 +373,7 @@ impl ITemplateManager for TemplateManager {
         });
     }
 
-    fn clear_caches_for(&self, template: &JavaString) {
+    fn clear_caches_for(&self, template: &Utf16String) {
         self.with_template_cache(|cache| {
             let Some(cache) = cache else {
                 return;
@@ -396,8 +396,8 @@ impl ITemplateManager for TemplateManager {
     fn parse_standalone(
         &self,
         context: &dyn ITemplateContext,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         template_mode: Option<TemplateMode>,
         use_cache: bool,
         fail_if_not_exists: bool,
@@ -408,7 +408,7 @@ impl ITemplateManager for TemplateManager {
         let selectors = Self::clean_selectors(template_selectors);
         let cache_key = use_cache.then(|| {
             TemplateCacheKey::new(
-                owner_template.map(JavaString::to_string_lossy).as_deref(),
+                owner_template.map(Utf16String::to_string_lossy).as_deref(),
                 Some(&template.to_string_lossy()),
                 Self::cache_selectors(selectors.as_deref()),
                 0,
@@ -467,7 +467,7 @@ impl ITemplateManager for TemplateManager {
     fn parse_string(
         &self,
         owner_template_data: &TemplateData,
-        template: &JavaString,
+        template: &Utf16String,
         line_offset: i32,
         col_offset: i32,
         template_mode: Option<TemplateMode>,
@@ -513,7 +513,7 @@ impl ITemplateManager for TemplateManager {
                 owner_template_data.get_template().cloned(),
                 owner_template_data
                     .get_template_selectors()
-                    .map(<[JavaString]>::to_vec),
+                    .map(<[Utf16String]>::to_vec),
                 owner_template_data.get_template_resource_arc(),
                 Some(definitive_mode),
                 Some(Arc::clone(&validity)),
@@ -584,11 +584,11 @@ impl ITemplateManager for TemplateManager {
         context: &dyn IContext,
         writer: Box<dyn JavaWriter>,
     ) -> Result<(), TemplateProcessingException> {
-        let template = JavaString::from_rust_str(template_spec.get_template());
+        let template = Utf16String::from_rust_str(template_spec.get_template());
         let selectors = template_spec.get_template_selectors().map(|selectors| {
             selectors
                 .iter()
-                .map(|selector| JavaString::from_rust_str(selector))
+                .map(|selector| Utf16String::from_rust_str(selector))
                 .collect::<Vec<_>>()
         });
         let attributes = template_spec.get_template_resolution_attributes();
@@ -670,11 +670,11 @@ impl ITemplateManager for TemplateManager {
         template_spec: &TemplateSpec,
         context: &dyn IContext,
     ) -> Result<Box<dyn IThrottledTemplateProcessor>, TemplateProcessingException> {
-        let template = JavaString::from_rust_str(template_spec.get_template());
+        let template = Utf16String::from_rust_str(template_spec.get_template());
         let selectors = template_spec.get_template_selectors().map(|selectors| {
             selectors
                 .iter()
-                .map(|selector| JavaString::from_rust_str(selector))
+                .map(|selector| Utf16String::from_rust_str(selector))
                 .collect::<Vec<_>>()
         });
         let attributes = template_spec.get_template_resolution_attributes();

@@ -23,7 +23,7 @@ use crate::processinginstruction::IProcessingInstructionProcessor;
 use crate::templateboundaries::ITemplateBoundariesProcessor;
 use crate::templateresolver::ITemplateResolver;
 use crate::text::ITextProcessor;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::xmldeclaration::IXMLDeclarationProcessor;
 use crate::{DialectConfiguration, TemplateMode};
 
@@ -144,7 +144,7 @@ pub trait IEngineConfiguration: Send + Sync {
     /// # 返回值
     ///
     /// 返回显式或默认前缀；无 StandardDialect 或无前缀时返回 `None`。
-    fn get_standard_dialect_prefix(&self) -> Option<&JavaString>;
+    fn get_standard_dialect_prefix(&self) -> Option<&Utf16String>;
 
     /// 返回全局元素定义仓库。
     ///
@@ -316,7 +316,7 @@ pub trait IEngineConfiguration: Send + Sync {
     /// 返回保留可空键、可空值和方言聚合顺序的同一只读映射。
     fn get_execution_attributes(
         &self,
-    ) -> &IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>>;
+    ) -> &IndexMap<Option<Utf16String>, Option<Arc<ExecutionAttributeValue>>>;
 
     /// 返回聚合表达式对象工厂。
     ///

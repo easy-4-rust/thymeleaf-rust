@@ -9,7 +9,7 @@ use thymeleaf::context::{Context, IContext};
 use thymeleaf::dialect::IDialect;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
 // ---------------------------------------------------------------------------
@@ -29,8 +29,8 @@ fn create_engine() -> TemplateEngine {
 fn ctx_var(name: &str, value: &str) -> Context {
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str(name)),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str(name)),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             value,
         )))),
     );
@@ -41,7 +41,7 @@ fn ctx_num(name: &str, value: i64) -> Context {
     use thymeleaf::util::JavaNumber;
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str(name)),
+        Some(Utf16String::from_rust_str(name)),
         Some(Arc::new(TemplateValue::Number(JavaNumber::Long(value)))),
     );
     ctx
@@ -78,7 +78,7 @@ fn variable_boolean_true() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("flag")),
+        Some(Utf16String::from_rust_str("flag")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     assert!(render(&engine, "<p th:text=\"${flag}\">x</p>", &ctx).contains("true"));
@@ -89,7 +89,7 @@ fn variable_boolean_false() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("flag")),
+        Some(Utf16String::from_rust_str("flag")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     assert!(render(&engine, "<p th:text=\"${flag}\">x</p>", &ctx).contains("false"));
@@ -200,14 +200,14 @@ fn string_concat_two_variables() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("a")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "foo",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("b")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("b")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "bar",
         )))),
     );
@@ -315,11 +315,11 @@ fn logical_and() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
+        Some(Utf16String::from_rust_str("a")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("b")),
+        Some(Utf16String::from_rust_str("b")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     assert!(render(&engine, "<p th:text=\"${a and b}\">x</p>", &ctx).contains("true"));
@@ -330,11 +330,11 @@ fn logical_or() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
+        Some(Utf16String::from_rust_str("a")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("b")),
+        Some(Utf16String::from_rust_str("b")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     assert!(render(&engine, "<p th:text=\"${a or b}\">x</p>", &ctx).contains("true"));
@@ -345,7 +345,7 @@ fn logical_not() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
+        Some(Utf16String::from_rust_str("a")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     assert!(render(&engine, "<p th:text=\"${!a}\">x</p>", &ctx).contains("true"));
@@ -356,11 +356,11 @@ fn logical_and_false() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("a")),
+        Some(Utf16String::from_rust_str("a")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("b")),
+        Some(Utf16String::from_rust_str("b")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     assert!(render(&engine, "<p th:text=\"${a and b}\">x</p>", &ctx).contains("false"));
@@ -432,7 +432,7 @@ fn th_if_with_true_renders() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("show")),
+        Some(Utf16String::from_rust_str("show")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     let s = render(
@@ -448,7 +448,7 @@ fn th_if_with_false_removes() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("show")),
+        Some(Utf16String::from_rust_str("show")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     let s = render(
@@ -478,7 +478,7 @@ fn th_unless_with_false_renders() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("hide")),
+        Some(Utf16String::from_rust_str("hide")),
         Some(Arc::new(TemplateValue::Boolean(false))),
     );
     let s = render(
@@ -494,7 +494,7 @@ fn th_unless_with_true_removes() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("hide")),
+        Some(Utf16String::from_rust_str("hide")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     let s = render(
@@ -516,10 +516,10 @@ fn th_each_list_items() {
     let ctx = Context::new();
     let items: Vec<Arc<TemplateValue>> = ["a", "b", "c"]
         .iter()
-        .map(|v| Arc::new(TemplateValue::string(JavaString::from_rust_str(v))))
+        .map(|v| Arc::new(TemplateValue::string(Utf16String::from_rust_str(v))))
         .collect();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("items")),
+        Some(Utf16String::from_rust_str("items")),
         Some(Arc::new(TemplateValue::List(Arc::new(items)))),
     );
     let s = render(
@@ -537,7 +537,7 @@ fn th_each_empty_list() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("items")),
+        Some(Utf16String::from_rust_str("items")),
         Some(Arc::new(TemplateValue::List(Arc::new(vec![])))),
     );
     let s = render(
@@ -674,14 +674,14 @@ fn th_attr_multiple_attributes() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("url")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("url")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "http://test.com",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("title")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("title")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "My Link",
         )))),
     );
@@ -748,12 +748,12 @@ fn multiple_th_on_same_element() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("show")),
+        Some(Utf16String::from_rust_str("show")),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("text")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("text")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Hello",
         )))),
     );
@@ -1110,14 +1110,14 @@ fn mixed_static_dynamic() {
     let engine = create_engine();
     let ctx = Context::new();
     ctx.set_variable(
-        Some(JavaString::from_rust_str("title")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("title")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "My Page",
         )))),
     );
     ctx.set_variable(
-        Some(JavaString::from_rust_str("body")),
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Utf16String::from_rust_str("body")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             "Welcome",
         )))),
     );

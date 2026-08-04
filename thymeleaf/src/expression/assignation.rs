@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{IStandardExpression, StandardExpressionResult};
 
@@ -36,7 +36,7 @@ impl Assignation {
     }
     /// 返回规范字符串表示。
     /// 对应 Java: `Assignation#getStringRepresentation()`。
-    pub fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    pub fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = self.left.get_string_representation()?.as_utf16().to_vec();
         if let Some(right) = &self.right {
             units.push(b'=' as u16);
@@ -48,6 +48,6 @@ impl Assignation {
                 units.push(b')' as u16);
             }
         }
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 }

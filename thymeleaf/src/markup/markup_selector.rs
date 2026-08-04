@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::TemplateFragmentMarkupReferenceResolver;
 
@@ -18,7 +18,7 @@ impl MarkupSelectorEngine {
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(
         html: bool,
-        selectors: &[JavaString],
+        selectors: &[Utf16String],
         reference_resolver: Option<Arc<TemplateFragmentMarkupReferenceResolver>>,
     ) -> Result<Self, String> {
         let selectors = selectors
@@ -31,7 +31,7 @@ impl MarkupSelectorEngine {
     }
 
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub(crate) fn matching_element_selectors(&self, path: &[SelectorNode]) -> Vec<JavaString> {
+    pub(crate) fn matching_element_selectors(&self, path: &[SelectorNode]) -> Vec<Utf16String> {
         self.selectors
             .iter()
             .filter(|selector| selector.matches_path(self.html, path))
@@ -45,7 +45,7 @@ impl MarkupSelectorEngine {
         ancestor_path: &[SelectorNode],
         node_type: SelectorNodeType,
         preceding_siblings: Arc<Vec<SelectorNodeSummary>>,
-    ) -> Vec<JavaString> {
+    ) -> Vec<Utf16String> {
         let mut path = ancestor_path.to_vec();
         path.push(SelectorNode::event(node_type, preceding_siblings));
         self.selectors
@@ -100,7 +100,7 @@ impl SelectorNode {
         html: bool,
         name: &str,
         preceding_siblings: Arc<Vec<SelectorNodeSummary>>,
-        injected_attributes: &[(JavaString, Option<JavaString>)],
+        injected_attributes: &[(Utf16String, Option<Utf16String>)],
     ) -> Self {
         Self {
             node_type: SelectorNodeType::Element,
@@ -110,7 +110,7 @@ impl SelectorNode {
                 .map(|(name, value)| {
                     (
                         normalize_name(html, &name.to_string_lossy()),
-                        value.as_ref().map(JavaString::to_string_lossy),
+                        value.as_ref().map(Utf16String::to_string_lossy),
                     )
                 })
                 .collect(),
@@ -126,14 +126,14 @@ impl SelectorNode {
         name_end: usize,
         content_end: usize,
         preceding_siblings: Arc<Vec<SelectorNodeSummary>>,
-        injected_attributes: &[(JavaString, Option<JavaString>)],
+        injected_attributes: &[(Utf16String, Option<Utf16String>)],
     ) -> Self {
         let name = normalize_name(html, &source[name_start..name_end]);
         let mut attributes = parse_attributes(html, source, name_end, content_end);
         attributes.extend(injected_attributes.iter().map(|(name, value)| {
             (
                 normalize_name(html, &name.to_string_lossy()),
-                value.as_ref().map(JavaString::to_string_lossy),
+                value.as_ref().map(Utf16String::to_string_lossy),
             )
         }));
         Self {
@@ -176,14 +176,14 @@ pub(crate) struct SelectorNodeSummary {
 }
 
 struct CompiledSelector {
-    original: JavaString,
+    original: Utf16String,
     levels: Vec<SelectorLevel>,
 }
 
 impl CompiledSelector {
     fn parse(
         html: bool,
-        original: JavaString,
+        original: Utf16String,
         reference_resolver: Option<&TemplateFragmentMarkupReferenceResolver>,
     ) -> Result<Self, String> {
         let text = original.to_string_lossy();

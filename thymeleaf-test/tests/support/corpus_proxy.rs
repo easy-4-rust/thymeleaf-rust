@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use thymeleaf::util::{JavaNumber, JavaString};
+use thymeleaf::util::{JavaNumber, Utf16String};
 
 /// 上游动态代理访问限制语料的宿主代理。
 ///
@@ -14,8 +14,8 @@ impl TemplateObject for CorpusProxy {
         "org.thymeleaf.templateengine.features.ITestInterface"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.java_class_name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.java_class_name())
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -24,7 +24,7 @@ impl TemplateObject for CorpusProxy {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         (method_name.to_string_lossy() == "getValue" && arguments.is_empty()).then(|| {

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::exceptions::TemplateInputException;
 use crate::templateparser::TemplateParserError;
 use crate::templateresource::ITemplateResource;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{DecoupledTemplateLogic, DecoupledTemplateLogicBuilderMarkupHandler};
@@ -28,9 +28,9 @@ impl DecoupledTemplateLogicUtils {
     #[allow(clippy::too_many_arguments)]
     pub fn compute_decoupled_template_logic(
         configuration: &dyn IEngineConfiguration,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         resource: &dyn ITemplateResource,
         template_mode: TemplateMode,
     ) -> Result<Option<Arc<DecoupledTemplateLogic>>, TemplateParserError> {

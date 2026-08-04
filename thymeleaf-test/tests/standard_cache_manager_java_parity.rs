@@ -6,7 +6,7 @@ use std::fmt::Write;
 use std::sync::Arc;
 
 use thymeleaf::cache::{ExpressionCacheKey, ICacheManager, StandardCacheManager};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str =
@@ -18,7 +18,7 @@ fn standard_cache_manager_matches_java_golden() {
     emit(&mut output, "baseline", JAVA_BASELINE);
 
     let defaults = StandardCacheManager::new();
-    emit_java_string(
+    emit_utf16_string(
         &mut output,
         "default.template.name",
         defaults.get_template_cache_name(),
@@ -38,7 +38,7 @@ fn standard_cache_manager_matches_java_golden() {
         "default.template.soft",
         defaults.get_template_cache_use_soft_references(),
     );
-    emit_java_string_option(
+    emit_utf16_string_option(
         &mut output,
         "default.template.logger",
         defaults.get_template_cache_logger_name(),
@@ -52,7 +52,7 @@ fn standard_cache_manager_matches_java_golden() {
             "null"
         },
     );
-    emit_java_string(
+    emit_utf16_string(
         &mut output,
         "default.expression.name",
         defaults.get_expression_cache_name(),
@@ -72,7 +72,7 @@ fn standard_cache_manager_matches_java_golden() {
         "default.expression.soft",
         defaults.get_expression_cache_use_soft_references(),
     );
-    emit_java_string_option(
+    emit_utf16_string_option(
         &mut output,
         "default.expression.logger",
         defaults.get_expression_cache_logger_name(),
@@ -96,7 +96,7 @@ fn standard_cache_manager_matches_java_golden() {
             "[{}]",
             specific_names
                 .iter()
-                .map(JavaString::to_string_lossy)
+                .map(Utf16String::to_string_lossy)
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
@@ -105,7 +105,7 @@ fn standard_cache_manager_matches_java_golden() {
         &mut output,
         "default.specific.cache",
         if defaults
-            .get_specific_cache::<String, String>(&JavaString::from_rust_str("missing"))
+            .get_specific_cache::<String, String>(&Utf16String::from_rust_str("missing"))
             .is_some()
         {
             "present"
@@ -138,22 +138,22 @@ fn standard_cache_manager_matches_java_golden() {
     );
 
     let mut configured = StandardCacheManager::new();
-    configured.set_template_cache_name(JavaString::from_rust_str("T"));
+    configured.set_template_cache_name(Utf16String::from_rust_str("T"));
     configured.set_template_cache_initial_size(7);
     configured.set_template_cache_max_size(-2);
     configured.set_template_cache_use_soft_references(false);
-    configured.set_template_cache_logger_name(Some(JavaString::from_rust_str("template.logger")));
+    configured.set_template_cache_logger_name(Some(Utf16String::from_rust_str("template.logger")));
     configured.set_template_cache_validity_checker(None);
     configured.set_template_cache_enable_counters(true);
-    configured.set_expression_cache_name(JavaString::from_rust_str("E"));
+    configured.set_expression_cache_name(Utf16String::from_rust_str("E"));
     configured.set_expression_cache_initial_size(9);
     configured.set_expression_cache_max_size(11);
     configured.set_expression_cache_use_soft_references(false);
     configured
-        .set_expression_cache_logger_name(Some(JavaString::from_rust_str("expression.logger")));
+        .set_expression_cache_logger_name(Some(Utf16String::from_rust_str("expression.logger")));
     configured.set_expression_cache_validity_checker(None);
     configured.set_expression_cache_enable_counters(true);
-    emit_java_string(
+    emit_utf16_string(
         &mut output,
         "configured.template.name",
         configured.get_template_cache_name(),
@@ -173,7 +173,7 @@ fn standard_cache_manager_matches_java_golden() {
         "configured.template.soft",
         configured.get_template_cache_use_soft_references(),
     );
-    emit_java_string_option(
+    emit_utf16_string_option(
         &mut output,
         "configured.template.logger",
         configured.get_template_cache_logger_name(),
@@ -187,7 +187,7 @@ fn standard_cache_manager_matches_java_golden() {
             "null"
         },
     );
-    emit_java_string(
+    emit_utf16_string(
         &mut output,
         "configured.expression.name",
         configured.get_expression_cache_name(),
@@ -207,7 +207,7 @@ fn standard_cache_manager_matches_java_golden() {
         "configured.expression.soft",
         configured.get_expression_cache_use_soft_references(),
     );
-    emit_java_string_option(
+    emit_utf16_string_option(
         &mut output,
         "configured.expression.logger",
         configured.get_expression_cache_logger_name(),
@@ -249,19 +249,19 @@ fn standard_cache_manager_matches_java_golden() {
     );
 
     let mut mutation = StandardCacheManager::new();
-    mutation.set_expression_cache_name(JavaString::from_rust_str("before"));
+    mutation.set_expression_cache_name(Utf16String::from_rust_str("before"));
     let mutation0 = mutation
         .get_expression_cache()
         .expect("expression cache before mutation")
         as *const dyn thymeleaf::cache::ICache<ExpressionCacheKey, dyn Any + Send + Sync>
         as *const () as usize;
-    mutation.set_expression_cache_name(JavaString::from_rust_str("after"));
+    mutation.set_expression_cache_name(Utf16String::from_rust_str("after"));
     let mutation1 = mutation
         .get_expression_cache()
         .expect("expression cache after mutation")
         as *const dyn thymeleaf::cache::ICache<ExpressionCacheKey, dyn Any + Send + Sync>
         as *const () as usize;
-    emit_java_string(
+    emit_utf16_string(
         &mut output,
         "mutation.getter",
         mutation.get_expression_cache_name(),
@@ -288,14 +288,14 @@ fn option_presence<T: ?Sized>(value: Option<&T>) -> &'static str {
     if value.is_some() { "present" } else { "null" }
 }
 
-fn emit_java_string_option(output: &mut String, key: &str, value: Option<&JavaString>) {
+fn emit_utf16_string_option(output: &mut String, key: &str, value: Option<&Utf16String>) {
     match value {
-        Some(value) => emit_java_string(output, key, value),
+        Some(value) => emit_utf16_string(output, key, value),
         None => emit(output, key, "null"),
     }
 }
 
-fn emit_java_string(output: &mut String, key: &str, value: &JavaString) {
+fn emit_utf16_string(output: &mut String, key: &str, value: &Utf16String) {
     emit(output, key, value.to_string_lossy());
 }
 

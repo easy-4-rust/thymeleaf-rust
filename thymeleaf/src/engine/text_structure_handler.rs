@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::model::IModel;
 use crate::text::ITextStructureHandler;
-use crate::util::{JavaCharSequence, JavaString, Validate, ValidateError};
+use crate::util::{JavaCharSequence, Utf16String, Validate, ValidateError};
 
 /// 引擎内部 Text 结构动作状态机。
 ///
@@ -78,7 +78,7 @@ impl ITextStructureHandler for TextStructureHandler {
         self.remove_text = false;
     }
 
-    fn set_text(&mut self, text: JavaString) {
+    fn set_text(&mut self, text: Utf16String) {
         self.set_text_nullable(Some(Arc::new(text)))
             .expect("Rust non-null text boundary must satisfy Java validation");
     }

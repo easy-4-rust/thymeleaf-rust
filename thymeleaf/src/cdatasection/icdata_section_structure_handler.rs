@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::model::IModel;
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 
 /// CDATA Processor 的结构变更合同。
 ///
@@ -11,7 +11,7 @@ pub trait ICDATASectionStructureHandler {
     fn reset(&mut self);
     /// 设置不含 CDATA 边界的新内容。对应 Java:
     /// `ICDATASectionStructureHandler#setContent(CharSequence)`。
-    fn set_content(&mut self, content: JavaString);
+    fn set_content(&mut self, content: Utf16String);
     /// 使用任意 Java `CharSequence` 设置内容，保留对象身份和延迟 Writer 输出能力。
     ///
     /// 对应 Java: `ICDATASectionStructureHandler#setContent(CharSequence)`。

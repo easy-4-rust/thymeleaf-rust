@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::util::string_case_utils::to_lower_case_default;
-use crate::util::{JavaNumber, JavaString, ValidateError};
+use crate::util::{JavaNumber, Utf16String, ValidateError};
 
 use super::{
     AssignationSequence, IStandardExpression, SimpleExpression, StandardExpressionExecutionContext,
@@ -55,7 +55,7 @@ impl LinkExpression {
 }
 
 impl IStandardExpression for LinkExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         let mut units = vec![b'@' as u16, b'{' as u16];
         units.extend_from_slice(self.base.get_string_representation()?.as_utf16());
         if self.has_parameters() {
@@ -70,7 +70,7 @@ impl IStandardExpression for LinkExpression {
             units.push(b')' as u16);
         }
         units.push(b'}' as u16);
-        Ok(JavaString::from_utf16(units))
+        Ok(Utf16String::from_utf16(units))
     }
 
     fn execute_with_context(
@@ -112,7 +112,7 @@ impl LinkExpression {
     fn resolve_parameters(
         &self,
         context: &dyn IExpressionContext,
-    ) -> StandardExpressionResult<Option<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>>
+    ) -> StandardExpressionResult<Option<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>>
     {
         let Some(assignation_sequence) =
             self.parameters.as_deref().filter(|_| self.has_parameters())
@@ -121,7 +121,7 @@ impl LinkExpression {
         };
         let assignations = assignation_sequence.get_assignations();
         let mut parameters = IndexMap::with_capacity(assignations.len());
-        let mut normalized_names: IndexMap<JavaString, JavaString> =
+        let mut normalized_names: IndexMap<Utf16String, Utf16String> =
             IndexMap::with_capacity(assignations.len() + 1);
 
         for assignation in assignations.iter() {
@@ -133,7 +133,7 @@ impl LinkExpression {
                 .execute_with_context(context, StandardExpressionExecutionContext::NORMAL)?;
             let Some(mut parameter_name) = name_value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
             else {
                 return Err(invalid_parameter_name(self, name_expression)?);
             };
@@ -150,7 +150,7 @@ impl LinkExpression {
                     )?;
                     Some(match value.as_deref() {
                         None | Some(TemplateValue::Null) => {
-                            Arc::new(TemplateValue::string(JavaString::from_rust_str("")))
+                            Arc::new(TemplateValue::string(Utf16String::from_rust_str("")))
                         }
                         Some(TemplateValue::Literal(literal)) => literal
                             .get_value()
@@ -176,8 +176,8 @@ impl LinkExpression {
 }
 
 fn add_parameter(
-    parameters: &mut IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
-    parameter_name: JavaString,
+    parameters: &mut IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
+    parameter_name: Utf16String,
     parameter_value: Option<Arc<TemplateValue>>,
 ) {
     let key = Some(parameter_name);
@@ -221,15 +221,15 @@ fn normalize_parameter_value(value: Option<Arc<TemplateValue>>) -> Option<Arc<Te
     }
 }
 
-fn normalize_base(value: Option<&TemplateValue>) -> JavaString {
+fn normalize_base(value: Option<&TemplateValue>) -> Utf16String {
     let Some(value) = value else {
-        return JavaString::from_rust_str("");
+        return Utf16String::from_rust_str("");
     };
     let value = value
-        .to_java_string()
-        .unwrap_or_else(|| JavaString::from_rust_str(""));
+        .to_utf16_string()
+        .unwrap_or_else(|| Utf16String::from_rust_str(""));
     if is_empty_or_java_whitespace(&value) {
-        return JavaString::from_rust_str("");
+        return Utf16String::from_rust_str("");
     }
     java_trim(&value)
 }
@@ -248,7 +248,7 @@ fn invalid_parameter_name(
     )))))
 }
 
-fn java_trim(value: &JavaString) -> JavaString {
+fn java_trim(value: &Utf16String) -> Utf16String {
     let units = value.as_utf16();
     let mut start = 0;
     while start < units.len() && units[start] <= 0x20 {
@@ -258,10 +258,10 @@ fn java_trim(value: &JavaString) -> JavaString {
     while end > start && units[end - 1] <= 0x20 {
         end -= 1;
     }
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }
 
-fn is_empty_or_java_whitespace(value: &JavaString) -> bool {
+fn is_empty_or_java_whitespace(value: &Utf16String) -> bool {
     value.is_empty()
         || value.as_utf16().iter().all(|unit| {
             matches!(

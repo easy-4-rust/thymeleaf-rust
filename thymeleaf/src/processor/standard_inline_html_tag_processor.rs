@@ -6,7 +6,7 @@ use crate::inline::{
     IInliner, NoOpInliner, StandardCSSInliner, StandardHTMLInliner, StandardInlineMode,
     StandardJavaScriptInliner, StandardTextInliner,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractStandardTextInlineSettingTagProcessor, delegate_standard_element_tag_processor,
@@ -27,12 +27,12 @@ impl StandardInlineHTMLTagProcessor {
 
     /// 创建 HTML 模式 `th:inline` Processor。
     /// 对应 Java 语义：`StandardInlineHTMLTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(dialect_prefix: Option<JavaString>) -> Result<Self, TemplateProcessingException> {
+    pub fn new(dialect_prefix: Option<Utf16String>) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardTextInlineSettingTagProcessor::new(
                 TemplateMode::HTML,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 |context, inline_mode| match inline_mode {
                     StandardInlineMode::NONE => Ok(NoOpInliner::shared()),

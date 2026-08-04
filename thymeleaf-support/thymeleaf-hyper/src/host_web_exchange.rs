@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 use crate::{HostWebRequest, HostWebSession};
@@ -15,11 +15,11 @@ pub struct HostWebExchange {
     request: Arc<HostWebRequest>,
     session: Option<Arc<HostWebSession>>,
     application: Arc<dyn IWebApplication>,
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     principal: Option<Arc<TemplateValue>>,
     locale: Option<JavaLocale>,
-    content_type: RwLock<Option<JavaString>>,
-    character_encoding: RwLock<Option<JavaString>>,
+    content_type: RwLock<Option<Utf16String>>,
+    character_encoding: RwLock<Option<Utf16String>>,
 }
 
 impl HostWebExchange {
@@ -60,7 +60,7 @@ impl HostWebExchange {
     ///
     /// # 参数
     /// - `content_type`：MIME 文本；`None` 对应尚未设置。
-    pub fn set_content_type(&self, content_type: Option<JavaString>) {
+    pub fn set_content_type(&self, content_type: Option<Utf16String>) {
         *write_lock(&self.content_type) = content_type;
     }
 
@@ -69,7 +69,7 @@ impl HostWebExchange {
     ///
     /// # 参数
     /// - `character_encoding`：字符集名称；`None` 对应尚未设置。
-    pub fn set_character_encoding(&self, character_encoding: Option<JavaString>) {
+    pub fn set_character_encoding(&self, character_encoding: Option<Utf16String>) {
         *write_lock(&self.character_encoding) = character_encoding;
     }
 }
@@ -97,15 +97,15 @@ impl IWebExchange for HostWebExchange {
         self.locale.clone()
     }
 
-    fn get_content_type(&self) -> Option<JavaString> {
+    fn get_content_type(&self) -> Option<Utf16String> {
         read_lock(&self.content_type).clone()
     }
 
-    fn get_character_encoding(&self) -> Option<JavaString> {
+    fn get_character_encoding(&self) -> Option<Utf16String> {
         read_lock(&self.character_encoding).clone()
     }
 
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         require_name(name);
         read_lock(&self.attributes).contains_key(&name.cloned())
     }
@@ -114,15 +114,15 @@ impl IWebExchange for HostWebExchange {
         i32::try_from(read_lock(&self.attributes).len()).unwrap_or(i32::MAX)
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         read_lock(&self.attributes).keys().cloned().collect()
     }
 
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         read_lock(&self.attributes).clone()
     }
 
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         require_name(name);
         read_lock(&self.attributes)
             .get(&name.cloned())
@@ -130,7 +130,7 @@ impl IWebExchange for HostWebExchange {
             .flatten()
     }
 
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         require_owned_name(&name);
         if value.is_some() {
             write_lock(&self.attributes).insert(name, value);
@@ -139,12 +139,12 @@ impl IWebExchange for HostWebExchange {
         }
     }
 
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         require_name(name);
         write_lock(&self.attributes).shift_remove(&name.cloned());
     }
 
-    fn transform_url(&self, url: Option<&JavaString>) -> Option<JavaString> {
+    fn transform_url(&self, url: Option<&Utf16String>) -> Option<Utf16String> {
         url.cloned()
     }
 }
@@ -159,13 +159,13 @@ fn write_lock<T>(lock: &RwLock<T>) -> std::sync::RwLockWriteGuard<'_, T> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-fn require_name(name: Option<&JavaString>) {
+fn require_name(name: Option<&Utf16String>) {
     if name.is_none() {
         panic!("Name cannot be null");
     }
 }
 
-fn require_owned_name(name: &Option<JavaString>) {
+fn require_owned_name(name: &Option<Utf16String>) {
     if name.is_none() {
         panic!("Name cannot be null");
     }

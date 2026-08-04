@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use crate::context::ITemplateContext;
 use crate::expression::StandardExpressionResult;
 use crate::model::{ICDATASection, IComment, IText};
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{AbstractStandardInliner, IInliner, StandardInlinerEscaping};
@@ -27,9 +27,9 @@ impl StandardXMLInliner {
 }
 
 impl IInliner for StandardXMLInliner {
-    fn get_name(&self) -> &JavaString {
-        static NAME: OnceLock<JavaString> = OnceLock::new();
-        NAME.get_or_init(|| JavaString::from_rust_str("StandardXMLInliner"))
+    fn get_name(&self) -> &Utf16String {
+        static NAME: OnceLock<Utf16String> = OnceLock::new();
+        NAME.get_or_init(|| Utf16String::from_rust_str("StandardXMLInliner"))
     }
 
     fn inline_text(

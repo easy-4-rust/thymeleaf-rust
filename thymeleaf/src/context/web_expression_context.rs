@@ -2,7 +2,7 @@ use std::sync::{Arc, OnceLock, Weak};
 
 use crate::IEngineConfiguration;
 use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
-use crate::util::{JavaLocale, JavaString, ValidateError};
+use crate::util::{JavaLocale, Utf16String, ValidateError};
 use crate::web::IWebExchange;
 
 use super::ContextVariableEntries;
@@ -134,7 +134,7 @@ impl WebExpressionContext {
     /// - `value`：可空变量值；空值保存为显式 Java null。
     ///
     /// 对应 Java 语义：Java 接口/超类方法 `setVariable()` 的 Rust 移植（`WebExpressionContext` 继承路径）。
-    pub fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    pub fn set_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         self.base.set_variable(name, value);
     }
     /// 按输入迭代顺序批量新增或替换变量。
@@ -154,7 +154,7 @@ impl WebExpressionContext {
     /// - `name`：待删除的可空变量名。
     ///
     /// 对应 Java 语义：Java 接口/超类方法 `removeVariable()` 的 Rust 移植（`WebExpressionContext` 继承路径）。
-    pub fn remove_variable(&self, name: Option<&JavaString>) {
+    pub fn remove_variable(&self, name: Option<&Utf16String>) {
         self.base.remove_variable(name);
     }
     /// 删除全部变量。
@@ -173,13 +173,13 @@ impl IContext for WebExpressionContext {
     fn get_locale(&self) -> JavaLocale {
         self.base.get_locale()
     }
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool {
         self.base.contains_variable(name)
     }
     fn get_variable_names(&self) -> Arc<dyn IContextVariableNames + '_> {
         self.base.get_variable_names()
     }
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.base.get_variable(name)
     }
     fn get_web_exchange(&self) -> Option<&dyn IWebExchange> {

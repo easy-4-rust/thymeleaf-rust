@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::exceptions::TemplateEngineException;
 use crate::raw::{IRawHandler, RawParseCause, RawParseException};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ITemplateHandler, TemplateEnd, TemplateStart, Text};
 
@@ -13,7 +13,7 @@ use super::{ITemplateHandler, TemplateEnd, TemplateStart, Text};
 ///
 /// 对应 Java: `org.thymeleaf.engine.TemplateHandlerAdapterRawHandler`。
 pub struct TemplateHandlerAdapterRawHandler {
-    template_name: Option<JavaString>,
+    template_name: Option<Utf16String>,
     template_handler: Box<dyn ITemplateHandler>,
     line_offset: i32,
     col_offset: i32,
@@ -30,7 +30,7 @@ impl TemplateHandlerAdapterRawHandler {
     ///
     /// 对应 Java 语义：`TemplateHandlerAdapterRawHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         template_handler: Box<dyn ITemplateHandler>,
         line_offset: i32,
         col_offset: i32,
@@ -85,7 +85,7 @@ impl IRawHandler for TemplateHandlerAdapterRawHandler {
         col: i32,
     ) -> Result<(), RawParseException> {
         let buffer = buffer.ok_or_else(|| {
-            RawParseException::with_message(Some(JavaString::from_rust_str(
+            RawParseException::with_message(Some(Utf16String::from_rust_str(
                 "Text buffer cannot be null",
             )))
         })?;
@@ -95,7 +95,7 @@ impl IRawHandler for TemplateHandlerAdapterRawHandler {
             .checked_add(len)
             .filter(|end| *end <= buffer.len())
             .ok_or_else(|| invalid_text_range(line, col))?;
-        let text = JavaString::from_utf16(buffer[start..end].to_vec());
+        let text = Utf16String::from_utf16(buffer[start..end].to_vec());
         self.template_handler
             .handle_text(Arc::new(Text::with_location(
                 Some(Arc::new(text)),
@@ -109,14 +109,14 @@ impl IRawHandler for TemplateHandlerAdapterRawHandler {
 
 fn invalid_text_range(line: i32, col: i32) -> RawParseException {
     RawParseException::with_message_at(
-        Some(&JavaString::from_rust_str("Invalid text buffer range")),
+        Some(&Utf16String::from_rust_str("Invalid text buffer range")),
         line,
         col,
     )
 }
 
 fn handler_error(error: Box<dyn TemplateEngineException>) -> RawParseException {
-    let message = Some(JavaString::from_rust_str(&error.to_string()));
+    let message = Some(Utf16String::from_rust_str(&error.to_string()));
     let cause = RawParseCause::with_java_metadata(
         error,
         "org.thymeleaf.exceptions.TemplateEngineException",

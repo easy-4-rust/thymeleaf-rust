@@ -12,11 +12,11 @@ use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::{IModel, IModelFactory};
 use thymeleaf::processor::IProcessor;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{AttributeName, ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn engine() -> TemplateEngine {
@@ -38,7 +38,7 @@ type DoProcessFn = dyn Fn(
         &dyn thymeleaf::context::ITemplateContext,
         &mut dyn IModel,
         &AttributeName,
-        Option<JavaString>,
+        Option<Utf16String>,
         &mut dyn IElementModelStructureHandler,
     ) -> Result<(), Box<dyn TemplateEngineException>>
     + Send
@@ -49,7 +49,7 @@ fn noop_process() -> Box<DoProcessFn> {
         |_ctx: &dyn thymeleaf::context::ITemplateContext,
          _model: &mut dyn IModel,
          _attribute_name: &AttributeName,
-         _attribute_value: Option<JavaString>,
+         _attribute_value: Option<Utf16String>,
          _structure_handler: &mut dyn IElementModelStructureHandler|
          -> Result<(), Box<dyn TemplateEngineException>> { Ok(()) },
     )
@@ -242,7 +242,7 @@ fn attribute_model_processor_matching_attribute_name() {
     .expect("valid processor");
     // 匹配属性名应解析为 th:mymodelattr
     let matching = processor.get_matching_attribute_name().expect("matching");
-    let name = matching.to_java_string().expect("matching name text");
+    let name = matching.to_utf16_string().expect("matching name text");
     assert!(
         name.to_string_lossy().contains("mymodelattr"),
         "matching attribute name must contain mymodelattr"

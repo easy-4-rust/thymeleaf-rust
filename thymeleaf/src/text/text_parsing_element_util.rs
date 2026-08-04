@@ -5,7 +5,7 @@ use super::{
     ITextHandler, TextParseException, TextParsingAttributeSequenceError,
     TextParsingAttributeSequenceUtil, TextParsingUtilError,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const NULL_ARRAY_LOAD_MESSAGE: &str =
     "Cannot load from char array because \"<parameter1>\" is null";
@@ -88,38 +88,38 @@ impl TextParsingElementError {
 
     /// 返回 Java `String.valueOf(Throwable#getMessage())` 的 UTF-16 表示。
     /// 对应 Java 语义：`TextParsingElementUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> JavaString {
+    pub(crate) fn java_message(&self) -> Utf16String {
         match self {
             Self::TextParse(exception) => exception
                 .get_message()
                 .cloned()
-                .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             Self::Scanning(error) => error
                 .java_message()
-                .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             Self::Attribute(error) => error.java_message(),
-            Self::NullArrayLoad => JavaString::from_rust_str(NULL_ARRAY_LOAD_MESSAGE),
-            Self::NullStringValue => JavaString::from_rust_str(NULL_STRING_VALUE_MESSAGE),
-            Self::ArrayIndex { index, length } => JavaString::from_rust_str(&format!(
+            Self::NullArrayLoad => Utf16String::from_rust_str(NULL_ARRAY_LOAD_MESSAGE),
+            Self::NullStringValue => Utf16String::from_rust_str(NULL_STRING_VALUE_MESSAGE),
+            Self::ArrayIndex { index, length } => Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             )),
             Self::StringRange {
                 offset,
                 len,
                 length,
-            } => JavaString::from_rust_str(&format!(
+            } => Utf16String::from_rust_str(&format!(
                 "Range [{offset}, {offset} + {len}) out of bounds for length {length}"
             )),
             Self::NullStandaloneStartHandler => {
-                JavaString::from_rust_str(NULL_STANDALONE_START_MESSAGE)
+                Utf16String::from_rust_str(NULL_STANDALONE_START_MESSAGE)
             }
             Self::NullStandaloneEndHandler => {
-                JavaString::from_rust_str(NULL_STANDALONE_END_MESSAGE)
+                Utf16String::from_rust_str(NULL_STANDALONE_END_MESSAGE)
             }
-            Self::NullOpenStartHandler => JavaString::from_rust_str(NULL_OPEN_START_MESSAGE),
-            Self::NullOpenEndHandler => JavaString::from_rust_str(NULL_OPEN_END_MESSAGE),
-            Self::NullCloseStartHandler => JavaString::from_rust_str(NULL_CLOSE_START_MESSAGE),
-            Self::NullCloseEndHandler => JavaString::from_rust_str(NULL_CLOSE_END_MESSAGE),
+            Self::NullOpenStartHandler => Utf16String::from_rust_str(NULL_OPEN_START_MESSAGE),
+            Self::NullOpenEndHandler => Utf16String::from_rust_str(NULL_OPEN_END_MESSAGE),
+            Self::NullCloseStartHandler => Utf16String::from_rust_str(NULL_CLOSE_START_MESSAGE),
+            Self::NullCloseEndHandler => Utf16String::from_rust_str(NULL_CLOSE_END_MESSAGE),
         }
     }
 
@@ -609,12 +609,12 @@ fn malformed_element(
     col: i32,
     suffix: &str,
 ) -> Result<TextParsingElementError, TextParsingElementError> {
-    let source = java_string_from_range(buffer, offset, len)?;
+    let source = utf16_string_from_range(buffer, offset, len)?;
     let mut message = prefix.encode_utf16().collect::<Vec<_>>();
     message.extend_from_slice(&source);
     message.extend(suffix.encode_utf16());
     Ok(TextParsingElementError::TextParse(Box::new(
-        TextParseException::with_message_at(Some(&JavaString::from_utf16(message)), line, col),
+        TextParseException::with_message_at(Some(&Utf16String::from_utf16(message)), line, col),
     )))
 }
 
@@ -633,7 +633,7 @@ fn malformed_element_validated(
     message.extend_from_slice(source);
     message.extend(suffix.encode_utf16());
     TextParsingElementError::TextParse(Box::new(TextParseException::with_message_at(
-        Some(&JavaString::from_utf16(message)),
+        Some(&Utf16String::from_utf16(message)),
         line,
         col,
     )))
@@ -872,7 +872,7 @@ fn array_unit(buffer: Option<&[u16]>, index: i32) -> Result<u16, TextParsingElem
         })
 }
 
-fn java_string_from_range(
+fn utf16_string_from_range(
     buffer: Option<&[u16]>,
     offset: i32,
     len: i32,
@@ -920,7 +920,7 @@ mod tests {
     use crate::text::{
         ITextHandler, TextParseException, TextParsingAttributeSequenceError, TextParsingUtilError,
     };
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
     const JAVA_GOLDEN: &str = include_str!("../../tests/fixtures/text_parsing_element_golden.txt");
@@ -984,7 +984,7 @@ mod tests {
         fn fail(&self, checked: Mode, runtime: Mode) -> Result<(), Box<TextParseException>> {
             if self.mode == checked {
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_rust_str("handler")),
+                    Some(&Utf16String::from_rust_str("handler")),
                     41,
                     43,
                 )));
@@ -1649,8 +1649,8 @@ mod tests {
         for unit in u16::MIN..=u16::MAX {
             let open = [u16::from(b'['), u16::from(b'#'), unit, u16::from(b']')];
             let close = [u16::from(b'['), u16::from(b'/'), unit, u16::from(b']')];
-            name_hash = mix_java_string(name_hash, &predicates(Some(&open), 0, 4));
-            name_hash = mix_java_string(name_hash, &predicates(Some(&close), 0, 4));
+            name_hash = mix_utf16_string(name_hash, &predicates(Some(&open), 0, 4));
+            name_hash = mix_utf16_string(name_hash, &predicates(Some(&close), 0, 4));
         }
         emit(
             output,
@@ -1662,7 +1662,7 @@ mod tests {
         let mut predicate_range_hash = FNV_OFFSET;
         for offset in -2..=predicate_buffer.len() as i32 + 2 {
             for maxi in -2..=predicate_buffer.len() as i32 + 4 {
-                predicate_range_hash = mix_java_string(
+                predicate_range_hash = mix_utf16_string(
                     predicate_range_hash,
                     &predicates(Some(&predicate_buffer), offset, maxi),
                 );
@@ -1706,7 +1706,7 @@ mod tests {
                         }
                     });
                     let len = text.len() as i32;
-                    grammar_hash = mix_java_string(
+                    grammar_hash = mix_utf16_string(
                         grammar_hash,
                         &outcome(Some(&mut text), kind, 0, len, -7, i32::MAX, Mode::Normal),
                     );
@@ -1729,7 +1729,7 @@ mod tests {
                     ElementKind::Close,
                 ] {
                     let mut buffer = range_source.clone();
-                    parse_range_hash = mix_java_string(
+                    parse_range_hash = mix_utf16_string(
                         parse_range_hash,
                         &outcome(Some(&mut buffer), kind, offset, len, 13, 17, Mode::Normal),
                     );
@@ -1743,12 +1743,12 @@ mod tests {
         );
     }
 
-    fn predicates(buffer: Option<&[u16]>, offset: i32, maxi: i32) -> JavaString {
+    fn predicates(buffer: Option<&[u16]>, offset: i32, maxi: i32) -> Utf16String {
         let open = TextParsingElementUtil::is_open_element_start(buffer, offset, maxi);
         let close = TextParsingElementUtil::is_close_element_start(buffer, offset, maxi);
         let regular_end = TextParsingElementUtil::is_element_end(buffer, offset, maxi, false);
         let standalone_end = TextParsingElementUtil::is_element_end(buffer, offset, maxi, true);
-        JavaString::from_rust_str(&format!(
+        Utf16String::from_rust_str(&format!(
             "O={},C={},E0={},E1={}",
             describe_predicate(open),
             describe_predicate(close),
@@ -1807,7 +1807,7 @@ mod tests {
         line: i32,
         col: i32,
         mode: Mode,
-    ) -> JavaString {
+    ) -> Utf16String {
         let mut buffer = buffer;
         let mut handler = RecordingHandler::new(mode);
         let result = catch_unwind(AssertUnwindSafe(|| {
@@ -1826,11 +1826,11 @@ mod tests {
             Ok(Err(error)) => format!("{}:{}", describe_error(&error), handler.calls),
             Err(_) => format!(
                 "ERR:java.lang.IllegalStateException:{}:{}",
-                to_utf16_hex(&JavaString::from_rust_str("runtime")),
+                to_utf16_hex(&Utf16String::from_rust_str("runtime")),
                 handler.calls
             ),
         };
-        JavaString::from_rust_str(&format!("{prefix}:{}", describe_buffer(buffer.as_deref())))
+        Utf16String::from_rust_str(&format!("{prefix}:{}", describe_buffer(buffer.as_deref())))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1870,7 +1870,7 @@ mod tests {
     fn describe_buffer(buffer: Option<&[u16]>) -> String {
         buffer.map_or_else(
             || "null".to_owned(),
-            |buffer| to_utf16_hex(&JavaString::from_utf16(buffer.to_vec())),
+            |buffer| to_utf16_hex(&Utf16String::from_utf16(buffer.to_vec())),
         )
     }
 
@@ -1880,7 +1880,7 @@ mod tests {
         }
     }
 
-    fn mix_java_string(mut hash: u64, value: &JavaString) -> u64 {
+    fn mix_utf16_string(mut hash: u64, value: &Utf16String) -> u64 {
         for unit in value.as_utf16() {
             hash = mix(hash, i32::from((*unit & 0x00ff) as u8));
             hash = mix(hash, i32::from((*unit >> 8) as u8));
@@ -1892,7 +1892,7 @@ mod tests {
         (hash ^ value as i64 as u64).wrapping_mul(FNV_PRIME)
     }
 
-    fn to_utf16_hex(value: &JavaString) -> String {
+    fn to_utf16_hex(value: &Utf16String) -> String {
         value
             .as_utf16()
             .iter()

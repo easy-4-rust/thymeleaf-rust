@@ -11,14 +11,14 @@ use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IProcessableElementTag;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &dyn IProcessableElementTag,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult;
 
@@ -36,10 +36,10 @@ impl NoOpAttributeTagProcessor {
         Self {
             processor: AbstractAttributeTagProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("noop")),
+                Some(Utf16String::from_rust_str("noop")),
                 true,
                 1000,
                 false,
@@ -93,11 +93,11 @@ fn process_tag(
     _context: &dyn ITemplateContext,
     _tag: &dyn IProcessableElementTag,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     structure_handler: &mut dyn IElementTagStructureHandler,
 ) -> ProcessResult {
     structure_handler.set_local_variable(
-        JavaString::from_rust_str("noop-tag"),
+        Utf16String::from_rust_str("noop-tag"),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     Ok(())

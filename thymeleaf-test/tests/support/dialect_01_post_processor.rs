@@ -7,7 +7,7 @@ use thymeleaf::model::{
     ICDATASection, ICloseElementTag, IComment, IDocType, IOpenElementTag, IProcessingInstruction,
     IStandaloneElementTag, ITemplateEnd, ITemplateStart, IText, IXMLDeclaration,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 为上游 pre/post processor 语料改写引擎处理完成后的全部模板事件。
 ///
@@ -54,10 +54,10 @@ impl Dialect01PostProcessor {
         Box::new(TemplateProcessingException::new(Some(message.to_owned())))
     }
 
-    fn suffixed(value: Option<&JavaString>, kind: &str, index: i32) -> JavaString {
+    fn suffixed(value: Option<&Utf16String>, kind: &str, index: i32) -> Utf16String {
         let prefix =
             value.map_or_else(String::new, |value| format!("{} ", value.to_string_lossy()));
-        JavaString::from_rust_str(&format!("{prefix}({kind}:{index})"))
+        Utf16String::from_rust_str(&format!("{prefix}({kind}:{index})"))
     }
 }
 
@@ -132,11 +132,11 @@ impl ITemplateHandler for Dialect01PostProcessor {
                 doc_type
                     .get_keyword()
                     .cloned()
-                    .unwrap_or_else(|| JavaString::from_rust_str("DOCTYPE")),
+                    .unwrap_or_else(|| Utf16String::from_rust_str("DOCTYPE")),
                 doc_type
                     .get_element_name()
                     .cloned()
-                    .unwrap_or_else(|| JavaString::from_rust_str("html")),
+                    .unwrap_or_else(|| Utf16String::from_rust_str("html")),
                 doc_type.get_public_id().cloned(),
                 doc_type.get_system_id().cloned(),
                 Some(internal_subset),
@@ -219,8 +219,8 @@ impl ITemplateHandler for Dialect01PostProcessor {
             .get_model_factory()
             .set_attribute(
                 processable,
-                JavaString::from_rust_str("post"),
-                Some(JavaString::from_rust_str(
+                Utf16String::from_rust_str("post"),
+                Some(Utf16String::from_rust_str(
                     &self.standalone_element_tags.to_string(),
                 )),
                 None,
@@ -248,8 +248,8 @@ impl ITemplateHandler for Dialect01PostProcessor {
             .get_model_factory()
             .set_attribute(
                 processable,
-                JavaString::from_rust_str("post"),
-                Some(JavaString::from_rust_str(
+                Utf16String::from_rust_str("post"),
+                Some(Utf16String::from_rust_str(
                     &self.open_element_tags.to_string(),
                 )),
                 None,
@@ -288,7 +288,7 @@ impl ITemplateHandler for Dialect01PostProcessor {
                 instruction
                     .get_target()
                     .cloned()
-                    .unwrap_or_else(|| JavaString::from_rust_str("")),
+                    .unwrap_or_else(|| Utf16String::from_rust_str("")),
                 content,
             )
             .map_err(Self::processing_error)?;

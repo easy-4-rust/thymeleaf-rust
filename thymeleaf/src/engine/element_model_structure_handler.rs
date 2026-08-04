@@ -6,7 +6,7 @@ use crate::context::IEngineContext;
 use crate::element::IElementModelStructureHandler;
 use crate::expression::TemplateValue;
 use crate::inline::IInliner;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::TemplateData;
 
@@ -16,9 +16,9 @@ use super::TemplateData;
 /// 顺序应用。对应 Java: `org.thymeleaf.engine.ElementModelStructureHandler`。
 pub(crate) struct ElementModelStructureHandler {
     pub(crate) set_local_variable: bool,
-    pub(crate) added_local_variables: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    pub(crate) added_local_variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     pub(crate) remove_local_variable: bool,
-    pub(crate) removed_local_variable_names: IndexSet<JavaString>,
+    pub(crate) removed_local_variable_names: IndexSet<Utf16String>,
     pub(crate) set_selection_target: bool,
     pub(crate) selection_target_object: Option<Arc<TemplateValue>>,
     pub(crate) set_inliner: bool,
@@ -89,12 +89,12 @@ impl IElementModelStructureHandler for ElementModelStructureHandler {
         self.set_template_data_value = None;
     }
 
-    fn set_local_variable(&mut self, name: JavaString, value: Option<Arc<TemplateValue>>) {
+    fn set_local_variable(&mut self, name: Utf16String, value: Option<Arc<TemplateValue>>) {
         self.set_local_variable = true;
         self.added_local_variables.insert(Some(name), value);
     }
 
-    fn remove_local_variable(&mut self, name: JavaString) {
+    fn remove_local_variable(&mut self, name: Utf16String) {
         self.remove_local_variable = true;
         self.removed_local_variable_names.insert(name);
     }
@@ -129,11 +129,11 @@ mod tests {
     use crate::expression::TemplateValue;
     use crate::templatemode::TemplateMode;
     use crate::templateresource::StringTemplateResource;
-    use crate::util::{JavaLocale, JavaString};
+    use crate::util::{JavaLocale, Utf16String};
     use crate::{ITemplateEngine, TemplateEngine};
 
-    fn java(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn java(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
     fn template_data(name: &str) -> TemplateData {

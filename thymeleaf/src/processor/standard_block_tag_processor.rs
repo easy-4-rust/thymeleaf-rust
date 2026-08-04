@@ -1,6 +1,6 @@
 use crate::TemplateMode;
 use crate::element::AbstractElementTagProcessor;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{StandardElementCallback, delegate_standard_element_tag_processor};
 
@@ -20,8 +20,8 @@ impl StandardBlockTagProcessor {
     /// 对应 Java 语义：`StandardBlockTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        element_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        element_name: Utf16String,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         let prefix_element_name = dialect_prefix.is_some();
         let callback: StandardElementCallback = Box::new(|_context, _tag, structure_handler| {

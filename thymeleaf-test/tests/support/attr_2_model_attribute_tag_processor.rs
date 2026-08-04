@@ -10,14 +10,14 @@ use thymeleaf::engine::AttributeName;
 use thymeleaf::exceptions::{TemplateEngineException, TemplateProcessingException};
 use thymeleaf::model::{IModel, ITemplateEvent};
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -35,10 +35,10 @@ impl Attr2ModelAttributeTagProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("attr2model")),
+                Some(Utf16String::from_rust_str("attr2model")),
                 true,
                 50,
                 true,
@@ -90,7 +90,7 @@ fn set_attribute(
     context: &dyn ITemplateContext,
     model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     _structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     let first = model
@@ -98,12 +98,12 @@ fn set_attribute(
         .into_processable_element_tag()
         .ok_or_else(|| processing_error("Model first event is not an element tag"))?;
     let value = context
-        .get_variable(Some(&JavaString::from_rust_str("var")))
+        .get_variable(Some(&Utf16String::from_rust_str("var")))
         .as_deref()
-        .and_then(|value| value.to_java_string());
+        .and_then(|value| value.to_utf16_string());
     let first = context
         .get_model_factory()
-        .set_attribute(first, JavaString::from_rust_str("var2"), value, None)
+        .set_attribute(first, Utf16String::from_rust_str("var2"), value, None)
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
     let event: Arc<dyn ITemplateEvent> = first;
     model.replace(0, Some(event)).map_err(model_error)

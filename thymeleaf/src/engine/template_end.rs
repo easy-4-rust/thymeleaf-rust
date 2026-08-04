@@ -3,7 +3,7 @@ use std::io;
 use std::sync::{Arc, OnceLock};
 
 use crate::model::{IModelVisitor, ITemplateEnd, ITemplateEvent};
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -37,7 +37,7 @@ impl ITemplateEvent for TemplateEnd {
         self.template_event.has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.template_event.get_template_name()
     }
 

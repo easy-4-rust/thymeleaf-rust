@@ -6,10 +6,10 @@
 //!   `HtmlEscape.escapeHtml4Xml`，XML 用内容版 `XmlEscape.escapeXml10`，
 //!   JS/CSS 委托 Standard Serializer，RAW 原样）；
 //! - `AbstractLazyCharSequence`（439）：惰性缓存与未解析写出语义（写出
-//!   未解析内容不填充缓存）、length/charAt/subSequence/to_java_string；
+//!   未解析内容不填充缓存）、length/charAt/subSequence/to_utf16_string；
 //! - `IWritableCharSequence`（451）：`write_direct` 快路径委托；
 //! - `LazyProcessingCharSequence`（454）：写出时按模型处理文本
-//!   （`to_java_string` 返回处理后结果，对应 Java `resolveText`）；
+//!   （`to_utf16_string` 返回处理后结果，对应 Java `resolveText`）；
 //! - `ProcessorComparators`（463）：方言 precedence → 处理器 precedence →
 //!   Java 类名 → 对象身份的比较链；
 //! - `ProcessorConfigurationUtils`（464）：unwrap_* 委托族；
@@ -27,14 +27,14 @@ use thymeleaf::element::AbstractAttributeTagProcessor;
 use thymeleaf::processor::IProcessor;
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::util::{
-    FastStringWriter, IWritableCharSequence, JavaCharSequence, JavaString,
-    LazyEscapingCharSequence, LazyProcessingCharSequence, ProcessorComparators,
-    ProcessorConfigurationUtils, ResourceLoaderUtils,
+    FastStringWriter, IWritableCharSequence, JavaCharSequence, LazyEscapingCharSequence,
+    LazyProcessingCharSequence, ProcessorComparators, ProcessorConfigurationUtils,
+    ResourceLoaderUtils, Utf16String,
 };
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn engine() -> TemplateEngine {
@@ -80,7 +80,7 @@ fn lazy_escaping_char_sequence_html_text_xml_raw_match_java() {
             "a&lt;b&gt;&amp;c&quot;d&#39;e",
             "mode {mode:?} html4/xml escaping"
         );
-        // 惰性缓存：to_java_string 后再次写出同一结果
+        // 惰性缓存：to_utf16_string 后再次写出同一结果
         assert_eq!(
             sequence
                 .java_to_string()
@@ -258,7 +258,7 @@ type DoProcessFn = dyn Fn(
         &dyn thymeleaf::context::ITemplateContext,
         &mut dyn thymeleaf::model::IModel,
         &thymeleaf::engine::AttributeName,
-        Option<JavaString>,
+        Option<Utf16String>,
         &mut dyn thymeleaf::element::IElementModelStructureHandler,
     ) -> Result<(), Box<dyn thymeleaf::exceptions::TemplateEngineException>>
     + Send
@@ -269,7 +269,7 @@ fn noop_process() -> Box<DoProcessFn> {
         |_ctx: &dyn thymeleaf::context::ITemplateContext,
          _model: &mut dyn thymeleaf::model::IModel,
          _attribute_name: &thymeleaf::engine::AttributeName,
-         _attribute_value: Option<JavaString>,
+         _attribute_value: Option<Utf16String>,
          _structure_handler: &mut dyn thymeleaf::element::IElementModelStructureHandler|
          -> Result<(), Box<dyn thymeleaf::exceptions::TemplateEngineException>> { Ok(()) },
     )

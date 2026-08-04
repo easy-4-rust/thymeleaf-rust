@@ -7,32 +7,32 @@ use std::sync::{Arc, RwLock};
 use crate::context::ITemplateContext;
 use crate::expression::TemplateValue;
 use crate::templateresource::ITemplateResource;
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 
 use super::{
     AbstractMessageResolver, IMessageResolver, MessageResolutionError, MessageResolutionResult,
     StandardMessageResolutionUtils,
 };
 
-type Messages = HashMap<JavaString, JavaString>;
+type Messages = HashMap<Utf16String, Utf16String>;
 type LocalizedMessages = HashMap<JavaLocale, Arc<Messages>>;
-type TemplateMessagesHook = dyn Fn(&JavaString, &dyn ITemplateResource, &JavaLocale) -> MessageResolutionResult<Messages>
+type TemplateMessagesHook = dyn Fn(&Utf16String, &dyn ITemplateResource, &JavaLocale) -> MessageResolutionResult<Messages>
     + Send
     + Sync;
 type OriginMessagesHook = dyn Fn(TypeId, &JavaLocale) -> Messages + Send + Sync;
 type MessageFormatterHook = dyn Fn(
         &JavaLocale,
-        &JavaString,
+        &Utf16String,
         Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>>
+    ) -> MessageResolutionResult<Option<Utf16String>>
     + Send
     + Sync;
 type AbsentMessageHook = dyn Fn(
         Option<&dyn ITemplateContext>,
         Option<TypeId>,
-        Option<&JavaString>,
+        Option<&Utf16String>,
         Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>>
+    ) -> MessageResolutionResult<Option<Utf16String>>
     + Send
     + Sync;
 
@@ -50,7 +50,7 @@ type AbsentMessageHook = dyn Fn(
 /// 钩子，而不是只暴露同名辅助方法。内部锁只保护缓存和默认消息，使解析器可以跨线程共享。
 pub struct StandardMessageResolver {
     base: AbstractMessageResolver,
-    messages_by_locale_by_template: RwLock<HashMap<JavaString, LocalizedMessages>>,
+    messages_by_locale_by_template: RwLock<HashMap<Utf16String, LocalizedMessages>>,
     messages_by_locale_by_origin: RwLock<HashMap<TypeId, LocalizedMessages>>,
     default_messages: RwLock<Messages>,
     template_messages_hook: Option<Arc<TemplateMessagesHook>>,
@@ -98,7 +98,7 @@ impl StandardMessageResolver {
     pub fn with_template_messages_hook<F>(mut self, hook: F) -> Self
     where
         F: Fn(
-                &JavaString,
+                &Utf16String,
                 &dyn ITemplateResource,
                 &JavaLocale,
             ) -> MessageResolutionResult<Messages>
@@ -147,9 +147,9 @@ impl StandardMessageResolver {
     where
         F: Fn(
                 &JavaLocale,
-                &JavaString,
+                &Utf16String,
                 Option<&[Option<Arc<TemplateValue>>]>,
-            ) -> MessageResolutionResult<Option<JavaString>>
+            ) -> MessageResolutionResult<Option<Utf16String>>
             + Send
             + Sync
             + 'static,
@@ -174,9 +174,9 @@ impl StandardMessageResolver {
         F: Fn(
                 Option<&dyn ITemplateContext>,
                 Option<TypeId>,
-                Option<&JavaString>,
+                Option<&Utf16String>,
                 Option<&[Option<Arc<TemplateValue>>]>,
-            ) -> MessageResolutionResult<Option<JavaString>>
+            ) -> MessageResolutionResult<Option<Utf16String>>
             + Send
             + Sync
             + 'static,
@@ -187,7 +187,7 @@ impl StandardMessageResolver {
 
     /// 设置可空解析器名称。
     /// 对应 Java 语义：Java 接口/超类方法 `setName()` 的 Rust 移植（`StandardMessageResolver` 继承路径）。
-    pub fn set_name(&mut self, name: Option<JavaString>) {
+    pub fn set_name(&mut self, name: Option<Utf16String>) {
         self.base.set_name(name);
     }
 
@@ -203,7 +203,7 @@ impl StandardMessageResolver {
     /// `Properties` 对象并允许调用者直接修改；Rust 返回同一 `RwLock`，调用者可取得
     /// read/write guard，同时保持并发安全。
     #[must_use]
-    pub const fn get_default_messages(&self) -> &RwLock<HashMap<JavaString, JavaString>> {
+    pub const fn get_default_messages(&self) -> &RwLock<HashMap<Utf16String, Utf16String>> {
         &self.default_messages
     }
 
@@ -219,8 +219,8 @@ impl StandardMessageResolver {
     /// 对应 Java: `StandardMessageResolver#addDefaultMessage()`。
     pub fn add_default_message(
         &self,
-        key: JavaString,
-        value: JavaString,
+        key: Utf16String,
+        value: Utf16String,
     ) -> MessageResolutionResult<()> {
         self.add_default_message_nullable(Some(key), Some(value))
     }
@@ -230,8 +230,8 @@ impl StandardMessageResolver {
     /// 对应 Java: `StandardMessageResolver#addDefaultMessage(String, String)`。
     pub fn add_default_message_nullable(
         &self,
-        key: Option<JavaString>,
-        value: Option<JavaString>,
+        key: Option<Utf16String>,
+        value: Option<Utf16String>,
     ) -> MessageResolutionResult<()> {
         let key = key.ok_or_else(|| {
             Box::new(MessageResolverArgumentError(
@@ -258,7 +258,7 @@ impl StandardMessageResolver {
     pub fn register_origin_messages(
         origin: TypeId,
         locale: JavaLocale,
-        messages: HashMap<JavaString, JavaString>,
+        messages: HashMap<Utf16String, Utf16String>,
     ) {
         StandardMessageResolutionUtils::register_origin_messages(origin, locale, messages);
     }
@@ -290,9 +290,9 @@ impl StandardMessageResolver {
     pub fn format_message(
         &self,
         locale: &JavaLocale,
-        message: &JavaString,
+        message: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         if let Some(hook) = &self.message_formatter_hook {
             return hook(locale, message, message_parameters);
         }
@@ -311,10 +311,10 @@ impl StandardMessageResolver {
     /// 按 Locale 层级合并后的消息映射，或资源读取/Properties 解析错误。
     pub fn resolve_messages_for_template(
         &self,
-        template: &JavaString,
+        template: &Utf16String,
         template_resource: &dyn ITemplateResource,
         locale: &JavaLocale,
-    ) -> MessageResolutionResult<HashMap<JavaString, JavaString>> {
+    ) -> MessageResolutionResult<HashMap<Utf16String, Utf16String>> {
         if let Some(hook) = &self.template_messages_hook {
             return hook(template, template_resource, locale);
         }
@@ -332,7 +332,7 @@ impl StandardMessageResolver {
         &self,
         origin: TypeId,
         locale: &JavaLocale,
-    ) -> HashMap<JavaString, JavaString> {
+    ) -> HashMap<Utf16String, Utf16String> {
         if let Some(hook) = &self.origin_messages_hook {
             return hook(origin, locale);
         }
@@ -353,12 +353,12 @@ impl StandardMessageResolver {
         &self,
         context: &dyn ITemplateContext,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         perform_template_based_resolution: bool,
         perform_origin_based_resolution: bool,
         perform_default_based_resolution: bool,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let locale = context.get_locale();
 
         if perform_template_based_resolution {
@@ -409,7 +409,7 @@ impl StandardMessageResolver {
 
     fn cached_template_messages(
         &self,
-        template: &JavaString,
+        template: &Utf16String,
         locale: &JavaLocale,
         load: impl FnOnce() -> MessageResolutionResult<Messages>,
     ) -> MessageResolutionResult<Arc<Messages>> {
@@ -456,7 +456,7 @@ impl Default for StandardMessageResolver {
 }
 
 impl IMessageResolver for StandardMessageResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.base.get_name()
     }
 
@@ -468,9 +468,9 @@ impl IMessageResolver for StandardMessageResolver {
         &self,
         context: Option<&dyn ITemplateContext>,
         origin: Option<TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let context = context.ok_or_else(|| {
             Box::new(MessageResolverArgumentError("Context cannot be null"))
                 as MessageResolutionError
@@ -486,9 +486,9 @@ impl IMessageResolver for StandardMessageResolver {
         &self,
         context: Option<&dyn ITemplateContext>,
         origin: Option<TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         if let Some(hook) = &self.absent_message_hook {
             return hook(context, origin, key, message_parameters);
         }
@@ -498,7 +498,7 @@ impl IMessageResolver for StandardMessageResolver {
         })?;
         let context = context
             .ok_or_else(|| Box::new(MessageResolverNullContextError) as MessageResolutionError)?;
-        Ok(Some(JavaString::from_rust_str(&format!(
+        Ok(Some(Utf16String::from_rust_str(&format!(
             "??{}_{}??",
             key.to_string_lossy(),
             context.get_locale()
@@ -545,7 +545,7 @@ fn write_lock<T>(lock: &RwLock<T>) -> std::sync::RwLockWriteGuard<'_, T> {
 mod tests {
     use std::sync::RwLock;
 
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     use super::StandardMessageResolver;
 
@@ -560,18 +560,18 @@ mod tests {
 
         resolver
             .add_default_message(
-                JavaString::from_rust_str("first"),
-                JavaString::from_rust_str("one"),
+                Utf16String::from_rust_str("first"),
+                Utf16String::from_rust_str("one"),
             )
             .expect("valid default");
         resolver.set_default_messages(Some(&std::collections::HashMap::from([
             (
-                JavaString::from_rust_str("second"),
-                JavaString::from_rust_str("two"),
+                Utf16String::from_rust_str("second"),
+                Utf16String::from_rust_str("two"),
             ),
             (
-                JavaString::from_rust_str("first"),
-                JavaString::from_rust_str("override"),
+                Utf16String::from_rust_str("first"),
+                Utf16String::from_rust_str("override"),
             ),
         ])));
         {
@@ -581,17 +581,17 @@ mod tests {
                 .expect("default messages read");
             assert_eq!(messages.len(), 2);
             assert_eq!(
-                messages.get(&JavaString::from_rust_str("first")),
-                Some(&JavaString::from_rust_str("override"))
+                messages.get(&Utf16String::from_rust_str("first")),
+                Some(&Utf16String::from_rust_str("override"))
             );
         }
 
         let error = resolver
-            .add_default_message_nullable(None, Some(JavaString::from_rust_str("value")))
+            .add_default_message_nullable(None, Some(Utf16String::from_rust_str("value")))
             .expect_err("null key");
         assert_eq!(error.to_string(), "Key for default message cannot be null");
         let error = resolver
-            .add_default_message_nullable(Some(JavaString::from_rust_str("key")), None)
+            .add_default_message_nullable(Some(Utf16String::from_rust_str("key")), None)
             .expect_err("null value");
         assert_eq!(
             error.to_string(),

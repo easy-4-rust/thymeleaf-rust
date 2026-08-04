@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use crate::exceptions::TemplateProcessingException;
 use crate::inline::{IInlinePreProcessorHandler, OutputExpressionInlinePreProcessorHandler};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{ITextHandler, TextParseException};
@@ -29,7 +29,7 @@ impl InlinedOutputExpressionTextHandler {
     pub fn new(
         configuration: &dyn IEngineConfiguration,
         template_mode: TemplateMode,
-        standard_dialect_prefix: Option<&JavaString>,
+        standard_dialect_prefix: Option<&Utf16String>,
         next: Box<dyn ITextHandler>,
     ) -> Result<Self, TemplateProcessingException> {
         let next = Rc::new(RefCell::new(next));

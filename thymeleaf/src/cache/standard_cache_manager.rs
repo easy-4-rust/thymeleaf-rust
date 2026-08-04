@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use crate::engine::TemplateModel;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractCacheManager, ExpressionCacheKey, ICache, ICacheEntryValidityChecker, ICacheManager,
@@ -18,20 +18,20 @@ use super::{
 /// 对应 Java: `org.thymeleaf.cache.StandardCacheManager`。
 pub struct StandardCacheManager {
     cache_manager: AbstractCacheManager,
-    template_cache_name: JavaString,
+    template_cache_name: Utf16String,
     template_cache_initial_size: i32,
     template_cache_max_size: i32,
     template_cache_enable_counters: bool,
     template_cache_use_soft_references: bool,
-    template_cache_logger_name: Option<JavaString>,
+    template_cache_logger_name: Option<Utf16String>,
     template_cache_validity_checker:
         Option<Arc<dyn ICacheEntryValidityChecker<TemplateCacheKey, TemplateModel>>>,
-    expression_cache_name: JavaString,
+    expression_cache_name: Utf16String,
     expression_cache_initial_size: i32,
     expression_cache_max_size: i32,
     expression_cache_enable_counters: bool,
     expression_cache_use_soft_references: bool,
-    expression_cache_logger_name: Option<JavaString>,
+    expression_cache_logger_name: Option<Utf16String>,
     expression_cache_validity_checker:
         Option<Arc<dyn ICacheEntryValidityChecker<ExpressionCacheKey, dyn Any + Send + Sync>>>,
 }
@@ -66,7 +66,7 @@ impl StandardCacheManager {
     pub fn new() -> Self {
         Self {
             cache_manager: AbstractCacheManager::new(),
-            template_cache_name: JavaString::from_rust_str(Self::DEFAULT_TEMPLATE_CACHE_NAME),
+            template_cache_name: Utf16String::from_rust_str(Self::DEFAULT_TEMPLATE_CACHE_NAME),
             template_cache_initial_size: Self::DEFAULT_TEMPLATE_CACHE_INITIAL_SIZE,
             template_cache_max_size: Self::DEFAULT_TEMPLATE_CACHE_MAX_SIZE,
             template_cache_enable_counters: Self::DEFAULT_TEMPLATE_CACHE_ENABLE_COUNTERS,
@@ -75,7 +75,7 @@ impl StandardCacheManager {
             template_cache_validity_checker: Some(Arc::new(
                 StandardParsedTemplateEntryValidator::new(),
             )),
-            expression_cache_name: JavaString::from_rust_str(Self::DEFAULT_EXPRESSION_CACHE_NAME),
+            expression_cache_name: Utf16String::from_rust_str(Self::DEFAULT_EXPRESSION_CACHE_NAME),
             expression_cache_initial_size: Self::DEFAULT_EXPRESSION_CACHE_INITIAL_SIZE,
             expression_cache_max_size: Self::DEFAULT_EXPRESSION_CACHE_MAX_SIZE,
             expression_cache_enable_counters: Self::DEFAULT_EXPRESSION_CACHE_ENABLE_COUNTERS,
@@ -89,7 +89,7 @@ impl StandardCacheManager {
     /// 返回模板缓存名称。
     #[must_use]
     /// 对应 Java: `StandardCacheManager#getTemplateCacheName()`。
-    pub fn get_template_cache_name(&self) -> &JavaString {
+    pub fn get_template_cache_name(&self) -> &Utf16String {
         &self.template_cache_name
     }
 
@@ -114,7 +114,7 @@ impl StandardCacheManager {
     /// 返回模板缓存 logger 名；`None` 使用引擎默认 logger 路径。
     #[must_use]
     /// 对应 Java: `StandardCacheManager#getTemplateCacheLoggerName()`。
-    pub fn get_template_cache_logger_name(&self) -> Option<&JavaString> {
+    pub fn get_template_cache_logger_name(&self) -> Option<&Utf16String> {
         self.template_cache_logger_name.as_ref()
     }
 
@@ -130,7 +130,7 @@ impl StandardCacheManager {
     /// 返回表达式缓存名称。
     #[must_use]
     /// 对应 Java: `StandardCacheManager#getExpressionCacheName()`。
-    pub fn get_expression_cache_name(&self) -> &JavaString {
+    pub fn get_expression_cache_name(&self) -> &Utf16String {
         &self.expression_cache_name
     }
 
@@ -155,7 +155,7 @@ impl StandardCacheManager {
     /// 返回表达式缓存 logger 名；`None` 使用引擎默认 logger 路径。
     #[must_use]
     /// 对应 Java: `StandardCacheManager#getExpressionCacheLoggerName()`。
-    pub fn get_expression_cache_logger_name(&self) -> Option<&JavaString> {
+    pub fn get_expression_cache_logger_name(&self) -> Option<&Utf16String> {
         self.expression_cache_logger_name.as_ref()
     }
 
@@ -169,7 +169,7 @@ impl StandardCacheManager {
     }
 
     /// 设置模板缓存名称。对应 Java `setTemplateCacheName`。
-    pub fn set_template_cache_name(&mut self, template_cache_name: JavaString) {
+    pub fn set_template_cache_name(&mut self, template_cache_name: Utf16String) {
         self.template_cache_name = template_cache_name;
     }
 
@@ -194,7 +194,7 @@ impl StandardCacheManager {
     /// 设置模板缓存 logger 名。对应 Java `setTemplateCacheLoggerName`。
     pub fn set_template_cache_logger_name(
         &mut self,
-        template_cache_logger_name: Option<JavaString>,
+        template_cache_logger_name: Option<Utf16String>,
     ) {
         self.template_cache_logger_name = template_cache_logger_name;
     }
@@ -219,7 +219,7 @@ impl StandardCacheManager {
     }
 
     /// 设置表达式缓存名称。对应 Java `setExpressionCacheName`。
-    pub fn set_expression_cache_name(&mut self, expression_cache_name: JavaString) {
+    pub fn set_expression_cache_name(&mut self, expression_cache_name: Utf16String) {
         self.expression_cache_name = expression_cache_name;
     }
 
@@ -244,7 +244,7 @@ impl StandardCacheManager {
     /// 设置表达式缓存 logger 名。对应 Java `setExpressionCacheLoggerName`。
     pub fn set_expression_cache_logger_name(
         &mut self,
-        expression_cache_logger_name: Option<JavaString>,
+        expression_cache_logger_name: Option<Utf16String>,
     ) {
         self.expression_cache_logger_name = expression_cache_logger_name;
     }
@@ -331,7 +331,7 @@ impl ICacheManager for StandardCacheManager {
             .get_expression_cache(|| self.initialize_expression_cache())
     }
 
-    fn get_specific_cache<K, V>(&self, _name: &JavaString) -> Option<&dyn ICache<K, V>>
+    fn get_specific_cache<K, V>(&self, _name: &Utf16String) -> Option<&dyn ICache<K, V>>
     where
         Self: Sized,
         K: Clone + Eq + std::hash::Hash + Send + Sync,
@@ -340,7 +340,7 @@ impl ICacheManager for StandardCacheManager {
         None
     }
 
-    fn get_all_specific_cache_names(&self) -> Option<Vec<JavaString>> {
+    fn get_all_specific_cache_names(&self) -> Option<Vec<Utf16String>> {
         Some(Vec::new())
     }
 

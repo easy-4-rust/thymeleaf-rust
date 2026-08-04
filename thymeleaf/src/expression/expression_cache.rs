@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::IEngineConfiguration;
 use crate::cache::ExpressionCacheKey;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::IStandardExpression;
 
@@ -24,7 +24,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#getExpressionFromCache()`。
     pub(crate) fn get_expression_from_cache(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<Arc<dyn IStandardExpression>> {
         Self::get_from_cache::<CachedStandardExpression>(configuration, input, Self::EXPRESSION)
             .map(|cached| Arc::clone(&cached.0))
@@ -33,7 +33,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#putExpressionIntoCache()`。
     pub(crate) fn put_expression_into_cache(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         value: Arc<dyn IStandardExpression>,
     ) {
         Self::put_into_cache(
@@ -47,7 +47,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#getAssignationSequenceFromCache()`。
     pub(crate) fn get_assignation_sequence_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<Arc<T>>
     where
         T: Any + Send + Sync,
@@ -58,7 +58,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#putAssignationSequenceIntoCache()`。
     pub(crate) fn put_assignation_sequence_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         value: Arc<T>,
     ) where
         T: Any + Send + Sync,
@@ -69,7 +69,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#getExpressionSequenceFromCache()`。
     pub(crate) fn get_expression_sequence_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<Arc<T>>
     where
         T: Any + Send + Sync,
@@ -80,7 +80,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#putExpressionSequenceIntoCache()`。
     pub(crate) fn put_expression_sequence_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         value: Arc<T>,
     ) where
         T: Any + Send + Sync,
@@ -91,7 +91,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#getEachFromCache()`。
     pub(crate) fn get_each_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<Arc<T>>
     where
         T: Any + Send + Sync,
@@ -102,7 +102,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#putEachIntoCache()`。
     pub(crate) fn put_each_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         value: Arc<T>,
     ) where
         T: Any + Send + Sync,
@@ -113,7 +113,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#getFragmentSignatureFromCache()`。
     pub(crate) fn get_fragment_signature_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<Arc<T>>
     where
         T: Any + Send + Sync,
@@ -124,7 +124,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#putFragmentSignatureIntoCache()`。
     pub(crate) fn put_fragment_signature_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         value: Arc<T>,
     ) where
         T: Any + Send + Sync,
@@ -134,7 +134,7 @@ impl ExpressionCache {
 
     fn get_from_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         cache_type: &str,
     ) -> Option<Arc<T>>
     where
@@ -151,7 +151,7 @@ impl ExpressionCache {
 
     fn put_into_cache<T>(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         value: Arc<T>,
         cache_type: &str,
     ) where
@@ -181,7 +181,7 @@ impl ExpressionCache {
     /// 对应 Java: `ExpressionCache#removeFromCache()`。
     pub(crate) fn remove_from_cache(
         configuration: &dyn IEngineConfiguration,
-        input: &JavaString,
+        input: &Utf16String,
         cache_type: &str,
     ) {
         let Ok(key) = ExpressionCacheKey::new(Some(cache_type), Some(&input.to_string_lossy()))

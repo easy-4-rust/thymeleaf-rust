@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IContext;
 use crate::exceptions::TemplateEngineException;
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 use crate::{IEngineConfiguration, IThrottledTemplateProcessor, TemplateSpec};
 
 /// 模板引擎统一操作结果。
@@ -21,7 +21,7 @@ pub trait ITemplateEngine: Send + Sync {
         &self,
         template_spec: &TemplateSpec,
         context: &dyn IContext,
-    ) -> TemplateEngineResult<JavaString>;
+    ) -> TemplateEngineResult<Utf16String>;
 
     /// 处理模板规格并把结果写入调用方 Writer，结束时刷新 Writer。
     fn process_to_writer(
@@ -45,7 +45,7 @@ pub trait ITemplateEngine: Send + Sync {
         &self,
         template: &str,
         context: &dyn IContext,
-    ) -> TemplateEngineResult<JavaString> {
+    ) -> TemplateEngineResult<Utf16String> {
         self.process(&template_spec(template, None)?, context)
     }
 
@@ -57,7 +57,7 @@ pub trait ITemplateEngine: Send + Sync {
         template: &str,
         template_selectors: &crate::TemplateSelectorSet,
         context: &dyn IContext,
-    ) -> TemplateEngineResult<JavaString> {
+    ) -> TemplateEngineResult<Utf16String> {
         self.process(&template_spec(template, Some(template_selectors))?, context)
     }
 

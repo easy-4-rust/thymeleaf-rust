@@ -10,7 +10,7 @@ use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IModel;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
@@ -33,8 +33,8 @@ impl NoOpModelProcessor {
         Self {
             processor: AbstractElementModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
-                Some(JavaString::from_rust_str("noop")),
+                dialect_prefix.map(Utf16String::from_rust_str),
+                Some(Utf16String::from_rust_str("noop")),
                 true,
                 None,
                 false,
@@ -91,7 +91,7 @@ fn process_model(
     structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     structure_handler.set_local_variable(
-        JavaString::from_rust_str("noop-model"),
+        Utf16String::from_rust_str("noop-model"),
         Some(Arc::new(TemplateValue::Boolean(true))),
     );
     Ok(())

@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::templateresource::{ITemplateResource, TemplateResourceError};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::IDecoupledTemplateLogicResolver;
@@ -14,8 +14,8 @@ use super::IDecoupledTemplateLogicResolver;
 /// 对应 Java:
 /// `org.thymeleaf.templateparser.markup.decoupled.StandardDecoupledTemplateLogicResolver`。
 pub struct StandardDecoupledTemplateLogicResolver {
-    prefix: RwLock<Option<JavaString>>,
-    suffix: RwLock<Option<JavaString>>,
+    prefix: RwLock<Option<Utf16String>>,
+    suffix: RwLock<Option<Utf16String>>,
 }
 
 impl StandardDecoupledTemplateLogicResolver {
@@ -30,7 +30,7 @@ impl StandardDecoupledTemplateLogicResolver {
     pub fn new() -> Self {
         Self {
             prefix: RwLock::new(None),
-            suffix: RwLock::new(Some(JavaString::from_rust_str(
+            suffix: RwLock::new(Some(Utf16String::from_rust_str(
                 Self::DECOUPLED_TEMPLATE_LOGIC_FILE_SUFFIX,
             ))),
         }
@@ -40,14 +40,14 @@ impl StandardDecoupledTemplateLogicResolver {
     ///
     /// 对应 Java: `StandardDecoupledTemplateLogicResolver#getSuffix()`。
     #[must_use]
-    pub fn get_suffix(&self) -> Option<JavaString> {
+    pub fn get_suffix(&self) -> Option<Utf16String> {
         read_lock(&self.suffix).clone()
     }
 
     /// 替换 suffix；`None` 使相对位置不追加后缀。
     ///
     /// 对应 Java: `StandardDecoupledTemplateLogicResolver#setSuffix(String)`。
-    pub fn set_suffix(&self, suffix: Option<JavaString>) {
+    pub fn set_suffix(&self, suffix: Option<Utf16String>) {
         *write_lock(&self.suffix) = suffix;
     }
 
@@ -55,14 +55,14 @@ impl StandardDecoupledTemplateLogicResolver {
     ///
     /// 对应 Java: `StandardDecoupledTemplateLogicResolver#getPrefix()`。
     #[must_use]
-    pub fn get_prefix(&self) -> Option<JavaString> {
+    pub fn get_prefix(&self) -> Option<Utf16String> {
         read_lock(&self.prefix).clone()
     }
 
     /// 替换 prefix；`None` 使相对位置不添加前缀。
     ///
     /// 对应 Java: `StandardDecoupledTemplateLogicResolver#setPrefix(String)`。
-    pub fn set_prefix(&self, prefix: Option<JavaString>) {
+    pub fn set_prefix(&self, prefix: Option<Utf16String>) {
         *write_lock(&self.prefix) = prefix;
     }
 }
@@ -77,9 +77,9 @@ impl IDecoupledTemplateLogicResolver for StandardDecoupledTemplateLogicResolver 
     fn resolve_decoupled_template_logic(
         &self,
         _configuration: &dyn IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        _template: &JavaString,
-        _template_selectors: Option<&[JavaString]>,
+        _owner_template: Option<&Utf16String>,
+        _template: &Utf16String,
+        _template_selectors: Option<&[Utf16String]>,
         resource: &dyn ITemplateResource,
         _template_mode: TemplateMode,
     ) -> Result<Option<Arc<dyn ITemplateResource>>, TemplateResourceError> {

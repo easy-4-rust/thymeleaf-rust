@@ -5,7 +5,7 @@ use crate::expression::TemplateValue;
 use crate::inline::IInliner;
 use crate::model::{AttributeValueQuotes, IModel};
 use crate::util::JavaCharSequence;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// ElementTag Processor 声明标签、正文、上下文和迭代变更的完整合同。
 ///
@@ -14,28 +14,28 @@ pub trait IElementTagStructureHandler {
     /// 清除全部动作。
     fn reset(&mut self);
     /// 设置局部变量。
-    fn set_local_variable(&mut self, name: JavaString, value: Option<Arc<TemplateValue>>);
+    fn set_local_variable(&mut self, name: Utf16String, value: Option<Arc<TemplateValue>>);
     /// 删除局部变量。
-    fn remove_local_variable(&mut self, name: JavaString);
+    fn remove_local_variable(&mut self, name: Utf16String);
     /// 设置或添加属性。
     fn set_attribute(
         &mut self,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         quotes: Option<AttributeValueQuotes>,
     );
     /// 替换属性。
     fn replace_attribute(
         &mut self,
         old_attribute_name: AttributeNameValue,
-        attribute_name: JavaString,
-        attribute_value: Option<JavaString>,
+        attribute_name: Utf16String,
+        attribute_value: Option<Utf16String>,
         quotes: Option<AttributeValueQuotes>,
     );
     /// 按完整名称删除属性。
-    fn remove_attribute(&mut self, attribute_name: JavaString);
+    fn remove_attribute(&mut self, attribute_name: Utf16String);
     /// 按 prefix 与本地名称删除属性。
-    fn remove_attribute_with_prefix(&mut self, prefix: Option<JavaString>, name: JavaString);
+    fn remove_attribute_with_prefix(&mut self, prefix: Option<Utf16String>, name: Utf16String);
     /// 按规范化属性名删除属性。
     fn remove_attribute_name(&mut self, attribute_name: AttributeNameValue);
     /// 设置 selection target。
@@ -45,7 +45,7 @@ pub trait IElementTagStructureHandler {
     /// 设置模板来源数据。
     fn set_template_data(&mut self, template_data: Arc<TemplateData>);
     /// 使用文本设置正文。
-    fn set_body_text(&mut self, text: JavaString, processable: bool);
+    fn set_body_text(&mut self, text: Utf16String, processable: bool);
     /// 使用任意 Java CharSequence 设置正文。
     ///
     /// 对应 Java: `IElementTagStructureHandler#setBody(CharSequence, boolean)`；该入口
@@ -58,7 +58,7 @@ pub trait IElementTagStructureHandler {
     /// 紧随元素之后插入模型。
     fn insert_immediately_after(&mut self, model: Arc<dyn IModel>, processable: bool);
     /// 使用文本替换整个元素。
-    fn replace_with_text(&mut self, text: JavaString, processable: bool);
+    fn replace_with_text(&mut self, text: Utf16String, processable: bool);
     /// 使用模型替换整个元素。
     fn replace_with_model(&mut self, model: Arc<dyn IModel>, processable: bool);
     /// 删除整个元素。
@@ -72,8 +72,8 @@ pub trait IElementTagStructureHandler {
     /// 为当前元素建立迭代。
     fn iterate_element(
         &mut self,
-        iter_variable_name: JavaString,
-        iter_status_variable_name: Option<JavaString>,
+        iter_variable_name: Utf16String,
+        iter_status_variable_name: Option<Utf16String>,
         iterated_object: Option<Arc<TemplateValue>>,
     ) -> Result<(), crate::util::ValidateError>;
 }

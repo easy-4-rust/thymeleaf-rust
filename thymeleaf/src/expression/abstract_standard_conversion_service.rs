@@ -4,7 +4,7 @@ use crate::util::Validate;
 
 use super::{
     IStandardConversionService, JavaConversionObject, JavaConversionResult, JavaConversionValue,
-    JavaStringConversionResult, JavaTargetClass, StandardConversionError,
+    JavaTargetClass, StandardConversionError, Utf16StringConversionResult,
 };
 
 /// 标准转换服务实现使用的抽象基类契约。
@@ -34,7 +34,7 @@ pub trait AbstractStandardConversionService: Send + Sync {
         &self,
         _context: Option<&dyn Any>,
         object: &'a dyn JavaConversionObject,
-    ) -> Result<JavaStringConversionResult<'a>, StandardConversionError> {
+    ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
         object.java_to_string()
     }
 

@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, IProcessingInstruction, ITemplateEvent};
-use crate::util::{JavaString, JavaWriter};
+use crate::util::{JavaWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -12,9 +12,9 @@ use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 /// 对应 Java: `org.thymeleaf.engine.ProcessingInstruction`。
 pub struct ProcessingInstruction {
     template_event: AbstractTemplateEvent,
-    target: Option<JavaString>,
-    content: Option<JavaString>,
-    processing_instruction: JavaString,
+    target: Option<Utf16String>,
+    content: Option<Utf16String>,
+    processing_instruction: Utf16String,
 }
 
 impl ProcessingInstruction {
@@ -22,7 +22,7 @@ impl ProcessingInstruction {
     ///
     /// 对应 Java: `ProcessingInstruction#ProcessingInstruction(String,String)`。
     #[must_use]
-    pub fn new(target: Option<JavaString>, content: Option<JavaString>) -> Self {
+    pub fn new(target: Option<Utf16String>, content: Option<Utf16String>) -> Self {
         let processing_instruction =
             compute_processing_instruction(target.as_ref(), content.as_ref());
         Self {
@@ -40,10 +40,10 @@ impl ProcessingInstruction {
     /// 完整文本为 null 时按 target/content 重新计算。
     #[must_use]
     pub fn with_location(
-        processing_instruction: Option<JavaString>,
-        target: Option<JavaString>,
-        content: Option<JavaString>,
-        template_name: Option<JavaString>,
+        processing_instruction: Option<Utf16String>,
+        target: Option<Utf16String>,
+        content: Option<Utf16String>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -59,15 +59,15 @@ impl ProcessingInstruction {
 }
 
 impl IProcessingInstruction for ProcessingInstruction {
-    fn get_target(&self) -> Option<&JavaString> {
+    fn get_target(&self) -> Option<&Utf16String> {
         self.target.as_ref()
     }
 
-    fn get_content(&self) -> Option<&JavaString> {
+    fn get_content(&self) -> Option<&Utf16String> {
         self.content.as_ref()
     }
 
-    fn get_processing_instruction(&self) -> Option<&JavaString> {
+    fn get_processing_instruction(&self) -> Option<&Utf16String> {
         Some(&self.processing_instruction)
     }
 }
@@ -77,7 +77,7 @@ impl ITemplateEvent for ProcessingInstruction {
         self.template_event.has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.template_event.get_template_name()
     }
 
@@ -114,9 +114,9 @@ impl Display for ProcessingInstruction {
 }
 
 fn compute_processing_instruction(
-    target: Option<&JavaString>,
-    content: Option<&JavaString>,
-) -> JavaString {
+    target: Option<&Utf16String>,
+    content: Option<&Utf16String>,
+) -> Utf16String {
     let mut result = Vec::with_capacity(100);
     result.extend("<?".encode_utf16());
     append_nullable(&mut result, target);
@@ -125,10 +125,10 @@ fn compute_processing_instruction(
         result.extend_from_slice(content.as_utf16());
     }
     result.extend("?>".encode_utf16());
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
-fn append_nullable(result: &mut Vec<u16>, value: Option<&JavaString>) {
+fn append_nullable(result: &mut Vec<u16>, value: Option<&Utf16String>) {
     match value {
         Some(value) => result.extend_from_slice(value.as_utf16()),
         None => result.extend("null".encode_utf16()),

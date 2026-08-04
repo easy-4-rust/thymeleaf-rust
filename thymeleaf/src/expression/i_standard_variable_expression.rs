@@ -1,14 +1,14 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// `${...}` 与 `*{...}` 变量表达式的共同合同。
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.IStandardVariableExpression`。
 pub trait IStandardVariableExpression {
     /// 返回定界符内部的表达式文本。
-    fn get_expression(&self) -> Option<&JavaString>;
+    fn get_expression(&self) -> Option<&Utf16String>;
     /// 返回是否以 selection target 为求值根。
     fn get_use_selection_as_root(&self) -> bool;
     /// 返回是否启用双括号字符串转换。

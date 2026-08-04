@@ -1,7 +1,7 @@
 use crate::TemplateMode;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::TemplateValue;
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 
 use super::{
     AbstractStandardExpressionAttributeTagProcessor, delegate_standard_element_tag_processor,
@@ -20,8 +20,8 @@ impl AbstractStandardAttributeModifierTagProcessor {
     /// 对应 Java 语义：`AbstractStandardAttributeModifierTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         remove_if_empty: bool,
         restricted_expression_execution: bool,
@@ -44,9 +44,9 @@ impl AbstractStandardAttributeModifierTagProcessor {
     /// 对应 Java 语义：`AbstractStandardAttributeModifierTagProcessor` 的 `with_target` 行为（Rust 侧辅助/私有路径）。
     pub fn with_target(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
-        target_attr_complete_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
+        target_attr_complete_name: Utf16String,
         precedence: i32,
         remove_if_empty: bool,
         restricted_expression_execution: bool,
@@ -68,20 +68,20 @@ impl AbstractStandardAttributeModifierTagProcessor {
                       structure_handler| {
                     let value = expression_result
                         .as_deref()
-                        .and_then(TemplateValue::to_java_string);
+                        .and_then(TemplateValue::to_utf16_string);
                     let escaped = EscapedAttributeUtils::escape_attribute(
                         Some(template_mode),
                         value.as_ref(),
                     )
                     .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
-                    if remove_if_empty && escaped.as_ref().is_none_or(JavaString::is_empty) {
+                    if remove_if_empty && escaped.as_ref().is_none_or(Utf16String::is_empty) {
                         structure_handler.remove_attribute(target_attr_complete_name.clone());
                         structure_handler.remove_attribute_with_prefix(
                             attribute_name.get_prefix().cloned(),
                             attribute_name.get_attribute_name().clone(),
                         );
                     } else {
-                        let value = escaped.or_else(|| Some(JavaString::from_rust_str("")));
+                        let value = escaped.or_else(|| Some(Utf16String::from_rust_str("")));
                         if let Some(source_attribute) = tag.get_attribute_by_name(attribute_name) {
                             // 对应 Java StandardProcessorUtils#replaceAttribute：在原
                             // 位置改名并继承输入模板的引号，而不是追加到属性末尾。

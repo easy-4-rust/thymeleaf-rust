@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaLocale, JavaNumber, JavaString, StringUtils};
+use crate::util::{JavaLocale, JavaNumber, StringUtils, Utf16String};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -24,7 +24,7 @@ impl Strings {
     /// 执行 null-safe 文本转换。
     #[must_use]
     /// 对应 Java: `Strings#toString()`。
-    pub fn to_string(&self, target: Option<&TemplateValue>) -> Option<JavaString> {
+    pub fn to_string(&self, target: Option<&TemplateValue>) -> Option<Utf16String> {
         value_as_string(target)
     }
 
@@ -34,7 +34,7 @@ impl Strings {
         &self,
         target: Option<&TemplateValue>,
         max_size: i32,
-    ) -> Result<Option<JavaString>, StringsError> {
+    ) -> Result<Option<Utf16String>, StringsError> {
         Ok(StringUtils::abbreviate(
             value_as_string(target).as_ref(),
             max_size,
@@ -70,7 +70,7 @@ impl Strings {
     pub fn contains(
         &self,
         target: Option<&TemplateValue>,
-        fragment: Option<&JavaString>,
+        fragment: Option<&Utf16String>,
     ) -> Result<bool, StringsError> {
         Ok(StringUtils::contains(
             value_as_string(target).as_ref(),
@@ -83,7 +83,7 @@ impl Strings {
     pub fn contains_ignore_case(
         &self,
         target: Option<&TemplateValue>,
-        fragment: Option<&JavaString>,
+        fragment: Option<&Utf16String>,
     ) -> Result<bool, StringsError> {
         Ok(StringUtils::contains_ignore_case(
             value_as_string(target).as_ref(),
@@ -97,7 +97,7 @@ impl Strings {
     pub fn starts_with(
         &self,
         target: Option<&TemplateValue>,
-        prefix: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
     ) -> Result<bool, StringsError> {
         Ok(StringUtils::starts_with(
             value_as_string(target).as_ref(),
@@ -110,7 +110,7 @@ impl Strings {
     pub fn ends_with(
         &self,
         target: Option<&TemplateValue>,
-        suffix: Option<&JavaString>,
+        suffix: Option<&Utf16String>,
     ) -> Result<bool, StringsError> {
         Ok(StringUtils::ends_with(
             value_as_string(target).as_ref(),
@@ -125,7 +125,7 @@ impl Strings {
         target: Option<&TemplateValue>,
         start: i32,
         end: i32,
-    ) -> Result<Option<JavaString>, StringsError> {
+    ) -> Result<Option<Utf16String>, StringsError> {
         Ok(StringUtils::substring(
             value_as_string(target).as_ref(),
             start,
@@ -139,7 +139,7 @@ impl Strings {
         &self,
         target: Option<&TemplateValue>,
         start: i32,
-    ) -> Result<Option<JavaString>, StringsError> {
+    ) -> Result<Option<Utf16String>, StringsError> {
         Ok(StringUtils::substring_from(
             value_as_string(target).as_ref(),
             start,
@@ -158,7 +158,7 @@ impl Strings {
     pub fn to_upper_case(
         &self,
         target: Option<&TemplateValue>,
-    ) -> Result<Option<JavaString>, StringsError> {
+    ) -> Result<Option<Utf16String>, StringsError> {
         Ok(StringUtils::to_upper_case(
             value_as_string(target).as_ref(),
             Some(&self.locale),
@@ -170,7 +170,7 @@ impl Strings {
     pub fn to_lower_case(
         &self,
         target: Option<&TemplateValue>,
-    ) -> Result<Option<JavaString>, StringsError> {
+    ) -> Result<Option<Utf16String>, StringsError> {
         Ok(StringUtils::to_lower_case(
             value_as_string(target).as_ref(),
             Some(&self.locale),
@@ -393,7 +393,7 @@ impl Strings {
             ("defaultString", [target, default]) => {
                 let target = value_as_string(value_ref(target));
                 let value = if StringUtils::is_empty_or_whitespace(target.as_ref()) {
-                    string_argument(default).or_else(|| Some(JavaString::from_rust_str("null")))
+                    string_argument(default).or_else(|| Some(Utf16String::from_rust_str("null")))
                 } else {
                     target
                 };
@@ -440,8 +440,8 @@ impl TemplateObject for Strings {
         "org.thymeleaf.expression.Strings"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("org.thymeleaf.expression.Strings")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("org.thymeleaf.expression.Strings")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -450,7 +450,7 @@ impl TemplateObject for Strings {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         Some(
@@ -495,13 +495,13 @@ fn value_ref(value: &Option<Arc<TemplateValue>>) -> Option<&TemplateValue> {
         .filter(|value| !matches!(value, TemplateValue::Null))
 }
 
-fn value_as_string(value: Option<&TemplateValue>) -> Option<JavaString> {
+fn value_as_string(value: Option<&TemplateValue>) -> Option<Utf16String> {
     value
         .filter(|value| !matches!(value, TemplateValue::Null))
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
 }
 
-fn string_argument(value: &Option<Arc<TemplateValue>>) -> Option<JavaString> {
+fn string_argument(value: &Option<Arc<TemplateValue>>) -> Option<Utf16String> {
     value_as_string(value_ref(value))
 }
 
@@ -527,14 +527,14 @@ fn list_argument(
 
 fn string_list(
     value: &Option<Arc<TemplateValue>>,
-) -> Result<Vec<Option<JavaString>>, StringsError> {
+) -> Result<Vec<Option<Utf16String>>, StringsError> {
     Ok(list_argument(value)?
         .iter()
         .map(|value| value_as_string(Some(value.as_ref())))
         .collect())
 }
 
-fn string_value(value: Option<JavaString>) -> Option<Arc<TemplateValue>> {
+fn string_value(value: Option<Utf16String>) -> Option<Arc<TemplateValue>> {
     value.map(|value| Arc::new(TemplateValue::string(value)))
 }
 
@@ -571,10 +571,10 @@ fn collection_method(method_name: &str) -> Option<(CollectionKind, String)> {
 }
 
 fn contains_java_value(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateValue>) -> bool {
-    let candidate = candidate.to_java_string();
+    let candidate = candidate.to_utf16_string();
     values
         .iter()
-        .any(|value| value.to_java_string() == candidate)
+        .any(|value| value.to_utf16_string() == candidate)
 }
 
 // ===========================================================================
@@ -585,18 +585,18 @@ fn contains_java_value(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateVa
 mod invoke_direct_tests {
     use super::Strings;
     use crate::expression::TemplateValue;
-    use crate::util::{JavaLocale, JavaNumber, JavaString};
+    use crate::util::{JavaLocale, JavaNumber, Utf16String};
     use std::sync::Arc;
 
     fn strings() -> Strings {
         Strings::new(JavaLocale::new(
-            JavaString::from_rust_str("en"),
-            JavaString::from_rust_str("US"),
+            Utf16String::from_rust_str("en"),
+            Utf16String::from_rust_str("US"),
         ))
     }
 
     fn text_arg(value: &str) -> Option<Arc<TemplateValue>> {
-        Some(Arc::new(TemplateValue::string(JavaString::from_rust_str(
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
             value,
         ))))
     }
@@ -604,7 +604,7 @@ mod invoke_direct_tests {
     fn result_text(result: Option<Arc<TemplateValue>>) -> String {
         result
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
+            .and_then(TemplateValue::to_utf16_string)
             .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
     }
 
@@ -668,8 +668,8 @@ mod invoke_direct_tests {
     fn strings_invoke_collection_methods_match_java() {
         let strings = strings();
         let list = Some(Arc::new(TemplateValue::List(Arc::new(vec![
-            Arc::new(TemplateValue::string(JavaString::from_rust_str("a"))),
-            Arc::new(TemplateValue::string(JavaString::from_rust_str("b"))),
+            Arc::new(TemplateValue::string(Utf16String::from_rust_str("a"))),
+            Arc::new(TemplateValue::string(Utf16String::from_rust_str("b"))),
         ]))));
         // arrayJoin 合并分隔符
         assert_eq!(

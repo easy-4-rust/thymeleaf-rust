@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     Each, ExpressionCache, StandardExpressionPreprocessor, StandardExpressionResult,
@@ -19,7 +19,7 @@ impl EachUtils {
     /// 对应 Java: `EachUtils#parseEach()`。
     pub fn parse_each(
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<Each>> {
         let input = input.ok_or_else(|| {
             Box::new(ValidateError::IllegalArgument {
@@ -44,7 +44,7 @@ impl EachUtils {
     }
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
+fn java_trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()
@@ -54,5 +54,5 @@ fn java_trim(input: &JavaString) -> JavaString {
         .iter()
         .rposition(|unit| *unit > 0x20)
         .map_or(start, |position| position + 1);
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }

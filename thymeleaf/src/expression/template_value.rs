@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaEvaluationValue, JavaNumber, JavaString, double_string};
+use crate::util::{JavaEvaluationValue, JavaNumber, Utf16String, double_string};
 
 use super::LiteralValue;
 
@@ -18,7 +18,7 @@ pub trait TemplateObject: Any + Send + Sync {
     fn java_class_name(&self) -> &str;
 
     /// 返回 Java `Object#toString()` 对应 UTF-16 文本。
-    fn to_java_string(&self) -> JavaString;
+    fn to_utf16_string(&self) -> Utf16String;
 
     /// 返回 `Any` 视图，供已注册的属性和方法访问器安全向下转型。
     fn as_any(&self) -> &dyn Any;
@@ -51,7 +51,7 @@ pub trait TemplateObject: Any + Send + Sync {
     /// `None` 表示对象没有可枚举属性。
     fn java_serializable_properties(
         &self,
-    ) -> Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>> {
+    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         None
     }
 
@@ -69,7 +69,7 @@ pub trait TemplateObject: Any + Send + Sync {
     /// Java null；错误保留宿主 getter 抛出的运行时异常。
     fn java_get_property(
         &self,
-        _property_name: &JavaString,
+        _property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         None
     }
@@ -80,7 +80,7 @@ pub trait TemplateObject: Any + Send + Sync {
     /// null；错误保留宿主方法抛出的运行时异常。
     fn java_invoke_method(
         &self,
-        _method_name: &JavaString,
+        _method_name: &Utf16String,
         _arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         None
@@ -121,7 +121,7 @@ pub enum TemplateValue {
     /// Java `Character` 的单个 UTF-16 代码单元。
     Character(u16),
     /// Java `String`。
-    String(Arc<JavaString>),
+    String(Arc<Utf16String>),
     /// Java `byte[]`。
     Bytes(Arc<Vec<i8>>),
     /// Java 数组或 List 的有序元素；null 使用 `TemplateValue::Null`。
@@ -135,21 +135,21 @@ pub enum TemplateValue {
     /// 宿主注册的任意 Java 对象等价物。
     Object(Arc<dyn TemplateObject>),
     /// 已由应用确认无需 HTML 转义的文本。
-    SafeHtml(Arc<JavaString>),
+    SafeHtml(Arc<Utf16String>),
 }
 
 impl TemplateValue {
     /// 创建 Java `String` 模板值。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn string(value: JavaString) -> Self {
+    pub fn string(value: Utf16String) -> Self {
         Self::String(Arc::new(value))
     }
 
     /// 创建受信任的免 HTML 转义文本。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn safe_html(value: JavaString) -> Self {
+    pub fn safe_html(value: Utf16String) -> Self {
         Self::SafeHtml(Arc::new(value))
     }
 
@@ -184,9 +184,9 @@ impl TemplateValue {
     /// 仍按 `String.valueOf`/拼接语义返回文本 `null`。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn to_java_string(&self) -> Option<JavaString> {
+    pub fn to_utf16_string(&self) -> Option<Utf16String> {
         let text = match self {
-            Self::Null => return Some(JavaString::from_rust_str("null")),
+            Self::Null => return Some(Utf16String::from_rust_str("null")),
             Self::Boolean(value) => value.to_string(),
             Self::Number(JavaNumber::BigDecimal(value)) => value.to_string(),
             Self::Number(JavaNumber::BigInteger(value)) => value.to_string(),
@@ -198,7 +198,7 @@ impl TemplateValue {
             Self::Number(JavaNumber::Double(value)) => double_string(*value),
             Self::Number(JavaNumber::Other { double_value, .. }) => double_value.to_string(),
             Self::Character(value) => {
-                return Some(JavaString::from_utf16(vec![*value]));
+                return Some(Utf16String::from_utf16(vec![*value]));
             }
             Self::String(value) | Self::SafeHtml(value) => return Some(value.as_ref().clone()),
             Self::Bytes(value) => format!("[B@{:x}", Arc::as_ptr(value) as usize),
@@ -210,13 +210,13 @@ impl TemplateValue {
                     }
                     units.extend_from_slice(
                         value
-                            .to_java_string()
-                            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                            .to_utf16_string()
+                            .unwrap_or_else(|| Utf16String::from_rust_str("null"))
                             .as_utf16(),
                     );
                 }
                 units.push(b']' as u16);
-                return Some(JavaString::from_utf16(units));
+                return Some(Utf16String::from_utf16(units));
             }
             Self::Map(entries) => {
                 let mut units = vec![b'{' as u16];
@@ -225,26 +225,26 @@ impl TemplateValue {
                         units.extend_from_slice(&[b',' as u16, b' ' as u16]);
                     }
                     units.extend_from_slice(
-                        key.to_java_string()
-                            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                        key.to_utf16_string()
+                            .unwrap_or_else(|| Utf16String::from_rust_str("null"))
                             .as_utf16(),
                     );
                     units.push(b'=' as u16);
                     units.extend_from_slice(
                         value
-                            .to_java_string()
-                            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+                            .to_utf16_string()
+                            .unwrap_or_else(|| Utf16String::from_rust_str("null"))
                             .as_utf16(),
                     );
                 }
                 units.push(b'}' as u16);
-                return Some(JavaString::from_utf16(units));
+                return Some(Utf16String::from_utf16(units));
             }
             Self::Literal(value) => return value.get_value().cloned(),
-            Self::NoOp => return Some(JavaString::from_rust_str("_")),
-            Self::Object(value) => return Some(value.to_java_string()),
+            Self::NoOp => return Some(Utf16String::from_rust_str("_")),
+            Self::Object(value) => return Some(value.to_utf16_string()),
         };
-        Some(JavaString::from_rust_str(&text))
+        Some(Utf16String::from_rust_str(&text))
     }
 
     /// 执行 Java 对象的 `equals` 等价比较。
@@ -327,14 +327,14 @@ impl TemplateValue {
 impl super::JavaConversionObject for TemplateValue {
     fn java_to_string(
         &self,
-    ) -> Result<super::JavaStringConversionResult<'_>, super::StandardConversionError> {
+    ) -> Result<super::Utf16StringConversionResult<'_>, super::StandardConversionError> {
         Ok(match self {
             Self::String(value) | Self::SafeHtml(value) => {
-                super::JavaStringConversionResult::Borrowed(value)
+                super::Utf16StringConversionResult::Borrowed(value)
             }
-            _ => match self.to_java_string() {
-                Some(value) => super::JavaStringConversionResult::Owned(value),
-                None => super::JavaStringConversionResult::Null,
+            _ => match self.to_utf16_string() {
+                Some(value) => super::Utf16StringConversionResult::Owned(value),
+                None => super::Utf16StringConversionResult::Null,
             },
         })
     }

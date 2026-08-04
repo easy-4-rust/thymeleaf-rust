@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::util::{JavaNumber, JavaString};
+use crate::util::{JavaNumber, Utf16String};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -34,8 +34,8 @@ impl TemplateObject for StreamValue {
         "java.util.stream.Stream"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str("java.util.stream.ReferencePipeline$Head")
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str("java.util.stream.ReferencePipeline$Head")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -48,7 +48,7 @@ impl TemplateObject for StreamValue {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         (method_name.to_string_lossy() == "count" && arguments.is_empty()).then(|| {

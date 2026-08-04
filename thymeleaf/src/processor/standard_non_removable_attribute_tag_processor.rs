@@ -1,5 +1,5 @@
 use crate::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractStandardAttributeModifierTagProcessor, delegate_standard_element_tag_processor,
@@ -20,8 +20,8 @@ impl StandardNonRemovableAttributeTagProcessor {
     /// 创建指定属性 Processor。
     /// 对应 Java 语义：`StandardNonRemovableAttributeTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardAttributeModifierTagProcessor::new(

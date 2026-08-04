@@ -2,7 +2,7 @@
 
 use std::fmt::Write;
 
-use thymeleaf::util::{FastStringWriter, FastStringWriterError, JavaString};
+use thymeleaf::util::{FastStringWriter, FastStringWriterError, Utf16String};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str =
@@ -72,7 +72,7 @@ fn write_string_cases(output: &mut String) {
     let mut writer = FastStringWriter::new();
     writer.write_string(Some(&java("ab")));
     writer.write_string(None);
-    writer.write_string(Some(&JavaString::from_utf16([0xD800])));
+    writer.write_string(Some(&Utf16String::from_utf16([0xD800])));
     emit(
         output,
         "writeString.utf16",
@@ -180,7 +180,7 @@ fn exhaustive_cases(output: &mut String) {
         hex(hash_string(&int_writer.to_string())),
     );
 
-    let string = JavaString::from_utf16([0x0041, 0xD800, 0x0042, 0x0043]);
+    let string = Utf16String::from_utf16([0x0041, 0xD800, 0x0042, 0x0043]);
     let mut string_range_hash = FNV_OFFSET;
     for offset in -2..=7 {
         for length in -2..=7 {
@@ -225,7 +225,7 @@ fn exhaustive_cases(output: &mut String) {
 fn emit_string_range(
     output: &mut String,
     key: &str,
-    value: Option<&JavaString>,
+    value: Option<&Utf16String>,
     offset: i32,
     length: i32,
 ) {
@@ -257,7 +257,7 @@ fn emit_char_range(
 fn emit_append_range(
     output: &mut String,
     key: &str,
-    value: Option<&JavaString>,
+    value: Option<&Utf16String>,
     start: i32,
     end: i32,
 ) {
@@ -268,7 +268,7 @@ fn emit_append_range(
     emit_result(output, &format!("appendRange.{key}"), result);
 }
 
-fn emit_result(output: &mut String, key: &str, result: Result<JavaString, FastStringWriterError>) {
+fn emit_result(output: &mut String, key: &str, result: Result<Utf16String, FastStringWriterError>) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", to_utf16_hex(&value))),
         Err(error) => emit(
@@ -283,15 +283,15 @@ fn emit_result(output: &mut String, key: &str, result: Result<JavaString, FastSt
     }
 }
 
-fn java_message_or_null(error: &FastStringWriterError) -> JavaString {
+fn java_message_or_null(error: &FastStringWriterError) -> Utf16String {
     error.message().unwrap_or_else(|| java("null"))
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
-fn to_utf16_hex(value: &JavaString) -> String {
+fn to_utf16_hex(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()
@@ -300,11 +300,11 @@ fn to_utf16_hex(value: &JavaString) -> String {
         .join(",")
 }
 
-fn hash_string(value: &JavaString) -> u64 {
+fn hash_string(value: &Utf16String) -> u64 {
     mix_string(FNV_OFFSET, value)
 }
 
-fn mix_string(mut hash: u64, value: &JavaString) -> u64 {
+fn mix_string(mut hash: u64, value: &Utf16String) -> u64 {
     for unit in value.as_utf16() {
         hash = mix(hash, u64::from(unit & 0x00FF));
         hash = mix(hash, u64::from(unit >> 8));

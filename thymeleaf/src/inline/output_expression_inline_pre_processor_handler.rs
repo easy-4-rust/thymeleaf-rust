@@ -2,7 +2,7 @@ use std::panic::panic_any;
 
 use crate::engine::{AttributeNames, ElementNames};
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{EscapedAttributeUtils, JavaString};
+use crate::util::{EscapedAttributeUtils, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{IInlinePreProcessorHandler, StandardInlineMode};
@@ -18,10 +18,10 @@ const DEFAULT_LEVELS_SIZE: usize = 2;
 /// `org.thymeleaf.standard.inline.OutputExpressionInlinePreProcessorHandler`。
 pub struct OutputExpressionInlinePreProcessorHandler {
     next: Box<dyn IInlinePreProcessorHandler>,
-    inline_attribute_names: Vec<JavaString>,
+    inline_attribute_names: Vec<Utf16String>,
     block_element_name: Vec<u16>,
-    escaped_text_attribute_name: JavaString,
-    unescaped_text_attribute_name: JavaString,
+    escaped_text_attribute_name: Utf16String,
+    unescaped_text_attribute_name: Utf16String,
     exec_level: i32,
     inline_template_modes: Vec<Option<TemplateMode>>,
     inline_exec_levels: Vec<i32>,
@@ -36,13 +36,13 @@ impl OutputExpressionInlinePreProcessorHandler {
     pub fn new(
         _configuration: &dyn IEngineConfiguration,
         template_mode: TemplateMode,
-        standard_dialect_prefix: Option<&JavaString>,
+        standard_dialect_prefix: Option<&Utf16String>,
         next: Box<dyn IInlinePreProcessorHandler>,
     ) -> Result<Self, TemplateProcessingException> {
-        let inline_name = JavaString::from_rust_str("inline");
-        let block_name = JavaString::from_rust_str("block");
-        let text_name = JavaString::from_rust_str("text");
-        let utext_name = JavaString::from_rust_str("utext");
+        let inline_name = Utf16String::from_rust_str("inline");
+        let block_name = Utf16String::from_rust_str("block");
+        let text_name = Utf16String::from_rust_str("text");
+        let utext_name = Utf16String::from_rust_str("utext");
 
         let inline = AttributeNames::for_name_with_prefix(
             Some(template_mode),
@@ -266,7 +266,7 @@ impl OutputExpressionInlinePreProcessorHandler {
 
     fn prepare_attribute_buffer(
         &mut self,
-        attribute_name: &JavaString,
+        attribute_name: &Utf16String,
         value_text: &[u16],
         value_offset: usize,
         value_len: usize,
@@ -476,7 +476,7 @@ impl IInlinePreProcessorHandler for OutputExpressionInlinePreProcessorHandler {
             }) {
                 let (value_start, value_length) =
                     checked_range(values, value_content_offset, value_content_len);
-                let raw = JavaString::from_utf16(
+                let raw = Utf16String::from_utf16(
                     values[value_start..value_start + value_length].to_vec(),
                 );
                 let inline_mode_value = EscapedAttributeUtils::unescape_attribute(
@@ -521,7 +521,7 @@ impl IInlinePreProcessorHandler for OutputExpressionInlinePreProcessorHandler {
 
 fn first_complete_attribute_name(
     name: &crate::engine::AttributeName,
-) -> Result<JavaString, TemplateProcessingException> {
+) -> Result<Utf16String, TemplateProcessingException> {
     name.get_complete_attribute_names()
         .read()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -532,7 +532,7 @@ fn first_complete_attribute_name(
 
 fn first_complete_element_name(
     name: &crate::engine::ElementName,
-) -> Result<JavaString, TemplateProcessingException> {
+) -> Result<Utf16String, TemplateProcessingException> {
     name.get_complete_element_names()
         .read()
         .unwrap_or_else(std::sync::PoisonError::into_inner)

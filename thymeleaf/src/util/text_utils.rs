@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use super::{CharArrayWrapperSequence, JavaHashCode, JavaString, JavaWriter};
+use super::{CharArrayWrapperSequence, JavaHashCode, JavaWriter, Utf16String};
 
 const CASE_MAP: &[u8] = include_bytes!("text_utils_case_map.bin");
 
@@ -47,7 +47,7 @@ pub enum TextUtilsError {
         /// Java 异常全限定名。
         class_name: String,
         /// Java detail message；null 映射为 `None`。
-        message: Option<JavaString>,
+        message: Option<Utf16String>,
     },
 }
 
@@ -74,12 +74,12 @@ impl TextUtilsError {
     /// 显式或运行时消息的 UTF-16 副本；隐式 null 解引用返回 `None`。
     /// 对应 Java 语义：Java 接口/超类方法 `message()` 的 Rust 移植（`TextUtils` 继承路径）。
     #[must_use]
-    pub fn message(&self) -> Option<JavaString> {
+    pub fn message(&self) -> Option<Utf16String> {
         match self {
-            Self::IllegalArgument { message } => Some(JavaString::from_rust_str(message)),
+            Self::IllegalArgument { message } => Some(Utf16String::from_rust_str(message)),
             Self::NullPointer => None,
             Self::ArrayIndexOutOfBounds { index, length }
-            | Self::StringIndexOutOfBounds { index, length } => Some(JavaString::from_rust_str(
+            | Self::StringIndexOutOfBounds { index, length } => Some(Utf16String::from_rust_str(
                 &format!("Index {index} out of bounds for length {length}"),
             )),
             Self::SequenceAccess { message, .. } => message.clone(),
@@ -128,13 +128,13 @@ pub trait JavaCharSequence: Send + Sync {
     ///
     /// # 返回
     /// 仅当实现语义就是 `java.lang.String` 时返回该字符串。
-    fn as_java_string(&self) -> Option<&JavaString>;
+    fn as_utf16_string(&self) -> Option<&Utf16String>;
 
     /// 调用 Java `Object#toString()` 得到序列的字符串表示。
     ///
     /// 默认实现按当前 `length/charAt` 复制；自定义 Java `CharSequence` 若覆盖
     /// `toString()`，对应 Rust 适配器也必须覆盖此方法。
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
         let length = self.java_length()?;
         self.java_sub_sequence(0, length)
     }
@@ -163,7 +163,7 @@ pub trait JavaCharSequence: Send + Sync {
     /// 调用 Java `CharSequence#subSequence(int, int)`。
     ///
     /// 默认实现逐 UTF-16 代码单元复制；具有不同异常或视图语义的自定义序列可以覆盖。
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         let length = self.java_length()?;
         if start < 0 || end < start || end > length {
             return Err(TextUtilsError::StringIndexOutOfBounds {
@@ -179,11 +179,11 @@ pub trait JavaCharSequence: Send + Sync {
         for index in start..end {
             value.push(self.java_char_at(index)?);
         }
-        Ok(JavaString::from_utf16(value))
+        Ok(Utf16String::from_utf16(value))
     }
 }
 
-impl JavaCharSequence for JavaString {
+impl JavaCharSequence for Utf16String {
     fn java_sequence_class_name(&self) -> &str {
         "java.lang.String"
     }
@@ -207,11 +207,11 @@ impl JavaCharSequence for JavaString {
             })
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         Some(self)
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
         Ok(self.clone())
     }
 
@@ -220,10 +220,10 @@ impl JavaCharSequence for JavaString {
     }
 
     fn java_sequence_equals(&self, other: &dyn JavaCharSequence) -> Result<bool, TextUtilsError> {
-        Ok(other.as_java_string().is_some_and(|value| value == self))
+        Ok(other.as_utf16_string().is_some_and(|value| value == self))
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         let start = usize::try_from(start).map_err(|_| TextUtilsError::StringIndexOutOfBounds {
             index: start,
             length: self.len(),
@@ -242,7 +242,9 @@ impl JavaCharSequence for JavaString {
                 length: self.len(),
             });
         }
-        Ok(JavaString::from_utf16(self.as_utf16()[start..end].to_vec()))
+        Ok(Utf16String::from_utf16(
+            self.as_utf16()[start..end].to_vec(),
+        ))
     }
 }
 
@@ -259,7 +261,7 @@ impl JavaCharSequence for CharArrayWrapperSequence {
             })
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 }
@@ -289,7 +291,7 @@ impl TextUtils {
         let text1 = require_sequence(text1, FIRST_TEXT_NULL)?;
         let text2 = require_sequence(text2, SECOND_TEXT_NULL)?;
         if case_sensitive
-            && let (Some(left), Some(right)) = (text1.as_java_string(), text2.as_java_string())
+            && let (Some(left), Some(right)) = (text1.as_utf16_string(), text2.as_utf16_string())
         {
             return Ok(left.as_utf16() == right.as_utf16());
         }
@@ -464,7 +466,7 @@ impl TextUtils {
         let text = require_sequence(text, TEXT_NULL)?;
         let prefix = require_sequence(prefix, PREFIX_NULL)?;
         if case_sensitive
-            && let (Some(text), Some(prefix)) = (text.as_java_string(), prefix.as_java_string())
+            && let (Some(text), Some(prefix)) = (text.as_utf16_string(), prefix.as_utf16_string())
         {
             return Ok(text.as_utf16().starts_with(prefix.as_utf16()));
         }
@@ -651,7 +653,7 @@ impl TextUtils {
         let text = require_sequence(text, TEXT_NULL)?;
         let suffix = require_sequence(suffix, SUFFIX_NULL)?;
         if case_sensitive
-            && let (Some(text), Some(suffix)) = (text.as_java_string(), suffix.as_java_string())
+            && let (Some(text), Some(suffix)) = (text.as_utf16_string(), suffix.as_utf16_string())
         {
             return Ok(text.as_utf16().ends_with(suffix.as_utf16()));
         }
@@ -836,7 +838,8 @@ impl TextUtils {
         let text = require_sequence(text, TEXT_NULL)?;
         let fragment = require_sequence(fragment, FRAGMENT_NULL)?;
         if case_sensitive
-            && let (Some(text), Some(fragment)) = (text.as_java_string(), fragment.as_java_string())
+            && let (Some(text), Some(fragment)) =
+                (text.as_utf16_string(), fragment.as_utf16_string())
         {
             return Ok(slice_contains(text.as_utf16(), fragment.as_utf16()));
         }
@@ -1876,7 +1879,7 @@ fn hash_part_range(
     if hash == 0 && begin_index == 0 {
         let sequence = text.ok_or(TextUtilsError::NullPointer)?;
         if end_index == sequence.java_length()?
-            && let Some(string) = sequence.as_java_string()
+            && let Some(string) = sequence.as_utf16_string()
         {
             let mut string_hash = 0_i32;
             for &unit in string.as_utf16() {
@@ -1966,17 +1969,17 @@ mod tests {
     use std::sync::{Arc, RwLock};
 
     use super::{
-        JavaCharSequence, JavaString, TextRef, TextUtils, TextUtilsError, char_value_at,
+        JavaCharSequence, TextRef, TextUtils, TextUtilsError, Utf16String, char_value_at,
         compare_core, contains_validated, ends_with_validated, equals_core, hash_part_range,
         hash_part_whole, sequence_value_at,
     };
     use crate::util::CharArrayWrapperSequence;
 
-    struct PlainSequence(JavaString);
+    struct PlainSequence(Utf16String);
 
     impl PlainSequence {
         fn new(value: &str) -> Self {
-            Self(JavaString::from_rust_str(value))
+            Self(Utf16String::from_rust_str(value))
         }
     }
 
@@ -1989,7 +1992,7 @@ mod tests {
             self.0.java_char_at(index)
         }
 
-        fn as_java_string(&self) -> Option<&JavaString> {
+        fn as_utf16_string(&self) -> Option<&Utf16String> {
             None
         }
     }
@@ -2005,7 +2008,7 @@ mod tests {
             Err(dynamic_error())
         }
 
-        fn as_java_string(&self) -> Option<&JavaString> {
+        fn as_utf16_string(&self) -> Option<&Utf16String> {
             None
         }
     }
@@ -2021,7 +2024,7 @@ mod tests {
             Err(dynamic_error())
         }
 
-        fn as_java_string(&self) -> Option<&JavaString> {
+        fn as_utf16_string(&self) -> Option<&Utf16String> {
             None
         }
     }
@@ -2033,8 +2036,8 @@ mod tests {
         }
     }
 
-    fn java(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn java(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
     #[test]
@@ -2071,7 +2074,7 @@ mod tests {
         let wrapper = CharArrayWrapperSequence::with_range(Some(shared), 0, 1).unwrap();
         assert_eq!(wrapper.java_length().unwrap(), 1);
         assert_eq!(wrapper.java_char_at(0).unwrap(), 'a' as u16);
-        assert!(wrapper.as_java_string().is_none());
+        assert!(wrapper.as_utf16_string().is_none());
         let dynamic = wrapper.java_char_at(1).unwrap_err();
         assert_eq!(
             dynamic.java_class_name(),
@@ -2269,7 +2272,7 @@ mod tests {
 
     #[test]
     fn covers_compare_and_all_binary_search_directions_and_failures() {
-        assert!(PlainSequence::new("plain").as_java_string().is_none());
+        assert!(PlainSequence::new("plain").as_utf16_string().is_none());
 
         let same = [1_u16];
         assert_eq!(
@@ -2622,8 +2625,8 @@ mod tests {
         let char_failure = CharFailure;
         assert!(length_failure.java_char_at(0).is_err());
         assert_eq!(char_failure.java_length(), Ok(1));
-        assert!(length_failure.as_java_string().is_none());
-        assert!(char_failure.as_java_string().is_none());
+        assert!(length_failure.as_utf16_string().is_none());
+        assert!(char_failure.as_utf16_string().is_none());
 
         assert!(TextUtils::equals_sequences(false, None, Some(&good)).is_err());
         assert!(TextUtils::equals_sequences(false, Some(&good), None).is_err());

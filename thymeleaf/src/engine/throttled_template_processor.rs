@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use crate::context::IEngineContext;
 use crate::exceptions::{TemplateEngineException, TemplateOutputException};
 use crate::model::IModel;
-use crate::util::{Charset, JavaString, JavaWriter};
+use crate::util::{Charset, JavaWriter, Utf16String};
 use crate::{
     IThrottledTemplateProcessor, TemplateSpec, ThrottledTemplateResult, ThrottledTemplateStatus,
 };
@@ -24,7 +24,7 @@ static IDENTIFIER_GENERATOR: AtomicI64 = AtomicI64::new(0);
 ///
 /// 对应 Java: `org.thymeleaf.engine.ThrottledTemplateProcessor`。
 pub struct ThrottledTemplateProcessor {
-    identifier: JavaString,
+    identifier: Utf16String,
     template_spec: TemplateSpec,
     context: Arc<dyn IEngineContext>,
     template_model: Arc<TemplateModel>,
@@ -52,7 +52,7 @@ impl ThrottledTemplateProcessor {
     ) -> Self {
         let identifier = IDENTIFIER_GENERATOR.fetch_add(1, Ordering::Relaxed);
         Self {
-            identifier: JavaString::from_rust_str(&identifier.to_string()),
+            identifier: Utf16String::from_rust_str(&identifier.to_string()),
             template_spec,
             context,
             template_model,
@@ -204,7 +204,7 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         })
     }
 
-    fn get_processor_identifier(&self) -> &JavaString {
+    fn get_processor_identifier(&self) -> &Utf16String {
         &self.identifier
     }
 

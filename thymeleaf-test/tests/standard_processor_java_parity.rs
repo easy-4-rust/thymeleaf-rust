@@ -26,11 +26,11 @@ use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
 use thymeleaf::templateresolver::{
     ITemplateResolver, StringTemplateResolver, TemplateResolution, TemplateResolverError,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {
@@ -185,7 +185,7 @@ fn context_remove() -> Context {
 
 /// 内存消息解析器（%MESSAGES 等价）。
 struct ProcessorMessageResolver {
-    messages: HashMap<JavaString, JavaString>,
+    messages: HashMap<Utf16String, Utf16String>,
 }
 
 impl ProcessorMessageResolver {
@@ -200,7 +200,7 @@ impl ProcessorMessageResolver {
 }
 
 impl IMessageResolver for ProcessorMessageResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         None
     }
 
@@ -212,9 +212,9 @@ impl IMessageResolver for ProcessorMessageResolver {
         &self,
         _context: Option<&dyn thymeleaf::context::ITemplateContext>,
         _origin: Option<std::any::TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         _message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         Ok(key.and_then(|key| self.messages.get(key).cloned()))
     }
 
@@ -222,13 +222,13 @@ impl IMessageResolver for ProcessorMessageResolver {
         &self,
         context: Option<&dyn thymeleaf::context::ITemplateContext>,
         _origin: Option<std::any::TypeId>,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
         _message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let (Some(context), Some(key)) = (context, key) else {
             return Ok(None);
         };
-        Ok(Some(JavaString::from_rust_str(&format!(
+        Ok(Some(Utf16String::from_rust_str(&format!(
             "??{}_{}??",
             key.to_string_lossy(),
             context.get_locale()
@@ -239,9 +239,9 @@ impl IMessageResolver for ProcessorMessageResolver {
 /// 具名模板 Resolver（对应语料 %INPUT[name] 命名模板）。
 struct NamedTemplateResolver {
     delegate: StringTemplateResolver,
-    root_template_name: JavaString,
-    root_template: JavaString,
-    named_templates: HashMap<JavaString, JavaString>,
+    root_template_name: Utf16String,
+    root_template: Utf16String,
+    named_templates: HashMap<Utf16String, Utf16String>,
 }
 
 impl NamedTemplateResolver {
@@ -266,7 +266,7 @@ impl NamedTemplateResolver {
 }
 
 impl ITemplateResolver for NamedTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.delegate.get_name()
     }
 
@@ -277,8 +277,8 @@ impl ITemplateResolver for NamedTemplateResolver {
     fn resolve_template(
         &self,
         configuration: &dyn thymeleaf::IEngineConfiguration,
-        _owner_template: Option<&JavaString>,
-        template: &JavaString,
+        _owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         attributes: Option<&thymeleaf::TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         if template == &self.root_template_name {

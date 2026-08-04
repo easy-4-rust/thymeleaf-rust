@@ -6,7 +6,7 @@ use crate::decoupled::DecoupledInjectedAttribute;
 use crate::exceptions::TemplateInputException;
 use crate::model::AttributeValueQuotes;
 use crate::templateparser::TemplateParserError;
-use crate::util::{JavaCharSequence, JavaString};
+use crate::util::{JavaCharSequence, Utf16String};
 
 use super::{
     Attribute, Attributes, CDATASection, CloseElementTag, Comment, DocType, ITemplateHandler,
@@ -21,7 +21,7 @@ use super::{
 ///
 /// 对应 Java: `org.thymeleaf.engine.TemplateHandlerAdapterMarkupHandler`。
 pub struct TemplateHandlerAdapterMarkupHandler {
-    template_name: Option<JavaString>,
+    template_name: Option<Utf16String>,
     template_handler: Box<dyn ITemplateHandler>,
     configuration: Arc<dyn IEngineConfiguration>,
     template_mode: TemplateMode,
@@ -35,7 +35,7 @@ impl TemplateHandlerAdapterMarkupHandler {
     /// 对应 Java: `TemplateHandlerAdapterMarkupHandler#TemplateHandlerAdapterMarkupHandler`。
     #[must_use]
     pub fn new(
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         template_handler: Box<dyn ITemplateHandler>,
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,
@@ -90,7 +90,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         let (line, col) = self.location(source, start);
         self.template_handler
             .handle_text(Arc::new(Text::with_location(
-                Some(Arc::new(JavaString::from_rust_str(&source[start..end]))),
+                Some(Arc::new(Utf16String::from_rust_str(&source[start..end]))),
                 self.template_name.clone(),
                 line,
                 col,
@@ -109,14 +109,14 @@ impl TemplateHandlerAdapterMarkupHandler {
         end: usize,
     ) -> Result<(), TemplateParserError> {
         let (line, col) = self.location(source, start);
-        let content: Arc<dyn JavaCharSequence> = Arc::new(JavaString::from_rust_str(
+        let content: Arc<dyn JavaCharSequence> = Arc::new(Utf16String::from_rust_str(
             &source[content_start..content_end],
         ));
         self.template_handler
             .handle_comment(Arc::new(Comment::with_boundaries_and_location(
-                JavaString::from_rust_str(&source[start..content_start]),
+                Utf16String::from_rust_str(&source[start..content_start]),
                 Some(content),
-                JavaString::from_rust_str(&source[content_end..end]),
+                Utf16String::from_rust_str(&source[content_end..end]),
                 self.template_name.clone(),
                 line,
                 col,
@@ -135,14 +135,14 @@ impl TemplateHandlerAdapterMarkupHandler {
         end: usize,
     ) -> Result<(), TemplateParserError> {
         let (line, col) = self.location(source, start);
-        let content: Arc<dyn JavaCharSequence> = Arc::new(JavaString::from_rust_str(
+        let content: Arc<dyn JavaCharSequence> = Arc::new(Utf16String::from_rust_str(
             &source[content_start..content_end],
         ));
         self.template_handler
             .handle_cdata_section(Arc::new(CDATASection::with_boundaries_and_location(
-                JavaString::from_rust_str(&source[start..content_start]),
+                Utf16String::from_rust_str(&source[start..content_start]),
                 Some(content),
-                JavaString::from_rust_str(&source[content_end..end]),
+                Utf16String::from_rust_str(&source[content_end..end]),
                 self.template_name.clone(),
                 line,
                 col,
@@ -166,11 +166,11 @@ impl TemplateHandlerAdapterMarkupHandler {
         let (line, col) = self.location(source, start);
         self.template_handler
             .handle_xml_declaration(Arc::new(XMLDeclaration::with_location(
-                Some(JavaString::from_rust_str(&source[start..end])),
-                Some(JavaString::from_rust_str(keyword)),
-                version.map(JavaString::from_rust_str),
-                encoding.map(JavaString::from_rust_str),
-                standalone.map(JavaString::from_rust_str),
+                Some(Utf16String::from_rust_str(&source[start..end])),
+                Some(Utf16String::from_rust_str(keyword)),
+                version.map(Utf16String::from_rust_str),
+                encoding.map(Utf16String::from_rust_str),
+                standalone.map(Utf16String::from_rust_str),
                 self.template_name.clone(),
                 line,
                 col,
@@ -194,12 +194,12 @@ impl TemplateHandlerAdapterMarkupHandler {
     ) -> Result<(), TemplateParserError> {
         let (line, col) = self.location(source, start);
         let event = DocType::with_location(
-            Some(JavaString::from_rust_str(&source[start..end])),
-            Some(JavaString::from_rust_str(keyword)),
-            Some(JavaString::from_rust_str(root_element_name)),
-            public_id.map(JavaString::from_rust_str),
-            system_id.map(JavaString::from_rust_str),
-            internal_subset.map(JavaString::from_rust_str),
+            Some(Utf16String::from_rust_str(&source[start..end])),
+            Some(Utf16String::from_rust_str(keyword)),
+            Some(Utf16String::from_rust_str(root_element_name)),
+            public_id.map(Utf16String::from_rust_str),
+            system_id.map(Utf16String::from_rust_str),
+            internal_subset.map(Utf16String::from_rust_str),
             self.template_name.clone(),
             line,
             col,
@@ -223,9 +223,9 @@ impl TemplateHandlerAdapterMarkupHandler {
         let (line, col) = self.location(source, start);
         self.template_handler
             .handle_processing_instruction(Arc::new(ProcessingInstruction::with_location(
-                Some(JavaString::from_rust_str(&source[start..end])),
-                Some(JavaString::from_rust_str(target)),
-                content.map(JavaString::from_rust_str),
+                Some(Utf16String::from_rust_str(&source[start..end])),
+                Some(Utf16String::from_rust_str(target)),
+                content.map(Utf16String::from_rust_str),
                 self.template_name.clone(),
                 line,
                 col,
@@ -281,7 +281,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         synthetic: bool,
         injected_attributes: &[Arc<DecoupledInjectedAttribute>],
     ) -> Result<(), TemplateParserError> {
-        let complete_name = JavaString::from_rust_str(&source[name_start..name_end]);
+        let complete_name = Utf16String::from_rust_str(&source[name_start..name_end]);
         let definition = self
             .configuration
             .get_element_definitions()
@@ -343,12 +343,12 @@ impl TemplateHandlerAdapterMarkupHandler {
         let mut spaces = attributes
             .as_ref()
             .and_then(|value| value.inner_white_spaces())
-            .map_or_else(Vec::new, <[JavaString]>::to_vec);
+            .map_or_else(Vec::new, <[Utf16String]>::to_vec);
         let (line, col) = self.location(source, position);
 
         for injected in injected_attributes {
             if spaces.len() <= values.len() {
-                spaces.push(JavaString::from_rust_str(" "));
+                spaces.push(Utf16String::from_rust_str(" "));
             }
             let (_, _, _, _, operator_len, _, _, _, value_outer_len) = injected.parser_parts();
             let complete_name = injected
@@ -406,7 +406,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         synthetic: bool,
         unmatched: bool,
     ) -> Result<(), TemplateParserError> {
-        let complete_name = JavaString::from_rust_str(&source[name_start..name_end]);
+        let complete_name = Utf16String::from_rust_str(&source[name_start..name_end]);
         let definition = self
             .configuration
             .get_element_definitions()
@@ -418,7 +418,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         let trailing_white_space = if trailing.is_empty() {
             None
         } else {
-            Some(JavaString::from_rust_str(&trailing))
+            Some(Utf16String::from_rust_str(&trailing))
         };
         let (line, col) = self.location(source, start);
         self.template_handler
@@ -447,7 +447,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         position: usize,
         complete_name: &str,
     ) -> Result<(), TemplateParserError> {
-        let complete_name = JavaString::from_rust_str(complete_name);
+        let complete_name = Utf16String::from_rust_str(complete_name);
         let definition = self
             .configuration
             .get_element_definitions()
@@ -482,7 +482,7 @@ impl TemplateHandlerAdapterMarkupHandler {
         complete_name: &str,
         injected_attributes: &[Arc<DecoupledInjectedAttribute>],
     ) -> Result<(), TemplateParserError> {
-        let complete_name = JavaString::from_rust_str(complete_name);
+        let complete_name = Utf16String::from_rust_str(complete_name);
         let definition = self
             .configuration
             .get_element_definitions()
@@ -519,11 +519,11 @@ impl TemplateHandlerAdapterMarkupHandler {
             position = consume_whitespace(source, position, content_end);
             if position == content_end {
                 if position > white_start {
-                    spaces.push(JavaString::from_rust_str(&source[white_start..position]));
+                    spaces.push(Utf16String::from_rust_str(&source[white_start..position]));
                 }
                 break;
             }
-            spaces.push(JavaString::from_rust_str(&source[white_start..position]));
+            spaces.push(Utf16String::from_rust_str(&source[white_start..position]));
 
             let name_start = position;
             position = consume_attribute_name(source, position, content_end);
@@ -552,7 +552,9 @@ impl TemplateHandlerAdapterMarkupHandler {
                 position = after_name_whitespace;
                 position += 1;
                 position = consume_whitespace(source, position, content_end);
-                operator = Some(JavaString::from_rust_str(&source[operator_start..position]));
+                operator = Some(Utf16String::from_rust_str(
+                    &source[operator_start..position],
+                ));
                 if position < content_end {
                     let quote = source.as_bytes()[position];
                     if quote == b'\'' || quote == b'"' {
@@ -566,7 +568,7 @@ impl TemplateHandlerAdapterMarkupHandler {
                         while position < content_end && source.as_bytes()[position] != quote {
                             position = next_char_boundary(source, position);
                         }
-                        value = Some(JavaString::from_rust_str(&source[value_start..position]));
+                        value = Some(Utf16String::from_rust_str(&source[value_start..position]));
                         if position < content_end {
                             position += 1;
                         } else if self.template_mode == TemplateMode::XML {
@@ -591,10 +593,10 @@ impl TemplateHandlerAdapterMarkupHandler {
                         {
                             position = next_char_boundary(source, position);
                         }
-                        value = Some(JavaString::from_rust_str(&source[value_start..position]));
+                        value = Some(Utf16String::from_rust_str(&source[value_start..position]));
                     }
                 } else {
-                    value = Some(JavaString::from_rust_str(""));
+                    value = Some(Utf16String::from_rust_str(""));
                     quotes = Some(AttributeValueQuotes::DOUBLE);
                 }
             } else {
@@ -603,7 +605,7 @@ impl TemplateHandlerAdapterMarkupHandler {
                 position = after_name;
             }
 
-            let complete_name = JavaString::from_rust_str(&source[name_start..name_end]);
+            let complete_name = Utf16String::from_rust_str(&source[name_start..name_end]);
             if attributes.iter().any(|attribute: &Arc<Attribute>| {
                 use crate::model::IAttribute;
                 if self.template_mode == TemplateMode::HTML {
@@ -646,7 +648,7 @@ impl TemplateHandlerAdapterMarkupHandler {
             Ok(None)
         } else {
             while spaces.len() < attributes.len() {
-                spaces.push(JavaString::from_rust_str(""));
+                spaces.push(Utf16String::from_rust_str(""));
             }
             Ok(Some(Attributes::new(Some(attributes), Some(spaces))))
         }

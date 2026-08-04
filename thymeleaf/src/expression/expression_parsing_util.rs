@@ -1,7 +1,7 @@
 use std::sync::{Arc, RwLock};
 
 use crate::exceptions::TemplateProcessingException;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AdditionExpression, AndExpression, Assignation, AssignationSequence, BooleanTokenExpression,
@@ -34,7 +34,7 @@ impl ExpressionParsingUtil {
     /// 语法完整时返回表达式树，否则返回模板处理错误。
     /// 对应 Java 语义：Java 接口/超类方法 `parseExpression()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_expression(
-        input: &JavaString,
+        input: &Utf16String,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
         let trimmed = java_trim(input.as_utf16());
         parse_range(trimmed).ok_or_else(|| {
@@ -48,7 +48,7 @@ impl ExpressionParsingUtil {
     /// 解析赋值序列，供 `AssignationUtils` 与 Fragment/Link 表达式共享。
     /// 对应 Java 语义：Java 接口/超类方法 `parseAssignationSequence()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_assignation_sequence(
-        input: &JavaString,
+        input: &Utf16String,
         allow_parameters_without_value: bool,
     ) -> Option<AssignationSequence> {
         parse_assignation_sequence(input.as_utf16(), allow_parameters_without_value)
@@ -56,13 +56,13 @@ impl ExpressionParsingUtil {
 
     /// 解析逗号分隔的表达式序列。
     /// 对应 Java 语义：Java 接口/超类方法 `parseExpressionSequence()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
-    pub(crate) fn parse_expression_sequence(input: &JavaString) -> Option<ExpressionSequence> {
+    pub(crate) fn parse_expression_sequence(input: &Utf16String) -> Option<ExpressionSequence> {
         parse_expression_sequence(input.as_utf16())
     }
 
     /// 解析 `iter[,status] : iterable` 声明。
     /// 对应 Java 语义：Java 接口/超类方法 `parseEach()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
-    pub(crate) fn parse_each(input: &JavaString) -> Option<Each> {
+    pub(crate) fn parse_each(input: &Utf16String) -> Option<Each> {
         let input = java_trim(input.as_utf16());
         let operator = find_top_level_character(input, b':' as u16)?;
         if operator == 0 || operator + 1 >= input.len() {
@@ -84,7 +84,7 @@ impl ExpressionParsingUtil {
 
     /// 解析只允许 token 名称的 Fragment 签名。
     /// 对应 Java 语义：Java 接口/超类方法 `parseFragmentSignature()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
-    pub(crate) fn parse_fragment_signature(input: &JavaString) -> Option<FragmentSignature> {
+    pub(crate) fn parse_fragment_signature(input: &Utf16String) -> Option<FragmentSignature> {
         let input = java_trim(input.as_utf16());
         if input.is_empty() {
             return None;
@@ -95,12 +95,13 @@ impl ExpressionParsingUtil {
             return None;
         }
         let fragment_name_end = parameter_start.unwrap_or(input.len());
-        let fragment_name = JavaString::from_utf16(java_trim(&input[..fragment_name_end]).to_vec());
+        let fragment_name =
+            Utf16String::from_utf16(java_trim(&input[..fragment_name_end]).to_vec());
         let parameter_names = parameter_start.and_then(|start| {
             let parameters = &input[start + 1..input.len().saturating_sub(1)];
             let values = parameters
                 .split(|unit| *unit == b',' as u16)
-                .map(|value| Some(JavaString::from_utf16(java_trim(value).to_vec())))
+                .map(|value| Some(Utf16String::from_utf16(java_trim(value).to_vec())))
                 .filter(|value| value.as_ref().is_some_and(|value| !value.is_empty()))
                 .collect::<Vec<_>>();
             (!values.is_empty()).then(|| Arc::new(RwLock::new(values)))
@@ -125,7 +126,7 @@ fn parse_range(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
         let else_expression = match colon {
             Some(position) => parse_range(&input[position + 1..])?,
             None => NullTokenExpression::parse_null_token_expression(Some(
-                &JavaString::from_rust_str("null"),
+                &Utf16String::from_rust_str("null"),
             ))?,
         };
         return ConditionalExpression::new(
@@ -198,7 +199,7 @@ fn parse_range(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
 }
 
 fn parse_simple(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let value = JavaString::from_utf16(input.to_vec());
+    let value = Utf16String::from_utf16(input.to_vec());
     if input[0] == b'\'' as u16 && input[input.len() - 1] == b'\'' as u16 {
         return Some(Arc::new(
             TextLiteralExpression::parse_text_literal_expression(&value),
@@ -288,7 +289,7 @@ fn parse_link_base_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandard
         && !contains_standard_expression
     {
         let literal = TextLiteralExpression::wrap_string_into_literal(Some(
-            &JavaString::from_utf16(input.to_vec()),
+            &Utf16String::from_utf16(input.to_vec()),
         ))?;
         return Some(Arc::new(
             TextLiteralExpression::parse_text_literal_expression(&literal),
@@ -301,7 +302,7 @@ fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression
     let input = java_trim(input);
     parse_range(input).or_else(|| {
         let literal = TextLiteralExpression::wrap_string_into_literal(Some(
-            &JavaString::from_utf16(input.to_vec()),
+            &Utf16String::from_utf16(input.to_vec()),
         ))?;
         Some(Arc::new(
             TextLiteralExpression::parse_text_literal_expression(&literal),
@@ -497,8 +498,8 @@ fn operator_boundary(input: &[u16], position: usize, operator: &[u16]) -> bool {
     if operator == OP_MINUS {
         // Java 的 TokenParsingTracer 会先判断连字符是否属于 token；例如
         // `data-id` 是一个 GenericToken，而 `10-2` 才是减法表达式。
-        let context = JavaString::from_utf16(input.to_vec());
-        return !Token::<JavaString>::is_token_char(
+        let context = Utf16String::from_utf16(input.to_vec());
+        return !Token::<Utf16String>::is_token_char(
             Some(&context),
             i32::try_from(position).unwrap_or(i32::MAX),
         )

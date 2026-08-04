@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::engine::ITemplateHandler;
 use crate::templateparser::{ITemplateParser, TemplateParserError};
 use crate::templateresource::ITemplateResource;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::AbstractMarkupTemplateParser;
@@ -29,9 +29,9 @@ impl ITemplateParser for XMLTemplateParser {
     fn parse_standalone(
         &self,
         configuration: Arc<dyn IEngineConfiguration>,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         resource: Arc<dyn ITemplateResource>,
         template_mode: TemplateMode,
         use_decoupled_logic: bool,
@@ -52,8 +52,8 @@ impl ITemplateParser for XMLTemplateParser {
     fn parse_string(
         &self,
         configuration: Arc<dyn IEngineConfiguration>,
-        owner_template: &JavaString,
-        template: &JavaString,
+        owner_template: &Utf16String,
+        template: &Utf16String,
         line_offset: i32,
         col_offset: i32,
         template_mode: TemplateMode,

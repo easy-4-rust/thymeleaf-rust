@@ -6,7 +6,7 @@ use crate::element::{
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{AssignationUtils, StandardExpressionExecutionContext, TemplateValue};
 use crate::model::IProcessableElementTag;
-use crate::util::{EscapedAttributeUtils, EvaluationUtils, JavaEvaluationValue, JavaString};
+use crate::util::{EscapedAttributeUtils, EvaluationUtils, JavaEvaluationValue, Utf16String};
 
 use super::{
     IProcessor, StandardAttributeCallback, StandardConditionalFixedValueTagProcessor,
@@ -46,8 +46,8 @@ impl AbstractStandardMultipleAttributeModifierTagProcessor {
     /// 对应 Java 语义：`AbstractStandardMultipleAttributeModifierTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
-        attr_name: JavaString,
+        dialect_prefix: Option<Utf16String>,
+        attr_name: Utf16String,
         precedence: i32,
         modification_type: ModificationType,
         restricted_expression_execution: bool,
@@ -110,7 +110,7 @@ impl AbstractStandardMultipleAttributeModifierTagProcessor {
 
                     let new_attribute_name = left_value
                         .as_deref()
-                        .and_then(TemplateValue::to_java_string);
+                        .and_then(TemplateValue::to_utf16_string);
                     if is_empty_or_java_whitespace(new_attribute_name.as_ref()) {
                         return Err(Box::new(TemplateProcessingException::new(Some(format!(
                             "Attribute name expression evaluated as null or empty: \"{}\"",
@@ -161,7 +161,7 @@ impl AbstractStandardMultipleAttributeModifierTagProcessor {
 
                     let raw_value = right_value
                         .as_deref()
-                        .and_then(TemplateValue::to_java_string);
+                        .and_then(TemplateValue::to_utf16_string);
                     let escaped = EscapedAttributeUtils::escape_attribute(
                         Some(template_mode),
                         raw_value.as_ref(),
@@ -184,7 +184,7 @@ impl AbstractStandardMultipleAttributeModifierTagProcessor {
                                     as Box<dyn TemplateEngineException>
                             })?;
                     let output = if modification_type == ModificationType::Substitution
-                        || current.is_none_or(JavaString::is_empty)
+                        || current.is_none_or(Utf16String::is_empty)
                     {
                         escaped
                     } else {
@@ -258,12 +258,12 @@ impl IElementTagProcessor for AbstractStandardMultipleAttributeModifierTagProces
     }
 }
 
-fn concat(left: &JavaString, separator: Option<u16>, right: &JavaString) -> JavaString {
+fn concat(left: &Utf16String, separator: Option<u16>, right: &Utf16String) -> Utf16String {
     let mut units = Vec::with_capacity(left.len() + right.len() + usize::from(separator.is_some()));
     units.extend_from_slice(left.as_utf16());
     if let Some(separator) = separator {
         units.push(separator);
     }
     units.extend_from_slice(right.as_utf16());
-    JavaString::from_utf16(units)
+    Utf16String::from_utf16(units)
 }

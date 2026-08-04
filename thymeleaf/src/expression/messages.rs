@@ -4,7 +4,7 @@ use indexmap::IndexSet;
 
 use crate::context::IExpressionContext;
 use crate::messageresolver::{MessageResolutionError, MessageResolutionResult};
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::TemplateValue;
 
@@ -35,7 +35,7 @@ impl Messages {
 
     /// 解析消息；缺失时使用 absent-message 表示。
     /// 对应 Java: `Messages#msg()`。
-    pub fn msg(&self, message_key: &JavaString) -> MessageResolutionResult<Option<JavaString>> {
+    pub fn msg(&self, message_key: &Utf16String) -> MessageResolutionResult<Option<Utf16String>> {
         self.msg_with_params(message_key, &[])
     }
 
@@ -43,9 +43,9 @@ impl Messages {
     /// 对应 Java: `Messages#msgWithParams()`。
     pub fn msg_with_params(
         &self,
-        message_key: &JavaString,
+        message_key: &Utf16String,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         self.get_message(message_key, message_parameters, true)
     }
 
@@ -53,8 +53,8 @@ impl Messages {
     /// 对应 Java: `Messages#msgOrNull()`。
     pub fn msg_or_null(
         &self,
-        message_key: &JavaString,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+        message_key: &Utf16String,
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         self.msg_or_null_with_params(message_key, &[])
     }
 
@@ -62,9 +62,9 @@ impl Messages {
     /// 对应 Java: `Messages#msgOrNullWithParams()`。
     pub fn msg_or_null_with_params(
         &self,
-        message_key: &JavaString,
+        message_key: &Utf16String,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         self.get_message(message_key, message_parameters, false)
     }
 
@@ -72,8 +72,8 @@ impl Messages {
     /// 对应 Java: `Messages#arrayMsg()`。
     pub fn array_msg(
         &self,
-        message_keys: Option<&[JavaString]>,
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+        message_keys: Option<&[Utf16String]>,
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.array_msg_with_params(message_keys, &[])
     }
 
@@ -81,9 +81,9 @@ impl Messages {
     /// 对应 Java: `Messages#arrayMsgWithParams()`。
     pub fn array_msg_with_params(
         &self,
-        message_keys: Option<&[JavaString]>,
+        message_keys: Option<&[Utf16String]>,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.map_messages(message_keys, message_parameters, true)
     }
 
@@ -91,8 +91,8 @@ impl Messages {
     /// 对应 Java: `Messages#arrayMsgOrNull()`。
     pub fn array_msg_or_null(
         &self,
-        message_keys: Option<&[JavaString]>,
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+        message_keys: Option<&[Utf16String]>,
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.array_msg_or_null_with_params(message_keys, &[])
     }
 
@@ -100,9 +100,9 @@ impl Messages {
     /// 对应 Java: `Messages#arrayMsgOrNullWithParams()`。
     pub fn array_msg_or_null_with_params(
         &self,
-        message_keys: Option<&[JavaString]>,
+        message_keys: Option<&[Utf16String]>,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.map_messages(message_keys, message_parameters, false)
     }
 
@@ -110,8 +110,8 @@ impl Messages {
     /// 对应 Java: `Messages#listMsg()`。
     pub fn list_msg(
         &self,
-        message_keys: Option<&[JavaString]>,
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+        message_keys: Option<&[Utf16String]>,
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.array_msg(message_keys)
     }
 
@@ -119,9 +119,9 @@ impl Messages {
     /// 对应 Java: `Messages#listMsgWithParams()`。
     pub fn list_msg_with_params(
         &self,
-        message_keys: Option<&[JavaString]>,
+        message_keys: Option<&[Utf16String]>,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.array_msg_with_params(message_keys, message_parameters)
     }
 
@@ -129,8 +129,8 @@ impl Messages {
     /// 对应 Java: `Messages#listMsgOrNull()`。
     pub fn list_msg_or_null(
         &self,
-        message_keys: Option<&[JavaString]>,
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+        message_keys: Option<&[Utf16String]>,
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.array_msg_or_null(message_keys)
     }
 
@@ -138,9 +138,9 @@ impl Messages {
     /// 对应 Java: `Messages#listMsgOrNullWithParams()`。
     pub fn list_msg_or_null_with_params(
         &self,
-        message_keys: Option<&[JavaString]>,
+        message_keys: Option<&[Utf16String]>,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         self.array_msg_or_null_with_params(message_keys, message_parameters)
     }
 
@@ -148,8 +148,8 @@ impl Messages {
     /// 对应 Java: `Messages#setMsg()`。
     pub fn set_msg(
         &self,
-        message_keys: Option<&IndexSet<JavaString>>,
-    ) -> MessageResolutionResult<IndexSet<Option<JavaString>>> {
+        message_keys: Option<&IndexSet<Utf16String>>,
+    ) -> MessageResolutionResult<IndexSet<Option<Utf16String>>> {
         self.set_msg_with_params(message_keys, &[])
     }
 
@@ -157,9 +157,9 @@ impl Messages {
     /// 对应 Java: `Messages#setMsgWithParams()`。
     pub fn set_msg_with_params(
         &self,
-        message_keys: Option<&IndexSet<JavaString>>,
+        message_keys: Option<&IndexSet<Utf16String>>,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<IndexSet<Option<JavaString>>> {
+    ) -> MessageResolutionResult<IndexSet<Option<Utf16String>>> {
         self.map_set(message_keys, message_parameters, true)
     }
 
@@ -167,8 +167,8 @@ impl Messages {
     /// 对应 Java: `Messages#setMsgOrNull()`。
     pub fn set_msg_or_null(
         &self,
-        message_keys: Option<&IndexSet<JavaString>>,
-    ) -> MessageResolutionResult<IndexSet<Option<JavaString>>> {
+        message_keys: Option<&IndexSet<Utf16String>>,
+    ) -> MessageResolutionResult<IndexSet<Option<Utf16String>>> {
         self.set_msg_or_null_with_params(message_keys, &[])
     }
 
@@ -176,18 +176,18 @@ impl Messages {
     /// 对应 Java: `Messages#setMsgOrNullWithParams()`。
     pub fn set_msg_or_null_with_params(
         &self,
-        message_keys: Option<&IndexSet<JavaString>>,
+        message_keys: Option<&IndexSet<Utf16String>>,
         message_parameters: &[Option<Arc<TemplateValue>>],
-    ) -> MessageResolutionResult<IndexSet<Option<JavaString>>> {
+    ) -> MessageResolutionResult<IndexSet<Option<Utf16String>>> {
         self.map_set(message_keys, message_parameters, false)
     }
 
     fn map_messages(
         &self,
-        message_keys: Option<&[JavaString]>,
+        message_keys: Option<&[Utf16String]>,
         message_parameters: &[Option<Arc<TemplateValue>>],
         use_absent_message_representation: bool,
-    ) -> MessageResolutionResult<Vec<Option<JavaString>>> {
+    ) -> MessageResolutionResult<Vec<Option<Utf16String>>> {
         let message_keys = message_keys
             .ok_or_else(|| ValidateError::IllegalArgument {
                 message: Some("Message keys cannot be null".to_owned()),
@@ -201,10 +201,10 @@ impl Messages {
 
     fn map_set(
         &self,
-        message_keys: Option<&IndexSet<JavaString>>,
+        message_keys: Option<&IndexSet<Utf16String>>,
         message_parameters: &[Option<Arc<TemplateValue>>],
         use_absent_message_representation: bool,
-    ) -> MessageResolutionResult<IndexSet<Option<JavaString>>> {
+    ) -> MessageResolutionResult<IndexSet<Option<Utf16String>>> {
         let message_keys = message_keys
             .ok_or_else(|| ValidateError::IllegalArgument {
                 message: Some("Message keys cannot be null".to_owned()),
@@ -218,10 +218,10 @@ impl Messages {
 
     fn get_message(
         &self,
-        message_key: &JavaString,
+        message_key: &Utf16String,
         message_parameters: &[Option<Arc<TemplateValue>>],
         use_absent_message_representation: bool,
-    ) -> MessageResolutionResult<Option<JavaString>> {
+    ) -> MessageResolutionResult<Option<Utf16String>> {
         let context = self.context.upgrade().ok_or_else(|| {
             Box::new(ValidateError::IllegalArgument {
                 message: Some("Expression context is no longer available".to_owned()),

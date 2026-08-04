@@ -384,7 +384,7 @@ impl JavaBigDecimal {
         Self::from_unscaled(rounded, scale)
     }
 
-    fn java_string(&self) -> String {
+    fn to_display_string(&self) -> String {
         let negative = self.unscaled_value.sign() == Sign::Minus;
         let digits = self.unscaled_value.abs().to_str_radix(10);
         let adjusted_exponent = i64::try_from(self.precision()).expect("precision fits i64")
@@ -415,7 +415,7 @@ impl JavaBigDecimal {
 impl Display for JavaBigDecimal {
     /// 输出 Java `BigDecimal#toString()` 等价文本。
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.java_string())
+        formatter.write_str(&self.to_display_string())
     }
 }
 

@@ -7,10 +7,10 @@
 use std::sync::Arc;
 
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{DateUtils, JavaDate, JavaLocale, JavaString};
+use thymeleaf::util::{DateUtils, JavaDate, JavaLocale, Utf16String};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn locale_en() -> JavaLocale {

@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::element::{ElementProcessorSet, IElementProcessor};
 use crate::templatemode::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AttributeDefinition, AttributeDefinitionError, AttributeNameValue, AttributeNames,
@@ -19,7 +19,7 @@ pub type ElementProcessorsByTemplateMode = HashMap<TemplateMode, Vec<Arc<dyn IEl
 ///
 /// 对应 Java: `AttributeDefinitions.AttributeDefinitionRepository`。Java 使用有序数组
 /// 加读写锁；Rust 以同样的读写锁边界配合哈希索引，保留并发查找与双重检查写入语义。
-type AttributeDefinitionRepository = RwLock<HashMap<JavaString, AttributeDefinitionValue>>;
+type AttributeDefinitionRepository = RwLock<HashMap<Utf16String, AttributeDefinitionValue>>;
 
 /// `AttributeDefinitions` 返回的具体属性定义。
 #[derive(Clone)]
@@ -127,7 +127,7 @@ impl AttributeDefinitions {
             css_repository: RwLock::new(HashMap::new()),
         };
         for name in STANDARD_HTML_ATTRIBUTE_NAMES {
-            manager.for_html_name(Some(&JavaString::from_rust_str(name)))?;
+            manager.for_html_name(Some(&Utf16String::from_rust_str(name)))?;
         }
         Ok(manager)
     }
@@ -146,7 +146,7 @@ impl AttributeDefinitions {
     pub fn for_name(
         &self,
         template_mode: Option<TemplateMode>,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<AttributeDefinitionValue, AttributeDefinitionsError> {
         let mode = require_mode(template_mode)?;
         match mode {
@@ -168,8 +168,8 @@ impl AttributeDefinitions {
     pub fn for_name_with_prefix(
         &self,
         template_mode: Option<TemplateMode>,
-        prefix: Option<&JavaString>,
-        attribute_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<AttributeDefinitionValue, AttributeDefinitionsError> {
         let mode = require_mode(template_mode)?;
         match mode {
@@ -212,7 +212,7 @@ impl AttributeDefinitions {
     /// 对应 Java 语义：`AttributeDefinitions` 的 `for_html_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name(
         &self,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<HTMLAttributeDefinition>, AttributeDefinitionsError> {
         let name = AttributeNames::for_html_name(attribute_name)?;
         self.get_or_build(TemplateMode::HTML, AttributeNameValue::Html(name))?
@@ -223,8 +223,8 @@ impl AttributeDefinitions {
     /// 对应 Java 语义：`AttributeDefinitions` 的 `for_html_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_html_name_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        attribute_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<HTMLAttributeDefinition>, AttributeDefinitionsError> {
         let name = AttributeNames::for_html_name_with_prefix(prefix, attribute_name)?;
         self.get_or_build(TemplateMode::HTML, AttributeNameValue::Html(name))?
@@ -235,7 +235,7 @@ impl AttributeDefinitions {
     /// 对应 Java 语义：`AttributeDefinitions` 的 `for_xml_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name(
         &self,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<XMLAttributeDefinition>, AttributeDefinitionsError> {
         let name = AttributeNames::for_xml_name(attribute_name)?;
         self.get_or_build(TemplateMode::XML, AttributeNameValue::Xml(name))?
@@ -246,8 +246,8 @@ impl AttributeDefinitions {
     /// 对应 Java 语义：`AttributeDefinitions` 的 `for_xml_name_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn for_xml_name_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        attribute_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<XMLAttributeDefinition>, AttributeDefinitionsError> {
         let name = AttributeNames::for_xml_name_with_prefix(prefix, attribute_name)?;
         self.get_or_build(TemplateMode::XML, AttributeNameValue::Xml(name))?
@@ -258,7 +258,7 @@ impl AttributeDefinitions {
     /// 对应 Java: `AttributeDefinitions#forTextName()`。
     pub fn for_text_name(
         &self,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<TextAttributeDefinition>, AttributeDefinitionsError> {
         self.for_text_mode_name(TemplateMode::TEXT, attribute_name)
     }
@@ -267,7 +267,7 @@ impl AttributeDefinitions {
     /// 对应 Java 语义：`AttributeDefinitions` 的 `for_javascript_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_javascript_name(
         &self,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<TextAttributeDefinition>, AttributeDefinitionsError> {
         self.for_text_mode_name(TemplateMode::JAVASCRIPT, attribute_name)
     }
@@ -276,7 +276,7 @@ impl AttributeDefinitions {
     /// 对应 Java 语义：`AttributeDefinitions` 的 `for_css_name` 行为（Rust 侧辅助/私有路径）。
     pub fn for_css_name(
         &self,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<TextAttributeDefinition>, AttributeDefinitionsError> {
         self.for_text_mode_name(TemplateMode::CSS, attribute_name)
     }
@@ -284,7 +284,7 @@ impl AttributeDefinitions {
     fn for_text_mode_name(
         &self,
         mode: TemplateMode,
-        attribute_name: Option<&JavaString>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<TextAttributeDefinition>, AttributeDefinitionsError> {
         let name = AttributeNames::for_text_name(attribute_name)?;
         self.get_or_build(mode, AttributeNameValue::Text(name))?
@@ -294,8 +294,8 @@ impl AttributeDefinitions {
     fn for_text_mode_name_with_prefix(
         &self,
         mode: TemplateMode,
-        prefix: Option<&JavaString>,
-        attribute_name: Option<&JavaString>,
+        prefix: Option<&Utf16String>,
+        attribute_name: Option<&Utf16String>,
     ) -> Result<Arc<TextAttributeDefinition>, AttributeDefinitionsError> {
         let name = AttributeNames::for_text_name_with_prefix(prefix, attribute_name)?;
         self.get_or_build(mode, AttributeNameValue::Text(name))?
@@ -391,7 +391,7 @@ impl AttributeDefinitions {
     fn repository(
         &self,
         mode: TemplateMode,
-    ) -> &RwLock<HashMap<JavaString, AttributeDefinitionValue>> {
+    ) -> &RwLock<HashMap<Utf16String, AttributeDefinitionValue>> {
         match mode {
             TemplateMode::HTML => &self.html_repository,
             TemplateMode::XML => &self.xml_repository,
@@ -432,14 +432,14 @@ impl AttributeDefinitionValue {
     }
 }
 
-fn complete_name_values(name: &super::AttributeName) -> Vec<JavaString> {
+fn complete_name_values(name: &super::AttributeName) -> Vec<Utf16String> {
     let values = name.get_complete_attribute_names();
     read_lock(&values).iter().filter_map(Clone::clone).collect()
 }
 
 fn complete_attribute_names(
     definition: &AttributeDefinition,
-) -> Result<Vec<JavaString>, AttributeDefinitionsError> {
+) -> Result<Vec<Utf16String>, AttributeDefinitionsError> {
     let values = complete_name_values(definition.get_attribute_name().as_attribute_name());
     if values.is_empty() {
         return Err(AttributeDefinitionError::AttributeName(

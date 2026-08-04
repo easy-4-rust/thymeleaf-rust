@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use vernal_web::{RequestContext, SecurityPrincipal};
 
@@ -24,7 +24,7 @@ pub struct VernalWebExchange {
     principal_snapshot: RwLock<Option<Arc<SecurityPrincipal>>>,
     session: Option<Arc<VernalWebSession>>,
     application: Arc<VernalWebApplication>,
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 impl VernalWebExchange {
@@ -120,15 +120,15 @@ impl IWebExchange for VernalWebExchange {
         None
     }
 
-    fn get_content_type(&self) -> Option<JavaString> {
+    fn get_content_type(&self) -> Option<Utf16String> {
         None
     }
 
-    fn get_character_encoding(&self) -> Option<JavaString> {
-        Some(JavaString::from_rust_str("UTF-8"))
+    fn get_character_encoding(&self) -> Option<Utf16String> {
+        Some(Utf16String::from_rust_str("UTF-8"))
     }
 
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -142,7 +142,7 @@ impl IWebExchange for VernalWebExchange {
             .len() as i32
     }
 
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -151,14 +151,14 @@ impl IWebExchange for VernalWebExchange {
             .collect()
     }
 
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
     }
 
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -167,7 +167,7 @@ impl IWebExchange for VernalWebExchange {
             .flatten()
     }
 
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let mut attributes = self
             .attributes
             .write()
@@ -179,14 +179,14 @@ impl IWebExchange for VernalWebExchange {
         }
     }
 
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .shift_remove(&name.cloned());
     }
 
-    fn transform_url(&self, url: Option<&JavaString>) -> Option<JavaString> {
+    fn transform_url(&self, url: Option<&Utf16String>) -> Option<Utf16String> {
         url.cloned()
     }
 }
@@ -207,8 +207,8 @@ impl TemplateObject for VernalPrincipalObject {
         "org.springframework.security.core.Authentication"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.principal.subject())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.principal.subject())
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -217,20 +217,20 @@ impl TemplateObject for VernalPrincipalObject {
 
     fn java_serializable_properties(
         &self,
-    ) -> Option<Vec<(JavaString, Option<Arc<TemplateValue>>)>> {
+    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![
             (
-                JavaString::from_rust_str("name"),
-                Some(Arc::new(TemplateValue::string(self.to_java_string()))),
+                Utf16String::from_rust_str("name"),
+                Some(Arc::new(TemplateValue::string(self.to_utf16_string()))),
             ),
             (
-                JavaString::from_rust_str("roles"),
+                Utf16String::from_rust_str("roles"),
                 Some(Arc::new(TemplateValue::List(Arc::new(
                     self.principal
                         .roles()
                         .iter()
                         .map(|role| {
-                            Arc::new(TemplateValue::string(JavaString::from_rust_str(role)))
+                            Arc::new(TemplateValue::string(Utf16String::from_rust_str(role)))
                         })
                         .collect(),
                 )))),
@@ -240,17 +240,17 @@ impl TemplateObject for VernalPrincipalObject {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<
         Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectPropertyError>,
     > {
         let value = match property_name.to_string_lossy().as_str() {
-            "name" | "subject" => Some(Arc::new(TemplateValue::string(self.to_java_string()))),
+            "name" | "subject" => Some(Arc::new(TemplateValue::string(self.to_utf16_string()))),
             "roles" => Some(Arc::new(TemplateValue::List(Arc::new(
                 self.principal
                     .roles()
                     .iter()
-                    .map(|role| Arc::new(TemplateValue::string(JavaString::from_rust_str(role))))
+                    .map(|role| Arc::new(TemplateValue::string(Utf16String::from_rust_str(role))))
                     .collect(),
             )))),
             _ => return None,
@@ -260,7 +260,7 @@ impl TemplateObject for VernalPrincipalObject {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, thymeleaf::expression::TemplateObjectMethodError>>
     {
@@ -278,7 +278,7 @@ impl TemplateObject for VernalPrincipalObject {
 
 /// Vernal Web 会话（当前无状态实现，保留属性作用域接口）。
 pub struct VernalWebSession {
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 impl Default for VernalWebSession {
@@ -293,7 +293,7 @@ impl IWebSession for VernalWebSession {
     fn exists(&self) -> bool {
         true
     }
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -305,7 +305,7 @@ impl IWebSession for VernalWebSession {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .len() as i32
     }
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -313,13 +313,13 @@ impl IWebSession for VernalWebSession {
             .cloned()
             .collect()
     }
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
     }
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -327,7 +327,7 @@ impl IWebSession for VernalWebSession {
             .cloned()
             .flatten()
     }
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let mut attributes = self
             .attributes
             .write()
@@ -338,7 +338,7 @@ impl IWebSession for VernalWebSession {
             attributes.shift_remove(&name);
         }
     }
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -349,11 +349,11 @@ impl IWebSession for VernalWebSession {
 /// Vernal Web 应用（当前无状态实现）。
 #[derive(Default)]
 pub struct VernalWebApplication {
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 impl IWebApplication for VernalWebApplication {
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -365,7 +365,7 @@ impl IWebApplication for VernalWebApplication {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .len() as i32
     }
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -373,13 +373,13 @@ impl IWebApplication for VernalWebApplication {
             .cloned()
             .collect()
     }
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
     }
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -387,7 +387,7 @@ impl IWebApplication for VernalWebApplication {
             .cloned()
             .flatten()
     }
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let mut attributes = self
             .attributes
             .write()
@@ -398,18 +398,18 @@ impl IWebApplication for VernalWebApplication {
             attributes.shift_remove(&name);
         }
     }
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .shift_remove(&name.cloned());
     }
-    fn resource_exists(&self, _path: Option<&JavaString>) -> bool {
+    fn resource_exists(&self, _path: Option<&Utf16String>) -> bool {
         false
     }
     fn get_resource_as_stream(
         &self,
-        _path: Option<&JavaString>,
+        _path: Option<&Utf16String>,
     ) -> Option<Box<dyn std::io::Read + Send>> {
         None
     }

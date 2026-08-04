@@ -3,7 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 use thiserror::Error;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     ExpressionObjectNames, IExpressionObjects, NativeContextPropertyAccessor, TemplateValue,
@@ -18,7 +18,7 @@ use super::{
 /// 对应 Java: `org.thymeleaf.standard.expression.OGNLExpressionObjectsWrapper`。
 pub struct NativeExpressionObjectsWrapper<'a> {
     expression_objects: &'a dyn IExpressionObjects,
-    local_values: IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>,
+    local_values: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
 }
 
 impl<'a> NativeExpressionObjectsWrapper<'a> {
@@ -55,11 +55,11 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
     ///
     /// `ctx`、`vars`、`root`、`this` 或 `execInfo` 返回 `true`。
     #[must_use]
-    pub fn is_restricted(name: Option<&JavaString>) -> bool {
+    pub fn is_restricted(name: Option<&Utf16String>) -> bool {
         name.is_some_and(|name| {
             Self::RESTRICTED_NAMES
                 .iter()
-                .any(|candidate| name == &JavaString::from_rust_str(candidate))
+                .any(|candidate| name == &Utf16String::from_rust_str(candidate))
         })
     }
 
@@ -98,7 +98,7 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
     /// Java 会先调用 `key.toString()`；键为 `None` 时返回对应空指针错误。
     pub fn contains_key(
         &self,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
     ) -> Result<bool, NativeExpressionObjectsWrapperError> {
         let key = require_key(key)?;
         Ok(self.expression_objects.contains_object(Some(key))
@@ -122,7 +122,7 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
     /// 键为 `None`、受限名称被禁止或工厂构建失败时返回对应错误。
     pub fn get(
         &self,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
     ) -> Result<Option<Arc<TemplateValue>>, NativeExpressionObjectsWrapperError> {
         let key = require_key(key)?;
         if self.expression_objects.contains_object(Some(key)) {
@@ -159,7 +159,7 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
     /// 键为 `None` 或与表达式对象名称冲突时拒绝写入。
     pub fn put(
         &mut self,
-        key: Option<JavaString>,
+        key: Option<Utf16String>,
         value: Option<Arc<TemplateValue>>,
     ) -> Result<Option<Arc<TemplateValue>>, NativeExpressionObjectsWrapperError> {
         let key = key.ok_or(NativeExpressionObjectsWrapperError::NullStringKey)?;
@@ -190,7 +190,7 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
     /// 写入本地 Map。
     pub fn put_all<I>(&mut self, entries: I) -> Result<(), NativeExpressionObjectsWrapperError>
     where
-        I: IntoIterator<Item = (Option<JavaString>, Option<Arc<TemplateValue>>)>,
+        I: IntoIterator<Item = (Option<Utf16String>, Option<Arc<TemplateValue>>)>,
     {
         // HashMap#putAll 的内部 putMapEntries/putVal 不会动态派发到覆盖后的 put。
         // 因此这里必须绕过表达式对象名称冲突检查，保留上游真实运行时行为。
@@ -217,7 +217,7 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
     /// 键为空或属于表达式对象时拒绝删除。
     pub fn remove(
         &mut self,
-        key: Option<&JavaString>,
+        key: Option<&Utf16String>,
     ) -> Result<Option<Arc<TemplateValue>>, NativeExpressionObjectsWrapperError> {
         let key = require_key(key)?;
         if self.expression_objects.contains_object(Some(key)) {
@@ -321,7 +321,7 @@ impl<'a> NativeExpressionObjectsWrapper<'a> {
 
     fn restrict_expression_objects(&self) -> bool {
         self.local_values
-            .contains_key(&Some(JavaString::from_rust_str(
+            .contains_key(&Some(Utf16String::from_rust_str(
                 NativeContextPropertyAccessor::RESTRICT_EXPRESSION_OBJECTS,
             )))
     }
@@ -334,7 +334,7 @@ impl std::fmt::Display for NativeExpressionObjectsWrapper<'_> {
             .iter()
             .map(|name| {
                 name.as_ref()
-                    .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                    .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
             })
             .collect::<Vec<_>>()
             .join(", ");
@@ -397,7 +397,7 @@ pub enum NativeExpressionObjectsWrapperError {
 }
 
 fn require_key(
-    key: Option<&JavaString>,
-) -> Result<&JavaString, NativeExpressionObjectsWrapperError> {
+    key: Option<&Utf16String>,
+) -> Result<&Utf16String, NativeExpressionObjectsWrapperError> {
     key.ok_or(NativeExpressionObjectsWrapperError::NullKey)
 }

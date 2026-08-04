@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, Write};
 
 use thymeleaf::text::{TextParseCause, TextParseException};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
 const JAVA_GOLDEN: &str =
@@ -38,7 +38,7 @@ fn basic_constructors(output: &mut String) {
     emit_exception(
         output,
         "surrogateMessage",
-        &TextParseException::with_message(Some(JavaString::from_utf16([0xD800]))),
+        &TextParseException::with_message(Some(Utf16String::from_utf16([0xD800]))),
     );
 }
 
@@ -217,11 +217,11 @@ fn plain_cause(message: Option<&str>) -> TextParseCause {
     TextParseCause::with_java_metadata(Box::new(PlainError), PLAIN_CLASS, message.map(java))
 }
 
-fn java(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn java(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
-fn to_utf16_hex(value: &JavaString) -> String {
+fn to_utf16_hex(value: &Utf16String) -> String {
     value
         .as_utf16()
         .iter()

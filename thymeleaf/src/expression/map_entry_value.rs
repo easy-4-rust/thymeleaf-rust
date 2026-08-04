@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
 
@@ -26,16 +26,16 @@ impl TemplateObject for MapEntryValue {
         "java.util.Map$Entry"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         let key = self
             .key
-            .to_java_string()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"));
+            .to_utf16_string()
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"));
         let value = self
             .value
-            .to_java_string()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"));
-        JavaString::from_rust_str(&format!(
+            .to_utf16_string()
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"));
+        Utf16String::from_rust_str(&format!(
             "{}={}",
             key.to_string_lossy(),
             value.to_string_lossy()
@@ -48,7 +48,7 @@ impl TemplateObject for MapEntryValue {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
         match property_name.to_string_lossy().as_str() {
             "key" => Some(Ok(Some(Arc::clone(&self.key)))),

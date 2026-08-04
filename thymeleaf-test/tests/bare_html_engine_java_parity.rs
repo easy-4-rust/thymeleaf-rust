@@ -14,7 +14,7 @@ use thymeleaf::engine::ITemplateHandler;
 use thymeleaf::markup::HTMLTemplateParser;
 use thymeleaf::templateparser::ITemplateParser;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaString, JavaWriter};
+use thymeleaf::util::{JavaWriter, Utf16String};
 
 /// 捕获 UTF-16 输出的 Writer（对应 Java `StringWriter`）。
 #[derive(Default)]
@@ -38,8 +38,8 @@ impl JavaWriter for CapturedWriter {
     }
 }
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 /// 构造带可读 Writer 的 `OutputTemplateHandler`（与调用方共享缓冲区）。
@@ -66,7 +66,7 @@ fn check(input: &str, output: &str, block_selectors: Option<&[&str]>) {
     let selectors = block_selectors.map(|selectors| {
         selectors
             .iter()
-            .map(|selector| JavaString::from_rust_str(selector))
+            .map(|selector| Utf16String::from_rust_str(selector))
             .collect::<Vec<_>>()
     });
     let resource = Arc::new(StringTemplateResource::new(Some(input)).expect("string resource"));

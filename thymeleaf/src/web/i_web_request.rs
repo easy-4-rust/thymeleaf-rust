@@ -1,7 +1,7 @@
 use indexmap::IndexMap;
 use thiserror::Error;
 
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// Web 请求读取合同。
 ///
@@ -10,7 +10,7 @@ use crate::util::JavaString;
 /// 路径字段保持宿主提供的已编码形式；Header、参数与 Cookie 的多值顺序不得改写。
 pub trait IWebRequest: Send + Sync {
     /// 返回 HTTP 方法。
-    fn get_method(&self) -> Option<JavaString>;
+    fn get_method(&self) -> Option<Utf16String>;
 
     /// 根据 scheme 是否等于忽略大小写的 `https` 判断安全请求。
     fn is_secure(&self) -> bool {
@@ -19,27 +19,27 @@ pub trait IWebRequest: Send + Sync {
     }
 
     /// 返回 URI scheme。
-    fn get_scheme(&self) -> Option<JavaString>;
+    fn get_scheme(&self) -> Option<Utf16String>;
     /// 返回服务器名称。
-    fn get_server_name(&self) -> Option<JavaString>;
+    fn get_server_name(&self) -> Option<Utf16String>;
     /// 返回服务器端口。
     fn get_server_port(&self) -> Option<i32>;
     /// 返回已编码的应用路径。
-    fn get_application_path(&self) -> Option<JavaString>;
+    fn get_application_path(&self) -> Option<Utf16String>;
     /// 返回已编码的应用内路径。
-    fn get_path_within_application(&self) -> Option<JavaString>;
+    fn get_path_within_application(&self) -> Option<Utf16String>;
     /// 返回不含问号的查询串。
-    fn get_query_string(&self) -> Option<JavaString>;
+    fn get_query_string(&self) -> Option<Utf16String>;
 
     /// 拼接应用路径和应用内路径；null 分支按空串处理。
-    fn get_request_path(&self) -> JavaString {
+    fn get_request_path(&self) -> Utf16String {
         let mut utf16 = self
             .get_application_path()
             .map_or_else(Vec::new, |value| value.as_utf16().to_vec());
         if let Some(value) = self.get_path_within_application() {
             utf16.extend_from_slice(value.as_utf16());
         }
-        JavaString::from_utf16(utf16)
+        Utf16String::from_utf16(utf16)
     }
 
     /// 按 Java 默认实现计算完整请求 URL。
@@ -47,7 +47,7 @@ pub trait IWebRequest: Send + Sync {
     /// # 错误
     /// scheme、server name 或端口缺失时返回上游
     /// `UnsupportedOperationException` 对应错误。
-    fn get_request_url(&self) -> Result<JavaString, WebRequestError> {
+    fn get_request_url(&self) -> Result<Utf16String, WebRequestError> {
         let scheme = self.get_scheme();
         let server_name = self.get_server_name();
         let server_port = self.get_server_port();
@@ -76,56 +76,56 @@ pub trait IWebRequest: Send + Sync {
             result.push(b'?' as u16);
             result.extend_from_slice(query_string.as_utf16());
         }
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 
     /// 判断 Header 是否存在。
-    fn contains_header(&self, name: Option<&JavaString>) -> bool;
+    fn contains_header(&self, name: Option<&Utf16String>) -> bool;
     /// 返回 Header 数量。
     fn get_header_count(&self) -> i32;
     /// 返回 Header 名称快照。
-    fn get_all_header_names(&self) -> Vec<Option<JavaString>>;
+    fn get_all_header_names(&self) -> Vec<Option<Utf16String>>;
     /// 返回 Header 多值 Map 快照。
-    fn get_header_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>>;
+    fn get_header_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>>;
     /// 返回第一个 Header 值。
-    fn get_header_value(&self, name: Option<&JavaString>) -> Option<JavaString> {
+    fn get_header_value(&self, name: Option<&Utf16String>) -> Option<Utf16String> {
         self.get_header_values(name)
             .and_then(|values| values.into_iter().next().flatten())
     }
     /// 返回 Header 的全部值。
-    fn get_header_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>>;
+    fn get_header_values(&self, name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>>;
 
     /// 判断请求参数是否存在。
-    fn contains_parameter(&self, name: Option<&JavaString>) -> bool;
+    fn contains_parameter(&self, name: Option<&Utf16String>) -> bool;
     /// 返回请求参数数量。
     fn get_parameter_count(&self) -> i32;
     /// 返回请求参数名称快照。
-    fn get_all_parameter_names(&self) -> Vec<Option<JavaString>>;
+    fn get_all_parameter_names(&self) -> Vec<Option<Utf16String>>;
     /// 返回请求参数多值 Map 快照。
-    fn get_parameter_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>>;
+    fn get_parameter_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>>;
     /// 返回第一个请求参数值。
-    fn get_parameter_value(&self, name: Option<&JavaString>) -> Option<JavaString> {
+    fn get_parameter_value(&self, name: Option<&Utf16String>) -> Option<Utf16String> {
         self.get_parameter_values(name)
             .and_then(|values| values.into_iter().next().flatten())
     }
     /// 返回请求参数的全部值。
-    fn get_parameter_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>>;
+    fn get_parameter_values(&self, name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>>;
 
     /// 判断请求 Cookie 是否存在。
-    fn contains_cookie(&self, name: Option<&JavaString>) -> bool;
+    fn contains_cookie(&self, name: Option<&Utf16String>) -> bool;
     /// 返回请求 Cookie 数量。
     fn get_cookie_count(&self) -> i32;
     /// 返回请求 Cookie 名称快照。
-    fn get_all_cookie_names(&self) -> Vec<Option<JavaString>>;
+    fn get_all_cookie_names(&self) -> Vec<Option<Utf16String>>;
     /// 返回请求 Cookie 多值 Map 快照。
-    fn get_cookie_map(&self) -> IndexMap<Option<JavaString>, Option<Vec<Option<JavaString>>>>;
+    fn get_cookie_map(&self) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>>;
     /// 返回第一个请求 Cookie 值。
-    fn get_cookie_value(&self, name: Option<&JavaString>) -> Option<JavaString> {
+    fn get_cookie_value(&self, name: Option<&Utf16String>) -> Option<Utf16String> {
         self.get_cookie_values(name)
             .and_then(|values| values.into_iter().next().flatten())
     }
     /// 返回请求 Cookie 的全部值。
-    fn get_cookie_values(&self, name: Option<&JavaString>) -> Option<Vec<Option<JavaString>>>;
+    fn get_cookie_values(&self, name: Option<&Utf16String>) -> Option<Vec<Option<Utf16String>>>;
 }
 
 /// Web 请求默认计算方法的错误。

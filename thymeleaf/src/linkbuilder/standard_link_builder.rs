@@ -5,22 +5,22 @@ use indexmap::IndexMap;
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::{JavaString, java_lower};
+use crate::util::{Utf16String, java_lower};
 
 use super::ILinkBuilder;
 
-type LinkParameters = IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+type LinkParameters = IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>;
 type ContextPathHook = dyn Fn(
         &dyn IExpressionContext,
-        &JavaString,
+        &Utf16String,
         Option<&LinkParameters>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException>
+    ) -> Result<Option<Utf16String>, TemplateProcessingException>
     + Send
     + Sync;
 type ProcessLinkHook = dyn Fn(
         &dyn IExpressionContext,
-        &JavaString,
-    ) -> Result<Option<JavaString>, TemplateProcessingException>
+        &Utf16String,
+    ) -> Result<Option<Utf16String>, TemplateProcessingException>
     + Send
     + Sync;
 
@@ -49,7 +49,7 @@ enum LinkType {
 ///
 /// 自 Thymeleaf 3.0.0 起提供。
 pub struct StandardLinkBuilder {
-    name: Option<JavaString>,
+    name: Option<Utf16String>,
     order: Option<i32>,
     context_path_hook: Option<Arc<ContextPathHook>>,
     process_link_hook: Option<Arc<ProcessLinkHook>>,
@@ -66,7 +66,7 @@ impl StandardLinkBuilder {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            name: Some(JavaString::from_rust_str(
+            name: Some(Utf16String::from_rust_str(
                 "org.thymeleaf.linkbuilder.StandardLinkBuilder",
             )),
             order: None,
@@ -96,9 +96,9 @@ impl StandardLinkBuilder {
     where
         F: Fn(
                 &dyn IExpressionContext,
-                &JavaString,
-                Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-            ) -> Result<Option<JavaString>, TemplateProcessingException>
+                &Utf16String,
+                Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+            ) -> Result<Option<Utf16String>, TemplateProcessingException>
             + Send
             + Sync
             + 'static,
@@ -127,8 +127,8 @@ impl StandardLinkBuilder {
     where
         F: Fn(
                 &dyn IExpressionContext,
-                &JavaString,
-            ) -> Result<Option<JavaString>, TemplateProcessingException>
+                &Utf16String,
+            ) -> Result<Option<Utf16String>, TemplateProcessingException>
             + Send
             + Sync
             + 'static,
@@ -145,7 +145,7 @@ impl StandardLinkBuilder {
     ///
     /// 当前名称；`None` 对应 Java `null`。
     #[must_use]
-    pub const fn get_name(&self) -> Option<&JavaString> {
+    pub const fn get_name(&self) -> Option<&Utf16String> {
         self.name.as_ref()
     }
 
@@ -156,7 +156,7 @@ impl StandardLinkBuilder {
     /// # 参数
     ///
     /// - `name`：新的可空名称。
-    pub fn set_name(&mut self, name: Option<JavaString>) {
+    pub fn set_name(&mut self, name: Option<Utf16String>) {
         self.name = name;
     }
 
@@ -186,9 +186,9 @@ impl StandardLinkBuilder {
     fn build_standard_link(
         &self,
         context: &dyn IExpressionContext,
-        base: Option<&JavaString>,
+        base: Option<&Utf16String>,
         parameters: Option<&LinkParameters>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         let Some(base) = base else {
             return Ok(None);
         };
@@ -250,15 +250,15 @@ impl StandardLinkBuilder {
             link_base.splice(0..0, context_path.as_utf16().iter().copied());
         }
 
-        self.process_link(context, &JavaString::from_utf16(link_base))
+        self.process_link(context, &Utf16String::from_utf16(link_base))
     }
 
     fn compute_context_path(
         &self,
         context: &dyn IExpressionContext,
-        base: &JavaString,
+        base: &Utf16String,
         parameters: Option<&LinkParameters>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         if let Some(hook) = &self.context_path_hook {
             return hook(context, base, parameters);
         }
@@ -275,8 +275,8 @@ impl StandardLinkBuilder {
     fn process_link(
         &self,
         context: &dyn IExpressionContext,
-        link: &JavaString,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+        link: &Utf16String,
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         if let Some(hook) = &self.process_link_hook {
             return hook(context, link);
         }
@@ -294,7 +294,7 @@ impl Default for StandardLinkBuilder {
 }
 
 impl ILinkBuilder for StandardLinkBuilder {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.get_name()
     }
 
@@ -305,14 +305,14 @@ impl ILinkBuilder for StandardLinkBuilder {
     fn build_link(
         &self,
         context: &dyn IExpressionContext,
-        base: Option<&JavaString>,
+        base: Option<&Utf16String>,
         parameters: Option<&LinkParameters>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         self.build_standard_link(context, base, parameters)
     }
 }
 
-fn classify_link(base: &JavaString) -> LinkType {
+fn classify_link(base: &Utf16String) -> LinkType {
     if is_link_base_absolute(base) {
         LinkType::Absolute
     } else if is_link_base_context_relative(base) {
@@ -324,7 +324,7 @@ fn classify_link(base: &JavaString) -> LinkType {
     }
 }
 
-fn filter_out_java_script_links(base: &JavaString) -> Result<(), TemplateProcessingException> {
+fn filter_out_java_script_links(base: &Utf16String) -> Result<(), TemplateProcessingException> {
     if starts_with_java_ignore_case(base.as_utf16(), b"javascript:") {
         return Err(TemplateProcessingException::new(Some(
             "'javascript:' is forbidden in this context. Link expressions cannot contain inlined \
@@ -335,7 +335,7 @@ fn filter_out_java_script_links(base: &JavaString) -> Result<(), TemplateProcess
     Ok(())
 }
 
-fn is_link_base_absolute(base: &JavaString) -> bool {
+fn is_link_base_absolute(base: &Utf16String) -> bool {
     let units = base.as_utf16();
     if units.len() < 2 {
         return false;
@@ -351,13 +351,13 @@ fn is_link_base_absolute(base: &JavaString) -> bool {
         .any(|window| window == [u16::from(b':'), u16::from(b'/'), u16::from(b'/')])
 }
 
-fn is_link_base_context_relative(base: &JavaString) -> bool {
+fn is_link_base_context_relative(base: &Utf16String) -> bool {
     let units = base.as_utf16();
     units.first() == Some(&u16::from(b'/'))
         && units.get(1).is_none_or(|unit| *unit != u16::from(b'/'))
 }
 
-fn is_link_base_server_relative(base: &JavaString) -> bool {
+fn is_link_base_server_relative(base: &Utf16String) -> bool {
     base.as_utf16()
         .starts_with(&[u16::from(b'~'), u16::from(b'/')])
 }
@@ -387,7 +387,7 @@ fn replace_template_params_in_base(
     for (parameter_name, parameter_value) in parameters.iter() {
         let parameter_name_text = parameter_name
             .clone()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"));
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"));
         let direct_template = surrounded_template(parameter_name_text.as_utf16(), false);
         let segment_template = surrounded_template(parameter_name_text.as_utf16(), true);
         let (template, escape_as_path_segment, mut start) =
@@ -453,9 +453,9 @@ fn find_subsequence(haystack: &[u16], needle: &[u16], start: usize) -> Option<us
 
 fn format_parameter_value_as_unescaped_variable_template(
     parameter_value: Option<&TemplateValue>,
-) -> JavaString {
+) -> Utf16String {
     match parameter_value {
-        None | Some(TemplateValue::Null) => JavaString::from_utf16(Vec::new()),
+        None | Some(TemplateValue::Null) => Utf16String::from_utf16(Vec::new()),
         Some(TemplateValue::List(values)) => {
             let mut result = Vec::new();
             for value in values.iter() {
@@ -467,7 +467,7 @@ fn format_parameter_value_as_unescaped_variable_template(
                     result.extend_from_slice(java_value_string(value).as_utf16());
                 }
             }
-            JavaString::from_utf16(result)
+            Utf16String::from_utf16(result)
         }
         Some(value) => java_value_string(value),
     }
@@ -481,13 +481,13 @@ fn process_all_remaining_parameters_as_query_params(
     for (parameter_name, value) in parameters {
         let parameter_name = parameter_name
             .clone()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"));
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"));
         match value.as_deref() {
             None | Some(TemplateValue::Null) => {
                 if parameter_index > 0 {
                     result.push(u16::from(b'&'));
                 }
-                append_java_string(result, &escape_uri_query_param(&parameter_name));
+                append_utf16_string(result, &escape_uri_query_param(&parameter_name));
                 parameter_index += 1;
                 continue;
             }
@@ -496,10 +496,10 @@ fn process_all_remaining_parameters_as_query_params(
                     if parameter_index > 0 || value_index > 0 {
                         result.push(u16::from(b'&'));
                     }
-                    append_java_string(result, &escape_uri_query_param(&parameter_name));
+                    append_utf16_string(result, &escape_uri_query_param(&parameter_name));
                     if !matches!(value.as_ref(), TemplateValue::Null) {
                         result.push(u16::from(b'='));
-                        append_java_string(
+                        append_utf16_string(
                             result,
                             &escape_uri_query_param(&java_value_string(value)),
                         );
@@ -510,34 +510,34 @@ fn process_all_remaining_parameters_as_query_params(
                 if parameter_index > 0 {
                     result.push(u16::from(b'&'));
                 }
-                append_java_string(result, &escape_uri_query_param(&parameter_name));
+                append_utf16_string(result, &escape_uri_query_param(&parameter_name));
                 result.push(u16::from(b'='));
-                append_java_string(result, &escape_uri_query_param(&java_value_string(value)));
+                append_utf16_string(result, &escape_uri_query_param(&java_value_string(value)));
             }
         }
         parameter_index += 1;
     }
 }
 
-fn java_value_string(value: &TemplateValue) -> JavaString {
+fn java_value_string(value: &TemplateValue) -> Utf16String {
     value
-        .to_java_string()
-        .unwrap_or_else(|| JavaString::from_rust_str("null"))
+        .to_utf16_string()
+        .unwrap_or_else(|| Utf16String::from_rust_str("null"))
 }
 
-fn append_java_string(result: &mut Vec<u16>, value: &JavaString) {
+fn append_utf16_string(result: &mut Vec<u16>, value: &Utf16String) {
     result.extend_from_slice(value.as_utf16());
 }
 
-fn escape_uri_path(value: &JavaString) -> JavaString {
+fn escape_uri_path(value: &Utf16String) -> Utf16String {
     percent_escape(value, |byte| is_pchar(byte) || byte == b'/')
 }
 
-fn escape_uri_path_segment(value: &JavaString) -> JavaString {
+fn escape_uri_path_segment(value: &Utf16String) -> Utf16String {
     percent_escape(value, is_pchar)
 }
 
-fn escape_uri_query_param(value: &JavaString) -> JavaString {
+fn escape_uri_query_param(value: &Utf16String) -> Utf16String {
     percent_escape(value, |byte| {
         !matches!(byte, b'=' | b'&' | b'+' | b'#')
             && (is_pchar(byte) || matches!(byte, b'/' | b'?'))
@@ -567,7 +567,7 @@ fn is_pchar(byte: u8) -> bool {
         )
 }
 
-fn percent_escape(value: &JavaString, allowed: impl Fn(u8) -> bool) -> JavaString {
+fn percent_escape(value: &Utf16String, allowed: impl Fn(u8) -> bool) -> Utf16String {
     let units = value.as_utf16();
     let mut result = Vec::with_capacity(units.len());
     let mut index = 0usize;
@@ -613,7 +613,7 @@ fn percent_escape(value: &JavaString, allowed: impl Fn(u8) -> bool) -> JavaStrin
         }
         index += 1;
     }
-    JavaString::from_utf16(result)
+    Utf16String::from_utf16(result)
 }
 
 fn append_percent_byte(result: &mut Vec<u16>, byte: u8) {

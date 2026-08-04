@@ -3,7 +3,7 @@ use html_escape::NAMED_ENTITIES;
 use crate::TemplateMode;
 use crate::exceptions::TemplateProcessingException;
 
-use super::JavaString;
+use super::Utf16String;
 
 /// 按模板模式转义或反转义元素属性值。
 ///
@@ -28,8 +28,8 @@ impl EscapedAttributeUtils {
     /// 非空输入配合空模式，或不支持输出属性的文本模式时返回处理异常。
     pub fn escape_attribute(
         template_mode: Option<TemplateMode>,
-        input: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+        input: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         let Some(input) = input else {
             return Ok(None);
         };
@@ -59,8 +59,8 @@ impl EscapedAttributeUtils {
     /// 非空输入配合空模板模式时返回处理异常。
     pub fn unescape_attribute(
         template_mode: Option<TemplateMode>,
-        input: Option<&JavaString>,
-    ) -> Result<Option<JavaString>, TemplateProcessingException> {
+        input: Option<&Utf16String>,
+    ) -> Result<Option<Utf16String>, TemplateProcessingException> {
         let Some(input) = input else {
             return Ok(None);
         };
@@ -84,7 +84,7 @@ fn require_template_mode(
     })
 }
 
-fn escape_html4_xml(input: &JavaString) -> JavaString {
+fn escape_html4_xml(input: &Utf16String) -> Utf16String {
     let mut output = Vec::with_capacity(input.len());
     for unit in input.as_utf16() {
         match *unit {
@@ -96,10 +96,10 @@ fn escape_html4_xml(input: &JavaString) -> JavaString {
             value => output.push(value),
         }
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
-fn escape_xml10_attribute(input: &JavaString) -> JavaString {
+fn escape_xml10_attribute(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let mut output = Vec::with_capacity(units.len());
     let mut index = 0;
@@ -123,10 +123,10 @@ fn escape_xml10_attribute(input: &JavaString) -> JavaString {
             _ => output.push(first),
         }
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
-fn unescape_html(input: &JavaString) -> JavaString {
+fn unescape_html(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let mut output = Vec::with_capacity(units.len());
     let mut index = 0;
@@ -144,7 +144,7 @@ fn unescape_html(input: &JavaString) -> JavaString {
             index += 1;
         }
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
 fn decode_html_reference(units: &[u16]) -> Option<(Vec<u16>, usize)> {
@@ -176,7 +176,7 @@ fn decode_html_reference(units: &[u16]) -> Option<(Vec<u16>, usize)> {
         if let Ok(position) =
             NAMED_ENTITIES.binary_search_by(|(entry, _)| entry.cmp(&name.as_slice()))
         {
-            let decoded = JavaString::from_rust_str(NAMED_ENTITIES[position].1)
+            let decoded = Utf16String::from_rust_str(NAMED_ENTITIES[position].1)
                 .as_utf16()
                 .to_vec();
             let consumed = if name_end == end && has_semicolon {
@@ -190,11 +190,11 @@ fn decode_html_reference(units: &[u16]) -> Option<(Vec<u16>, usize)> {
     None
 }
 
-fn unescape_xml(input: &JavaString) -> JavaString {
+fn unescape_xml(input: &Utf16String) -> Utf16String {
     unescape_ampersand_references(input, false)
 }
 
-fn unescape_ampersand_references(input: &JavaString, html: bool) -> JavaString {
+fn unescape_ampersand_references(input: &Utf16String, html: bool) -> Utf16String {
     let units = input.as_utf16();
     let mut output = Vec::with_capacity(units.len());
     let mut index = 0;
@@ -218,7 +218,7 @@ fn unescape_ampersand_references(input: &JavaString, html: bool) -> JavaString {
             index += 1;
         }
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
 fn decode_xml_reference(units: &[u16]) -> Option<(Vec<u16>, usize)> {
@@ -251,7 +251,7 @@ fn decode_xml_reference(units: &[u16]) -> Option<(Vec<u16>, usize)> {
     None
 }
 
-fn unescape_javascript(input: &JavaString) -> JavaString {
+fn unescape_javascript(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let mut output = Vec::with_capacity(units.len());
     let mut index = 0;
@@ -316,10 +316,10 @@ fn unescape_javascript(input: &JavaString) -> JavaString {
         }
         index += 2;
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
-fn unescape_css(input: &JavaString) -> JavaString {
+fn unescape_css(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let mut output = Vec::with_capacity(units.len());
     let mut index = 0;
@@ -356,7 +356,7 @@ fn unescape_css(input: &JavaString) -> JavaString {
         }
         index += 2;
     }
-    JavaString::from_utf16(output)
+    Utf16String::from_utf16(output)
 }
 
 fn decode_utf16_codepoint(units: &[u16], index: usize) -> (u32, usize) {

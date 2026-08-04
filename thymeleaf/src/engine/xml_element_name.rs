@@ -1,4 +1,4 @@
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ElementName, ElementNameError, ElementNameKind};
 
@@ -7,14 +7,14 @@ use super::{ElementName, ElementNameError, ElementNameKind};
 /// 对应 Java: `org.thymeleaf.engine.XMLElementName`。
 pub struct XMLElementName {
     element_name: ElementName,
-    complete_namespaced_element_name: JavaString,
+    complete_namespaced_element_name: Utf16String,
 }
 
 impl XMLElementName {
     /// 对应 Java: `XMLElementName#forName()`。
     pub(super) fn for_name(
-        prefix: Option<JavaString>,
-        element_name: Option<JavaString>,
+        prefix: Option<Utf16String>,
+        element_name: Option<Utf16String>,
     ) -> Result<Self, ElementNameError> {
         let raw_element_name = element_name
             .as_ref()
@@ -25,7 +25,7 @@ impl XMLElementName {
             let mut complete = prefix_value.as_utf16().to_vec();
             complete.push(u16::from(b':'));
             complete.extend_from_slice(raw_element_name.as_utf16());
-            JavaString::from_utf16(complete)
+            Utf16String::from_utf16(complete)
         } else {
             raw_element_name.clone()
         };
@@ -49,26 +49,27 @@ impl XMLElementName {
 
     /// 返回 `prefix:name` 或无 prefix 的原始 XML 元素名。
     #[must_use]
-    pub const fn get_complete_namespaced_element_name(&self) -> &JavaString {
+    pub const fn get_complete_namespaced_element_name(&self) -> &Utf16String {
         &self.complete_namespaced_element_name
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     use super::super::element_names::ElementNames;
 
     #[test]
     fn xml_name_contract_matches_java_golden() {
-        let prefixed = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("p:Code")))
+        let prefixed = ElementNames::for_xml_name(Some(&Utf16String::from_rust_str("p:Code")))
             .expect("valid prefixed XML name");
-        let same = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("p:Code")))
+        let same = ElementNames::for_xml_name(Some(&Utf16String::from_rust_str("p:Code")))
             .expect("valid same XML name");
-        let different_case = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("p:code")))
-            .expect("valid differently cased XML name");
-        let bare = ElementNames::for_xml_name(Some(&JavaString::from_rust_str("Code")))
+        let different_case =
+            ElementNames::for_xml_name(Some(&Utf16String::from_rust_str("p:code")))
+                .expect("valid differently cased XML name");
+        let bare = ElementNames::for_xml_name(Some(&Utf16String::from_rust_str("Code")))
             .expect("valid bare XML name");
         let actual = format!(
             "prefixed={}\nbare={}\nequalsSame={}\nequalsDifferentCase={}\nhashSame={}\n",
@@ -93,7 +94,7 @@ mod tests {
             .map(|value| {
                 value
                     .as_ref()
-                    .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                    .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
             })
             .collect::<Vec<_>>()
             .join(", ");
@@ -102,9 +103,9 @@ mod tests {
             base.get_element_name().to_string_lossy(),
             base.is_prefixed(),
             base.get_prefix()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
             complete,
-            base.to_java_string().expect("valid").to_string_lossy(),
+            base.to_utf16_string().expect("valid").to_string_lossy(),
             name.get_complete_namespaced_element_name()
                 .to_string_lossy(),
         )

@@ -7,7 +7,7 @@ use super::{
     AbstractChainedTextHandler, ITextHandler, ParsingLocatorUtil, TextParseException,
     TextParsingElementError, TextParsingElementUtil,
 };
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 const FILTER_BUFFER_INCREMENT: i32 = 256;
 const NULL_CHAR_ARRAY_MESSAGE: &str =
@@ -31,7 +31,7 @@ pub(crate) enum CommentProcessorTextHandlerRuntimeError {
     /// `System.arraycopy` 参数校验失败。
     ArrayCopy {
         java_class_name: &'static str,
-        java_message: Option<JavaString>,
+        java_message: Option<Utf16String>,
     },
     /// `getNext()` 返回 null 后直接调用 `handleText`。
     NullNextText,
@@ -52,7 +52,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_negative_length(length: i32) -> Self {
         Self::ArrayCopy {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: length {length} is negative"
             ))),
         }
@@ -61,7 +61,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self::ArrayCopy {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -70,7 +70,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_destination_index(index: i32, length: usize) -> Self {
         Self::ArrayCopy {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: destination index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -79,7 +79,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self::ArrayCopy {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -88,7 +88,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_last_destination(index: i64, length: usize) -> Self {
         Self::ArrayCopy {
             java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(JavaString::from_rust_str(&format!(
+            java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last destination index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -116,14 +116,14 @@ impl CommentProcessorTextHandlerRuntimeError {
     /// # 返回
     /// `None` 仅表示 HotSpot `System.arraycopy` 的 null-source NPE 消息为 null。
     #[must_use]
-    pub(crate) fn java_message(&self) -> Option<JavaString> {
+    pub(crate) fn java_message(&self) -> Option<Utf16String> {
         match self {
-            Self::NullCharArrayLoad => Some(JavaString::from_rust_str(NULL_CHAR_ARRAY_MESSAGE)),
-            Self::ArrayIndex { index, length } => Some(JavaString::from_rust_str(&format!(
+            Self::NullCharArrayLoad => Some(Utf16String::from_rust_str(NULL_CHAR_ARRAY_MESSAGE)),
+            Self::ArrayIndex { index, length } => Some(Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             ))),
             Self::ArrayCopy { java_message, .. } => java_message.clone(),
-            Self::NullNextText => Some(JavaString::from_rust_str(NULL_NEXT_TEXT_MESSAGE)),
+            Self::NullNextText => Some(Utf16String::from_rust_str(NULL_NEXT_TEXT_MESSAGE)),
             Self::Locator(error) => Some(error.message()),
             Self::Element(error) => Some(error.java_message()),
         }
@@ -770,7 +770,7 @@ mod tests {
         TextParseException, compute_filter_offset,
     };
     use crate::text::ChainedTextHandlerRuntimeError;
-    use crate::util::JavaString;
+    use crate::util::Utf16String;
 
     const JAVA_GOLDEN: &str =
         include_str!("../../tests/fixtures/comment_processor_text_handler_golden.txt");
@@ -818,7 +818,7 @@ mod tests {
             }
             if state.fail_event == Some(event) {
                 return Err(Box::new(TextParseException::with_message_at(
-                    Some(&JavaString::from_rust_str(&format!("downstream-{event}"))),
+                    Some(&Utf16String::from_rust_str(&format!("downstream-{event}"))),
                     71,
                     72,
                 )));

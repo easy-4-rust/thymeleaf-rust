@@ -28,11 +28,11 @@ use thymeleaf::model::{
     ITemplateEnd, ITemplateEvent, ITemplateStart, IText, IXMLDeclaration,
 };
 use thymeleaf::templateresource::{ITemplateResource, StringTemplateResource};
-use thymeleaf::util::{FastStringWriter, JavaString};
+use thymeleaf::util::{FastStringWriter, Utf16String};
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
-fn js(value: &str) -> JavaString {
-    JavaString::from_rust_str(value)
+fn js(value: &str) -> Utf16String {
+    Utf16String::from_rust_str(value)
 }
 
 fn engine() -> TemplateEngine {
@@ -206,11 +206,11 @@ fn xml_standalone_tag(
 }
 
 fn tag_text(tag: &Arc<OpenElementTag>) -> String {
-    tag.to_java_string().to_string_lossy()
+    tag.to_utf16_string().to_string_lossy()
 }
 
 fn standalone_text(tag: &Arc<StandaloneElementTag>) -> String {
-    tag.to_java_string().to_string_lossy()
+    tag.to_utf16_string().to_string_lossy()
 }
 
 fn close_text(tag: &dyn ICloseElementTag) -> String {

@@ -6,7 +6,7 @@ use thymeleaf::context::ITemplateContext;
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::IComment;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback =
@@ -78,7 +78,7 @@ fn replace_event(
         .get_model_factory()
         .parse(
             &context.get_template_data(),
-            &JavaString::from_rust_str("<replaced th:text=\"one\"/>"),
+            &Utf16String::from_rust_str("<replaced th:text=\"one\"/>"),
         )
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException>)?;
     structure_handler.replace_with(Arc::from(replacement), true);

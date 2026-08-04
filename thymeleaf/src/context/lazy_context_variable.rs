@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 
 use super::ILazyContextVariable;
 use crate::expression::{TemplateObject, TemplateValue};
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 /// 只执行一次加载逻辑的基础惰性上下文变量。
 ///
@@ -73,11 +73,11 @@ where
         "org.thymeleaf.context.LazyContextVariable"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         self.get_value()
             .as_deref()
-            .and_then(TemplateValue::to_java_string)
-            .unwrap_or_else(|| JavaString::from_rust_str("null"))
+            .and_then(TemplateValue::to_utf16_string)
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"))
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

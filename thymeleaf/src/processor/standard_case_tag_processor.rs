@@ -3,7 +3,7 @@ use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{
     EqualsExpression, IStandardExpression, StandardExpressions, TemplateValue,
 };
-use crate::util::{EvaluationUtils, JavaEvaluationValue, JavaString};
+use crate::util::{EvaluationUtils, JavaEvaluationValue, Utf16String};
 
 use super::{
     AbstractStandardConditionalVisibilityTagProcessor, StandardSwitchTagProcessor, SwitchStructure,
@@ -28,16 +28,16 @@ impl StandardCaseTagProcessor {
     /// 对应 Java 语义：`StandardCaseTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardConditionalVisibilityTagProcessor::new(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 |context, _tag, attribute_name, attribute_value| {
-                    let switch_value = context.get_variable(Some(&JavaString::from_rust_str(
+                    let switch_value = context.get_variable(Some(&Utf16String::from_rust_str(
                         StandardSwitchTagProcessor::SWITCH_VARIABLE_NAME,
                     )));
                     let switch_structure = switch_value
@@ -51,7 +51,7 @@ impl StandardCaseTagProcessor {
                         .ok_or_else(|| {
                             Box::new(TemplateProcessingException::new(Some(format!(
                                 "Cannot specify a \"{}\" attribute in an environment where no switch operator has been defined before.",
-                                attribute_name.to_java_string().map_or_else(
+                                attribute_name.to_utf16_string().map_or_else(
                                     |_| String::new(),
                                     |value| value.to_string_lossy()
                                 )
@@ -116,7 +116,7 @@ impl StandardCaseTagProcessor {
 
 delegate_standard_element_tag_processor!(StandardCaseTagProcessor, processor);
 
-fn is_default_case(value: &JavaString) -> bool {
+fn is_default_case(value: &Utf16String) -> bool {
     let units = value.as_utf16();
     let start = units
         .iter()

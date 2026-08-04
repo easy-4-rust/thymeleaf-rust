@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
-use thymeleaf::util::{JavaNumber, JavaString};
+use thymeleaf::util::{JavaNumber, Utf16String};
 
 /// 上游 Web 测试上下文中的同名请求参数值。
 ///
@@ -35,11 +35,11 @@ impl TemplateObject for CorpusRequestParameterValues {
         "[Ljava.lang.String;"
     }
 
-    fn to_java_string(&self) -> JavaString {
+    fn to_utf16_string(&self) -> Utf16String {
         self.values
             .first()
-            .and_then(|value| value.to_java_string())
-            .unwrap_or_else(|| JavaString::from_rust_str(""))
+            .and_then(|value| value.to_utf16_string())
+            .unwrap_or_else(|| Utf16String::from_rust_str(""))
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -52,9 +52,9 @@ impl TemplateObject for CorpusRequestParameterValues {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
-        (property_name == &JavaString::from_rust_str("length")).then(|| {
+        (property_name == &Utf16String::from_rust_str("length")).then(|| {
             Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
                 i32::try_from(self.values.len()).unwrap_or(i32::MAX),
             )))))

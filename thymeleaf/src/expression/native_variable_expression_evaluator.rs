@@ -9,7 +9,7 @@ use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::temporal::TemporalCreationUtils;
 use crate::util::StandardExpressionUtils;
-use crate::util::{ExpressionUtils, JavaBigDecimal, JavaNumber, JavaString};
+use crate::util::{ExpressionUtils, JavaBigDecimal, JavaNumber, Utf16String};
 
 use super::{
     AdditionExpression, AndExpression, ClassNotFoundException, ConditionalExpression,
@@ -278,7 +278,7 @@ impl ComputedOGNLExpression {
 
 fn parse_and_cache_expression(
     expression: &dyn IStandardVariableExpression,
-    source: &JavaString,
+    source: &Utf16String,
     apply_shortcuts: bool,
 ) -> Arc<ComputedOGNLExpression> {
     let value = Arc::new(parse_expression(
@@ -364,7 +364,7 @@ enum ComputedExpression {
     },
     Sequence(Vec<ComputedExpression>),
     Assignment {
-        name: JavaString,
+        name: Utf16String,
         value: Box<ComputedExpression>,
     },
     NativeBinary {
@@ -375,7 +375,7 @@ enum ComputedExpression {
     BitNegate(Box<ComputedExpression>),
     InstanceOf {
         value: Box<ComputedExpression>,
-        type_name: JavaString,
+        type_name: Utf16String,
     },
     Navigation {
         root: Box<ComputedExpression>,
@@ -396,26 +396,26 @@ enum OgnlBinaryOperator {
 }
 
 struct OgnlStaticReference {
-    type_name: JavaString,
-    member_name: JavaString,
+    type_name: Utf16String,
+    member_name: Utf16String,
     arguments: Option<Vec<ComputedExpression>>,
     trailing_steps: Vec<PathStep>,
 }
 
 struct OgnlConstructor {
-    type_name: JavaString,
+    type_name: Utf16String,
     arguments: Vec<ComputedExpression>,
     trailing_steps: Vec<PathStep>,
 }
 
 struct OgnlLeafExpression {
-    source: JavaString,
+    source: Utf16String,
     expression: Box<ComputedExpression>,
     use_selection_as_root: bool,
 }
 
 impl IStandardExpression for OgnlLeafExpression {
-    fn get_string_representation(&self) -> StandardExpressionResult<JavaString> {
+    fn get_string_representation(&self) -> StandardExpressionResult<Utf16String> {
         Ok(self.source.clone())
     }
 
@@ -446,7 +446,7 @@ impl IStandardExpression for OgnlLeafExpression {
             ))),
             ComputedExpression::Literal(OgnlLiteral::Character(value)) => {
                 Ok(Some(Arc::new(TemplateValue::Literal(Arc::new(
-                    LiteralValue::new(Some(JavaString::from_utf16(vec![*value]))),
+                    LiteralValue::new(Some(Utf16String::from_utf16(vec![*value]))),
                 )))))
             }
             _ => self.execute_with_context(context, expression_context),
@@ -464,7 +464,7 @@ enum OgnlLiteral {
     Double(f64),
     BigInteger(num_bigint::BigInt),
     BigDecimal(JavaBigDecimal),
-    String(JavaString),
+    String(Utf16String),
 }
 
 impl OgnlLiteral {
@@ -498,16 +498,16 @@ struct OgnlPath {
 }
 
 enum PathRoot {
-    Context(JavaString),
-    ExpressionObject(JavaString),
+    Context(Utf16String),
+    ExpressionObject(Utf16String),
 }
 
 enum PathStep {
-    Property(JavaString),
-    Method(JavaString, Vec<ComputedExpression>),
+    Property(Utf16String),
+    Method(Utf16String, Vec<ComputedExpression>),
     Projection(Box<ComputedExpression>),
     Selection(SelectionKind, Box<ComputedExpression>),
-    StringIndex(JavaString),
+    StringIndex(Utf16String),
     NumericIndex(usize),
     DynamicSubscript(OgnlDynamicSubscript),
     DynamicIndex(Box<ComputedExpression>),
@@ -529,7 +529,7 @@ enum SelectionKind {
 }
 
 fn parse_expression(
-    source: &JavaString,
+    source: &Utf16String,
     apply_shortcuts: bool,
     use_selection_as_root: bool,
 ) -> ComputedOGNLExpression {
@@ -577,7 +577,7 @@ fn parse_ognl_range(
             use_selection_as_root,
         )?;
         return Some(ComputedExpression::Assignment {
-            name: JavaString::from_utf16(target[1..].to_vec()),
+            name: Utf16String::from_utf16(target[1..].to_vec()),
             value: Box::new(value),
         });
     }
@@ -702,7 +702,7 @@ fn parse_ognl_range(
         }
         return Some(ComputedExpression::InstanceOf {
             value: Box::new(value),
-            type_name: JavaString::from_utf16(type_name.to_vec()),
+            type_name: Utf16String::from_utf16(type_name.to_vec()),
         });
     }
     native_binary_group!(
@@ -741,7 +741,7 @@ fn parse_ognl_range(
             .map(|value| ComputedExpression::Operation(Arc::new(value)));
     }
 
-    let source = JavaString::from_utf16(input.to_vec());
+    let source = Utf16String::from_utf16(input.to_vec());
     if let Some(value) = parse_literal(&source) {
         return Some(ComputedExpression::Literal(value));
     }
@@ -795,7 +795,7 @@ fn parse_ognl_operand(
     match expression {
         ComputedExpression::Operation(expression) => Some(expression),
         expression => Some(Arc::new(OgnlLeafExpression {
-            source: JavaString::from_utf16(java_trim_units(input).to_vec()),
+            source: Utf16String::from_utf16(java_trim_units(input).to_vec()),
             expression: Box::new(expression),
             use_selection_as_root,
         })),
@@ -833,7 +833,7 @@ fn build_ognl_binary(
     }
 }
 
-fn parse_literal(source: &JavaString) -> Option<OgnlLiteral> {
+fn parse_literal(source: &Utf16String) -> Option<OgnlLiteral> {
     let text = source.to_string_lossy();
     if text == "null" {
         return Some(OgnlLiteral::Null);
@@ -852,7 +852,7 @@ fn parse_literal(source: &JavaString) -> Option<OgnlLiteral> {
         if source.as_utf16().first() == Some(&(b'\'' as u16)) && contents.len() == 1 {
             return Some(OgnlLiteral::Character(contents[0]));
         }
-        return Some(OgnlLiteral::String(JavaString::from_utf16(contents)));
+        return Some(OgnlLiteral::String(Utf16String::from_utf16(contents)));
     }
     let unsigned_source = text.trim_start_matches(['-', '+']);
     let hexadecimal = unsigned_source.starts_with("0x") || unsigned_source.starts_with("0X");
@@ -1002,7 +1002,7 @@ fn parse_static_reference(
         return None;
     }
     let second_at = input[1..].iter().position(|unit| *unit == b'@' as u16)? + 1;
-    let type_name = JavaString::from_utf16(java_trim_units(&input[1..second_at]).to_vec());
+    let type_name = Utf16String::from_utf16(java_trim_units(&input[1..second_at]).to_vec());
     if type_name.is_empty() {
         return None;
     }
@@ -1014,14 +1014,14 @@ fn parse_static_reference(
     if position == member_start {
         return None;
     }
-    let member_name = JavaString::from_utf16(input[member_start..position].to_vec());
+    let member_name = Utf16String::from_utf16(input[member_start..position].to_vec());
     let arguments = if input.get(position) == Some(&(b'(' as u16)) {
         let end = find_closing_parenthesis(input, position)?;
         let arguments = split_method_arguments(&input[position + 1..end])?
             .into_iter()
             .map(|argument| {
                 parse_expression(
-                    &JavaString::from_utf16(argument.to_vec()),
+                    &Utf16String::from_utf16(argument.to_vec()),
                     apply_shortcuts,
                     use_selection_as_root,
                 )
@@ -1085,12 +1085,12 @@ fn parse_constructor(
     } else {
         return None;
     };
-    let type_name = JavaString::from_utf16(type_name_units);
+    let type_name = Utf16String::from_utf16(type_name_units);
     let arguments = arguments
         .into_iter()
         .map(|argument| {
             parse_expression(
-                &JavaString::from_utf16(argument.to_vec()),
+                &Utf16String::from_utf16(argument.to_vec()),
                 apply_shortcuts,
                 use_selection_as_root,
             )
@@ -1147,14 +1147,14 @@ fn parse_suffix_steps(
             if *position == start {
                 return None;
             }
-            let name = JavaString::from_utf16(input[start..*position].to_vec());
+            let name = Utf16String::from_utf16(input[start..*position].to_vec());
             if input.get(*position) == Some(&(b'(' as u16)) {
                 let end = find_closing_parenthesis(input, *position)?;
                 let arguments = split_method_arguments(&input[*position + 1..end])?
                     .into_iter()
                     .map(|argument| {
                         parse_expression(
-                            &JavaString::from_utf16(argument.to_vec()),
+                            &Utf16String::from_utf16(argument.to_vec()),
                             apply_shortcuts,
                             use_selection_as_root,
                         )
@@ -1186,7 +1186,7 @@ fn parse_suffix_steps(
         {
             steps.push(PathStep::DynamicSubscript(subscript));
         } else if let Some(OgnlLiteral::String(value)) =
-            parse_literal(&JavaString::from_utf16(index.to_vec()))
+            parse_literal(&Utf16String::from_utf16(index.to_vec()))
         {
             steps.push(PathStep::StringIndex(value));
         } else if let Ok(value) = String::from_utf16_lossy(index).parse::<usize>() {
@@ -1234,7 +1234,7 @@ fn unescape_ognl_string(input: &[u16]) -> Option<Vec<u16>> {
 }
 
 fn parse_path(
-    source: &JavaString,
+    source: &Utf16String,
     apply_shortcuts: bool,
     use_selection_as_root: bool,
 ) -> Option<OgnlPath> {
@@ -1251,7 +1251,7 @@ fn parse_path(
     if position == root_start {
         return None;
     }
-    let name = JavaString::from_utf16(input[root_start..position].to_vec());
+    let name = Utf16String::from_utf16(input[root_start..position].to_vec());
     let root = if expression_object {
         PathRoot::ExpressionObject(name)
     } else {
@@ -1264,7 +1264,7 @@ fn parse_path(
             .into_iter()
             .map(|argument| {
                 parse_expression(
-                    &JavaString::from_utf16(argument.to_vec()),
+                    &Utf16String::from_utf16(argument.to_vec()),
                     apply_shortcuts,
                     use_selection_as_root,
                 )
@@ -1272,7 +1272,7 @@ fn parse_path(
             })
             .collect();
         steps.push(PathStep::Method(
-            JavaString::from_rust_str("__invoke_root__"),
+            Utf16String::from_rust_str("__invoke_root__"),
             arguments,
         ));
         position = end + 1;
@@ -1381,7 +1381,7 @@ fn evaluate_path(
     let restrict_variable_access = expression_context.get_restrict_variable_access();
     let value = match &path.root {
         PathRoot::Context(name) => {
-            if restrict_variable_access && name == &JavaString::from_rust_str("param") {
+            if restrict_variable_access && name == &Utf16String::from_rust_str("param") {
                 return Err(processing_error(
                     "Access to variable \"param\" is forbidden in this context.".to_owned(),
                 ));
@@ -1411,7 +1411,7 @@ fn evaluate_path(
                     expression_context,
                 );
             }
-            if name == &JavaString::from_rust_str("this") {
+            if name == &Utf16String::from_rust_str("this") {
                 let root = if let Some(root) = current_projection_root() {
                     Some(root)
                 } else if use_selection_as_root {
@@ -1423,12 +1423,12 @@ fn evaluate_path(
                         Some(selection) => Some(selection),
                         None => context
                             .get_expression_objects()
-                            .get_object(Some(&JavaString::from_rust_str("root")))?,
+                            .get_object(Some(&Utf16String::from_rust_str("root")))?,
                     }
                 } else {
                     context
                         .get_expression_objects()
-                        .get_object(Some(&JavaString::from_rust_str("root")))?
+                        .get_object(Some(&Utf16String::from_rust_str("root")))?
                 };
                 return evaluate_path_steps(
                     context,
@@ -1481,7 +1481,7 @@ fn evaluate_navigation_steps(
     value: Option<Arc<TemplateValue>>,
     use_selection_as_root: bool,
     expression_context: &'static StandardExpressionExecutionContext,
-    root_method_name: Option<&JavaString>,
+    root_method_name: Option<&Utf16String>,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let mut value = normalize_java_null(value);
     for step in steps {
@@ -1507,7 +1507,7 @@ fn evaluate_navigation_steps(
                         )
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                if name == &JavaString::from_rust_str("__invoke_root__") {
+                if name == &Utf16String::from_rust_str("__invoke_root__") {
                     let root_method_name = root_method_name.ok_or_else(|| {
                         processing_error("OGNL root invocation has no root method name".to_owned())
                     })?;
@@ -1839,7 +1839,7 @@ fn evaluate_sequence(
 
 fn evaluate_assignment(
     context: &dyn IExpressionContext,
-    name: &JavaString,
+    name: &Utf16String,
     value: &ComputedExpression,
     use_selection_as_root: bool,
     expression_context: &'static StandardExpressionExecutionContext,
@@ -1995,7 +1995,7 @@ fn evaluate_bit_negate(
 fn evaluate_instance_of(
     context: &dyn IExpressionContext,
     value: &ComputedExpression,
-    type_name: &JavaString,
+    type_name: &Utf16String,
     use_selection_as_root: bool,
     expression_context: &'static StandardExpressionExecutionContext,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
@@ -2063,7 +2063,7 @@ fn ognl_list_index(value: &TemplateValue) -> Option<usize> {
     match value {
         TemplateValue::Number(number) => Some(truncated_i64(number)? as usize),
         other => other
-            .to_java_string()
+            .to_utf16_string()
             .and_then(|value| value.to_string_lossy().parse::<usize>().ok()),
     }
 }
@@ -2266,16 +2266,16 @@ fn evaluate_constructor(
         ThymeleafACLClassResolver::class_for_name(&type_name)?;
         match (type_name.as_str(), arguments.as_slice()) {
             ("java.lang.String", []) => Ok(Some(Arc::new(TemplateValue::string(
-                JavaString::from_rust_str(""),
+                Utf16String::from_rust_str(""),
             )))),
             ("java.lang.String", [value]) => Ok(Some(Arc::new(TemplateValue::string(
                 value
                     .as_deref()
-                    .and_then(TemplateValue::to_java_string)
-                    .unwrap_or_else(|| JavaString::from_rust_str("null")),
+                    .and_then(TemplateValue::to_utf16_string)
+                    .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             )))),
             ("java.math.BigDecimal", [Some(value)]) => {
-                let text = value.to_java_string().ok_or_else(|| {
+                let text = value.to_utf16_string().ok_or_else(|| {
                     processing_error("BigDecimal constructor argument cannot be null".to_owned())
                 })?;
                 let value = JavaBigDecimal::parse(&text.to_string_lossy())
@@ -2285,7 +2285,7 @@ fn evaluate_constructor(
                 ))))
             }
             ("java.math.BigInteger", [Some(value)]) => {
-                let text = value.to_java_string().ok_or_else(|| {
+                let text = value.to_utf16_string().ok_or_else(|| {
                     processing_error("BigInteger constructor argument cannot be null".to_owned())
                 })?;
                 let value = text
@@ -2327,8 +2327,8 @@ fn read_static_field(
     type_name: &str,
     member: &str,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
-    let runtime_type_name = JavaString::from_rust_str(type_name);
-    let runtime_member_name = JavaString::from_rust_str(member);
+    let runtime_type_name = Utf16String::from_rust_str(type_name);
+    let runtime_member_name = Utf16String::from_rust_str(member);
     if let Some(result) = current_ognl_runtime()
         .and_then(|runtime| runtime.read_static_field(&runtime_type_name, &runtime_member_name))
     {
@@ -2366,7 +2366,7 @@ fn read_static_field(
         ("java.util.Calendar", "MONTH") => TemplateValue::Number(JavaNumber::Integer(2)),
         ("java.util.Calendar", "YEAR") => TemplateValue::Number(JavaNumber::Integer(1)),
         ("org.thymeleaf.TemplateEngine", "TIMER_LOGGER_NAME") => TemplateValue::string(
-            JavaString::from_rust_str("org.thymeleaf.TemplateEngine.TIMER"),
+            Utf16String::from_rust_str("org.thymeleaf.TemplateEngine.TIMER"),
         ),
         _ => {
             return Err(processing_error(format!(
@@ -2382,8 +2382,8 @@ fn invoke_static_method(
     member: &str,
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
-    let runtime_type_name = JavaString::from_rust_str(type_name);
-    let runtime_member_name = JavaString::from_rust_str(member);
+    let runtime_type_name = Utf16String::from_rust_str(type_name);
+    let runtime_member_name = Utf16String::from_rust_str(member);
     if let Some(result) = current_ognl_runtime().and_then(|runtime| {
         runtime.invoke_static_method(&runtime_type_name, &runtime_member_name, arguments)
     }) {
@@ -2418,7 +2418,7 @@ fn invoke_static_method(
             JavaNumber::Long(numeric_f64(value)?.round() as i64),
         )))),
         ("java.lang.Integer", "parseInt" | "valueOf", [Some(value)]) => {
-            let value = required_java_string(value, "Integer text cannot be null")?;
+            let value = required_utf16_string(value, "Integer text cannot be null")?;
             let parsed = value
                 .to_string_lossy()
                 .parse::<i32>()
@@ -2428,7 +2428,7 @@ fn invoke_static_method(
             )))))
         }
         ("java.lang.Byte", "parseByte" | "valueOf", [Some(value)]) => {
-            let value = required_java_string(value, "Byte text cannot be null")?;
+            let value = required_utf16_string(value, "Byte text cannot be null")?;
             let parsed = value
                 .to_string_lossy()
                 .parse::<i8>()
@@ -2438,7 +2438,7 @@ fn invoke_static_method(
             )))))
         }
         ("java.lang.Short", "parseShort" | "valueOf", [Some(value)]) => {
-            let value = required_java_string(value, "Short text cannot be null")?;
+            let value = required_utf16_string(value, "Short text cannot be null")?;
             let parsed = value
                 .to_string_lossy()
                 .parse::<i16>()
@@ -2448,7 +2448,7 @@ fn invoke_static_method(
             )))))
         }
         ("java.lang.Long", "parseLong" | "valueOf", [Some(value)]) => {
-            let value = required_java_string(value, "Long text cannot be null")?;
+            let value = required_utf16_string(value, "Long text cannot be null")?;
             let parsed = value
                 .to_string_lossy()
                 .parse::<i64>()
@@ -2458,7 +2458,7 @@ fn invoke_static_method(
             )))))
         }
         ("java.lang.Double", "parseDouble" | "valueOf", [Some(value)]) => {
-            let value = required_java_string(value, "Double text cannot be null")?;
+            let value = required_utf16_string(value, "Double text cannot be null")?;
             let parsed = value
                 .to_string_lossy()
                 .parse::<f64>()
@@ -2466,7 +2466,7 @@ fn invoke_static_method(
             number_result(parsed)
         }
         ("java.lang.Boolean", "parseBoolean" | "valueOf", [Some(value)]) => {
-            let value = required_java_string(value, "Boolean text cannot be null")?;
+            let value = required_utf16_string(value, "Boolean text cannot be null")?;
             Ok(Some(Arc::new(TemplateValue::Boolean(
                 value.to_string_lossy().eq_ignore_ascii_case("true"),
             ))))
@@ -2496,18 +2496,18 @@ fn invoke_static_method(
         }
         ("java.lang.String", "format", [Some(format), values @ ..]) => {
             let mut output = format
-                .to_java_string()
+                .to_utf16_string()
                 .ok_or_else(|| processing_error("Format cannot be null".to_owned()))?
                 .to_string_lossy();
             for value in values {
                 let replacement = value
                     .as_deref()
-                    .and_then(TemplateValue::to_java_string)
+                    .and_then(TemplateValue::to_utf16_string)
                     .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy());
                 output = output.replacen("%s", &replacement, 1);
             }
             Ok(Some(Arc::new(TemplateValue::string(
-                JavaString::from_rust_str(&output),
+                Utf16String::from_rust_str(&output),
             ))))
         }
         _ => Err(processing_error(format!(
@@ -2551,7 +2551,7 @@ fn number_result(value: f64) -> StandardExpressionResult<Option<Arc<TemplateValu
 }
 
 struct ClassObjectValue {
-    type_name: JavaString,
+    type_name: Utf16String,
 }
 
 impl super::TemplateObject for ClassObjectValue {
@@ -2559,8 +2559,8 @@ impl super::TemplateObject for ClassObjectValue {
         "java.lang.Class"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&format!("class {}", self.type_name.to_string_lossy()))
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&format!("class {}", self.type_name.to_string_lossy()))
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -2569,11 +2569,11 @@ impl super::TemplateObject for ClassObjectValue {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
         let value = match property_name.to_string_lossy().as_str() {
             "name" => self.type_name.clone(),
-            "simpleName" => JavaString::from_rust_str(
+            "simpleName" => Utf16String::from_rust_str(
                 self.type_name
                     .to_string_lossy()
                     .rsplit('.')
@@ -2587,12 +2587,12 @@ impl super::TemplateObject for ClassObjectValue {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectMethodError>> {
         let value = match (method_name.to_string_lossy().as_str(), arguments) {
             ("getName", []) => self.type_name.clone(),
-            ("getSimpleName", []) => JavaString::from_rust_str(
+            ("getSimpleName", []) => Utf16String::from_rust_str(
                 self.type_name
                     .to_string_lossy()
                     .rsplit('.')
@@ -2607,11 +2607,11 @@ impl super::TemplateObject for ClassObjectValue {
 
 fn java_class_value(type_name: &str) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::Object(Arc::new(ClassObjectValue {
-        type_name: JavaString::from_rust_str(type_name),
+        type_name: Utf16String::from_rust_str(type_name),
     })))
 }
 
-fn path_root_method_name(root: &PathRoot) -> JavaString {
+fn path_root_method_name(root: &PathRoot) -> Utf16String {
     match root {
         PathRoot::Context(name) | PathRoot::ExpressionObject(name) => name.clone(),
     }
@@ -2619,13 +2619,13 @@ fn path_root_method_name(root: &PathRoot) -> JavaString {
 
 fn invoke_dynamic_method(
     target: &TemplateValue,
-    name: &JavaString,
+    name: &Utf16String,
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     match (name.to_string_lossy().as_str(), arguments) {
         ("toString", []) => {
             return Ok(target
-                .to_java_string()
+                .to_utf16_string()
                 .map(|value| Arc::new(TemplateValue::string(value))));
         }
         ("getClass", []) => return Ok(Some(java_class_value(target.java_class_name()))),
@@ -2669,7 +2669,7 @@ fn invoke_dynamic_method(
             )
         }
         TemplateValue::String(value) | TemplateValue::SafeHtml(value) => {
-            invoke_java_string_method(value, name, arguments)
+            invoke_utf16_string_method(value, name, arguments)
         }
         TemplateValue::List(values) => invoke_java_list_method(values, name, arguments),
         TemplateValue::Map(entries) => invoke_java_map_method(entries, name, arguments),
@@ -2683,7 +2683,7 @@ fn invoke_dynamic_method(
 
 fn invoke_java_map_method(
     entries: &[(Arc<TemplateValue>, Arc<TemplateValue>)],
-    name: &JavaString,
+    name: &Utf16String,
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let name = name.to_string_lossy();
@@ -2741,9 +2741,9 @@ fn dynamic_values_equal(
     }
 }
 
-fn invoke_java_string_method(
-    value: &JavaString,
-    name: &JavaString,
+fn invoke_utf16_string_method(
+    value: &Utf16String,
+    name: &Utf16String,
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let name = name.to_string_lossy();
@@ -2754,7 +2754,7 @@ fn invoke_java_string_method(
         ("isEmpty", []) => Ok(Some(Arc::new(TemplateValue::Boolean(value.is_empty())))),
         ("toString", []) => Ok(Some(Arc::new(TemplateValue::string(value.clone())))),
         ("contains", [Some(argument)]) => {
-            let argument = argument.to_java_string().ok_or_else(|| {
+            let argument = argument.to_utf16_string().ok_or_else(|| {
                 processing_error("String.contains argument cannot be null".to_owned())
             })?;
             Ok(Some(Arc::new(TemplateValue::Boolean(
@@ -2764,13 +2764,13 @@ fn invoke_java_string_method(
             ))))
         }
         ("equalsIgnoreCase", [Some(argument)]) => {
-            let argument = required_java_string(argument, "String argument cannot be null")?;
+            let argument = required_utf16_string(argument, "String argument cannot be null")?;
             Ok(Some(Arc::new(TemplateValue::Boolean(
                 value.to_string_lossy().to_lowercase() == argument.to_string_lossy().to_lowercase(),
             ))))
         }
         ("startsWith", [Some(argument)]) | ("endsWith", [Some(argument)]) => {
-            let argument = required_java_string(argument, "String argument cannot be null")?;
+            let argument = required_utf16_string(argument, "String argument cannot be null")?;
             let result = if name == "startsWith" {
                 value.as_utf16().starts_with(argument.as_utf16())
             } else {
@@ -2779,7 +2779,7 @@ fn invoke_java_string_method(
             Ok(Some(Arc::new(TemplateValue::Boolean(result))))
         }
         ("startsWith", [Some(argument), Some(offset)]) => {
-            let argument = required_java_string(argument, "String argument cannot be null")?;
+            let argument = required_utf16_string(argument, "String argument cannot be null")?;
             let offset = integer_argument(offset, "String offset is not an integer")?;
             let result = usize::try_from(offset)
                 .ok()
@@ -2790,7 +2790,7 @@ fn invoke_java_string_method(
         ("substring" | "subSequence", [Some(begin)]) => {
             let begin = string_index(begin, value.len())?;
             Ok(Some(Arc::new(TemplateValue::string(
-                JavaString::from_utf16(value.as_utf16()[begin..].to_vec()),
+                Utf16String::from_utf16(value.as_utf16()[begin..].to_vec()),
             ))))
         }
         ("substring" | "subSequence", [Some(begin), Some(end)]) => {
@@ -2802,7 +2802,7 @@ fn invoke_java_string_method(
                 )));
             }
             Ok(Some(Arc::new(TemplateValue::string(
-                JavaString::from_utf16(value.as_utf16()[begin..end].to_vec()),
+                Utf16String::from_utf16(value.as_utf16()[begin..end].to_vec()),
             ))))
         }
         ("charAt", [Some(index)]) => {
@@ -2815,7 +2815,7 @@ fn invoke_java_string_method(
             Ok(Some(Arc::new(TemplateValue::Character(character))))
         }
         ("indexOf" | "lastIndexOf", [Some(argument)]) => {
-            let argument = required_java_string(argument, "String argument cannot be null")?;
+            let argument = required_utf16_string(argument, "String argument cannot be null")?;
             if argument.is_empty() {
                 let index = if name == "indexOf" {
                     0
@@ -2844,26 +2844,26 @@ fn invoke_java_string_method(
             )))))
         }
         ("concat", [Some(argument)]) => {
-            let argument = required_java_string(argument, "String argument cannot be null")?;
+            let argument = required_utf16_string(argument, "String argument cannot be null")?;
             let mut output = value.as_utf16().to_vec();
             output.extend_from_slice(argument.as_utf16());
             Ok(Some(Arc::new(TemplateValue::string(
-                JavaString::from_utf16(output),
+                Utf16String::from_utf16(output),
             ))))
         }
         ("trim" | "strip", []) => Ok(Some(Arc::new(TemplateValue::string(java_trim(value))))),
         ("toUpperCase", []) => Ok(Some(Arc::new(TemplateValue::string(
-            JavaString::from_rust_str(&value.to_string_lossy().to_uppercase()),
+            Utf16String::from_rust_str(&value.to_string_lossy().to_uppercase()),
         )))),
         ("toLowerCase", []) => Ok(Some(Arc::new(TemplateValue::string(
-            JavaString::from_rust_str(&value.to_string_lossy().to_lowercase()),
+            Utf16String::from_rust_str(&value.to_string_lossy().to_lowercase()),
         )))),
         ("repeat", [Some(count)]) => {
             let count = integer_argument(count, "String repeat count is not an integer")?;
             let count = usize::try_from(count)
                 .map_err(|_| processing_error("String repeat count is negative".to_owned()))?;
             Ok(Some(Arc::new(TemplateValue::string(
-                JavaString::from_utf16(value.as_utf16().repeat(count)),
+                Utf16String::from_utf16(value.as_utf16().repeat(count)),
             ))))
         }
         ("getBytes", []) => Ok(Some(Arc::new(TemplateValue::Bytes(Arc::new(
@@ -2883,7 +2883,7 @@ fn invoke_java_string_method(
 
 fn invoke_java_list_method(
     values: &[Arc<TemplateValue>],
-    name: &JavaString,
+    name: &Utf16String,
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let name = name.to_string_lossy();
@@ -2952,12 +2952,12 @@ fn invoke_java_list_method(
     }
 }
 
-fn required_java_string(
+fn required_utf16_string(
     value: &TemplateValue,
     message: &str,
-) -> StandardExpressionResult<JavaString> {
+) -> StandardExpressionResult<Utf16String> {
     value
-        .to_java_string()
+        .to_utf16_string()
         .ok_or_else(|| processing_error(message.to_owned()))
 }
 
@@ -2993,9 +2993,9 @@ fn list_index(value: &TemplateValue, maximum: usize) -> StandardExpressionResult
 
 fn read_dynamic_property(
     target: &TemplateValue,
-    name: &JavaString,
+    name: &Utf16String,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
-    if name == &JavaString::from_rust_str("class") {
+    if name == &Utf16String::from_rust_str("class") {
         if let TemplateValue::Map(entries) = target
             && let Some(value) = entries.iter().find_map(|(key, value)| {
                 matches!(
@@ -3049,7 +3049,7 @@ fn read_dynamic_property(
                 target.java_class_name()
             ))),
         },
-        TemplateValue::Bytes(values) if name == &JavaString::from_rust_str("length") => {
+        TemplateValue::Bytes(values) if name == &Utf16String::from_rust_str("length") => {
             Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
                 i32::try_from(values.len()).unwrap_or(i32::MAX),
             )))))
@@ -3143,8 +3143,8 @@ fn convert_to_string(
     })
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
-    JavaString::from_utf16(java_trim_units(input.as_utf16()).to_vec())
+fn java_trim(input: &Utf16String) -> Utf16String {
+    Utf16String::from_utf16(java_trim_units(input.as_utf16()).to_vec())
 }
 
 fn java_trim_units(input: &[u16]) -> &[u16] {
@@ -3539,11 +3539,11 @@ const OP_REMAINDER: &[u16] = &[b'%' as u16];
 
 thread_local! {
     static OGNL_RUNTIMES: RefCell<Vec<Arc<dyn OgnlRuntime>>> = const { RefCell::new(Vec::new()) };
-    static OGNL_LOCALS: RefCell<Vec<HashMap<JavaString, Option<Arc<TemplateValue>>>>> =
+    static OGNL_LOCALS: RefCell<Vec<HashMap<Utf16String, Option<Arc<TemplateValue>>>>> =
         const { RefCell::new(Vec::new()) };
 }
 
-fn current_ognl_local(name: &JavaString) -> Option<Option<Arc<TemplateValue>>> {
+fn current_ognl_local(name: &Utf16String) -> Option<Option<Arc<TemplateValue>>> {
     OGNL_LOCALS.with(|scopes| {
         scopes
             .borrow()
@@ -3552,7 +3552,7 @@ fn current_ognl_local(name: &JavaString) -> Option<Option<Arc<TemplateValue>>> {
     })
 }
 
-fn set_ognl_local(name: JavaString, value: Option<Arc<TemplateValue>>) {
+fn set_ognl_local(name: Utf16String, value: Option<Arc<TemplateValue>>) {
     OGNL_LOCALS.with(|scopes| {
         if let Some(scope) = scopes.borrow_mut().last_mut() {
             scope.insert(name, value);
@@ -3621,38 +3621,38 @@ fn ognl_processing_error(message: String, ognl_message: String) -> super::Standa
 #[cfg(test)]
 mod dispatcher_direct_tests {
     use super::{
-        ComputedExpression, invoke_java_string_method, invoke_static_method, parse_ognl_range,
+        ComputedExpression, invoke_static_method, invoke_utf16_string_method, parse_ognl_range,
     };
     use crate::expression::TemplateValue;
-    use crate::util::{JavaNumber, JavaString};
+    use crate::util::{JavaNumber, Utf16String};
     use std::sync::Arc;
 
-    fn js(value: &str) -> JavaString {
-        JavaString::from_rust_str(value)
+    fn js(value: &str) -> Utf16String {
+        Utf16String::from_rust_str(value)
     }
 
     fn text(value: &Arc<TemplateValue>) -> String {
         value
-            .to_java_string()
+            .to_utf16_string()
             .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
     }
 
     #[test]
-    fn invoke_java_string_method_dispatch_matches_java() {
+    fn invoke_utf16_string_method_dispatch_matches_java() {
         let target = js("Hello World");
-        let result = invoke_java_string_method(&target, &js("length"), &[])
+        let result = invoke_utf16_string_method(&target, &js("length"), &[])
             .expect("length ok")
             .expect("non-null");
         assert_eq!(text(&result), "11");
-        let result = invoke_java_string_method(&js(""), &js("isEmpty"), &[])
+        let result = invoke_utf16_string_method(&js(""), &js("isEmpty"), &[])
             .expect("isEmpty ok")
             .expect("non-null");
         assert_eq!(text(&result), "true");
-        let result = invoke_java_string_method(&target, &js("toString"), &[])
+        let result = invoke_utf16_string_method(&target, &js("toString"), &[])
             .expect("toString ok")
             .expect("non-null");
         assert_eq!(text(&result), "Hello World");
-        let result = invoke_java_string_method(
+        let result = invoke_utf16_string_method(
             &target,
             &js("contains"),
             &[Some(Arc::new(TemplateValue::string(js("World"))))],
@@ -3660,7 +3660,7 @@ mod dispatcher_direct_tests {
         .expect("contains ok")
         .expect("non-null");
         assert_eq!(text(&result), "true");
-        let result = invoke_java_string_method(
+        let result = invoke_utf16_string_method(
             &target,
             &js("contains"),
             &[Some(Arc::new(TemplateValue::string(js("xyz"))))],
@@ -3668,7 +3668,7 @@ mod dispatcher_direct_tests {
         .expect("contains ok")
         .expect("non-null");
         assert_eq!(text(&result), "false");
-        let result = invoke_java_string_method(
+        let result = invoke_utf16_string_method(
             &target,
             &js("charAt"),
             &[Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
@@ -3679,9 +3679,9 @@ mod dispatcher_direct_tests {
         .expect("non-null");
         assert_eq!(text(&result), "e");
         // 未知方法 -> 错误（Java String 方法分派拒绝）
-        assert!(invoke_java_string_method(&target, &js("noSuchMethod"), &[]).is_err());
+        assert!(invoke_utf16_string_method(&target, &js("noSuchMethod"), &[]).is_err());
         // 参数个数不匹配 -> 错误
-        assert!(invoke_java_string_method(&target, &js("charAt"), &[]).is_err());
+        assert!(invoke_utf16_string_method(&target, &js("charAt"), &[]).is_err());
     }
 
     #[test]

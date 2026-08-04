@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use crate::element::{IElementProcessor, MatchingElementNameError};
 use crate::model::IAttribute;
 use crate::templatemode::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractElementTag, Attribute, AttributeName, Attributes, AttributesError,
@@ -35,7 +35,7 @@ impl AbstractProcessableElementTag {
     pub fn new(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
+        element_complete_name: Utf16String,
         attributes: Option<Arc<Attributes>>,
         synthetic: bool,
     ) -> Self {
@@ -61,10 +61,10 @@ impl AbstractProcessableElementTag {
     pub fn with_location(
         template_mode: TemplateMode,
         element_definition: ElementDefinitionValue,
-        element_complete_name: JavaString,
+        element_complete_name: Utf16String,
         attributes: Option<Arc<Attributes>>,
         synthetic: bool,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -108,7 +108,7 @@ impl AbstractProcessableElementTag {
 
     /// 按完整名称判断属性是否存在。
     /// 对应 Java: `AbstractProcessableElementTag#hasAttribute()`。
-    pub fn has_attribute(&self, complete_name: &JavaString) -> Result<bool, AttributesError> {
+    pub fn has_attribute(&self, complete_name: &Utf16String) -> Result<bool, AttributesError> {
         let Some(attributes) = self.attributes.as_ref() else {
             return Ok(false);
         };
@@ -119,8 +119,8 @@ impl AbstractProcessableElementTag {
     /// 对应 Java 语义：`AbstractProcessableElementTag` 的 `has_attribute_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn has_attribute_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<bool, AttributesError> {
         let Some(attributes) = self.attributes.as_ref() else {
             return Ok(false);
@@ -141,7 +141,7 @@ impl AbstractProcessableElementTag {
     /// 对应 Java: `AbstractProcessableElementTag#getAttribute()`。
     pub fn get_attribute(
         &self,
-        complete_name: &JavaString,
+        complete_name: &Utf16String,
     ) -> Result<Option<&Attribute>, AttributesError> {
         let Some(attributes) = self.attributes.as_ref() else {
             return Ok(None);
@@ -155,8 +155,8 @@ impl AbstractProcessableElementTag {
     /// 对应 Java 语义：`AbstractProcessableElementTag` 的 `get_attribute_with_prefix` 行为（Rust 侧辅助/私有路径）。
     pub fn get_attribute_with_prefix(
         &self,
-        prefix: Option<&JavaString>,
-        name: &JavaString,
+        prefix: Option<&Utf16String>,
+        name: &Utf16String,
     ) -> Result<Option<&Attribute>, AttributesError> {
         let Some(attributes) = self.attributes.as_ref() else {
             return Ok(None);
@@ -188,7 +188,7 @@ impl AbstractProcessableElementTag {
     /// 按插入顺序返回属性名称和值的防御性 Map。
     #[must_use]
     /// 对应 Java: `AbstractProcessableElementTag#getAttributeMap()`。
-    pub fn get_attribute_map(&self) -> IndexMap<JavaString, Option<JavaString>> {
+    pub fn get_attribute_map(&self) -> IndexMap<Utf16String, Option<Utf16String>> {
         self.attributes
             .as_ref()
             .map_or_else(IndexMap::new, |attributes| attributes.get_attribute_map())

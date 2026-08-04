@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     AssignationSequence, ExpressionCache, StandardExpressionPreprocessor, StandardExpressionResult,
@@ -19,7 +19,7 @@ impl AssignationUtils {
     /// 对应 Java: `AssignationUtils#parseAssignationSequence()`。
     pub fn parse_assignation_sequence(
         context: &dyn IExpressionContext,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
         allow_parameters_without_value: bool,
     ) -> StandardExpressionResult<Arc<AssignationSequence>> {
         let input = input.ok_or_else(|| {
@@ -51,7 +51,7 @@ impl AssignationUtils {
     /// 不执行预处理和缓存，直接解析赋值序列。
     /// 对应 Java: `AssignationUtils#internalParseAssignationSequence()`。
     pub(crate) fn internal_parse_assignation_sequence(
-        input: &JavaString,
+        input: &Utf16String,
         allow_parameters_without_value: bool,
     ) -> Option<AssignationSequence> {
         ExpressionParsingUtil::parse_assignation_sequence(
@@ -61,14 +61,14 @@ impl AssignationUtils {
     }
 }
 
-fn parse_error(kind: &str, input: &JavaString) -> super::StandardExpressionError {
+fn parse_error(kind: &str, input: &Utf16String) -> super::StandardExpressionError {
     Box::new(TemplateProcessingException::new(Some(format!(
         "Could not parse as {kind}: \"{}\"",
         input.to_string_lossy()
     ))))
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
+fn java_trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()
@@ -78,5 +78,5 @@ fn java_trim(input: &JavaString) -> JavaString {
         .iter()
         .rposition(|unit| *unit > 0x20)
         .map_or(start, |position| position + 1);
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }

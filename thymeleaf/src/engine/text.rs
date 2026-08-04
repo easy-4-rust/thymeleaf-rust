@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, ITemplateEvent, IText};
-use crate::util::{JavaCharSequence, JavaString, JavaWriter, TextUtilsError};
+use crate::util::{JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTextualTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -31,7 +31,7 @@ impl Text {
     #[must_use]
     pub fn with_location(
         text: Option<Arc<dyn JavaCharSequence>>,
-        template_name: Option<JavaString>,
+        template_name: Option<Utf16String>,
         line: i32,
         col: i32,
     ) -> Self {
@@ -71,23 +71,23 @@ impl JavaCharSequence for Text {
         self.textual_event.char_at_content(index)
     }
 
-    fn as_java_string(&self) -> Option<&JavaString> {
+    fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<JavaString, TextUtilsError> {
+    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.textual_event
             .get_content_text()?
             .ok_or(TextUtilsError::NullPointer)
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<JavaString, TextUtilsError> {
+    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.textual_event.content_sub_sequence(start, end)
     }
 }
 
 impl IText for Text {
-    fn get_text(&self) -> Result<Option<JavaString>, TextUtilsError> {
+    fn get_text(&self) -> Result<Option<Utf16String>, TextUtilsError> {
         self.textual_event.get_content_text()
     }
 }
@@ -97,7 +97,7 @@ impl ITemplateEvent for Text {
         self.textual_event.as_template_event().has_location()
     }
 
-    fn get_template_name(&self) -> Option<&JavaString> {
+    fn get_template_name(&self) -> Option<&Utf16String> {
         self.textual_event.as_template_event().get_template_name()
     }
 

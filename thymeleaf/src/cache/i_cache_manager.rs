@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use crate::engine::TemplateModel;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{ExpressionCacheKey, ICache, TemplateCacheKey};
 
@@ -27,13 +27,13 @@ pub trait ICacheManager: Send + Sync {
     ///
     /// `Self: Sized` 是 Java 泛型方法在 Rust 中保持强类型的必要映射；引擎通过
     /// `clear_all_caches` 操作擦除后的管理器，不会丢失自定义实现内部的清理能力。
-    fn get_specific_cache<K, V>(&self, name: &JavaString) -> Option<&dyn ICache<K, V>>
+    fn get_specific_cache<K, V>(&self, name: &Utf16String) -> Option<&dyn ICache<K, V>>
     where
         Self: Sized,
         K: Clone + Eq + std::hash::Hash + Send + Sync,
         V: Send + Sync;
     /// 返回全部自定义缓存名称；Java null 映射为 `None`。
-    fn get_all_specific_cache_names(&self) -> Option<Vec<JavaString>>;
+    fn get_all_specific_cache_names(&self) -> Option<Vec<Utf16String>>;
     /// 清理默认缓存及所有自定义缓存。
     fn clear_all_caches(&self);
 }

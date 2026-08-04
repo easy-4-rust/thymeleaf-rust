@@ -3,7 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 
 use super::{IWebApplication, IWebRequest, IWebSession};
 
@@ -40,23 +40,23 @@ pub trait IWebExchange: Send + Sync {
     /// 返回请求 Locale。
     fn get_locale(&self) -> Option<JavaLocale>;
     /// 返回响应内容类型。
-    fn get_content_type(&self) -> Option<JavaString>;
+    fn get_content_type(&self) -> Option<Utf16String>;
     /// 返回字符编码。
-    fn get_character_encoding(&self) -> Option<JavaString>;
+    fn get_character_encoding(&self) -> Option<Utf16String>;
     /// 判断 exchange 属性是否存在。
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool;
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool;
     /// 返回 exchange 属性数量。
     fn get_attribute_count(&self) -> i32;
     /// 返回 exchange 属性名称快照。
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>>;
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>>;
     /// 返回 exchange 属性 Map 快照。
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>;
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>;
     /// 返回 exchange 属性值。
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>>;
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>>;
     /// 新增或替换 exchange 属性。
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>);
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>);
     /// 删除 exchange 属性。
-    fn remove_attribute(&self, name: Option<&JavaString>);
+    fn remove_attribute(&self, name: Option<&Utf16String>);
     /// 执行宿主 URL 重写。
-    fn transform_url(&self, url: Option<&JavaString>) -> Option<JavaString>;
+    fn transform_url(&self, url: Option<&Utf16String>) -> Option<Utf16String>;
 }

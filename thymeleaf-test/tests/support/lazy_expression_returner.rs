@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectMethodError, TemplateValue};
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 /// 返回匿名 LazyContextVariable 的测试宿主。
 ///
@@ -14,8 +14,8 @@ impl TemplateObject for LazyExpressionReturner {
         "org.thymeleaf.templateengine.features.lazy.LazyExpressionReturner"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(self.java_class_name())
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(self.java_class_name())
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -24,7 +24,7 @@ impl TemplateObject for LazyExpressionReturner {
 
     fn java_invoke_method(
         &self,
-        method_name: &JavaString,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectMethodError>> {
         (method_name.to_string_lossy() == "doSomething" && arguments.is_empty()).then(|| {
@@ -43,8 +43,8 @@ impl TemplateObject for LazyExpressionValue {
         "org.thymeleaf.templateengine.features.lazy.LazyExpressionReturner$1"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(
             "org.thymeleaf.templateengine.features.lazy.LazyExpressionReturner$1@1",
         )
     }
@@ -55,7 +55,7 @@ impl TemplateObject for LazyExpressionValue {
 
     fn resolve_lazy_context_variable(&self) -> Option<Option<Arc<TemplateValue>>> {
         Some(Some(Arc::new(TemplateValue::string(
-            JavaString::from_rust_str("The lazy value"),
+            Utf16String::from_rust_str("The lazy value"),
         ))))
     }
 }

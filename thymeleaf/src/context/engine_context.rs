@@ -9,7 +9,7 @@ use crate::exceptions::TemplateProcessingException;
 use crate::expression::{IExpressionObjects, TemplateValue};
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::{JavaLocale, JavaString};
+use crate::util::{JavaLocale, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode, TemplateResolutionAttributes};
 
 use super::{
@@ -38,7 +38,7 @@ struct EngineContextState {
 
 struct LevelEntry {
     level: i32,
-    variables: IndexMap<Option<JavaString>, ScopedVariable>,
+    variables: IndexMap<Option<Utf16String>, ScopedVariable>,
     selection_target: Option<SelectionTarget>,
     inliner: Option<InlinerSetting>,
     template_data: Option<Arc<TemplateData>>,
@@ -76,7 +76,7 @@ impl EngineContext {
         template_data: TemplateData,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
         locale: JavaLocale,
-        variables: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+        variables: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     ) -> Arc<Self> {
         Arc::new_cyclic(|weak: &Weak<Self>| {
             let expression_context: Weak<dyn IExpressionContext> = weak.clone();
@@ -101,7 +101,7 @@ impl EngineContext {
         template_data: TemplateData,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
         locale: JavaLocale,
-        variables: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+        variables: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
         expression_context: Weak<dyn IExpressionContext>,
         self_reference: Option<Weak<EngineContext>>,
     ) -> Self {
@@ -183,7 +183,7 @@ impl EngineContext {
                     output.push_str(
                         &template_data
                             .get_template()
-                            .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                            .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
                     );
                     output.push(')');
                 }
@@ -222,7 +222,7 @@ impl IContext for EngineContext {
         self.base.get_locale()
     }
 
-    fn contains_variable(&self, name: Option<&JavaString>) -> bool {
+    fn contains_variable(&self, name: Option<&Utf16String>) -> bool {
         let state = read_state(&self.state);
         find_scoped_variable(&state.entries, name)
             .is_some_and(|variable| !matches!(variable, ScopedVariable::Removed))
@@ -232,7 +232,7 @@ impl IContext for EngineContext {
         Arc::new(EngineContextVariableNames { context: self })
     }
 
-    fn get_variable(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_variable(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         let state = read_state(&self.state);
         match find_scoped_variable(&state.entries, name) {
             Some(ScopedVariable::Value(value)) => resolve_lazy(value),
@@ -343,10 +343,10 @@ impl ITemplateContext for EngineContext {
     fn get_message(
         &self,
         origin: Option<TypeId>,
-        key: &JavaString,
+        key: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
         use_absent_message_representation: bool,
-    ) -> crate::messageresolver::MessageResolutionResult<Option<JavaString>> {
+    ) -> crate::messageresolver::MessageResolutionResult<Option<Utf16String>> {
         self.base.get_message(
             self,
             origin,
@@ -358,9 +358,9 @@ impl ITemplateContext for EngineContext {
 
     fn build_link(
         &self,
-        base: Option<&JavaString>,
-        parameters: Option<&IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
-    ) -> Result<JavaString, TemplateProcessingException> {
+        base: Option<&Utf16String>,
+        parameters: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
+    ) -> Result<Utf16String, TemplateProcessingException> {
         self.base.build_link(self, base, parameters)
     }
 
@@ -370,7 +370,7 @@ impl ITemplateContext for EngineContext {
 }
 
 impl IEngineContext for EngineContext {
-    fn set_variable(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_variable(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         let mut state = write_state(&self.state);
         let level = state.level;
         let entry = Self::ensure_level_initialized(&mut state);
@@ -381,7 +381,7 @@ impl IEngineContext for EngineContext {
         debug_assert_eq!(entry.level, level);
     }
 
-    fn set_variables(&self, variables: &IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>) {
+    fn set_variables(&self, variables: &IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>) {
         if variables.is_empty() {
             return;
         }
@@ -396,7 +396,7 @@ impl IEngineContext for EngineContext {
         }
     }
 
-    fn remove_variable(&self, name: Option<&JavaString>) {
+    fn remove_variable(&self, name: Option<&Utf16String>) {
         if !self.contains_variable(name) {
             return;
         }
@@ -449,7 +449,7 @@ impl IEngineContext for EngineContext {
             .collect()
     }
 
-    fn is_variable_local(&self, name: Option<&JavaString>) -> bool {
+    fn is_variable_local(&self, name: Option<&Utf16String>) -> bool {
         let state = read_state(&self.state);
         for entry in state.entries.iter().rev().filter(|entry| entry.level > 0) {
             if let Some(value) = entry.variables.get(&name.cloned()) {
@@ -494,7 +494,7 @@ impl IEngineContext for EngineContext {
 impl Display for EngineContext {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         let state = read_state(&self.state);
-        let mut variables: IndexMap<Option<JavaString>, Arc<TemplateValue>> = IndexMap::new();
+        let mut variables: IndexMap<Option<Utf16String>, Arc<TemplateValue>> = IndexMap::new();
         for entry in &state.entries {
             for (name, value) in &entry.variables {
                 match value {
@@ -540,7 +540,7 @@ impl Display for EngineContext {
             "({})",
             template_data
                 .get_template()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy)
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy)
         )
     }
 }
@@ -554,17 +554,17 @@ impl IContextVariableNames for EngineContextVariableNames<'_> {
         visible_variable_names(&read_state(&self.context.state)).len()
     }
 
-    fn contains(&self, name: Option<&JavaString>) -> bool {
+    fn contains(&self, name: Option<&Utf16String>) -> bool {
         self.context.contains_variable(name)
     }
 
-    fn snapshot(&self) -> Vec<Option<JavaString>> {
+    fn snapshot(&self) -> Vec<Option<Utf16String>> {
         visible_variable_names(&read_state(&self.context.state))
             .into_iter()
             .collect()
     }
 
-    fn remove(&self, name: Option<&JavaString>) -> bool {
+    fn remove(&self, name: Option<&Utf16String>) -> bool {
         let existed = self.context.contains_variable(name);
         self.context.remove_variable(name);
         existed
@@ -573,7 +573,7 @@ impl IContextVariableNames for EngineContextVariableNames<'_> {
 
 fn find_scoped_variable<'a>(
     entries: &'a [LevelEntry],
-    name: Option<&JavaString>,
+    name: Option<&Utf16String>,
 ) -> Option<&'a ScopedVariable> {
     let key = name.cloned();
     entries
@@ -582,7 +582,7 @@ fn find_scoped_variable<'a>(
         .find_map(|entry| entry.variables.get(&key))
 }
 
-fn visible_variable_names(state: &EngineContextState) -> IndexSet<Option<JavaString>> {
+fn visible_variable_names(state: &EngineContextState) -> IndexSet<Option<Utf16String>> {
     let mut names = IndexSet::new();
     for entry in &state.entries {
         for (name, value) in &entry.variables {
@@ -625,14 +625,14 @@ fn write_state(lock: &RwLock<EngineContextState>) -> RwLockWriteGuard<'_, Engine
 fn diagnostic_variables(
     entries: &[LevelEntry],
     entry_index: usize,
-) -> IndexMap<Option<JavaString>, Arc<TemplateValue>> {
+) -> IndexMap<Option<Utf16String>, Arc<TemplateValue>> {
     let mut result = IndexMap::new();
     let entry = &entries[entry_index];
     let mut names: Vec<_> = entry.variables.keys().cloned().collect();
     names.sort_by(|left, right| {
         left.as_ref()
-            .map(JavaString::as_utf16)
-            .cmp(&right.as_ref().map(JavaString::as_utf16))
+            .map(Utf16String::as_utf16)
+            .cmp(&right.as_ref().map(Utf16String::as_utf16))
     });
     for name in names {
         match entry.variables.get(&name) {
@@ -646,7 +646,7 @@ fn diagnostic_variables(
                 if removes_existing {
                     result.insert(
                         name,
-                        Arc::new(TemplateValue::string(JavaString::from_rust_str(
+                        Arc::new(TemplateValue::string(Utf16String::from_rust_str(
                             "(*removed*)",
                         ))),
                     );
@@ -658,7 +658,7 @@ fn diagnostic_variables(
     result
 }
 
-fn format_variable_map(variables: &IndexMap<Option<JavaString>, Arc<TemplateValue>>) -> String {
+fn format_variable_map(variables: &IndexMap<Option<Utf16String>, Arc<TemplateValue>>) -> String {
     let mut output = String::from("{");
     for (index, (name, value)) in variables.iter().enumerate() {
         if index != 0 {
@@ -667,7 +667,7 @@ fn format_variable_map(variables: &IndexMap<Option<JavaString>, Arc<TemplateValu
         output.push_str(
             &name
                 .as_ref()
-                .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy),
+                .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         );
         output.push('=');
         output.push_str(&format_optional_value(Some(value)));
@@ -678,6 +678,6 @@ fn format_variable_map(variables: &IndexMap<Option<JavaString>, Arc<TemplateValu
 
 fn format_optional_value(value: Option<&TemplateValue>) -> String {
     value
-        .and_then(TemplateValue::to_java_string)
+        .and_then(TemplateValue::to_utf16_string)
         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
 }

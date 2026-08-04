@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use thymeleaf::expression::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
-use thymeleaf::util::{JavaNumber, JavaString};
+use thymeleaf::util::{JavaNumber, Utf16String};
 
 /// 上游测试语料使用的 Java `String[]` 对象。
 ///
@@ -25,8 +25,8 @@ impl TemplateObject for CorpusStringArray {
         "[Ljava.lang.String;"
     }
 
-    fn to_java_string(&self) -> JavaString {
-        JavaString::from_rust_str(&format!(
+    fn to_utf16_string(&self) -> Utf16String {
+        Utf16String::from_rust_str(&format!(
             "[Ljava.lang.String;@{:x}",
             self as *const Self as usize
         ))
@@ -42,9 +42,9 @@ impl TemplateObject for CorpusStringArray {
 
     fn java_get_property(
         &self,
-        property_name: &JavaString,
+        property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
-        (property_name == &JavaString::from_rust_str("length")).then(|| {
+        (property_name == &Utf16String::from_rust_str("length")).then(|| {
             Ok(Some(Arc::new(TemplateValue::Number(JavaNumber::Integer(
                 i32::try_from(self.values.len()).unwrap_or(i32::MAX),
             )))))

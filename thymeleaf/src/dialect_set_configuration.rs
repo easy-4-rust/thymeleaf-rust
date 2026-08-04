@@ -21,7 +21,7 @@ use crate::processor::IProcessor;
 use crate::templateboundaries::ITemplateBoundariesProcessor;
 use crate::text::ITextProcessor;
 use crate::util::{
-    JavaString, ProcessorComparators, ProcessorConfigurationUtils, Validate, ValidateError,
+    ProcessorComparators, ProcessorConfigurationUtils, Utf16String, Validate, ValidateError,
 };
 use crate::xmldeclaration::IXMLDeclarationProcessor;
 use crate::{
@@ -36,8 +36,8 @@ pub struct DialectSetConfiguration {
     dialect_configurations: Vec<DialectConfiguration>,
     dialects: Vec<Arc<dyn IDialect>>,
     standard_dialect_present: bool,
-    standard_dialect_prefix: Option<JavaString>,
-    execution_attributes: IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>>,
+    standard_dialect_prefix: Option<Utf16String>,
+    execution_attributes: IndexMap<Option<Utf16String>, Option<Arc<ExecutionAttributeValue>>>,
     expression_object_factory: Arc<AggregateExpressionObjectFactory>,
     element_definitions: Arc<ElementDefinitions>,
     attribute_definitions: Arc<AttributeDefinitions>,
@@ -113,7 +113,7 @@ impl DialectSetConfiguration {
                 };
                 if dialect.is_standard_dialect() {
                     standard_dialect_present = true;
-                    standard_dialect_prefix = prefix.map(JavaString::from_rust_str);
+                    standard_dialect_prefix = prefix.map(Utf16String::from_rust_str);
                 }
                 let processor_set = processor_dialect.get_processors(prefix).ok_or_else(|| {
                     configuration_error(format!(
@@ -155,12 +155,12 @@ impl DialectSetConfiguration {
                 && let Some(attributes) = attribute_dialect.get_execution_attributes()
             {
                 for (name, value) in attributes {
-                    let key = name.as_deref().map(JavaString::from_rust_str);
+                    let key = name.as_deref().map(Utf16String::from_rust_str);
                     if execution_attributes.contains_key(&key) {
                         return Err(configuration_error(format!(
                             "Conflicting execution attribute. Two or more dialects specify an execution attribute with the same name \"{}\".",
                             key.as_ref()
-                                .map(JavaString::to_string_lossy)
+                                .map(Utf16String::to_string_lossy)
                                 .unwrap_or_else(|| "null".to_owned())
                         ))
                         .into());
@@ -373,7 +373,7 @@ impl DialectSetConfiguration {
 
     /// 返回 StandardDialect 实际前缀。
     /// 对应 Java: `DialectSetConfiguration#getStandardDialectPrefix()`。
-    pub fn get_standard_dialect_prefix(&self) -> Option<&JavaString> {
+    pub fn get_standard_dialect_prefix(&self) -> Option<&Utf16String> {
         self.standard_dialect_prefix.as_ref()
     }
 
@@ -381,7 +381,7 @@ impl DialectSetConfiguration {
     /// 对应 Java: `DialectSetConfiguration#getExecutionAttributes()`。
     pub fn get_execution_attributes(
         &self,
-    ) -> &IndexMap<Option<JavaString>, Option<Arc<ExecutionAttributeValue>>> {
+    ) -> &IndexMap<Option<Utf16String>, Option<Arc<ExecutionAttributeValue>>> {
         &self.execution_attributes
     }
 
@@ -389,7 +389,7 @@ impl DialectSetConfiguration {
     /// 对应 Java: `DialectSetConfiguration#getExecutionAttribute()`。
     pub fn get_execution_attribute(
         &self,
-        execution_attribute_name: Option<&JavaString>,
+        execution_attribute_name: Option<&Utf16String>,
     ) -> Option<Arc<ExecutionAttributeValue>> {
         self.execution_attributes
             .get(&execution_attribute_name.cloned())
@@ -399,7 +399,7 @@ impl DialectSetConfiguration {
 
     /// 判断执行属性 Map 是否包含指定键，显式 Java null 值仍计为存在。
     /// 对应 Java: `DialectSetConfiguration#hasExecutionAttribute()`。
-    pub fn has_execution_attribute(&self, execution_attribute_name: Option<&JavaString>) -> bool {
+    pub fn has_execution_attribute(&self, execution_attribute_name: Option<&Utf16String>) -> bool {
         self.execution_attributes
             .contains_key(&execution_attribute_name.cloned())
     }
@@ -592,7 +592,10 @@ impl AggregateExpressionObjectFactory {
         Self { factories }
     }
 
-    fn factory_for(&self, name: Option<&JavaString>) -> Option<&Arc<dyn IExpressionObjectFactory>> {
+    fn factory_for(
+        &self,
+        name: Option<&Utf16String>,
+    ) -> Option<&Arc<dyn IExpressionObjectFactory>> {
         self.factories.iter().rev().find(|factory| {
             factory
                 .get_all_expression_object_names()
@@ -624,7 +627,7 @@ impl IExpressionObjectFactory for AggregateExpressionObjectFactory {
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         if self.factories.len() == 1 {
             return self.factories[0].build_object(context, expression_object_name);
@@ -635,7 +638,7 @@ impl IExpressionObjectFactory for AggregateExpressionObjectFactory {
         factory.build_object(context, expression_object_name)
     }
 
-    fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool {
+    fn is_cacheable(&self, expression_object_name: Option<&Utf16String>) -> bool {
         if self.factories.len() == 1 {
             return self.factories[0].is_cacheable(expression_object_name);
         }

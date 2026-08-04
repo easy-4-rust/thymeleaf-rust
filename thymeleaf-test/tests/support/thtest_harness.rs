@@ -16,7 +16,7 @@ use thymeleaf::expression::{IStandardExpression, TemplateValue, VariableExpressi
 use thymeleaf::templateresolver::{
     StringTemplateResolver, TemplateResolution, TemplateResolverError,
 };
-use thymeleaf::util::{JavaLocale, JavaString};
+use thymeleaf::util::{JavaLocale, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode,
     TemplateResolutionAttributes,
@@ -208,8 +208,8 @@ pub fn parse_java_locale(value: &str) -> Result<JavaLocale, String> {
         tag.push_str(variant);
     }
     Ok(JavaLocale::new(
-        JavaString::from_rust_str(&tag),
-        JavaString::from_rust_str(&country),
+        Utf16String::from_rust_str(&tag),
+        Utf16String::from_rust_str(&country),
     ))
 }
 
@@ -217,8 +217,8 @@ pub fn parse_java_locale(value: &str) -> Result<JavaLocale, String> {
 /// `DefaultContextStandardTestFieldEvaluator` 的两种写入口）。
 pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Context, String> {
     let default_locale = JavaLocale::new(
-        JavaString::from_rust_str("en"),
-        JavaString::from_rust_str(""),
+        Utf16String::from_rust_str("en"),
+        Utf16String::from_rust_str(""),
     );
     let context = Context::with_locale(Some(default_locale.clone()));
     let configuration = engine
@@ -232,7 +232,7 @@ pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Co
     // Java 测试框架的 WebProcessingContextBuilder 总是暴露四个 Web 作用域。
     // 即使测试尚未向其中写入值，表达式也应看到空 Map，而不是 null。
     for scope_name in ["param", "request", "session", "application"] {
-        let name = JavaString::from_rust_str(scope_name);
+        let name = Utf16String::from_rust_str(scope_name);
         let value = Some(Arc::new(TemplateValue::Map(Arc::new(Vec::new()))));
         context.set_variable(Some(name.clone()), value.clone());
         expression_context.set_variable(Some(name), value);
@@ -247,7 +247,7 @@ pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Co
         // 这里必须保留同一层夹具语义，否则 `\\'`、`\uXXXX` 等会被错误地
         // 当成 OGNL 自身的转义。
         let expression = decode_java_properties_value(expression)?;
-        let expression = VariableExpression::new(Some(JavaString::from_rust_str(&expression)))
+        let expression = VariableExpression::new(Some(Utf16String::from_rust_str(&expression)))
             .map_err(|error| format!("CONTEXT `{assignment}`: {error}"))?;
         let value = expression
             .execute(expression_context.as_ref())
@@ -255,7 +255,7 @@ pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Co
         if name.eq_ignore_ascii_case("locale") {
             if let Some(locale) = value
                 .as_deref()
-                .and_then(TemplateValue::to_java_string)
+                .and_then(TemplateValue::to_utf16_string)
                 .map(|locale| parse_java_locale(&locale.to_string_lossy()))
                 .transpose()?
             {
@@ -272,7 +272,7 @@ pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Co
             apply_context_mutation(&context, &expression_context, name, value, &assignment)?;
             continue;
         }
-        let name = JavaString::from_rust_str(name);
+        let name = Utf16String::from_rust_str(name);
         if std::env::var_os("THYMELEAF_DEBUG_CONTEXT").is_some() {
             eprintln!("CONTEXT {} = {value:?}", name.to_string_lossy());
         }
@@ -327,14 +327,14 @@ pub fn apply_context_mutation(
         .iter()
         .map(|key_expression| {
             let key_expression = decode_java_properties_value(key_expression)?;
-            VariableExpression::new(Some(JavaString::from_rust_str(&key_expression)))
+            VariableExpression::new(Some(Utf16String::from_rust_str(&key_expression)))
                 .map_err(|error| format!("CONTEXT `{assignment}` key: {error}"))?
                 .execute(expression_context)
                 .map_err(|error| format!("CONTEXT `{assignment}` key: {error}"))
                 .map(|value| value.unwrap_or_else(|| Arc::new(TemplateValue::Null)))
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let root_name = JavaString::from_rust_str(root);
+    let root_name = Utf16String::from_rust_str(root);
     let current = match expression_context.get_variable(Some(&root_name)) {
         Some(value) if matches!(value.as_ref(), TemplateValue::Map(_)) => value,
         None if request_parameter => Arc::new(TemplateValue::Map(Arc::new(Vec::new()))),
@@ -355,7 +355,7 @@ pub fn apply_context_mutation(
     context.set_variable(Some(root_name.clone()), updated);
     if root == "request"
         && let [key] = keys.as_slice()
-        && let Some(attribute_name) = key.to_java_string()
+        && let Some(attribute_name) = key.to_utf16_string()
     {
         // WebProcessingContextBuilder 把 request.* 写入 exchange 属性；
         // WebEngineContext 对普通变量名也从该作用域读取。
@@ -438,11 +438,11 @@ fn update_context_map_path(
         entries.push((Arc::clone(key), inserted));
     }
     if entries.iter().all(|(key, _)| {
-        key.to_java_string()
+        key.to_utf16_string()
             .is_some_and(|key| matches!(key.to_string_lossy().as_str(), "MILLISECONDS" | "SECONDS"))
     }) {
         entries.sort_by_key(|(key, _)| {
-            key.to_java_string()
+            key.to_utf16_string()
                 .map_or(usize::MAX, |key| match key.to_string_lossy().as_str() {
                     "MILLISECONDS" => 0,
                     "SECONDS" => 1,
@@ -482,7 +482,7 @@ pub fn directive_section_for_marker(source: &str, marker: &str) -> Option<String
 }
 
 /// 提取 `%INPUT[qualifier]` 命名片段（按声明顺序）。
-pub fn named_input_sections(source: &str) -> Result<IndexMap<JavaString, JavaString>, String> {
+pub fn named_input_sections(source: &str) -> Result<IndexMap<Utf16String, Utf16String>, String> {
     let mut templates = IndexMap::new();
     for line in source.lines() {
         let Some(qualifier) = line
@@ -498,15 +498,15 @@ pub fn named_input_sections(source: &str) -> Result<IndexMap<JavaString, JavaStr
         let content = directive_section_for_marker(source, &marker)
             .ok_or_else(|| format!("missing section for {marker}"))?;
         templates.insert(
-            JavaString::from_rust_str(qualifier),
-            JavaString::from_rust_str(&content),
+            Utf16String::from_rust_str(qualifier),
+            Utf16String::from_rust_str(&content),
         );
     }
     Ok(templates)
 }
 
 /// 提取 `%TEMPLATE_MODE[qualifier]` 命名模板模式。
-pub fn named_template_modes(source: &str) -> Result<IndexMap<JavaString, TemplateMode>, String> {
+pub fn named_template_modes(source: &str) -> Result<IndexMap<Utf16String, TemplateMode>, String> {
     let mut modes = IndexMap::new();
     for line in source.lines() {
         let Some((marker, value)) = line
@@ -522,7 +522,7 @@ pub fn named_template_modes(source: &str) -> Result<IndexMap<JavaString, Templat
             .trim()
             .parse::<TemplateMode>()
             .map_err(|error| error.to_string())?;
-        modes.insert(JavaString::from_rust_str(marker), mode);
+        modes.insert(Utf16String::from_rust_str(marker), mode);
     }
     Ok(modes)
 }
@@ -535,10 +535,10 @@ pub fn named_template_modes(source: &str) -> Result<IndexMap<JavaString, Templat
 /// `StringTemplateResolver` 会把 `~{fragg}` 错误解析成文本 `fragg`。
 pub struct CorpusStringTemplateResolver {
     delegate: StringTemplateResolver,
-    root_template_name: JavaString,
-    root_template: JavaString,
-    named_templates: IndexMap<JavaString, JavaString>,
-    named_template_modes: IndexMap<JavaString, TemplateMode>,
+    root_template_name: Utf16String,
+    root_template: Utf16String,
+    named_templates: IndexMap<Utf16String, Utf16String>,
+    named_template_modes: IndexMap<Utf16String, TemplateMode>,
 }
 
 impl CorpusStringTemplateResolver {
@@ -548,15 +548,15 @@ impl CorpusStringTemplateResolver {
         mode: TemplateMode,
         root_template_name: &str,
         root_template: &str,
-        named_templates: IndexMap<JavaString, JavaString>,
-        named_template_modes: IndexMap<JavaString, TemplateMode>,
+        named_templates: IndexMap<Utf16String, Utf16String>,
+        named_template_modes: IndexMap<Utf16String, TemplateMode>,
     ) -> Self {
         let mut delegate = StringTemplateResolver::new();
         delegate.set_template_mode(mode);
         Self {
             delegate,
-            root_template_name: JavaString::from_rust_str(root_template_name),
-            root_template: JavaString::from_rust_str(root_template),
+            root_template_name: Utf16String::from_rust_str(root_template_name),
+            root_template: Utf16String::from_rust_str(root_template),
             named_templates,
             named_template_modes,
         }
@@ -564,7 +564,7 @@ impl CorpusStringTemplateResolver {
 }
 
 impl ITemplateResolver for CorpusStringTemplateResolver {
-    fn get_name(&self) -> Option<&JavaString> {
+    fn get_name(&self) -> Option<&Utf16String> {
         self.delegate.get_name()
     }
 
@@ -575,8 +575,8 @@ impl ITemplateResolver for CorpusStringTemplateResolver {
     fn resolve_template(
         &self,
         configuration: &dyn IEngineConfiguration,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         attributes: Option<&TemplateResolutionAttributes>,
     ) -> Result<Option<TemplateResolution>, TemplateResolverError> {
         if template == &self.root_template_name {

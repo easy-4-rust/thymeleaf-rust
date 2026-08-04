@@ -10,10 +10,10 @@ use std::sync::Arc;
 use thymeleaf::decoupled::{
     DecoupledInjectedAttribute, DecoupledTemplateLogic, StandardDecoupledTemplateLogicResolver,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 // ===========================================================================
@@ -159,11 +159,11 @@ fn create_attribute_boolean_style() {
 }
 
 #[test]
-fn attribute_to_java_string_contains_name() {
+fn attribute_to_utf16_string_contains_name() {
     let units: Vec<u16> = "th:class=greatclass".encode_utf16().collect();
     let attr = DecoupledInjectedAttribute::create_attribute(Some(&units), 0, 8, 8, 0, 9, 10, 9, 10)
         .expect("valid");
-    let repr = attr.to_java_string().to_string_lossy();
+    let repr = attr.to_utf16_string().to_string_lossy();
     assert!(repr.contains("th:class"), "name must be present: {repr}");
 }
 
@@ -228,7 +228,7 @@ fn decoupled_logic_file_end_to_end() {
 
     let mut resolver = FileTemplateResolver::new();
     resolver.set_template_mode(TemplateMode::HTML);
-    resolver.set_prefix(Some(JavaString::from_rust_str(&format!(
+    resolver.set_prefix(Some(Utf16String::from_rust_str(&format!(
         "{}/",
         temp_dir.display()
     ))));
@@ -276,7 +276,7 @@ fn decoupled_logic_disabled_keeps_original() {
 
     let mut resolver = FileTemplateResolver::new();
     resolver.set_template_mode(TemplateMode::HTML);
-    resolver.set_prefix(Some(JavaString::from_rust_str(&format!(
+    resolver.set_prefix(Some(Utf16String::from_rust_str(&format!(
         "{}/",
         temp_dir.display()
     ))));

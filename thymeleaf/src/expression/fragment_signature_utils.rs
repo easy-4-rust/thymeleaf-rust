@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock, RwLockReadGuard};
 
 use crate::IEngineConfiguration;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::{JavaString, ValidateError};
+use crate::util::{Utf16String, ValidateError};
 
 use super::{
     ExpressionCache, FragmentParameterMap, FragmentSignature, StandardExpressionResult,
@@ -19,7 +19,7 @@ impl FragmentSignatureUtils {
     /// 对应 Java: `FragmentSignatureUtils#parseFragmentSignature()`。
     pub fn parse_fragment_signature(
         configuration: Option<&dyn IEngineConfiguration>,
-        input: Option<&JavaString>,
+        input: Option<&Utf16String>,
     ) -> StandardExpressionResult<Arc<FragmentSignature>> {
         let input = input.ok_or_else(|| {
             Box::new(ValidateError::IllegalArgument {
@@ -53,7 +53,7 @@ impl FragmentSignatureUtils {
     ///
     /// 对应 Java: `FragmentSignatureUtils#internalParseFragmentSignature(String)`。
     pub(crate) fn internal_parse_fragment_signature(
-        input: &JavaString,
+        input: &Utf16String,
     ) -> Option<FragmentSignature> {
         ExpressionParsingUtil::parse_fragment_signature(input)
     }
@@ -62,8 +62,8 @@ impl FragmentSignatureUtils {
     ///
     /// 对应 Java: `FragmentSignatureUtils#getSyntheticParameterNameForIndex(int)`。
     #[must_use]
-    pub(crate) fn get_synthetic_parameter_name_for_index(index: usize) -> JavaString {
-        JavaString::from_rust_str(&format!("_arg{index}"))
+    pub(crate) fn get_synthetic_parameter_name_for_index(index: usize) -> Utf16String {
+        Utf16String::from_rust_str(&format!("_arg{index}"))
     }
 
     /// 按 Fragment 签名匹配命名或合成位置参数。
@@ -138,7 +138,7 @@ impl FragmentSignatureUtils {
                 if !specified.contains_key(parameter_name) {
                     let display_name = parameter_name
                         .as_ref()
-                        .map_or_else(|| "null".to_owned(), JavaString::to_string_lossy);
+                        .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy);
                     return Err(process_error(format!(
                         "Cannot resolve fragment. Signature \"{}\" declares parameter \"{}\", which is not specified at the fragment selection.",
                         fragment_signature
@@ -162,7 +162,7 @@ fn read_recovering_poison<T>(lock: &RwLock<T>) -> RwLockReadGuard<'_, T> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-fn java_trim(input: &JavaString) -> JavaString {
+fn java_trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()
@@ -172,5 +172,5 @@ fn java_trim(input: &JavaString) -> JavaString {
         .iter()
         .rposition(|unit| *unit > 0x20)
         .map_or(start, |position| position + 1);
-    JavaString::from_utf16(units[start..end].to_vec())
+    Utf16String::from_utf16(units[start..end].to_vec())
 }

@@ -9,13 +9,13 @@ use num_traits::Signed;
 use crate::expression::TemplateValue;
 use crate::templateresource::ITemplateResource;
 use crate::util::{
-    JavaBigDecimal, JavaLocale, JavaNumber, JavaString, NumberPointType, NumberUtils,
+    JavaBigDecimal, JavaLocale, JavaNumber, NumberPointType, NumberUtils, Utf16String,
 };
 use crate::{TemplateInputException, TemplateProcessingException};
 
 use super::MessageResolutionResult;
 
-type Messages = HashMap<JavaString, JavaString>;
+type Messages = HashMap<Utf16String, Utf16String>;
 type OriginMessages = HashMap<(TypeId, JavaLocale), Messages>;
 type OriginParents = HashMap<TypeId, TypeId>;
 
@@ -122,9 +122,9 @@ impl StandardMessageResolutionUtils {
     /// 对应 Java: `StandardMessageResolutionUtils#formatMessage()`。
     pub(crate) fn format_message(
         locale: &JavaLocale,
-        message: &JavaString,
+        message: &Utf16String,
         message_parameters: Option<&[Option<std::sync::Arc<TemplateValue>>]>,
-    ) -> MessageResolutionResult<JavaString> {
+    ) -> MessageResolutionResult<Utf16String> {
         let units = message.as_utf16();
         if !units.contains(&u16::from(b'}')) && !units.contains(&u16::from(b'\'')) {
             return Ok(message.clone());
@@ -150,7 +150,7 @@ impl StandardMessageResolutionUtils {
                 let Some(end) = find_format_element_end(units, index + 1) else {
                     return Err(Box::new(MessageFormatError::UnmatchedBraces));
                 };
-                let element = JavaString::from_utf16(units[index + 1..end].to_vec());
+                let element = Utf16String::from_utf16(units[index + 1..end].to_vec());
                 let formatted = format_message_element(&element, parameters, locale)?;
                 result.extend_from_slice(formatted.as_utf16());
                 index = end + 1;
@@ -161,7 +161,7 @@ impl StandardMessageResolutionUtils {
             index += 1;
         }
         // Java MessageFormat 接受未闭合引号，并将其视为延续到模式末尾。
-        Ok(JavaString::from_utf16(result))
+        Ok(Utf16String::from_utf16(result))
     }
 
     fn compute_message_resource_names_from_base(
@@ -207,8 +207,8 @@ impl StandardMessageResolutionUtils {
         java_properties::PropertiesIter::new_with_encoding(bytes.as_slice(), encoding_rs::UTF_8)
             .read_into(|key, value| {
                 messages.insert(
-                    JavaString::from_rust_str(&key),
-                    JavaString::from_rust_str(&value),
+                    Utf16String::from_rust_str(&key),
+                    Utf16String::from_rust_str(&value),
                 );
             })
             .map_err(|error| {
@@ -248,10 +248,10 @@ enum OriginRegistrationError {
 }
 
 fn format_message_element(
-    element: &JavaString,
+    element: &Utf16String,
     parameters: &[Option<std::sync::Arc<TemplateValue>>],
     locale: &JavaLocale,
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     let element_text = element.to_string_lossy();
     let mut sections = element_text.splitn(3, ',');
     let argument_text = sections.next().unwrap_or("").trim();
@@ -264,7 +264,7 @@ fn format_message_element(
         missing.push(u16::from(b'{'));
         missing.extend_from_slice(element.as_utf16());
         missing.push(u16::from(b'}'));
-        return Ok(JavaString::from_utf16(missing));
+        return Ok(Utf16String::from_utf16(missing));
     };
     let value = parameter.as_deref();
     let Some(format_type) = sections.next().map(str::trim) else {
@@ -286,16 +286,16 @@ fn format_message_element(
 fn format_default_parameter(
     value: Option<&TemplateValue>,
     locale: &JavaLocale,
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     match value {
         Some(TemplateValue::Number(number)) => format_number(number, locale, NumberStyle::Default),
         Some(TemplateValue::Object(object)) if object.as_any().is::<crate::util::JavaDate>() => {
             format_temporal_parameter(value, locale, "", "")
         }
         Some(value) => Ok(value
-            .to_java_string()
-            .unwrap_or_else(|| JavaString::from_rust_str("null"))),
-        None => Ok(JavaString::from_rust_str("null")),
+            .to_utf16_string()
+            .unwrap_or_else(|| Utf16String::from_rust_str("null"))),
+        None => Ok(Utf16String::from_rust_str("null")),
     }
 }
 
@@ -311,7 +311,7 @@ fn format_number_parameter(
     value: Option<&TemplateValue>,
     locale: &JavaLocale,
     style: &str,
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     let Some(TemplateValue::Number(number)) = value else {
         return Err(Box::new(MessageFormatError::NotANumber));
     };
@@ -329,7 +329,7 @@ fn format_decimal_pattern(
     number: &JavaNumber,
     locale: &JavaLocale,
     pattern: &str,
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     let subpatterns = split_unquoted(pattern, ';');
     if subpatterns.len() > 2 {
         return malformed_decimal_pattern(pattern);
@@ -359,7 +359,7 @@ fn format_decimal_pattern(
     } else {
         format_fixed_decimal_number(&scaled, locale, selected)?
     };
-    Ok(JavaString::from_rust_str(&format!(
+    Ok(Utf16String::from_rust_str(&format!(
         "{prefix}{formatted}{suffix}"
     )))
 }
@@ -779,7 +779,7 @@ fn format_number(
     number: &JavaNumber,
     locale: &JavaLocale,
     style: NumberStyle,
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     if let Some(non_finite) = non_finite_number_text(number) {
         let formatted = match style {
             NumberStyle::Currency => {
@@ -793,7 +793,7 @@ fn format_number(
             NumberStyle::Percent => format!("{non_finite}%"),
             NumberStyle::Default | NumberStyle::Integer => non_finite.to_owned(),
         };
-        return Ok(JavaString::from_rust_str(&formatted));
+        return Ok(Utf16String::from_rust_str(&formatted));
     }
     let formatted = match style {
         NumberStyle::Currency => NumberUtils::format_currency(Some(number), Some(locale)),
@@ -825,7 +825,7 @@ fn format_number(
         Box::new(MessageFormatError::NumberFormatting(error.to_string()))
             as super::MessageResolutionError
     })?;
-    Ok(formatted.unwrap_or_else(|| JavaString::from_rust_str("null")))
+    Ok(formatted.unwrap_or_else(|| Utf16String::from_rust_str("null")))
 }
 
 fn non_finite_number_text(number: &JavaNumber) -> Option<&'static str> {
@@ -899,7 +899,7 @@ fn format_choice_parameter(
     locale: &JavaLocale,
     pattern: &str,
     parameters: &[Option<std::sync::Arc<TemplateValue>>],
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     let Some(TemplateValue::Number(number)) = value else {
         return Err(Box::new(MessageFormatError::NotANumber));
     };
@@ -935,7 +935,7 @@ fn format_choice_parameter(
     let selected = selected.unwrap_or("");
     StandardMessageResolutionUtils::format_message(
         locale,
-        &JavaString::from_rust_str(selected),
+        &Utf16String::from_rust_str(selected),
         Some(parameters),
     )
 }
@@ -978,7 +978,7 @@ fn format_temporal_parameter(
     locale: &JavaLocale,
     format_type: &str,
     style: &str,
-) -> MessageResolutionResult<JavaString> {
+) -> MessageResolutionResult<Utf16String> {
     let Some(TemplateValue::Object(object)) = value else {
         return Err(Box::new(MessageFormatError::NumberFormatting(
             "Cannot format given Object as a Date".to_owned(),
@@ -992,11 +992,11 @@ fn format_temporal_parameter(
     let pattern = temporal_pattern(locale, format_type, style)?;
     crate::util::DateUtils::format(
         Some(date),
-        Some(&JavaString::from_rust_str(&pattern)),
+        Some(&Utf16String::from_rust_str(&pattern)),
         Some(locale),
     )
     .map_err(|error| Box::new(error) as super::MessageResolutionError)
-    .map(|formatted| formatted.unwrap_or_else(|| JavaString::from_rust_str("null")))
+    .map(|formatted| formatted.unwrap_or_else(|| Utf16String::from_rust_str("null")))
 }
 
 fn temporal_pattern(
@@ -1103,7 +1103,7 @@ mod tests {
     use std::any::TypeId;
     use std::collections::HashMap;
 
-    use crate::util::{JavaLocale, JavaString};
+    use crate::util::{JavaLocale, Utf16String};
 
     use super::StandardMessageResolutionUtils;
 
@@ -1116,8 +1116,8 @@ mod tests {
     #[test]
     fn origin_messages_use_specific_class_before_registered_parent() {
         let locale = JavaLocale::new(
-            JavaString::from_rust_str("en-US"),
-            JavaString::from_rust_str("US"),
+            Utf16String::from_rust_str("en-US"),
+            Utf16String::from_rust_str("US"),
         );
         let parent = TypeId::of::<Parent>();
         let child = TypeId::of::<Child>();
@@ -1126,12 +1126,12 @@ mod tests {
             locale.clone(),
             HashMap::from([
                 (
-                    JavaString::from_rust_str("parent"),
-                    JavaString::from_rust_str("parent-value"),
+                    Utf16String::from_rust_str("parent"),
+                    Utf16String::from_rust_str("parent-value"),
                 ),
                 (
-                    JavaString::from_rust_str("same"),
-                    JavaString::from_rust_str("parent-value"),
+                    Utf16String::from_rust_str("same"),
+                    Utf16String::from_rust_str("parent-value"),
                 ),
             ]),
         );
@@ -1139,8 +1139,8 @@ mod tests {
             child,
             locale.clone(),
             HashMap::from([(
-                JavaString::from_rust_str("same"),
-                JavaString::from_rust_str("child-value"),
+                Utf16String::from_rust_str("same"),
+                Utf16String::from_rust_str("child-value"),
             )]),
         );
         StandardMessageResolutionUtils::register_origin_parent(child, parent)
@@ -1148,12 +1148,12 @@ mod tests {
 
         let resolved = StandardMessageResolutionUtils::resolve_messages_for_origin(child, &locale);
         assert_eq!(
-            resolved.get(&JavaString::from_rust_str("parent")),
-            Some(&JavaString::from_rust_str("parent-value"))
+            resolved.get(&Utf16String::from_rust_str("parent")),
+            Some(&Utf16String::from_rust_str("parent-value"))
         );
         assert_eq!(
-            resolved.get(&JavaString::from_rust_str("same")),
-            Some(&JavaString::from_rust_str("child-value"))
+            resolved.get(&Utf16String::from_rust_str("same")),
+            Some(&Utf16String::from_rust_str("child-value"))
         );
     }
 

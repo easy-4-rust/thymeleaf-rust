@@ -9,7 +9,7 @@ use std::sync::Arc;
 use http::Request;
 use thymeleaf::context::WebContext;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::{IWebExchange, IWebRequest};
 use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
 use tokio_util::sync::CancellationToken;
@@ -18,8 +18,8 @@ use vernal_web::{RequestContext, RouteMetadata, SecurityPrincipal};
 
 use thymeleaf_vernal::{VernalWebExchange, VernalWebRequest};
 
-fn js(s: &str) -> JavaString {
-    JavaString::from_rust_str(s)
+fn js(s: &str) -> Utf16String {
+    Utf16String::from_rust_str(s)
 }
 
 fn snapshot(uri: &str, headers: &[(&str, &str)]) -> Arc<HttpRequestSnapshot> {
@@ -140,7 +140,7 @@ fn web_exchange_exposes_principal() {
     let thymeleaf::expression::TemplateValue::Object(object) = principal.as_ref() else {
         panic!("principal must be a TemplateValue::Object");
     };
-    assert_eq!(object.to_java_string().to_string_lossy(), "user-42");
+    assert_eq!(object.to_utf16_string().to_string_lossy(), "user-42");
 }
 
 #[test]

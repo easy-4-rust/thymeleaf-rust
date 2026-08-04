@@ -33,7 +33,7 @@ use sha2::Digest;
 use thymeleaf::context::Context;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::ITemplateResolver;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::{TemplateEngine, TemplateMode};
 
 #[allow(dead_code, unused_imports)]
@@ -256,8 +256,8 @@ struct ProcessorCase {
     input: String,
     output: Option<String>,
     expects_exception: bool,
-    named_inputs: indexmap::IndexMap<JavaString, JavaString>,
-    named_modes: indexmap::IndexMap<JavaString, TemplateMode>,
+    named_inputs: indexmap::IndexMap<Utf16String, Utf16String>,
+    named_modes: indexmap::IndexMap<Utf16String, TemplateMode>,
 }
 
 fn load_case(name: &str) -> ProcessorCase {
@@ -530,9 +530,9 @@ fn run_template(input: &str, mode: TemplateMode) -> String {
         .expect("set resolver");
     let context = Context::new();
     context.set_variable(
-        Some(JavaString::from_rust_str("var")),
+        Some(Utf16String::from_rust_str("var")),
         Some(Arc::new(TemplateValue::String(Arc::new(
-            JavaString::from_rust_str("10"),
+            Utf16String::from_rust_str("10"),
         )))),
     );
     engine

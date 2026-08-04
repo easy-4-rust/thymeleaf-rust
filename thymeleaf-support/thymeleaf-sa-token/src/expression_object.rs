@@ -15,7 +15,7 @@ use thymeleaf::context::IExpressionContext;
 use thymeleaf::expression::{
     ExpressionObjectNames, IExpressionObjectFactory, StandardExpressionResult, TemplateValue,
 };
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 use crate::authentication::{AUTHENTICATION_VARIABLE, SaTokenAuthentication};
 use crate::authentication_object::SaTokenAuthenticationObject;
@@ -30,7 +30,7 @@ pub const AUTHORIZATION_OBJECT_NAME: &str = "authorization";
 /// 变量缺失、为 null 或不是安全快照对象时返回匿名快照（不报错）。
 #[must_use]
 pub fn read_authentication(context: &dyn IExpressionContext) -> Arc<SaTokenAuthentication> {
-    let name = JavaString::from_rust_str(AUTHENTICATION_VARIABLE);
+    let name = Utf16String::from_rust_str(AUTHENTICATION_VARIABLE);
     match context.get_variable(Some(&name)) {
         Some(value) => match value.as_ref() {
             TemplateValue::Object(object) => object
@@ -51,7 +51,7 @@ pub fn read_authentication(context: &dyn IExpressionContext) -> Arc<SaTokenAuthe
 /// 仅语义上强调"仅授权判断"入口，因此返回相同的对象。
 fn build_object(
     context: Arc<dyn IExpressionContext>,
-    name: Option<&JavaString>,
+    name: Option<&Utf16String>,
 ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
     let Some(name) = name else {
         return Ok(None);
@@ -82,20 +82,20 @@ impl SaTokenExpressionObjectFactory {
 impl IExpressionObjectFactory for SaTokenExpressionObjectFactory {
     fn get_all_expression_object_names(&self) -> Option<ExpressionObjectNames> {
         Some(Arc::from(vec![
-            Some(JavaString::from_rust_str(AUTHENTICATION_OBJECT_NAME)),
-            Some(JavaString::from_rust_str(AUTHORIZATION_OBJECT_NAME)),
+            Some(Utf16String::from_rust_str(AUTHENTICATION_OBJECT_NAME)),
+            Some(Utf16String::from_rust_str(AUTHORIZATION_OBJECT_NAME)),
         ]))
     }
 
     fn build_object(
         &self,
         context: Arc<dyn IExpressionContext>,
-        expression_object_name: Option<&JavaString>,
+        expression_object_name: Option<&Utf16String>,
     ) -> StandardExpressionResult<Option<Arc<TemplateValue>>> {
         build_object(context, expression_object_name)
     }
 
-    fn is_cacheable(&self, expression_object_name: Option<&JavaString>) -> bool {
+    fn is_cacheable(&self, expression_object_name: Option<&Utf16String>) -> bool {
         expression_object_name.is_some_and(|name| {
             name.to_string_lossy() == AUTHENTICATION_OBJECT_NAME
                 || name.to_string_lossy() == AUTHORIZATION_OBJECT_NAME

@@ -1,5 +1,5 @@
 use crate::TemplateMode;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{
     AbstractStandardConditionalVisibilityTagProcessor, delegate_standard_element_tag_processor,
@@ -23,13 +23,13 @@ impl StandardIfTagProcessor {
     /// 对应 Java 语义：`StandardIfTagProcessor` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub fn new(
         template_mode: TemplateMode,
-        dialect_prefix: Option<JavaString>,
+        dialect_prefix: Option<Utf16String>,
     ) -> Result<Self, crate::exceptions::TemplateProcessingException> {
         Ok(Self {
             processor: AbstractStandardConditionalVisibilityTagProcessor::new(
                 template_mode,
                 dialect_prefix,
-                JavaString::from_rust_str(Self::ATTR_NAME),
+                Utf16String::from_rust_str(Self::ATTR_NAME),
                 Self::PRECEDENCE,
                 |context, _tag, _attribute_name, attribute_value| {
                     evaluate_standard_expression_as_boolean(context, attribute_value)

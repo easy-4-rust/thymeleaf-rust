@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use thymeleaf::expression::{OgnlRuntime, OgnlRuntimeError, TemplateValue};
-use thymeleaf::util::{JavaNumber, JavaString};
+use thymeleaf::util::{JavaNumber, Utf16String};
 
 use super::corpus_byte_array_input_stream::CorpusByteArrayInputStream;
 use super::corpus_optional::CorpusOptional;
@@ -22,20 +22,20 @@ pub struct CorpusOgnlRuntime;
 impl OgnlRuntime for CorpusOgnlRuntime {
     fn read_static_field(
         &self,
-        type_name: &JavaString,
-        member_name: &JavaString,
+        type_name: &Utf16String,
+        member_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         let type_name = type_name.to_string_lossy();
         let member_name = member_name.to_string_lossy();
         match (type_name.as_str(), member_name.as_str()) {
             ("java.util.concurrent.TimeUnit", "class") => {
                 Some(Ok(Some(Arc::new(TemplateValue::string(
-                    JavaString::from_rust_str("class java.util.concurrent.TimeUnit"),
+                    Utf16String::from_rust_str("class java.util.concurrent.TimeUnit"),
                 )))))
             }
             ("java.util.concurrent.TimeUnit", "MILLISECONDS" | "SECONDS") => {
                 Some(Ok(Some(Arc::new(TemplateValue::string(
-                    JavaString::from_rust_str(&member_name),
+                    Utf16String::from_rust_str(&member_name),
                 )))))
             }
             _ => None,
@@ -44,8 +44,8 @@ impl OgnlRuntime for CorpusOgnlRuntime {
 
     fn invoke_static_method(
         &self,
-        type_name: &JavaString,
-        method_name: &JavaString,
+        type_name: &Utf16String,
+        method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         let type_name = type_name.to_string_lossy();
@@ -54,8 +54,8 @@ impl OgnlRuntime for CorpusOgnlRuntime {
             ("java.util.TimeZone", "getTimeZone", [Some(value)]) => {
                 Some(Ok(Some(Arc::new(TemplateValue::string(
                     value
-                        .to_java_string()
-                        .unwrap_or_else(|| JavaString::from_rust_str("GMT")),
+                        .to_utf16_string()
+                        .unwrap_or_else(|| Utf16String::from_rust_str("GMT")),
                 )))))
             }
             ("java.util.Optional", "of", [Some(value)]) => {
@@ -76,8 +76,8 @@ impl OgnlRuntime for CorpusOgnlRuntime {
             ("java.util.UUID", "fromString", [Some(value)]) => {
                 Some(Ok(Some(Arc::new(TemplateValue::string(
                     value
-                        .to_java_string()
-                        .unwrap_or_else(|| JavaString::from_rust_str("")),
+                        .to_utf16_string()
+                        .unwrap_or_else(|| Utf16String::from_rust_str("")),
                 )))))
             }
             ("org.thymeleaf.templateengine.features.TestProxyFactory", "createTestProxy", []) => {
@@ -91,7 +91,7 @@ impl OgnlRuntime for CorpusOgnlRuntime {
 
     fn construct(
         &self,
-        type_name: &JavaString,
+        type_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
     ) -> Option<Result<Option<Arc<TemplateValue>>, OgnlRuntimeError>> {
         let type_name = type_name.to_string_lossy();
@@ -106,8 +106,8 @@ impl OgnlRuntime for CorpusOgnlRuntime {
             ))))),
             ("java.text.SimpleDateFormat", [Some(pattern)]) => {
                 let pattern = pattern
-                    .to_java_string()
-                    .unwrap_or_else(|| JavaString::from_rust_str(""));
+                    .to_utf16_string()
+                    .unwrap_or_else(|| Utf16String::from_rust_str(""));
                 Some(Ok(Some(Arc::new(TemplateValue::Object(Arc::new(
                     CorpusSimpleDateFormat::new(pattern),
                 ))))))
@@ -145,7 +145,7 @@ impl OgnlRuntime for CorpusOgnlRuntime {
             ("org.thymeleaf.templateengine.features.expression.ExpContainer1", []) => {
                 Some(Ok(Some(map_value(vec![(
                     "value",
-                    Arc::new(TemplateValue::string(JavaString::from_rust_str(
+                    Arc::new(TemplateValue::string(Utf16String::from_rust_str(
                         "Container1 - value",
                     ))),
                 )]))))
@@ -160,11 +160,11 @@ impl OgnlRuntime for CorpusOgnlRuntime {
                 Some(Ok(Some(map_value(vec![
                     (
                         "value",
-                        Arc::new(TemplateValue::string(JavaString::from_rust_str("a value"))),
+                        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a value"))),
                     ),
                     (
                         "code",
-                        Arc::new(TemplateValue::string(JavaString::from_rust_str("a code"))),
+                        Arc::new(TemplateValue::string(Utf16String::from_rust_str("a code"))),
                     ),
                 ]))))
             }
@@ -174,10 +174,10 @@ impl OgnlRuntime for CorpusOgnlRuntime {
                 let name = format!(
                     "{} {}",
                     first_name
-                        .to_java_string()
+                        .to_utf16_string()
                         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy()),
                     last_name
-                        .to_java_string()
+                        .to_utf16_string()
                         .map_or_else(|| "null".to_owned(), |value| value.to_string_lossy())
                 );
                 Some(Ok(Some(map_value(vec![
@@ -190,7 +190,7 @@ impl OgnlRuntime for CorpusOgnlRuntime {
                     ),
                     (
                         "name",
-                        Arc::new(TemplateValue::string(JavaString::from_rust_str(&name))),
+                        Arc::new(TemplateValue::string(Utf16String::from_rust_str(&name))),
                     ),
                 ]))))
             }
@@ -231,7 +231,7 @@ fn map_value(entries: Vec<(&str, Arc<TemplateValue>)>) -> Arc<TemplateValue> {
             .into_iter()
             .map(|(key, value)| {
                 (
-                    Arc::new(TemplateValue::string(JavaString::from_rust_str(key))),
+                    Arc::new(TemplateValue::string(Utf16String::from_rust_str(key))),
                     value,
                 )
             })

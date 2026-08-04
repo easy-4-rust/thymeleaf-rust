@@ -4,7 +4,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 use thymeleaf::web::IWebSession;
 
 use crate::business::entities::User;
@@ -13,7 +13,7 @@ use crate::business::entities::User;
 /// `User("John", "Apricot", "Antarctica", null)`。
 #[derive(Default)]
 pub struct GtvgWebSession {
-    attributes: RwLock<IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>>>,
+    attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
 }
 
 impl GtvgWebSession {
@@ -22,7 +22,7 @@ impl GtvgWebSession {
     pub fn with_user() -> Self {
         let session = Self::default();
         session.set_attribute_value(
-            Some(JavaString::from_rust_str("user")),
+            Some(Utf16String::from_rust_str("user")),
             Some(Arc::new(TemplateValue::Object(Arc::new(User {
                 first_name: "John".to_owned(),
                 last_name: "Apricot".to_owned(),
@@ -38,7 +38,7 @@ impl IWebSession for GtvgWebSession {
     fn exists(&self) -> bool {
         true
     }
-    fn contains_attribute(&self, name: Option<&JavaString>) -> bool {
+    fn contains_attribute(&self, name: Option<&Utf16String>) -> bool {
         self.attributes
             .read()
             .expect("session lock")
@@ -47,7 +47,7 @@ impl IWebSession for GtvgWebSession {
     fn get_attribute_count(&self) -> i32 {
         self.attributes.read().expect("session lock").len() as i32
     }
-    fn get_all_attribute_names(&self) -> Vec<Option<JavaString>> {
+    fn get_all_attribute_names(&self) -> Vec<Option<Utf16String>> {
         self.attributes
             .read()
             .expect("session lock")
@@ -55,10 +55,10 @@ impl IWebSession for GtvgWebSession {
             .cloned()
             .collect()
     }
-    fn get_attribute_map(&self) -> IndexMap<Option<JavaString>, Option<Arc<TemplateValue>>> {
+    fn get_attribute_map(&self) -> IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>> {
         self.attributes.read().expect("session lock").clone()
     }
-    fn get_attribute_value(&self, name: Option<&JavaString>) -> Option<Arc<TemplateValue>> {
+    fn get_attribute_value(&self, name: Option<&Utf16String>) -> Option<Arc<TemplateValue>> {
         self.attributes
             .read()
             .expect("session lock")
@@ -66,13 +66,13 @@ impl IWebSession for GtvgWebSession {
             .cloned()
             .flatten()
     }
-    fn set_attribute_value(&self, name: Option<JavaString>, value: Option<Arc<TemplateValue>>) {
+    fn set_attribute_value(&self, name: Option<Utf16String>, value: Option<Arc<TemplateValue>>) {
         self.attributes
             .write()
             .expect("session lock")
             .insert(name, value);
     }
-    fn remove_attribute(&self, name: Option<&JavaString>) {
+    fn remove_attribute(&self, name: Option<&Utf16String>) {
         self.attributes
             .write()
             .expect("session lock")

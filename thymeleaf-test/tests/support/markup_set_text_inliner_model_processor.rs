@@ -11,14 +11,14 @@ use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::model::IModel;
 use thymeleaf::processor::IProcessor;
-use thymeleaf::util::JavaString;
+use thymeleaf::util::Utf16String;
 
 type ProcessResult = Result<(), Box<dyn TemplateEngineException>>;
 type ProcessCallback = fn(
     &dyn ITemplateContext,
     &mut dyn IModel,
     &AttributeName,
-    Option<JavaString>,
+    Option<Utf16String>,
     &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult;
 
@@ -36,10 +36,10 @@ impl MarkupSetTextInlinerModelProcessor {
         Self {
             processor: AbstractAttributeModelProcessor::new(
                 Some(TemplateMode::HTML),
-                dialect_prefix.map(JavaString::from_rust_str),
+                dialect_prefix.map(Utf16String::from_rust_str),
                 None,
                 false,
-                Some(JavaString::from_rust_str("set-text-inliner")),
+                Some(Utf16String::from_rust_str("set-text-inliner")),
                 true,
                 600,
                 true,
@@ -91,7 +91,7 @@ fn set_inliner(
     context: &dyn ITemplateContext,
     _model: &mut dyn IModel,
     _attribute_name: &AttributeName,
-    _attribute_value: Option<JavaString>,
+    _attribute_value: Option<Utf16String>,
     structure_handler: &mut dyn IElementModelStructureHandler,
 ) -> ProcessResult {
     structure_handler.set_inliner(Some(Arc::new(StandardTextInliner::new(

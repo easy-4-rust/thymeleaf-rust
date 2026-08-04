@@ -6,7 +6,7 @@ use crate::exceptions::TemplateInputException;
 use crate::reader::{ParserLevelCommentTextReader, PrototypeOnlyCommentTextReader};
 use crate::templateparser::{ITemplateParser, TemplateParserError};
 use crate::templateresource::ITemplateResource;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
@@ -51,8 +51,8 @@ impl AbstractTextTemplateParser {
     fn parse_internal(
         &self,
         configuration: Arc<dyn IEngineConfiguration>,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
         resource: Option<Arc<dyn ITemplateResource>>,
         line_offset: i32,
         col_offset: i32,
@@ -82,7 +82,7 @@ impl AbstractTextTemplateParser {
                 })?,
             )?)
         } else {
-            Box::new(Utf8TextParserReader::from_java_string(template))
+            Box::new(Utf8TextParserReader::from_utf16_string(template))
         };
         let reader: Box<dyn TextParserReader> = if template_mode == TemplateMode::TEXT {
             Box::new(ParserLevelCommentTextReader::new(reader))
@@ -143,9 +143,9 @@ impl ITemplateParser for AbstractTextTemplateParser {
     fn parse_standalone(
         &self,
         configuration: Arc<dyn IEngineConfiguration>,
-        owner_template: Option<&JavaString>,
-        template: &JavaString,
-        template_selectors: Option<&[JavaString]>,
+        owner_template: Option<&Utf16String>,
+        template: &Utf16String,
+        template_selectors: Option<&[Utf16String]>,
         resource: Arc<dyn ITemplateResource>,
         template_mode: TemplateMode,
         use_decoupled_logic: bool,
@@ -181,8 +181,8 @@ impl ITemplateParser for AbstractTextTemplateParser {
     fn parse_string(
         &self,
         configuration: Arc<dyn IEngineConfiguration>,
-        owner_template: &JavaString,
-        template: &JavaString,
+        owner_template: &Utf16String,
+        template: &Utf16String,
         line_offset: i32,
         col_offset: i32,
         template_mode: TemplateMode,
@@ -234,7 +234,7 @@ impl Utf8TextParserReader {
         })
     }
 
-    fn from_java_string(input: &JavaString) -> Self {
+    fn from_utf16_string(input: &Utf16String) -> Self {
         Self {
             input: input.as_utf16().to_vec(),
             position: 0,

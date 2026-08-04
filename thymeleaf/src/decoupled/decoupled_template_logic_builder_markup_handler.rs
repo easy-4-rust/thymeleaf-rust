@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::TemplateMode;
 use crate::exceptions::TemplateInputException;
-use crate::util::JavaString;
+use crate::util::Utf16String;
 
 use super::{DecoupledInjectedAttribute, DecoupledTemplateLogic};
 
@@ -19,7 +19,7 @@ const ATTRIBUTE_NAME_SEL: &str = "sel";
 /// 对应 Java:
 /// `org.thymeleaf.templateparser.markup.decoupled.DecoupledTemplateLogicBuilderMarkupHandler`。
 pub struct DecoupledTemplateLogicBuilderMarkupHandler {
-    template_name: JavaString,
+    template_name: Utf16String,
     template_mode: TemplateMode,
     decoupled_template_logic: DecoupledTemplateLogic,
     in_logic_body: bool,
@@ -38,7 +38,7 @@ impl DecoupledTemplateLogicBuilderMarkupHandler {
     /// 对应 Java:
     /// `DecoupledTemplateLogicBuilderMarkupHandler#DecoupledTemplateLogicBuilderMarkupHandler`。
     pub fn new(
-        template_name: JavaString,
+        template_name: Utf16String,
         template_mode: TemplateMode,
     ) -> Result<Self, TemplateInputException> {
         if template_name.is_empty() {
@@ -189,7 +189,7 @@ impl DecoupledTemplateLogicBuilderMarkupHandler {
                 "Error while processing decoupled logic file: <attr> injection tag does not contain any \"sel\" selector attributes.",
             ));
         }
-        let current_selector = JavaString::from_rust_str(self.selector.get_current_selector());
+        let current_selector = Utf16String::from_rust_str(self.selector.get_current_selector());
         for attribute in self.current_injected_attributes.drain(..) {
             self.decoupled_template_logic
                 .add_injected_attribute(current_selector.clone(), attribute);
