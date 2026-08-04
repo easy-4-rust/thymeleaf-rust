@@ -805,15 +805,6 @@
       "owner": "thymeleaf-rust",
       "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
     },
-    "src/util/java_string.rs": {
-      "primary_types": [
-        "JavaString",
-        "JavaStringResult"
-      ],
-      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
-      "owner": "thymeleaf-rust",
-      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
-    },
     "src/util/list_utils.rs": {
       "primary_types": [
         "JavaListType",
@@ -931,6 +922,15 @@
         "RenderedTemplate"
       ],
       "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/util/utf16_string.rs": {
+      "primary_types": [
+        "Utf16String",
+        "Utf16StringResult"
+      ],
+      "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
       "owner": "thymeleaf-rust",
       "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
     }
