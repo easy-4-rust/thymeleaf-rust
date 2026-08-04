@@ -6,6 +6,25 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **命名 Rust 化（语义锁定，行为零变更）**：全量移除 `Java*` 前缀类型与
+  `java_*` 边界方法，改用 Rust 领域命名——`JavaString`→`Utf16String`、
+  `JavaLocale`→`Locale`、`JavaWriter`→`TemplateWriter`、`JavaTemporal`→
+  `TemporalValue`、`JavaNumber`→`NumberValue`、`JavaList`→`ListValue`、
+  `JavaDate`→`DateValue`、`JavaEvaluation*`→`Evaluation*` 等 40+ 类型；
+  `ClassNotFoundException`→`ClassNotFoundError`、`NoSuchMethodException`→
+  `NoSuchMethodError`、`OgnlException`→`OgnlError`；
+  `TemplateObject` 边界方法 `java_class_name`→`class_name`、
+  `java_invoke_method`→`invoke_method` 等 8 项。
+  模板语言可见的 Java 对象契约（UTF-16 语义、toString 格式、corpus 断言、
+  `%EXCEPTION` 字符串键）全部保持。API baseline 已用 cargo-public-api 再生成。
+- **安全模型修正（预先存在的 CI 失败）**：`ExpressionUtils::is_type_forbidden`
+  改为默认拒绝（仅白名单 + `java.time.*`/`org.thymeleaf.*` 受信前缀放行；
+  无包名裸类名仍由解析器报 `ClassNotFound`，保持 corpus 契约）；
+  `is_member_forbidden(None, ...)` 无目标上下文默认拒绝危险成员；
+  GTVG 示例测试固定进程默认 Locale，消除 CI 平台 LANG 差异。
+
 ### Added
 
 - **治理门禁**：通用迁移布局审计 vendor 为 `scripts/audit_migration_layout.py`

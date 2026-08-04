@@ -237,7 +237,7 @@ flowchart TB
     BUILDER --> MODEL
     MODEL -. "仅 Validity 允许时写入" .-> STORE["Template Cache"]
     MODEL --> CHAIN["PreProcessor → ProcessorTemplateHandler → PostProcessor"]
-    CHAIN --> FULL["OutputTemplateHandler → JavaWriter<br/>完整 UTF-16 输出"]
+    CHAIN --> FULL["OutputTemplateHandler → TemplateWriter<br/>完整 UTF-16 输出"]
     CHAIN --> THROTTLED["ThrottledTemplateProcessor<br/>FlowController 驱动分块输出"]
 
     CONFIG -. "固定顺序、优先级和协作者" .-> CHAIN
@@ -255,7 +255,7 @@ flowchart TB
    `TemplateModel`；缓存有效性只决定是否保存该模型，不改变后续 Handler 语义；
 6. Handler 链依次执行 PreProcessor、`ProcessorTemplateHandler`、PostProcessor 和输出；
 7. Standard Dialect 注册标准 `th:*` Processor，表达式 Parser 负责外层语法、预处理和缓存；
-8. 完整渲染写入 `JavaWriter`，节流渲染复用同一模型和 Processor 链，由 FlowController
+8. 完整渲染写入 `TemplateWriter`，节流渲染复用同一模型和 Processor 链，由 FlowController
    控制推进。
 
 ### 3.4 配置聚合是核心控制平面
@@ -297,9 +297,9 @@ ExpressionObjectFactory。
 | Resolver 顺序、缓存键、TemplateMode | 稳定排序、类型化 key、Rust enum |
 | 不可变、可缓存、可重放的 TemplateModel | `Arc<TemplateModel>` 和事件 trait |
 | Dialect 与 Processor precedence | trait SPI、`ProcessorSet` 和能力方法 |
-| Context 层级、Selection、Locale、变量不存在与 null | trait capability、`TemplateValue`、`JavaLocale` |
-| Java UTF-16 字符、哈希、索引边界 | `JavaString` 保存 UTF-16 code unit |
-| 完整与节流双输出 | `JavaWriter`、`IThrottledTemplateProcessor`、中立 HTTP Body |
+| Context 层级、Selection、Locale、变量不存在与 null | trait capability、`TemplateValue`、`Locale` |
+| Java UTF-16 字符、哈希、索引边界 | `Utf16String` 保存 UTF-16 code unit |
+| 完整与节流双输出 | `TemplateWriter`、`IThrottledTemplateProcessor`、中立 HTTP Body |
 | OGNL 常用只读语义 | 内建 AST 和安全求值器，不开放任意反射/Class/静态调用 |
 | Java SoftReference 自动回收 | 显式缓存策略；不伪造 GC 行为 |
 
@@ -362,11 +362,11 @@ flowchart TB
         end
 
         subgraph DELIVERY["交付平面"]
-            FULL["process / process_to_writer<br/>OutputTemplateHandler → JavaWriter"]
+            FULL["process / process_to_writer<br/>OutputTemplateHandler → TemplateWriter"]
             THROTTLED["process_throttled<br/>ThrottledTemplateProcessor + FlowController"]
             EVENTS --> FULL
             EVENTS --> THROTTLED
-            FULL --> FULL_RESULT["JavaString / Writer"]
+            FULL --> FULL_RESULT["Utf16String / Writer"]
             THROTTLED --> THROTTLED_RESULT["IThrottledTemplateProcessor"]
         end
 
@@ -441,7 +441,7 @@ sequenceDiagram
     participant Parser as Mode Parser
     participant Model as TemplateModel
     participant Chain as Processor Handler Chain
-    participant Writer as JavaWriter
+    participant Writer as TemplateWriter
 
     App->>Engine: process(TemplateSpec, IContext)
     Engine->>Manager: parse_and_process(...)
@@ -460,7 +460,7 @@ sequenceDiagram
     Manager->>Chain: replay model events
     Chain->>Writer: processed output events
     Writer-->>Engine: UTF-16 output / I/O result
-    Engine-->>App: JavaString or Result
+    Engine-->>App: Utf16String or Result
 ```
 
 ### 4.2 中立 Web 与宿主适配架构
@@ -484,7 +484,7 @@ flowchart LR
         REQUEST["TemplateSpec + Arc&lt;dyn IContext&gt;"]
         RENDERER["ThymeleafRenderer"]
         CORE["同一 ITemplateEngine<br/>Resolver / Parser / Model / Processor"]
-        FULL_ENGINE["process → JavaString"]
+        FULL_ENGINE["process → Utf16String"]
         STREAM_ENGINE["process_throttled → IThrottledTemplateProcessor"]
         FULL["Charset 编码 + Content-Length<br/>RenderedTemplateBody::Full(Bytes)"]
         STREAM["工作线程驱动 Processor<br/>容量 1 Frame 通道形成背压"]
@@ -549,7 +549,7 @@ Hyper/http 层桥接。
 
 | 模式 | 编译期依赖路径 | Context/能力来源 | 最终输出 |
 |:---|:---|:---|:---|
-| 非 Web 渲染 | 业务库/任务 → `thymeleaf` | 普通 `IContext` | `JavaString`、`JavaWriter` 或节流处理器 |
+| 非 Web 渲染 | 业务库/任务 → `thymeleaf` | 普通 `IContext` | `Utf16String`、`TemplateWriter` 或节流处理器 |
 | 独立 Web 集成 | 应用 → `thymeleaf-{framework}` → `thymeleaf` | 框架适配器包装 Request/Session/Application | 框架原生 Response/Body |
 | Vernal Web 集成 | Vernal 应用 → `thymeleaf-vernal` → `thymeleaf` | Vernal Bridge 提供同一组中立 Capability | Vernal View/HTTP Body |
 
@@ -572,7 +572,7 @@ sequenceDiagram
     Adapter->>Renderer: TemplateSpec + IContext
     alt Full
         Renderer->>Engine: process(...)
-        Engine-->>Renderer: JavaString
+        Engine-->>Renderer: Utf16String
         Renderer->>Renderer: Charset 编码 + Content-Length
         Renderer-->>Adapter: RenderedTemplate::Full(Bytes)
     else Stream / Data Stream
@@ -693,8 +693,8 @@ flowchart LR
 合同由 `ITemplateEngine` 固定：
 
 ```rust
-process(&TemplateSpec, &dyn IContext) -> TemplateEngineResult<JavaString>
-process_to_writer(&TemplateSpec, &dyn IContext, Box<dyn JavaWriter>) -> TemplateEngineResult<()>
+process(&TemplateSpec, &dyn IContext) -> TemplateEngineResult<Utf16String>
+process_to_writer(&TemplateSpec, &dyn IContext, Box<dyn TemplateWriter>) -> TemplateEngineResult<()>
 process_throttled(&TemplateSpec, &dyn IContext)
     -> TemplateEngineResult<Box<dyn IThrottledTemplateProcessor>>
 ```
@@ -1323,7 +1323,7 @@ sequenceDiagram
     R->>E: process()
     E->>M: parse_and_process()
     M->>P: parse/replay TemplateModel
-    P-->>E: JavaString
+    P-->>E: Utf16String
     E-->>R: UTF-16 output
     R->>R: encode charset + Content-Length
     R-->>H: RenderedTemplate::Full(Bytes)

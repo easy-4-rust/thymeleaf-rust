@@ -162,7 +162,7 @@ flowchart TB
     end
 
     subgraph DELIVERY["4 · delivery plane"]
-        FULL["process / process_to_writer<br/>OutputTemplateHandler → JavaWriter"]
+        FULL["process / process_to_writer<br/>OutputTemplateHandler → TemplateWriter"]
         THROTTLED["process_throttled<br/>ThrottledTemplateProcessor + FlowController"]
         EVENTS --> FULL
         EVENTS --> THROTTLED
@@ -173,7 +173,7 @@ flowchart TB
     CONFIG -. "frozen ordering and policies" .-> MANAGER
     CONFIG -. "supplies the context factory" .-> CONTEXT_FACTORY
     CONFIG -. "processor/runtime services" .-> HANDLERS
-    FULL --> FULL_RESULT["JavaString / Writer"]
+    FULL --> FULL_RESULT["Utf16String / Writer"]
     THROTTLED --> STREAM_RESULT["IThrottledTemplateProcessor<br/>caller-driven backpressure"]
 ```
 
@@ -221,7 +221,7 @@ flowchart LR
         CALL["TemplateSpec + IContext"]
         RENDERER["ThymeleafRenderer"]
         ENGINE["ITemplateEngine<br/>same resolver/parser/model/processor semantics"]
-        FULL_ENGINE["process → JavaString"]
+        FULL_ENGINE["process → Utf16String"]
         STREAM_ENGINE["process_throttled → throttled processor"]
         FULL["charset encode + Content-Length<br/>RenderedTemplateBody::Full(Bytes)"]
         STREAM["render worker + capacity-one Frame channel<br/>RenderedTemplateBody::Stream"]
@@ -280,7 +280,7 @@ The same core supports three deployment modes without changing template semantic
 
 | Mode | Dependency path | Web capabilities | Output |
 |:---|:---|:---|:---|
-| Non-Web rendering | application → `thymeleaf` | none; plain `IContext` | `JavaString` or `JavaWriter` |
+| Non-Web rendering | application → `thymeleaf` | none; plain `IContext` | `Utf16String` or `TemplateWriter` |
 | Direct Web integration | application → `thymeleaf-{framework}` → `thymeleaf` | adapter wraps native request/session/application objects | native framework response |
 | Vernal integration | Vernal application → `thymeleaf-vernal` → `thymeleaf` | Vernal bridge supplies the same neutral capabilities | Vernal HTTP/view result |
 
