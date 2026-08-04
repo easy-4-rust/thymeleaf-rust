@@ -137,6 +137,9 @@ jobs:
           --summary-only
 
       - name: Check dependency licenses, sources, and duplicates
+        # EmbarkStudios/cargo-deny-action 是容器 action，仅支持 Linux runner；
+        # 许可证/来源/重复检查与平台无关，macOS 任务跳过（复用 ubuntu 结果）。
+        if: runner.os == 'Linux'
         uses: EmbarkStudios/cargo-deny-action@v2
 
       - name: Install cargo-audit
