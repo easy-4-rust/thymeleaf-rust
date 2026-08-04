@@ -39,9 +39,19 @@ impl ExpressionUtils {
     #[must_use]
     pub fn is_type_forbidden(type_name: &str) -> bool {
         let normalized = Self::normalize(Some(type_name), false).expect("non-null");
+        // 空类型名没有合法解析路径，直接禁止。
+        if normalized.trim().is_empty() {
+            return true;
+        }
         if is_type_blocked_for_type_reference(&normalized) {
             return !ALLOWED_JAVA_CLASS_NAMES.contains(&normalized.as_str())
                 && !ALLOWED_JAVA_SUPERS_NAMES.contains(&normalized.as_str());
+        }
+        // 无包名的裸类名（如 @String@）不由类型门禁拦截：解析器按 Java
+        // `Class.forName` 语义报 ClassNotFound（corpus instancestaticrestrictions
+        // 23/26 断言 `%EXCEPTION java.lang.ClassNotFoundException`）。
+        if !normalized.contains('.') {
+            return false;
         }
         // 安全模型（比 Java 上游更严格）：非封禁前缀的任意类型也一律禁止，仅受信
         // 前缀（java.time.* / org.thymeleaf.*）放行。上游依赖反射，由 ClassResolver
