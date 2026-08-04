@@ -181,6 +181,11 @@ fn number_utils_sequence_matches_java() {
 // ===========================================================================
 
 /// 对应 Java ExpressionUtilsTest#typeAllowedTest：`isTypeForbidden` 全量断言。
+///
+/// 注意：三处与 Java 上游有意偏离（Rust 安全模型，见 README「安全模型」章节）——
+/// Java `isTypeForbidden` 对非封禁前缀的任意包（es.whatever/de.whatever/
+/// com.whatever）一律放行（依赖反射由 ClassResolver 兜底）；Rust 无反射，
+/// 类型门禁即最终防线，非受信前缀（仅 java.time.*/org.thymeleaf.*）默认拒绝。
 #[test]
 fn expression_utils_type_forbidden_matches_java() {
     use thymeleaf::util::ExpressionUtils;
@@ -194,13 +199,13 @@ fn expression_utils_type_forbidden_matches_java() {
     assert!(!allowed("org.springframework.aot.X"));
     assert!(!allowed("org.springframework.javapoet.X"));
     assert!(!allowed("net.bytebuddy.X"));
-    assert!(allowed("es.whatever.X"));
-    assert!(allowed("de.whatever.X"));
+    assert!(!allowed("es.whatever.X"));
+    assert!(!allowed("de.whatever.X"));
     assert!(!allowed("java.lang.X"));
     assert!(allowed("java.time.X"));
     assert!(!allowed("javax.servlet.X"));
     assert!(!allowed("jakarta.servlet.X"));
-    assert!(allowed("com.whatever.X"));
+    assert!(!allowed("com.whatever.X"));
     assert!(!allowed("com.sun.X"));
     assert!(!allowed("jdk.X"));
     assert!(!allowed("java.lang.Runtime"));
