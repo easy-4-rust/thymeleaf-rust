@@ -9,9 +9,10 @@ struct ognl_variable_expression_evaluator;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ognl_variable_expression_evaluator;
     #[test]
     fn placeholder_compiles() {
         // 存在性桩——保证目录 1:1 与 Java 上游镜像
+        let _ = ognl_variable_expression_evaluator;
     }
 }

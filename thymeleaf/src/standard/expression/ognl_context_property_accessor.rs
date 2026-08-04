@@ -9,9 +9,10 @@ struct ognl_context_property_accessor;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ognl_context_property_accessor;
     #[test]
     fn placeholder_compiles() {
         // 存在性桩——保证目录 1:1 与 Java 上游镜像
+        let _ = ognl_context_property_accessor;
     }
 }

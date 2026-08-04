@@ -9,9 +9,10 @@ struct i_servlet_web_exchange;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::i_servlet_web_exchange;
     #[test]
     fn placeholder_compiles() {
         // 存在性桩——保证目录 1:1 与 Java 上游镜像
+        let _ = i_servlet_web_exchange;
     }
 }

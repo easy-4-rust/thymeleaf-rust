@@ -9,9 +9,10 @@ struct jakarta_servlet_web_request;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::jakarta_servlet_web_request;
     #[test]
     fn placeholder_compiles() {
         // 存在性桩——保证目录 1:1 与 Java 上游镜像
+        let _ = jakarta_servlet_web_request;
     }
 }

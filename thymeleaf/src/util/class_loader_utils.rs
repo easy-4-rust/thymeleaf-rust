@@ -9,9 +9,10 @@ struct class_loader_utils;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::class_loader_utils;
     #[test]
     fn placeholder_compiles() {
         // 存在性桩——保证目录 1:1 与 Java 上游镜像
+        let _ = class_loader_utils;
     }
 }

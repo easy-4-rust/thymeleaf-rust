@@ -9,9 +9,10 @@ struct ognl_expression_objects_wrapper;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ognl_expression_objects_wrapper;
     #[test]
     fn placeholder_compiles() {
         // 存在性桩——保证目录 1:1 与 Java 上游镜像
+        let _ = ognl_expression_objects_wrapper;
     }
 }
