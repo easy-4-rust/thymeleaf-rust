@@ -411,6 +411,9 @@ def main() -> int:
             if approvals and java_relative in approvals.get("missing_object_file", {}):
                 approved_missing = True
             if current_paths:
+                approved_misplaced = False
+                if approvals and java_relative in approvals.get("misplaced_object_file", {}):
+                    approved_misplaced = True
                 findings.append(
                     Finding(
                         "error",
@@ -419,6 +422,7 @@ def main() -> int:
                         1,
                         f"expected {expected.as_posix()}, found same-name file at "
                         + ", ".join(path.as_posix() for path in sorted(current_paths)),
+                        allowed=approved_misplaced,
                     )
                 )
             else:

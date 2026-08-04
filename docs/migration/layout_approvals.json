@@ -1038,5 +1038,109 @@
       "owner": "thymeleaf-rust",
       "exit_criteria": "等价载体已提供相同公开语义并被 contract 测试锁定"
     }
+  },
+  "misplaced_object_file": {
+    "standard/expression/OGNLContextPropertyAccessor.java": {
+      "actual_path": "src/expression/ognl_context_property_accessor.rs",
+      "reason": "OGNL 互操作：Rust 使用 native_variable_expression_evaluator / native_context_property_accessor / native_expression_objects_wrapper / native_shortcut_expression 等替代路径（见 expression/native_*_evaluator.rs）；Java 1:1 镜像占位",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "standard/expression/OGNLExpressionObjectsWrapper.java": {
+      "actual_path": "src/expression/ognl_expression_objects_wrapper.rs",
+      "reason": "OGNL 互操作 stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "standard/expression/OGNLShortcutExpression.java": {
+      "actual_path": "src/expression/ognl_shortcut_expression.rs",
+      "reason": "OGNL 互操作 stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "standard/expression/OGNLVariableExpressionEvaluator.java": {
+      "actual_path": "src/expression/ognl_variable_expression_evaluator.rs",
+      "reason": "OGNL 互操作 stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "util/ClassLoaderUtils.java": {
+      "actual_path": "src/util/class_loader_utils.rs",
+      "reason": "JVM 类加载器概念：Rust 无对应；保留 Java 1:1 镜像占位",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/IServletWebApplication.java": {
+      "actual_path": "src/servlet/i_servlet_web_application.rs",
+      "reason": "Servlet/Jakarta/Javax 集成：Rust 无 Servlet 生态；通过 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 适配器承载（见 web/ 下 i_web* 镜像与 layout_approvals 的 12 Servlet 批准条目）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/IServletWebExchange.java": {
+      "actual_path": "src/servlet/i_servlet_web_exchange.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/IServletWebRequest.java": {
+      "actual_path": "src/servlet/i_servlet_web_request.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/IServletWebSession.java": {
+      "actual_path": "src/servlet/i_servlet_web_session.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JakartaServletWebApplication.java": {
+      "actual_path": "src/servlet/jakarta_servlet_web_application.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JakartaServletWebExchange.java": {
+      "actual_path": "src/servlet/jakarta_servlet_web_exchange.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JakartaServletWebRequest.java": {
+      "actual_path": "src/servlet/jakarta_servlet_web_request.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JakartaServletWebSession.java": {
+      "actual_path": "src/servlet/jakarta_servlet_web_session.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JavaxServletWebApplication.java": {
+      "actual_path": "src/servlet/javax_servlet_web_application.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JavaxServletWebExchange.java": {
+      "actual_path": "src/servlet/javax_servlet_web_exchange.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JavaxServletWebRequest.java": {
+      "actual_path": "src/servlet/javax_servlet_web_request.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    },
+    "web/servlet/JavaxServletWebSession.java": {
+      "actual_path": "src/servlet/javax_servlet_web_session.rs",
+      "reason": "Servlet stub（同上）",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "stub 占位：调用方已使用等价替代路径（见 layout_approvals 的 12 Servlet 批准条目与 native_* 评估器）；仅保留 Java 1:1 镜像位置"
+    }
   }
 }
