@@ -317,11 +317,11 @@
     },
     "src/expression/i_standard_conversion_service.rs": {
       "primary_types": [
-        "JavaConversionObject",
-        "JavaConversionValue",
-        "JavaTargetClass",
-        "JavaStringConversionResult",
-        "JavaConversionResult",
+        "ConversionObject",
+        "ConversionValue",
+        "TargetClass",
+        "Utf16StringConversionResult",
+        "ConversionResult",
         "StandardConversionError",
         "IStandardConversionService"
       ],
@@ -368,7 +368,7 @@
     },
     "src/expression/objects.rs": {
       "primary_types": [
-        "JavaObjectArray",
+        "ObjectArrayValue",
         "ObjectsError",
         "Objects"
       ],
@@ -414,8 +414,8 @@
     },
     "src/expression/token.rs": {
       "primary_types": [
-        "JavaTokenStringResult",
-        "JavaTokenValue",
+        "TokenStringResult",
+        "TokenValue",
         "TokenError",
         "Token",
         "TokenParsingTracer"
@@ -564,15 +564,6 @@
       "owner": "thymeleaf-rust",
       "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
     },
-    "src/temporal/java_temporal.rs": {
-      "primary_types": [
-        "JavaTemporalKind",
-        "JavaTemporal"
-      ],
-      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
-      "owner": "thymeleaf-rust",
-      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
-    },
     "src/temporal/temporal_creation_utils.rs": {
       "primary_types": [
         "TemporalCreationUtils",
@@ -713,14 +704,14 @@
     },
     "src/util/aggregate_utils.rs": {
       "primary_types": [
-        "JavaBigDecimal",
-        "JavaNumber",
-        "JavaAggregateObject",
-        "JavaNumberIterable",
-        "JavaNumberList",
+        "BigDecimalValue",
+        "NumberValue",
+        "AggregateObjectValue",
+        "NumberIterableValue",
+        "NumberListValue",
         "AggregateError",
         "AggregateUtils",
-        "JavaBigDecimalArithmeticError"
+        "BigDecimalValueArithmeticError"
       ],
       "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
       "owner": "thymeleaf-rust",
@@ -728,10 +719,10 @@
     },
     "src/util/array_utils.rs": {
       "primary_types": [
-        "JavaArrayElement",
-        "JavaArrayType",
+        "ArrayElementValue",
+        "ArrayTypeValue",
         "ArrayTarget",
-        "JavaArray",
+        "ArrayValue",
         "ArrayUtilsError",
         "ArrayUtils"
       ],
@@ -761,7 +752,7 @@
     },
     "src/util/date_utils.rs": {
       "primary_types": [
-        "JavaDate",
+        "DateValue",
         "DateUtilsError",
         "DateUtils"
       ],
@@ -771,15 +762,15 @@
     },
     "src/util/evaluation_utils.rs": {
       "primary_types": [
-        "JavaEvaluationValue",
-        "JavaBigDecimalResult",
-        "JavaHashCode",
-        "JavaMapEntry",
-        "JavaEvaluationElement",
-        "JavaEvaluationTarget",
-        "JavaEvaluationListType",
-        "JavaEvaluationList",
-        "JavaEvaluationArray",
+        "EvaluationValue",
+        "BigDecimalResult",
+        "HashCodeValue",
+        "MapEntry",
+        "EvaluationElement",
+        "EvaluationTarget",
+        "EvaluationListType",
+        "EvaluationList",
+        "EvaluationArray",
         "EvaluationError",
         "EvaluationUtils"
       ],
@@ -807,13 +798,13 @@
     },
     "src/util/list_utils.rs": {
       "primary_types": [
-        "JavaListType",
+        "ListTypeValue",
         "ListUtilsError",
-        "JavaComparable",
-        "JavaComparator",
+        "ComparableValue",
+        "ComparatorValue",
         "ListView",
         "ListTarget",
-        "JavaList",
+        "ListValue",
         "ListUtils"
       ],
       "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
@@ -852,7 +843,7 @@
       "primary_types": [
         "SetView",
         "SetTarget",
-        "JavaSet",
+        "SetValue",
         "SetUtilsError",
         "SetUtils"
       ],
@@ -881,7 +872,7 @@
     "src/util/text_utils.rs": {
       "primary_types": [
         "TextUtilsError",
-        "JavaCharSequence",
+        "CharSequenceValue",
         "TextUtils"
       ],
       "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
@@ -931,6 +922,15 @@
         "Utf16StringResult"
       ],
       "reason": "Java 内部类/枚举镜像：Rust 同文件镜像 Java 内部类（如 FragmentExpression$ExecutedFragmentExpression），1:1 忠实",
+      "owner": "thymeleaf-rust",
+      "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
+    },
+    "src/temporal/temporal_value.rs": {
+      "primary_types": [
+        "TemporalValue",
+        "TemporalKind"
+      ],
+      "reason": "Rust 辅助/值类型族：主对象 + 紧密耦合的 Rust 侧值类型/辅助类型（Java* 表示、枚举、解析辅助）",
       "owner": "thymeleaf-rust",
       "exit_criteria": "对象语义 1:1 由 2608 语料差分 + 对象级 parity 锁定；文件内聚仅为布局，不改变公开 API"
     }
