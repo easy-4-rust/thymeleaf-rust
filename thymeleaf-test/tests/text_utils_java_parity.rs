@@ -40,7 +40,7 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
 
     let string_error = good.java_char_at(-1).unwrap_err();
     assert_eq!(
-        string_error.java_class_name(),
+        string_error.class_name(),
         "java.lang.StringIndexOutOfBoundsException"
     );
     assert!(good.java_char_at(1).is_err());
@@ -49,7 +49,7 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
         class_name: "example.Failure".to_owned(),
         message: Some(java("failure")),
     };
-    assert_eq!(dynamic.java_class_name(), "example.Failure");
+    assert_eq!(dynamic.class_name(), "example.Failure");
     assert_eq!(dynamic.message().unwrap().to_string_lossy(), "failure");
     assert_eq!(dynamic.to_string(), "failure");
     let no_message = TextUtilsError::SequenceAccess {
@@ -61,14 +61,11 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
     assert_eq!(TextUtilsError::NullPointer.message(), None);
     assert_eq!(TextUtilsError::NullPointer.to_string(), "");
     let illegal = TextUtils::equals_chars_range(true, None, 0, 0, Some(&[]), 0, 0).unwrap_err();
-    assert_eq!(
-        illegal.java_class_name(),
-        "java.lang.IllegalArgumentException"
-    );
+    assert_eq!(illegal.class_name(), "java.lang.IllegalArgumentException");
     assert!(illegal.message().is_some());
     let array = TextUtils::hash_chars_range(Some(&[]), 0, 1).unwrap_err();
     assert_eq!(
-        array.java_class_name(),
+        array.class_name(),
         "java.lang.ArrayIndexOutOfBoundsException"
     );
     assert!(array.message().is_some());
@@ -1103,18 +1100,14 @@ fn emit_result<T: Display>(output: &mut String, key: &str, result: Result<T, Tex
     match result {
         Ok(value) => emit(output, key, &value.to_string()),
         Err(error) => {
-            let message = if error.java_class_name() == "java.lang.NullPointerException" {
+            let message = if error.class_name() == "java.lang.NullPointerException" {
                 "<ignored>".to_owned()
             } else {
                 error
                     .message()
                     .map_or_else(|| "<null>".to_owned(), |message| encode(message.as_utf16()))
             };
-            emit(
-                output,
-                key,
-                &format!("{}|{message}", error.java_class_name()),
-            );
+            emit(output, key, &format!("{}|{message}", error.class_name()));
         }
     }
 }

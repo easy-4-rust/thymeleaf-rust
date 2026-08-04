@@ -119,7 +119,7 @@ impl StandardInlineModeParseError {
     /// # 返回
     /// 上游两个失败分支均返回 `java.lang.IllegalArgumentException`。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         "java.lang.IllegalArgumentException"
     }
 
@@ -231,7 +231,7 @@ mod tests {
             "Unrecognized inline mode: RAW"
         );
         assert_eq!(
-            StandardInlineModeParseError::NullOrEmpty.java_class_name(),
+            StandardInlineModeParseError::NullOrEmpty.class_name(),
             "java.lang.IllegalArgumentException"
         );
         assert_eq!(

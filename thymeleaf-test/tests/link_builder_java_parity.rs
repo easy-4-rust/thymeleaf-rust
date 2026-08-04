@@ -71,10 +71,7 @@ fn abstract_link_builder_preserves_subclass_state_and_nullable_contract() {
     let error = error
         .downcast_ref::<ValidateError>()
         .expect("validation error retains its concrete type");
-    assert_eq!(
-        error.java_class_name(),
-        "java.lang.IllegalArgumentException"
-    );
+    assert_eq!(error.class_name(), "java.lang.IllegalArgumentException");
     assert_eq!(
         error.get_message(),
         Some("Expression context cannot be null")
@@ -148,7 +145,7 @@ fn export_validation_and_classification(output: &mut String, context: &dyn IExpr
         "validation.context.null",
         &format!(
             "{}|{}",
-            validation.java_class_name(),
+            validation.class_name(),
             validation.get_message().unwrap_or("null")
         ),
     );

@@ -21,7 +21,7 @@ enum Value {
 }
 
 impl ArrayElementValue for Value {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         match self {
             Self::Text(_) => "java.lang.String",
             Self::Integer(_) => "java.lang.Integer",
@@ -578,7 +578,7 @@ fn emit_error<T: Display>(output: &mut String, key: &str, result: Result<T, Arra
 }
 
 fn emit_exception(output: &mut String, key: &str, error: &ArrayUtilsError) {
-    let class_name = error.java_class_name();
+    let class_name = error.class_name();
     let value = match error {
         ArrayUtilsError::ClassCast { .. }
         | ArrayUtilsError::ArrayStore { .. }

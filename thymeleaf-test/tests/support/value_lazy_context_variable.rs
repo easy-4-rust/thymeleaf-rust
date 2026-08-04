@@ -20,12 +20,12 @@ impl ValueLazyContextVariable {
 }
 
 impl TemplateObject for ValueLazyContextVariable {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.templateengine.features.lazy.ValueLazyContextVariable"
     }
 
     fn to_utf16_string(&self) -> Utf16String {
-        Utf16String::from_rust_str(self.java_class_name())
+        Utf16String::from_rust_str(self.class_name())
     }
 
     fn as_any(&self) -> &dyn Any {

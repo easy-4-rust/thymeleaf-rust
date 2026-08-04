@@ -91,7 +91,7 @@ fn combined_reader(value: &str) -> Box<dyn TextParserReader> {
 fn describe_error(error: &TextParserReaderError) -> String {
     format!(
         "{}:{}",
-        error.java_class_name(),
+        error.class_name(),
         error
             .java_message()
             .map_or_else(|| "null".to_owned(), |message| message.to_string_lossy())

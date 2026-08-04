@@ -179,7 +179,7 @@ fn map_and_object_expression_facades_match_java_golden() {
     emit(
         &mut output,
         "objects.array.incompatible_with_null",
-        incompatible_error.java_class_name(),
+        incompatible_error.class_name(),
     );
     let incompatible_without_null = ObjectArrayValue::typed(
         "java.lang.String",
@@ -312,7 +312,7 @@ fn emit_validate<T: Display>(output: &mut String, key: &str, result: Result<T, V
             key,
             format!(
                 "{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 error.get_message().unwrap_or("null")
             ),
         ),
@@ -327,11 +327,11 @@ fn emit_objects<T: Display>(output: &mut String, key: &str, result: Result<T, Ob
             key,
             format!(
                 "{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 error.get_message().unwrap_or("null")
             ),
         ),
-        Err(error) => emit(output, key, error.java_class_name()),
+        Err(error) => emit(output, key, error.class_name()),
     }
 }
 

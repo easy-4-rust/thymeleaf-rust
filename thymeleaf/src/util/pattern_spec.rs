@@ -24,10 +24,10 @@ impl PatternSpecError {
     /// # 返回
     /// 委托给 [`ValidateError`] 或 [`PatternUtilsError`] 的稳定类名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
-            Self::Validation(error) => error.java_class_name(),
-            Self::Pattern(error) => error.java_class_name(),
+            Self::Validation(error) => error.class_name(),
+            Self::Pattern(error) => error.class_name(),
         }
     }
 
@@ -270,10 +270,7 @@ mod tests {
         let mut spec = PatternSpec::new();
         for invalid in [None, Some(""), Some("\u{2008}")] {
             let error = spec.add_pattern(invalid).expect_err("validation");
-            assert_eq!(
-                error.java_class_name(),
-                "java.lang.IllegalArgumentException"
-            );
+            assert_eq!(error.class_name(), "java.lang.IllegalArgumentException");
             assert_eq!(error.get_message(), Some("Pattern cannot be null or empty"));
             assert_eq!(error.to_string(), "Pattern cannot be null or empty");
             assert!(error.source().is_some());
@@ -283,7 +280,7 @@ mod tests {
 
         let syntax = spec.add_pattern(Some("{")).expect_err("syntax");
         assert_eq!(
-            syntax.java_class_name(),
+            syntax.class_name(),
             "java.util.regex.PatternSyntaxException"
         );
         assert_eq!(spec.get_patterns().len(), 1);
@@ -299,10 +296,7 @@ mod tests {
         let error = spec
             .set_patterns(Some(&[Some("*.html"), Some("{"), Some("*.txt")]))
             .expect_err("syntax");
-        assert_eq!(
-            error.java_class_name(),
-            "java.util.regex.PatternSyntaxException"
-        );
+        assert_eq!(error.class_name(), "java.util.regex.PatternSyntaxException");
         assert_eq!(spec.get_patterns().len(), 3);
         assert_eq!(spec.compiled_pattern_count(), 1);
         assert_eq!(spec.matches(Some("view.html")), Ok(true));
@@ -311,7 +305,7 @@ mod tests {
         let null = spec
             .set_patterns(Some(&[Some("*.html"), None, Some("*.txt")]))
             .expect_err("null");
-        assert_eq!(null.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(null.class_name(), "java.lang.NullPointerException");
         assert_eq!(spec.get_patterns().len(), 3);
         assert_eq!(spec.compiled_pattern_count(), 1);
     }
@@ -322,7 +316,7 @@ mod tests {
         assert_eq!(spec.matches(None), Ok(false));
         spec.add_pattern(Some("*")).expect("pattern");
         let error = spec.matches(None).expect_err("null");
-        assert_eq!(error.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(error.class_name(), "java.lang.NullPointerException");
         assert_eq!(error.get_message(), None);
         assert!(error.source().is_some());
     }

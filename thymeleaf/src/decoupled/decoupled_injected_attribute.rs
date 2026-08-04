@@ -30,7 +30,7 @@ pub enum DecoupledInjectedAttributeError {
 impl DecoupledInjectedAttributeError {
     /// 返回对应 Java 异常类名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::NullBuffer => "java.lang.NullPointerException",
             Self::NegativeArraySize(_) => "java.lang.NegativeArraySizeException",

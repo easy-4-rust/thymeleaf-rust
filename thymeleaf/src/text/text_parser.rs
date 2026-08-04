@@ -40,28 +40,28 @@ const MAX_CONSECUTIVE_ZERO_READS: usize = 1024;
 /// 策略而不丢失原因对象。
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct TextParserRuntimeError {
-    java_class_name: &'static str,
+    class_name: &'static str,
     java_message: Option<Utf16String>,
 }
 
 impl TextParserRuntimeError {
     fn illegal_argument(message: &'static str) -> Self {
         Self {
-            java_class_name: "java.lang.IllegalArgumentException",
+            class_name: "java.lang.IllegalArgumentException",
             java_message: Some(Utf16String::from_rust_str(message)),
         }
     }
 
     fn negative_array_size(size: i32) -> Self {
         Self {
-            java_class_name: "java.lang.NegativeArraySizeException",
+            class_name: "java.lang.NegativeArraySizeException",
             java_message: Some(Utf16String::from_rust_str(&size.to_string())),
         }
     }
 
     fn array_index(index: i32, length: usize) -> Self {
         Self {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             ))),
@@ -70,7 +70,7 @@ impl TextParserRuntimeError {
 
     fn string_range(offset: i32, len: i32, length: usize) -> Self {
         Self {
-            java_class_name: "java.lang.StringIndexOutOfBoundsException",
+            class_name: "java.lang.StringIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "Range [{offset}, {offset} + {len}) out of bounds for length {length}"
             ))),
@@ -124,7 +124,7 @@ impl TextParserRuntimeError {
 
     fn null_reader() -> Self {
         Self {
-            java_class_name: "java.lang.NullPointerException",
+            class_name: "java.lang.NullPointerException",
             java_message: Some(Utf16String::from_rust_str(
                 NULL_PARSE_DOCUMENT_READER_MESSAGE,
             )),
@@ -133,7 +133,7 @@ impl TextParserRuntimeError {
 
     fn null_handler() -> Self {
         Self {
-            java_class_name: "java.lang.NullPointerException",
+            class_name: "java.lang.NullPointerException",
             java_message: Some(Utf16String::from_rust_str(
                 NULL_PARSE_DOCUMENT_HANDLER_MESSAGE,
             )),
@@ -143,25 +143,25 @@ impl TextParserRuntimeError {
     /// 创建供 Rust handler/Reader 适配层表达 Java RuntimeException 的错误。
     ///
     /// # 参数
-    /// - `java_class_name`：Java 异常全限定名；
+    /// - `class_name`：Java 异常全限定名；
     /// - `java_message`：可空 Java UTF-16 消息。
     ///
     /// 对应 Java 语义：`TextParser` 的 `with_java_metadata` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn with_java_metadata(
-        java_class_name: &'static str,
+        class_name: &'static str,
         java_message: Option<Utf16String>,
     ) -> Self {
         Self {
-            java_class_name,
+            class_name,
             java_message,
         }
     }
 
     /// 返回 Java 异常全限定名。
     #[must_use]
-    pub(crate) const fn java_class_name(&self) -> &'static str {
-        self.java_class_name
+    pub(crate) const fn class_name(&self) -> &'static str {
+        self.class_name
     }
 
     /// 返回 Java `Throwable#getMessage()`。
@@ -191,7 +191,7 @@ impl Error for TextParserRuntimeError {}
 /// 包装为 `TextParseException`，同时保留类名、可空消息与 Rust source 身份。
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TextParserReaderError {
-    java_class_name: String,
+    class_name: String,
     java_message: Option<Utf16String>,
 }
 
@@ -199,9 +199,9 @@ impl TextParserReaderError {
     /// 创建带 Java 元数据的 Reader 失败。
     /// 对应 Java 语义：`TextParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn new(java_class_name: &str, java_message: Option<Utf16String>) -> Self {
+    pub fn new(class_name: &str, java_message: Option<Utf16String>) -> Self {
         Self {
-            java_class_name: java_class_name.to_owned(),
+            class_name: class_name.to_owned(),
             java_message,
         }
     }
@@ -217,10 +217,10 @@ impl TextParserReaderError {
     }
 
     /// 返回 Java 异常全限定名。
-    /// 对应 Java 语义：`TextParser` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`TextParser` 的 `class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
-        &self.java_class_name
+    pub fn class_name(&self) -> &str {
+        &self.class_name
     }
 
     /// 返回可空 Java 消息。
@@ -1223,10 +1223,10 @@ fn count_locator(locator: &mut [i32], character: u16) {
 }
 
 fn reader_error_as_text_parse(error: TextParserReaderError) -> Box<TextParseException> {
-    let java_class_name = error.java_class_name.clone();
+    let class_name = error.class_name.clone();
     let java_message = error.java_message.clone();
     Box::new(TextParseException::with_cause(Some(
-        TextParseCause::with_java_metadata(Box::new(error), java_class_name, java_message),
+        TextParseCause::with_java_metadata(Box::new(error), class_name, java_message),
     )))
 }
 
@@ -1235,7 +1235,7 @@ fn panic_payload_to_cause(
 ) -> Result<TextParseCause, Box<dyn Any + Send>> {
     let payload = match payload.downcast::<TextParserRuntimeError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = error.java_message();
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1245,7 +1245,7 @@ fn panic_payload_to_cause(
     };
     let payload = match payload.downcast::<TextParsingUtilError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = error.java_message();
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1255,7 +1255,7 @@ fn panic_payload_to_cause(
     };
     let payload = match payload.downcast::<TextParsingElementError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = Some(error.java_message());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1265,7 +1265,7 @@ fn panic_payload_to_cause(
     };
     let payload = match payload.downcast::<TextParsingCommentError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = Some(error.java_message());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1275,7 +1275,7 @@ fn panic_payload_to_cause(
     };
     let payload = match payload.downcast::<ParsingLocatorError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = Some(error.message());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1285,7 +1285,7 @@ fn panic_payload_to_cause(
     };
     let payload = match payload.downcast::<EventProcessorTextHandlerRuntimeError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = Some(error.java_message().clone());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1295,7 +1295,7 @@ fn panic_payload_to_cause(
     };
     let payload = match payload.downcast::<CommentProcessorTextHandlerRuntimeError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = error.java_message();
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -1305,7 +1305,7 @@ fn panic_payload_to_cause(
     };
     match payload.downcast::<ChainedTextHandlerRuntimeError>() {
         Ok(error) => {
-            let class_name = error.java_class_name();
+            let class_name = error.class_name();
             let message = Some(error.java_message());
             Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
@@ -2240,7 +2240,7 @@ mod tests {
             write!(
                 result,
                 ";causeClass={};causeMessage={}",
-                cause.java_class_name(),
+                cause.class_name(),
                 hex(&error
                     .source()
                     .expect("TextParseCause always owns its source")
@@ -2257,7 +2257,7 @@ mod tests {
         match payload.downcast::<TextParserRuntimeError>() {
             Ok(error) => format!(
                 "{};message={}",
-                error.java_class_name(),
+                error.class_name(),
                 error
                     .java_message()
                     .map_or_else(|| "null".to_owned(), |message| hex(message.as_utf16()))
@@ -2359,11 +2359,11 @@ mod tests {
     #[test]
     fn runtime_adapters_preserve_distinct_jvm_failure_contracts() {
         let error = TextParserReaderError::new("example.ReaderError", None);
-        assert_eq!(error.java_class_name(), "example.ReaderError");
+        assert_eq!(error.class_name(), "example.ReaderError");
         assert_eq!(error.java_message(), None);
         assert_eq!(error.to_string(), "null");
         let io_error = TextParserReaderError::io("reader-message");
-        assert_eq!(io_error.java_class_name(), "java.io.IOException");
+        assert_eq!(io_error.class_name(), "java.io.IOException");
         assert_eq!(
             io_error
                 .java_message()
@@ -2415,7 +2415,7 @@ mod tests {
             ),
         ];
         for (error, expected_class, expected_message) in cases {
-            assert_eq!(error.java_class_name(), expected_class);
+            assert_eq!(error.class_name(), expected_class);
             assert_eq!(error.to_string(), expected_message);
         }
 
@@ -2498,10 +2498,7 @@ mod tests {
             .parse_document(Some(Box::new(reader)), 2, Some(Box::new(handler)))
             .expect_err("initial Reader failure is preserved");
         assert_eq!(
-            initial_read
-                .get_cause()
-                .expect("reader cause")
-                .java_class_name(),
+            initial_read.get_cause().expect("reader cause").class_name(),
             "java.io.IOException"
         );
         assert_eq!(reader_state.borrow().close_count, 1);
@@ -2521,7 +2518,7 @@ mod tests {
             .parse_document(None, 2, Some(Box::new(handler)))
             .expect_err("null reader is wrapped");
         assert_eq!(
-            null_reader.get_cause().expect("cause").java_class_name(),
+            null_reader.get_cause().expect("cause").class_name(),
             "java.lang.NullPointerException"
         );
 
@@ -2530,7 +2527,7 @@ mod tests {
             .parse_document(Some(Box::new(reader)), 2, None)
             .expect_err("null handler is wrapped");
         assert_eq!(
-            null_handler.get_cause().expect("cause").java_class_name(),
+            null_handler.get_cause().expect("cause").class_name(),
             "java.lang.NullPointerException"
         );
         assert_eq!(reader_state.borrow().close_count, 1);
@@ -2565,7 +2562,7 @@ mod tests {
         ];
         for variant in variants {
             let cause = panic_payload_to_cause(variant).expect("known Java exception");
-            assert!(cause.java_class_name().starts_with("java."));
+            assert!(cause.class_name().starts_with("java."));
         }
 
         let event_payload = catch_unwind(AssertUnwindSafe(|| {
@@ -2577,7 +2574,7 @@ mod tests {
         assert_eq!(
             panic_payload_to_cause(event_payload)
                 .expect("event runtime adapter")
-                .java_class_name(),
+                .class_name(),
             "java.lang.IllegalArgumentException"
         );
 
@@ -2589,7 +2586,7 @@ mod tests {
         assert_eq!(
             panic_payload_to_cause(chained_payload)
                 .expect("chained runtime adapter")
-                .java_class_name(),
+                .class_name(),
             "java.lang.NullPointerException"
         );
 

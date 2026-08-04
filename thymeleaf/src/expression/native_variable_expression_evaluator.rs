@@ -31,7 +31,7 @@ use super::{
 ///
 /// 对应 Java: `org.thymeleaf.standard.expression.OGNLVariableExpressionEvaluator`。
 ///
-/// Rust 不具备 JVM 反射，因此 JavaBean 属性读取通过 `TemplateObject::java_get_property`
+/// Rust 不具备 JVM 反射，因此 JavaBean 属性读取通过 `TemplateObject::get_property`
 /// SPI 完成；Context、Map、List、数组以及表达式对象保留 OGNL 的动态访问语义。
 pub struct NativeVariableExpressionEvaluator {
     apply_ognl_shortcuts: bool,
@@ -1519,7 +1519,7 @@ fn evaluate_navigation_steps(
                 let values = iterable_values(target).ok_or_else(|| {
                     processing_error(format!(
                         "projection cannot be applied to {}",
-                        target.java_class_name()
+                        target.class_name()
                     ))
                 })?;
                 let projected = values
@@ -1542,7 +1542,7 @@ fn evaluate_navigation_steps(
                 let values = iterable_values(target).ok_or_else(|| {
                     processing_error(format!(
                         "selection cannot be applied to {}",
-                        target.java_class_name()
+                        target.class_name()
                     ))
                 })?;
                 let mut selected = Vec::new();
@@ -1573,7 +1573,7 @@ fn evaluate_navigation_steps(
                 match target {
                     TemplateValue::Map(entries) => entries
                         .iter()
-                        .find(|(key, _)| key.java_equals(index.as_ref()))
+                        .find(|(key, _)| key.template_equals(index.as_ref()))
                         .map(|(_, value)| Arc::clone(value)),
                     TemplateValue::List(values) => {
                         let index = ognl_list_index(&index).ok_or_else(|| {
@@ -1586,7 +1586,7 @@ fn evaluate_navigation_steps(
                     _ => {
                         return Err(processing_error(format!(
                             "dynamic index cannot be applied to {}",
-                            target.java_class_name()
+                            target.class_name()
                         )));
                     }
                 }
@@ -1608,14 +1608,14 @@ fn evaluate_navigation_steps(
                     .get(*index)
                     .map(|value| Arc::new(TemplateValue::Character(*value)))
                     .ok_or_else(|| processing_error(format!("index {index} is out of bounds")))?,
-                TemplateValue::Object(value) if value.java_iterable_values().is_some() => value
-                    .java_iterable_values()
+                TemplateValue::Object(value) if value.iterable_values().is_some() => value
+                    .iterable_values()
                     .and_then(|values| values.get(*index).cloned())
                     .ok_or_else(|| processing_error(format!("index {index} is out of bounds")))?,
                 _ => {
                     return Err(processing_error(format!(
                         "numeric index cannot be applied to {}",
-                        target.java_class_name()
+                        target.class_name()
                     )));
                 }
             }
@@ -1647,7 +1647,7 @@ fn evaluate_dynamic_subscript(
         _ => {
             return Err(processing_error(format!(
                 "dynamic subscript cannot be applied to {}",
-                target.java_class_name()
+                target.class_name()
             )));
         }
     };
@@ -1679,7 +1679,7 @@ fn iterable_values(target: &TemplateValue) -> Option<Vec<Arc<TemplateValue>>> {
                 .map(|value| Arc::new(TemplateValue::Number(NumberValue::Byte(*value))))
                 .collect(),
         ),
-        TemplateValue::Object(value) => value.java_iterable_values(),
+        TemplateValue::Object(value) => value.iterable_values(),
         _ => None,
     }
 }
@@ -2017,7 +2017,7 @@ fn evaluate_instance_of(
 }
 
 fn builtin_instance_of(value: &TemplateValue, type_name: &str) -> bool {
-    if value.java_class_name() == type_name || type_name == "java.lang.Object" {
+    if value.class_name() == type_name || type_name == "java.lang.Object" {
         return true;
     }
     match value {
@@ -2051,7 +2051,7 @@ fn builtin_instance_of(value: &TemplateValue, type_name: &str) -> bool {
             type_name,
             "byte[]" | "[B" | "java.lang.Cloneable" | "java.io.Serializable"
         ),
-        TemplateValue::Object(value) => value.java_class_name() == type_name,
+        TemplateValue::Object(value) => value.class_name() == type_name,
         TemplateValue::Literal(_) | TemplateValue::NoOp | TemplateValue::Null => false,
     }
 }
@@ -2112,7 +2112,7 @@ fn numeric_i64(value: &TemplateValue) -> StandardExpressionResult<i64> {
         TemplateValue::Character(value) => Ok(i64::from(*value)),
         _ => Err(processing_error(format!(
             "{} cannot be converted to an integral number",
-            value.java_class_name()
+            value.class_name()
         ))),
     }
 }
@@ -2177,15 +2177,17 @@ fn evaluate_inclusion(
         evaluate_computed_expression(context, right, use_selection_as_root, expression_context)?
             .unwrap_or_else(|| Arc::new(TemplateValue::Null));
     let contains = match right.as_ref() {
-        TemplateValue::List(values) => values.iter().any(|value| value.java_equals(&left)),
-        TemplateValue::Map(entries) => entries.iter().any(|(_, value)| value.java_equals(&left)),
+        TemplateValue::List(values) => values.iter().any(|value| value.template_equals(&left)),
+        TemplateValue::Map(entries) => entries
+            .iter()
+            .any(|(_, value)| value.template_equals(&left)),
         TemplateValue::Bytes(values) => values
             .iter()
-            .any(|value| TemplateValue::Number(NumberValue::Byte(*value)).java_equals(&left)),
+            .any(|value| TemplateValue::Number(NumberValue::Byte(*value)).template_equals(&left)),
         TemplateValue::Object(value) => value
-            .java_iterable_values()
-            .is_some_and(|values| values.iter().any(|value| value.java_equals(&left))),
-        value => value.java_equals(&left),
+            .iterable_values()
+            .is_some_and(|values| values.iter().any(|value| value.template_equals(&left))),
+        value => value.template_equals(&left),
     };
     Ok(Some(Arc::new(TemplateValue::Boolean(if negated {
         !contains
@@ -2540,7 +2542,7 @@ fn numeric_f64(value: &TemplateValue) -> StandardExpressionResult<f64> {
             .map_err(|error: std::num::ParseFloatError| processing_error(error.to_string())),
         _ => Err(processing_error(format!(
             "{} cannot be converted to a number",
-            value.java_class_name()
+            value.class_name()
         ))),
     }
 }
@@ -2556,7 +2558,7 @@ struct ClassObjectValue {
 }
 
 impl super::TemplateObject for ClassObjectValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.Class"
     }
 
@@ -2568,7 +2570,7 @@ impl super::TemplateObject for ClassObjectValue {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
@@ -2586,7 +2588,7 @@ impl super::TemplateObject for ClassObjectValue {
         Some(Ok(Some(Arc::new(TemplateValue::string(value)))))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -2629,41 +2631,41 @@ fn invoke_dynamic_method(
                 .to_utf16_string()
                 .map(|value| Arc::new(TemplateValue::string(value))));
         }
-        ("getClass", []) => return Ok(Some(java_class_value(target.java_class_name()))),
+        ("getClass", []) => return Ok(Some(java_class_value(target.class_name()))),
         ("equals", [other]) => {
             return Ok(Some(Arc::new(TemplateValue::Boolean(
                 other
                     .as_deref()
-                    .is_some_and(|other| target.java_equals(other)),
+                    .is_some_and(|other| target.template_equals(other)),
             ))));
         }
         _ => {}
     }
     match target {
         TemplateValue::Object(value) => {
-            if value.java_class_name() == "java.util.stream.Stream"
+            if value.class_name() == "java.util.stream.Stream"
                 && !matches!(name.to_string_lossy().as_str(), "count" | "iterator")
             {
                 return Err(processing_error_with_cause(
                     format!(
                         "method \"{}\" is not callable on {}",
                         name.to_string_lossy(),
-                        value.java_class_name()
+                        value.class_name()
                     ),
                     NoSuchMethodError::new(format!(
                         "{}.{}",
-                        value.java_class_name(),
+                        value.class_name(),
                         name.to_string_lossy()
                     )),
                 ));
             }
             ThymeleafACLMemberAccess::is_accessible(Some(value.as_ref()), &name.to_string_lossy())?;
-            value.java_invoke_method(name, arguments).map_or_else(
+            value.invoke_method(name, arguments).map_or_else(
                 || {
                     Err(processing_error(format!(
                         "method \"{}\" is not callable on {}",
                         name.to_string_lossy(),
-                        value.java_class_name()
+                        value.class_name()
                     )))
                 },
                 |result| result.map_err(|error| processing_error(error.to_string())),
@@ -2677,7 +2679,7 @@ fn invoke_dynamic_method(
         _ => Err(processing_error(format!(
             "method \"{}\" is not callable on {}",
             name.to_string_lossy(),
-            target.java_class_name()
+            target.class_name()
         ))),
     }
 }
@@ -2737,7 +2739,7 @@ fn dynamic_values_equal(
 ) -> bool {
     match (left.map(Arc::as_ref), right.map(Arc::as_ref)) {
         (None | Some(TemplateValue::Null), None | Some(TemplateValue::Null)) => true,
-        (Some(left), Some(right)) => left.java_equals(right),
+        (Some(left), Some(right)) => left.template_equals(right),
         _ => false,
     }
 }
@@ -3010,13 +3012,13 @@ fn read_dynamic_property(
             return Ok(Some(value));
         }
         if let TemplateValue::Object(value) = target
-            && let Some(result) = value.java_get_property(name)
+            && let Some(result) = value.get_property(name)
         {
             // OGNL 的专用 PropertyAccessor（例如 ContextMap）先于 Object#getClass；
             // 因而名为 class 的上下文变量必须遮蔽反射类属性。
             return result.map_err(|error| processing_error(error.to_string()));
         }
-        return Ok(Some(java_class_value(target.java_class_name())));
+        return Ok(Some(java_class_value(target.class_name())));
     }
     match target {
         TemplateValue::Map(entries) => match name.to_string_lossy().as_str() {
@@ -3047,7 +3049,7 @@ fn read_dynamic_property(
             _ => Err(processing_error(format!(
                 "property \"{}\" is not readable on {}",
                 name.to_string_lossy(),
-                target.java_class_name()
+                target.class_name()
             ))),
         },
         TemplateValue::Bytes(values) if name == &Utf16String::from_rust_str("length") => {
@@ -3064,13 +3066,13 @@ fn read_dynamic_property(
                 _ => Err(processing_error(format!(
                     "property \"{}\" is not readable on {}",
                     name.to_string_lossy(),
-                    target.java_class_name()
+                    target.class_name()
                 ))),
             }
         }
         TemplateValue::Object(value) => {
             let property_name = name.to_string_lossy();
-            let acl_member_name = match (value.java_class_name(), property_name.as_str()) {
+            let acl_member_name = match (value.class_name(), property_name.as_str()) {
                 ("java.lang.Class", "name") => "getName",
                 ("java.lang.Class", "simpleName") => "getSimpleName",
                 ("java.lang.Class", "package") => "getPackage",
@@ -3079,12 +3081,12 @@ fn read_dynamic_property(
                 _ => property_name.as_str(),
             };
             ThymeleafACLMemberAccess::is_accessible(Some(value.as_ref()), acl_member_name)?;
-            value.java_get_property(name).map_or_else(
+            value.get_property(name).map_or_else(
                 || {
                     Err(processing_error(format!(
                         "property \"{}\" is not readable on {}",
                         name.to_string_lossy(),
-                        value.java_class_name()
+                        value.class_name()
                     )))
                 },
                 |result| result.map_err(|error| processing_error(error.to_string())),
@@ -3103,7 +3105,7 @@ fn read_dynamic_property(
         _ => Err(processing_error(format!(
             "property \"{}\" is not readable on {}",
             name.to_string_lossy(),
-            target.java_class_name()
+            target.class_name()
         ))),
     }
 }

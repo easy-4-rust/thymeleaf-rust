@@ -250,10 +250,7 @@ fn abstract_attribute_tag_processor_contract_matches_java() {
 
     assert_eq!(processor.get_template_mode(), Some(TemplateMode::HTML));
     assert_eq!(processor.get_precedence(), 1000);
-    assert_eq!(
-        processor.java_class_name(),
-        "com.example.MyTagAttrProcessor"
-    );
+    assert_eq!(processor.class_name(), "com.example.MyTagAttrProcessor");
     assert_eq!(
         processor
             .get_matching_attribute_name()
@@ -316,10 +313,7 @@ fn abstract_element_tag_processor_contract_matches_java() {
 
     assert_eq!(processor.get_template_mode(), Some(TemplateMode::HTML));
     assert_eq!(processor.get_precedence(), 100);
-    assert_eq!(
-        processor.java_class_name(),
-        "com.example.MyElementProcessor"
-    );
+    assert_eq!(processor.class_name(), "com.example.MyElementProcessor");
     assert_eq!(
         processor
             .get_matching_element_name()
@@ -390,7 +384,7 @@ fn abstract_element_model_processor_contract_matches_java() {
     assert_eq!(processor.get_template_mode(), Some(TemplateMode::HTML));
     assert_eq!(processor.get_precedence(), 200);
     assert_eq!(
-        processor.java_class_name(),
+        processor.class_name(),
         "com.example.MyModelElementProcessor"
     );
     assert_eq!(

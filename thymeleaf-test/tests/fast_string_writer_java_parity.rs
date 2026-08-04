@@ -192,7 +192,7 @@ fn exhaustive_cases(output: &mut String) {
                 }
                 Err(error) => {
                     string_range_hash = mix(string_range_hash, 0);
-                    string_range_hash = mix_rust_str(string_range_hash, error.java_class_name());
+                    string_range_hash = mix_rust_str(string_range_hash, error.class_name());
                     string_range_hash =
                         mix_string(string_range_hash, &java_message_or_null(&error));
                 }
@@ -213,7 +213,7 @@ fn exhaustive_cases(output: &mut String) {
                 }
                 Err(error) => {
                     char_range_hash = mix(char_range_hash, 0);
-                    char_range_hash = mix_rust_str(char_range_hash, error.java_class_name());
+                    char_range_hash = mix_rust_str(char_range_hash, error.class_name());
                     char_range_hash = mix_string(char_range_hash, &java_message_or_null(&error));
                 }
             }
@@ -276,7 +276,7 @@ fn emit_result(output: &mut String, key: &str, result: Result<Utf16String, FastS
             key,
             format!(
                 "ERR:{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 to_utf16_hex(&java_message_or_null(&error))
             ),
         ),

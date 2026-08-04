@@ -27,7 +27,7 @@ impl ParsingLocatorError {
     ///
     /// # 返回
     /// Java `Throwable#getClass().getName()` 的精确结果。
-    pub(crate) const fn java_class_name(&self) -> &'static str {
+    pub(crate) const fn class_name(&self) -> &'static str {
         match self {
             Self::NullLocator => "java.lang.NullPointerException",
             Self::ArrayIndex { .. } => "java.lang.ArrayIndexOutOfBoundsException",
@@ -219,7 +219,7 @@ mod tests {
                         key,
                         format!(
                             "ERR:{}:{}:{}",
-                            error.java_class_name(),
+                            error.class_name(),
                             to_utf16_hex(&error.message()),
                             describe_locator(locator)
                         ),
@@ -234,7 +234,7 @@ mod tests {
                     key,
                     format!(
                         "ERR:{}:{}:null",
-                        error.java_class_name(),
+                        error.class_name(),
                         to_utf16_hex(&error.message())
                     ),
                 );

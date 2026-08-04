@@ -66,12 +66,12 @@ impl TemporalObjects {
                 .ok_or_else(|| {
                     invalid(format!(
                         "Cannot normalize class \"{}\" as a date",
-                        object.java_class_name()
+                        object.class_name()
                     ))
                 }),
             Some(value) => Err(invalid(format!(
                 "Cannot normalize class \"{}\" as a date",
-                value.java_class_name()
+                value.class_name()
             ))),
         }
     }

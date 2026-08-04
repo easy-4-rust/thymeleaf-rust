@@ -88,7 +88,7 @@ impl TemporalValue {
 }
 
 impl TemplateObject for TemporalValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         match self {
             Self::Instant(_) => "java.time.Instant",
             Self::LocalDate(_) => "java.time.LocalDate",

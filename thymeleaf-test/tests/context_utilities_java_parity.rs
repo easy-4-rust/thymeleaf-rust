@@ -306,7 +306,7 @@ fn emit_identifier_error(
     value: Result<i32, IdentifierSequencesError>,
 ) {
     let error = value.expect_err("expected identifier sequence error");
-    emit(output, key, format!("{}:{error}", error.java_class_name()));
+    emit(output, key, format!("{}:{error}", error.class_name()));
 }
 
 fn emit_cast_panic(output: &mut BTreeMap<String, String>, key: &str, action: impl FnOnce()) {

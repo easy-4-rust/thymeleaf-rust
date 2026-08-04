@@ -21,28 +21,28 @@ const REPOSITORY_INITIAL_INC: usize = 5;
 /// panic payload 保存 Java 异常类名与 UTF-16 消息。
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct EventProcessorTextHandlerRuntimeError {
-    java_class_name: &'static str,
+    class_name: &'static str,
     java_message: Utf16String,
 }
 
 impl EventProcessorTextHandlerRuntimeError {
     fn illegal_argument(message: &'static str) -> Self {
         Self {
-            java_class_name: "java.lang.IllegalArgumentException",
+            class_name: "java.lang.IllegalArgumentException",
             java_message: Utf16String::from_rust_str(message),
         }
     }
 
     fn negative_array_size(len: i32) -> Self {
         Self {
-            java_class_name: "java.lang.NegativeArraySizeException",
+            class_name: "java.lang.NegativeArraySizeException",
             java_message: Utf16String::from_rust_str(&len.to_string()),
         }
     }
 
     fn array_index(index: i32, length: usize) -> Self {
         Self {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             )),
@@ -51,7 +51,7 @@ impl EventProcessorTextHandlerRuntimeError {
 
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             )),
@@ -60,7 +60,7 @@ impl EventProcessorTextHandlerRuntimeError {
 
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             )),
@@ -73,8 +73,8 @@ impl EventProcessorTextHandlerRuntimeError {
     /// `IllegalArgumentException`、`ArrayIndexOutOfBoundsException` 或
     /// `NegativeArraySizeException`。
     #[must_use]
-    pub(crate) const fn java_class_name(&self) -> &'static str {
-        self.java_class_name
+    pub(crate) const fn class_name(&self) -> &'static str {
+        self.class_name
     }
 
     /// 返回对应 Java 异常的 UTF-16 消息。
@@ -975,7 +975,7 @@ mod tests {
                     .expect("known Java runtime payload");
                 format!(
                     "{};message={}",
-                    error.java_class_name(),
+                    error.class_name(),
                     hex(error.java_message().as_utf16())
                 )
             }

@@ -37,7 +37,7 @@ pub(crate) enum TextParsingUtilError {
 
 impl TextParsingUtilError {
     /// 返回对应 Java 异常全限定名。
-    pub(crate) const fn java_class_name(&self) -> &'static str {
+    pub(crate) const fn class_name(&self) -> &'static str {
         match self {
             Self::NullText | Self::NullDirectLocator | Self::NullCountCharLocator => {
                 "java.lang.NullPointerException"
@@ -1462,7 +1462,7 @@ mod tests {
             Ok(index) => format!("OK:{index}:{locator}"),
             Err(error) => format!(
                 "ERR:{}:{}:{locator}",
-                error.java_class_name(),
+                error.class_name(),
                 to_utf16_hex(
                     &error
                         .java_message()

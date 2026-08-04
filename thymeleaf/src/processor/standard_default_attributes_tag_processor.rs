@@ -66,7 +66,7 @@ impl IProcessor for StandardDefaultAttributesTagProcessor {
         Some(self)
     }
 
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.standard.processor.StandardDefaultAttributesTagProcessor"
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {

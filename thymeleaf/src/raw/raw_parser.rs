@@ -83,7 +83,7 @@ pub enum RawParserError {
 impl RawParserError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::IllegalArgument(_) => "java.lang.IllegalArgumentException",
             Self::Parse(_) => "org.thymeleaf.templateparser.raw.RawParseException",

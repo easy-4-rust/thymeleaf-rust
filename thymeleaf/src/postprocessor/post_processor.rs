@@ -105,7 +105,7 @@ impl IPostProcessor for PostProcessor {
         Some(PostProcessor::get_handler_class(self))
     }
 
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.postprocessor.PostProcessor"
     }
 }

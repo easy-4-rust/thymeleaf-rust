@@ -134,12 +134,12 @@ pub(crate) fn java_values_equal(
     }
     let left = character_as_string(left);
     let right = character_as_string(right);
-    if left.java_class_name() == right.java_class_name()
-        && let Some(comparison) = left.java_compare_to(right.as_ref())
+    if left.class_name() == right.class_name()
+        && let Some(comparison) = left.template_compare_to(right.as_ref())
     {
         return Ok(comparison? == Ordering::Equal);
     }
-    Ok(left.java_equals(right.as_ref()))
+    Ok(left.template_equals(right.as_ref()))
 }
 
 /// 对应 Java 语义：`BinaryOperationExpression` 的 `compare_java_values` 行为（Rust 侧辅助/私有路径）。
@@ -153,10 +153,10 @@ pub(crate) fn compare_java_values(
     ) {
         return Ok(Some(left_number.compare_java(&right_number)));
     }
-    if left.java_class_name() != right.java_class_name() {
+    if left.class_name() != right.class_name() {
         return Ok(None);
     }
-    match left.java_compare_to(right.as_ref()) {
+    match left.template_compare_to(right.as_ref()) {
         Some(comparison) => Ok(Some(comparison?)),
         None => Ok(None),
     }

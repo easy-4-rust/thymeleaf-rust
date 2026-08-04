@@ -52,7 +52,7 @@ impl SaTokenAuthenticationObject {
 }
 
 impl TemplateObject for SaTokenAuthenticationObject {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.extras.springsecurity6.auth.Authorization"
     }
 
@@ -67,27 +67,25 @@ impl TemplateObject for SaTokenAuthenticationObject {
         self
     }
 
-    fn java_equals(&self, other: &dyn TemplateObject) -> bool {
+    fn template_equals(&self, other: &dyn TemplateObject) -> bool {
         other
             .as_any()
             .downcast_ref::<SaTokenAuthenticationObject>()
             .is_some_and(|other| other.authentication == self.authentication)
     }
 
-    fn java_compare_to(
+    fn template_compare_to(
         &self,
         _other: &dyn TemplateObject,
     ) -> Option<Result<Ordering, thymeleaf::expression::TemplateObjectComparisonError>> {
         None
     }
 
-    fn java_iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
+    fn iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
         None
     }
 
-    fn java_serializable_properties(
-        &self,
-    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
+    fn serializable_properties(&self) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![
             (
                 Utf16String::from_rust_str("name"),
@@ -106,7 +104,7 @@ impl TemplateObject for SaTokenAuthenticationObject {
         ])
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -126,7 +124,7 @@ impl TemplateObject for SaTokenAuthenticationObject {
         Some(Ok(value))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

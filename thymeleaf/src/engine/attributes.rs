@@ -40,11 +40,11 @@ pub enum AttributesError {
 impl AttributesError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
             Self::NullValueInXml | Self::UnquotedValueInXml => "java.lang.IllegalArgumentException",
-            Self::AttributeNames(error) => error.java_class_name(),
-            Self::AttributeDefinitions(error) => error.java_class_name(),
+            Self::AttributeNames(error) => error.class_name(),
+            Self::AttributeDefinitions(error) => error.class_name(),
         }
     }
 }

@@ -104,13 +104,13 @@ mod tests {
         assert!(!TextParsingLiteralUtil::is_regex_literal_start(None, 0, 1).unwrap());
         let error =
             TextParsingLiteralUtil::is_regex_literal_start(None, 1, 2).expect_err("null positive");
-        assert_eq!(error.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(error.class_name(), "java.lang.NullPointerException");
         let buffer = vec![u16::from(b'/')];
         for offset in [-1, 1] {
             let error = TextParsingLiteralUtil::is_regex_literal_start(Some(&buffer), offset, 2)
                 .expect_err("bounds");
             assert_eq!(
-                error.java_class_name(),
+                error.class_name(),
                 "java.lang.ArrayIndexOutOfBoundsException"
             );
         }

@@ -563,7 +563,7 @@ struct MapEntryTemplateObject {
 }
 
 impl TemplateObject for MapEntryTemplateObject {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.util.Map$Entry"
     }
 
@@ -586,7 +586,7 @@ impl TemplateObject for MapEntryTemplateObject {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -647,7 +647,7 @@ fn compute_iterated_object(
             {
                 return (VecDeque::new(), None, Some(object.clone()));
             }
-            if let Some(values) = object.java_iterable_values() {
+            if let Some(values) = object.iterable_values() {
                 (values.into(), None, None)
             } else {
                 (VecDeque::from([value]), Some(1), None)

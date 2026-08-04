@@ -137,9 +137,9 @@ impl StandardConversionError {
     /// # 返回
     /// 参数/不可用转换返回 `IllegalArgumentException`；运行时异常返回保存的类名。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
-            Self::Validation(error) => error.java_class_name(),
+            Self::Validation(error) => error.class_name(),
             Self::NoAvailableConversion { .. } => "java.lang.IllegalArgumentException",
             Self::Runtime {
                 exception_class_name,

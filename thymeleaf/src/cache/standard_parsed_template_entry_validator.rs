@@ -39,7 +39,7 @@ impl StandardParsedTemplateEntryValidatorRuntimeError {
             reason = "Java unchecked exception metadata is consumed by parity tests and panic downcasts"
         )
     )]
-    const fn java_class_name(self) -> &'static str {
+    const fn class_name(self) -> &'static str {
         Self::JAVA_CLASS_NAME
     }
 }
@@ -223,7 +223,7 @@ mod tests {
         emit(
             &mut output,
             "null.validity",
-            format!("{}:{}", null_validity.java_class_name(), null_validity),
+            format!("{}:{}", null_validity.class_name(), null_validity),
         );
 
         // Java 的 null TemplateModel 在方法入口后由 invokevirtual 抛 NPE；Rust 的

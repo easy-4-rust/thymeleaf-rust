@@ -63,7 +63,7 @@ fn emit_validate_error(output: &mut String, key: &str, error: &ValidateError) {
         key,
         format!(
             "ERR:{}:{}",
-            error.java_class_name(),
+            error.class_name(),
             error.get_message().unwrap_or("null")
         ),
     );

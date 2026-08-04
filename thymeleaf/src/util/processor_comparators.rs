@@ -66,10 +66,8 @@ impl ProcessorPrecedenceComparator {
             left_wrapped.map_or_else(|| left.get_precedence(), IProcessor::get_precedence);
         let right_precedence =
             right_wrapped.map_or_else(|| right.get_precedence(), IProcessor::get_precedence);
-        let left_class =
-            left_wrapped.map_or_else(|| left.java_class_name(), IProcessor::java_class_name);
-        let right_class =
-            right_wrapped.map_or_else(|| right.java_class_name(), IProcessor::java_class_name);
+        let left_class = left_wrapped.map_or_else(|| left.class_name(), IProcessor::class_name);
+        let right_class = right_wrapped.map_or_else(|| right.class_name(), IProcessor::class_name);
         left_precedence
             .cmp(&right_precedence)
             .then_with(|| left_class.cmp(right_class))
@@ -109,8 +107,8 @@ impl PreProcessorPrecedenceComparator {
             })
             .then_with(|| {
                 left_processor
-                    .java_class_name()
-                    .cmp(right_processor.java_class_name())
+                    .class_name()
+                    .cmp(right_processor.class_name())
             })
             .then_with(|| {
                 pre_processor_identity(left_processor).cmp(&pre_processor_identity(right_processor))
@@ -147,8 +145,8 @@ impl PostProcessorPrecedenceComparator {
             })
             .then_with(|| {
                 left_processor
-                    .java_class_name()
-                    .cmp(right_processor.java_class_name())
+                    .class_name()
+                    .cmp(right_processor.class_name())
             })
             .then_with(|| {
                 post_processor_identity(left_processor)

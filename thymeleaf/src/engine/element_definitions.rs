@@ -75,12 +75,12 @@ pub enum ElementDefinitionsError {
 impl ElementDefinitionsError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
             Self::IllegalArgument(_) => "java.lang.IllegalArgumentException",
             Self::Configuration(_) => "org.thymeleaf.exceptions.ConfigurationException",
-            Self::ElementNames(error) => error.java_class_name(),
-            Self::ElementDefinition(error) => error.java_class_name(),
+            Self::ElementNames(error) => error.class_name(),
+            Self::ElementDefinition(error) => error.class_name(),
         }
     }
 }
@@ -367,7 +367,7 @@ impl ElementDefinitions {
             {
                 return Err(ElementDefinitionsError::Configuration(format!(
                     "{mode} processors must return {mode} element names and {mode} attribute names (processor: {})",
-                    processor.java_class_name()
+                    processor.class_name()
                 )));
             }
             if attribute_match.is_some_and(|value| !value.is_matching_all_attributes()) {

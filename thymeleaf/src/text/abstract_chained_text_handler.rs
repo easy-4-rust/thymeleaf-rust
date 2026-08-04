@@ -30,7 +30,7 @@ impl ChainedTextHandlerRuntimeError {
     /// # 返回
     /// 固定为 `java.lang.NullPointerException`。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         "java.lang.NullPointerException"
     }
 
@@ -629,7 +629,7 @@ mod tests {
             .expect("runtime adapter");
         let cloned = error.as_ref().clone();
         assert_eq!(*error, cloned);
-        assert_eq!(error.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(error.class_name(), "java.lang.NullPointerException");
         assert_eq!(error.to_string(), error.java_message().to_string_lossy());
         assert_eq!(describe_utf16_string(None), "null");
     }
@@ -754,7 +754,7 @@ mod tests {
                 &format!("chained.null.{}", event.key()),
                 format!(
                     "class={};message={};buffer={}",
-                    error.java_class_name(),
+                    error.class_name(),
                     describe_utf16_string(Some(&error.java_message())),
                     describe_buffer(Some(&buffer))
                 ),

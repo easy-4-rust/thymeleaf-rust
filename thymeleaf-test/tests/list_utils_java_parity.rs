@@ -75,10 +75,10 @@ enum Mixed {
 }
 
 impl ComparableValue for Mixed {
-    fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
+    fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         match (self, other) {
-            (Self::Text(left), Self::Text(right)) => left.java_compare_to(right),
-            (Self::Integer(left), Self::Integer(right)) => left.java_compare_to(right),
+            (Self::Text(left), Self::Text(right)) => left.template_compare_to(right),
+            (Self::Integer(left), Self::Integer(right)) => left.template_compare_to(right),
             (Self::Text(_), Self::Integer(_)) => Err(ListUtilsError::NaturalOrderingClassCast {
                 left_class: "java.lang.String".to_owned(),
                 right_class: "java.lang.Integer".to_owned(),
@@ -446,7 +446,7 @@ fn list_utils_and_expression_facade_match_java_golden() {
         render_java_double,
     );
 
-    let mut descending = |left: &String, right: &String| right.java_compare_to(left);
+    let mut descending = |left: &String, right: &String| right.template_compare_to(left);
     emit_list_result(
         &mut output,
         "sort.comparator.descending",
@@ -526,7 +526,7 @@ fn list_utils_and_expression_facade_match_java_golden() {
         lists.sort(Some(linked_view)),
         Clone::clone,
     );
-    let mut descending = |left: &String, right: &String| right.java_compare_to(left);
+    let mut descending = |left: &String, right: &String| right.template_compare_to(left);
     emit_list_result(
         &mut output,
         "facade.sort.comparator",

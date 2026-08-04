@@ -30,14 +30,14 @@ impl AbstractTemplateResolver {
     /// 对应 Java: `AbstractTemplateResolver#AbstractTemplateResolver()`。
     ///
     /// # 参数
-    /// - `java_class_name`：具体 Resolver 的 Java 完全限定类名，用作默认名称。
+    /// - `class_name`：具体 Resolver 的 Java 完全限定类名，用作默认名称。
     ///
     /// # 返回值
     /// 名称已初始化、顺序为空、存在性检查和解耦逻辑均关闭的公共状态。
     #[must_use]
-    pub fn new(java_class_name: &str) -> Self {
+    pub fn new(class_name: &str) -> Self {
         Self {
-            name: Some(Utf16String::from_rust_str(java_class_name)),
+            name: Some(Utf16String::from_rust_str(class_name)),
             order: None,
             check_existence: Self::DEFAULT_EXISTENCE_CHECK,
             use_decoupled_logic: Self::DEFAULT_USE_DECOUPLED_LOGIC,

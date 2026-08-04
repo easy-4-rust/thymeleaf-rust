@@ -429,7 +429,7 @@ fn is_trait_or_flow_merged(method: &InventoryMethod, source: &str, sibling_sourc
             | "getArrayProperty"
             | "getEnumerationProperty"
             | "getIteratorProperty"
-    ) && (source.contains("JavaBigDecimal::parse") || source.contains("fn read_property("))
+    ) && (source.contains("BigDecimalValue::parse") || source.contains("fn read_property("))
     {
         return true;
     }

@@ -206,9 +206,9 @@ impl ObjectsError {
     /// `IllegalArgumentException`、`ArrayStoreException` 或
     /// `ArrayIndexOutOfBoundsException`。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
-            Self::Validation(error) => error.java_class_name(),
+            Self::Validation(error) => error.class_name(),
             Self::ArrayStore { .. } => "java.lang.ArrayStoreException",
             Self::ArrayIndexOutOfBounds { .. } => "java.lang.ArrayIndexOutOfBoundsException",
         }
@@ -418,7 +418,7 @@ mod tests {
             error.to_string(),
             "value cannot be stored in array with component class \"java.lang.String\""
         );
-        assert_eq!(error.java_class_name(), "java.lang.ArrayStoreException");
+        assert_eq!(error.class_name(), "java.lang.ArrayStoreException");
 
         let without_null = ObjectArrayValue::typed(
             "java.lang.String",
@@ -438,7 +438,7 @@ mod tests {
         let invalid =
             ObjectArrayValue::typed("positive.Integer", vec![Some(-1)], |value| *value > 0)
                 .expect_err("invalid source");
-        assert_eq!(invalid.java_class_name(), "java.lang.ArrayStoreException");
+        assert_eq!(invalid.class_name(), "java.lang.ArrayStoreException");
 
         let mut target = ObjectArrayValue::object(vec![Some("one")]);
         let error = target.set(1, Some("two")).expect_err("bounds");
@@ -454,7 +454,7 @@ mod tests {
             "index 1 out of bounds for array length 1"
         );
         assert_eq!(
-            error.java_class_name(),
+            error.class_name(),
             "java.lang.ArrayIndexOutOfBoundsException"
         );
         assert_eq!(target.len(), 1);
@@ -514,7 +514,7 @@ mod tests {
             })
         );
         assert_eq!(
-            array_error.java_class_name(),
+            array_error.class_name(),
             "java.lang.IllegalArgumentException"
         );
         assert_eq!(array_error.to_string(), "Target cannot be null");

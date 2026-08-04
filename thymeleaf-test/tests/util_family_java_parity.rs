@@ -234,7 +234,7 @@ fn expression_utils_member_forbidden_matches_java() {
     }
 
     impl TemplateObject for FakeObject {
-        fn java_class_name(&self) -> &str {
+        fn class_name(&self) -> &str {
             &self.class_name
         }
         fn to_utf16_string(&self) -> Utf16String {

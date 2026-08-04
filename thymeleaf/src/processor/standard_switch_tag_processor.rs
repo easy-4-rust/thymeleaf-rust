@@ -53,11 +53,11 @@ impl SwitchStructure {
 }
 
 impl TemplateObject for SwitchStructure {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.standard.processor.StandardSwitchTagProcessor$SwitchStructure"
     }
     fn to_utf16_string(&self) -> Utf16String {
-        Utf16String::from_rust_str(self.java_class_name())
+        Utf16String::from_rust_str(self.class_name())
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self
@@ -130,8 +130,8 @@ impl IProcessor for StandardSwitchTagProcessor {
         Some(self)
     }
 
-    fn java_class_name(&self) -> &'static str {
-        self.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.processor.class_name()
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {
         self.processor.get_template_mode()

@@ -187,7 +187,7 @@ fn emit_outcome(output: &mut String, key: &str, result: Result<(), ValidateError
                 key,
                 format!(
                     "{}:{}",
-                    error.java_class_name(),
+                    error.class_name(),
                     error.get_message().unwrap_or("null")
                 ),
             );
@@ -198,7 +198,7 @@ fn emit_outcome(output: &mut String, key: &str, result: Result<(), ValidateError
 fn emit_implicit(output: &mut String, key: &str, result: Result<(), ValidateError>) {
     match result {
         Ok(()) => emit(output, key, "OK"),
-        Err(error) => emit(output, key, error.java_class_name()),
+        Err(error) => emit(output, key, error.class_name()),
     }
 }
 

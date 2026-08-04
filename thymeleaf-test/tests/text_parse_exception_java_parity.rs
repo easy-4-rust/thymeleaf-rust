@@ -205,7 +205,7 @@ fn emit_exception(output: &mut String, key: &str, exception: &TextParseException
         .map_or_else(|| "null".to_owned(), |value| value.to_string());
     let cause = exception
         .get_cause()
-        .map_or("null", TextParseCause::java_class_name);
+        .map_or("null", TextParseCause::class_name);
     emit(
         output,
         key,

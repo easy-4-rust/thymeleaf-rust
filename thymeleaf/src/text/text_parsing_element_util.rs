@@ -68,11 +68,11 @@ pub(crate) enum TextParsingElementError {
 
 impl TextParsingElementError {
     /// 返回对应 Java 异常全限定名。
-    pub(crate) const fn java_class_name(&self) -> &'static str {
+    pub(crate) const fn class_name(&self) -> &'static str {
         match self {
             Self::TextParse(_) => "org.thymeleaf.templateparser.text.TextParseException",
-            Self::Scanning(error) => error.java_class_name(),
-            Self::Attribute(error) => error.java_class_name(),
+            Self::Scanning(error) => error.class_name(),
+            Self::Attribute(error) => error.class_name(),
             Self::NullArrayLoad
             | Self::NullStringValue
             | Self::NullStandaloneStartHandler
@@ -1178,7 +1178,7 @@ mod tests {
     fn error_adapter_and_unreachable_null_end_callbacks_are_covered() {
         let text_parse = TextParsingElementError::TextParse(Box::default());
         assert_eq!(
-            text_parse.java_class_name(),
+            text_parse.class_name(),
             "org.thymeleaf.templateparser.text.TextParseException"
         );
         assert_eq!(text_parse.java_message().to_string_lossy(), "null");
@@ -1186,7 +1186,7 @@ mod tests {
         assert!(std::error::Error::source(&text_parse).is_some());
 
         let scanning = TextParsingElementError::Scanning(TextParsingUtilError::NullDirectLocator);
-        assert_eq!(scanning.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(scanning.class_name(), "java.lang.NullPointerException");
         assert_eq!(
             scanning.to_string(),
             "Cannot load from int array because \"<parameter4>\" is null"
@@ -1197,18 +1197,14 @@ mod tests {
 
         let attribute =
             TextParsingElementError::from(TextParsingAttributeSequenceError::NullHandler);
-        assert_eq!(
-            attribute.java_class_name(),
-            "java.lang.NullPointerException"
-        );
+        assert_eq!(attribute.class_name(), "java.lang.NullPointerException");
         assert!(!attribute.java_message().as_utf16().is_empty());
         assert!(std::error::Error::source(&attribute).is_some());
         let attribute_text = TextParsingElementError::from(
             TextParsingAttributeSequenceError::TextParse(Box::default()),
         );
         require(
-            attribute_text.java_class_name()
-                == "org.thymeleaf.templateparser.text.TextParseException",
+            attribute_text.class_name() == "org.thymeleaf.templateparser.text.TextParseException",
             "attribute TextParse conversion",
         );
         let attribute_scanning = TextParsingElementError::from(
@@ -1859,7 +1855,7 @@ mod tests {
     fn describe_error(error: &TextParsingElementError) -> String {
         let base = format!(
             "ERR:{}:{}",
-            error.java_class_name(),
+            error.class_name(),
             to_utf16_hex(&error.java_message())
         );
         error

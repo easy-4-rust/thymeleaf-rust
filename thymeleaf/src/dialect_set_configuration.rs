@@ -118,20 +118,20 @@ impl DialectSetConfiguration {
                 let processor_set = processor_dialect.get_processors(prefix).ok_or_else(|| {
                     configuration_error(format!(
                         "Dialect should not return null processor set: {}",
-                        dialect.java_class_name()
+                        dialect.class_name()
                     ))
                 })?;
                 for processor in processor_set.iter() {
                     let processor = processor.cloned().ok_or_else(|| {
                         configuration_error(format!(
                             "Dialect should not return null processor in processor set: {}",
-                            dialect.java_class_name()
+                            dialect.class_name()
                         ))
                     })?;
                     let mode = processor.get_template_mode().ok_or_else(|| {
                         configuration_error(format!(
                             "Template mode cannot be null (processor: {})",
-                            processor.java_class_name()
+                            processor.class_name()
                         ))
                     })?;
                     let dialect_precedence = processor_dialect.get_dialect_processor_precedence();
@@ -182,21 +182,21 @@ impl DialectSetConfiguration {
                     let processor = processor.ok_or_else(|| {
                         configuration_error(format!(
                             "Pre-Processor list for dialect {} includes a null entry, which is forbidden.",
-                            dialect.java_class_name()
+                            dialect.class_name()
                         ))
                     })?;
                     let template_mode = processor.get_template_mode().ok_or_else(|| {
                         configuration_error(format!(
                             "Template mode cannot be null (pre-processor: {}, dialect{})",
-                            processor.java_class_name(),
-                            dialect.java_class_name()
+                            processor.class_name(),
+                            dialect.class_name()
                         ))
                     })?;
                     let handler_class = processor.get_handler_class().ok_or_else(|| {
                         configuration_error(format!(
                             "Pre-Processor {} for dialect {} returns a null handler class, which is forbidden.",
-                            processor.java_class_name(),
-                            processor.java_class_name()
+                            processor.class_name(),
+                            processor.class_name()
                         ))
                     })?;
                     validate_pre_processor_handler(
@@ -218,21 +218,21 @@ impl DialectSetConfiguration {
                     let processor = processor.ok_or_else(|| {
                         configuration_error(format!(
                             "Post-Processor list for dialect {} includes a null entry, which is forbidden.",
-                            dialect.java_class_name()
+                            dialect.class_name()
                         ))
                     })?;
                     let template_mode = processor.get_template_mode().ok_or_else(|| {
                         configuration_error(format!(
                             "Template mode cannot be null (post-processor: {}, dialect{})",
-                            processor.java_class_name(),
-                            dialect.java_class_name()
+                            processor.class_name(),
+                            dialect.class_name()
                         ))
                     })?;
                     let handler_class = processor.get_handler_class().ok_or_else(|| {
                         configuration_error(format!(
                             "Post-Processor {} for dialect {} returns a null handler class, which is forbidden.",
-                            processor.java_class_name(),
-                            processor.java_class_name()
+                            processor.class_name(),
+                            processor.class_name()
                         ))
                     })?;
                     validate_post_processor_handler(
@@ -813,16 +813,16 @@ fn validate_pre_processor_handler(
         return Err(configuration_error(format!(
             "Handler class {} specified for pre-processor {} in dialect {} does not implement required interface org.thymeleaf.engine.ITemplateHandler",
             handler_class.get_name(),
-            pre_processor.java_class_name(),
-            dialect.java_class_name()
+            pre_processor.class_name(),
+            dialect.class_name()
         )));
     }
     if !handler_class.has_zero_argument_constructor() {
         let message = format!(
             "Pre-Processor class {} specified for pre-processor {} in dialect {} does not implement required zero-argument constructor.",
             handler_class.get_name(),
-            pre_processor.java_class_name(),
-            dialect.java_class_name()
+            pre_processor.class_name(),
+            dialect.class_name()
         );
         return Err(ConfigurationException::with_cause(
             Some(message),
@@ -844,16 +844,16 @@ fn validate_post_processor_handler(
         return Err(configuration_error(format!(
             "Handler class {} specified for post-processor {} in dialect {} does not implement required interface org.thymeleaf.engine.ITemplateHandler",
             handler_class.get_name(),
-            post_processor.java_class_name(),
-            dialect.java_class_name()
+            post_processor.class_name(),
+            dialect.class_name()
         )));
     }
     if !handler_class.has_zero_argument_constructor() {
         let message = format!(
             "Post-Processor class {} specified for post-processor {} in dialect {} does not implement required zero-argument constructor.",
             handler_class.get_name(),
-            post_processor.java_class_name(),
-            dialect.java_class_name()
+            post_processor.class_name(),
+            dialect.class_name()
         );
         return Err(ConfigurationException::with_cause(
             Some(message),

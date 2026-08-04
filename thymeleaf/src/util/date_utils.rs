@@ -88,7 +88,7 @@ impl DateValue {
 }
 
 impl TemplateObject for DateValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         if self.calendar {
             "java.util.GregorianCalendar"
         } else {
@@ -115,7 +115,7 @@ impl TemplateObject for DateValue {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, crate::expression::TemplateObjectPropertyError>>
@@ -127,7 +127,7 @@ impl TemplateObject for DateValue {
         })
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -482,12 +482,12 @@ impl DateUtils {
                 .ok_or_else(|| {
                     invalid(format!(
                         "Cannot normalize class \"{}\" as a date",
-                        object.java_class_name()
+                        object.class_name()
                     ))
                 }),
             Some(value) => Err(invalid(format!(
                 "Cannot normalize class \"{}\" as a date",
-                value.java_class_name()
+                value.class_name()
             ))),
         }
     }

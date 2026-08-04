@@ -224,10 +224,7 @@ mod tests {
                 message: Some("Template mode cannot be null".to_owned()),
             }
         );
-        assert_eq!(
-            error.java_class_name(),
-            "java.lang.IllegalArgumentException"
-        );
+        assert_eq!(error.class_name(), "java.lang.IllegalArgumentException");
         assert_eq!(error.to_string(), "Template mode cannot be null");
     }
 

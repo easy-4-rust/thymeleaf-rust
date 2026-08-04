@@ -37,13 +37,13 @@ pub enum ElementDefinitionError {
 impl ElementDefinitionError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::NullElementName | Self::NullAssociatedProcessors => {
                 "java.lang.IllegalArgumentException"
             }
             Self::NullAssociatedProcessor => "java.lang.NullPointerException",
-            Self::ElementName(error) => error.java_class_name(),
+            Self::ElementName(error) => error.class_name(),
         }
     }
 }

@@ -98,7 +98,7 @@ impl AbstractProcessorDialect {
 }
 
 impl IDialect for AbstractProcessorDialect {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.dialect.AbstractProcessorDialect"
     }
 

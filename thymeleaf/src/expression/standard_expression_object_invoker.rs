@@ -324,7 +324,7 @@ fn invoke_aggregates(
             TemplateValue::Number(value) => Ok(Some(value.clone())),
             value => Err(invocation_error(format!(
                 "Cannot aggregate non-number type {}",
-                value.java_class_name()
+                value.class_name()
             ))),
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -417,7 +417,7 @@ fn invoke_maps(
         Some(value) => {
             return Err(invocation_error(format!(
                 "Target of class {} is not a Map",
-                value.java_class_name()
+                value.class_name()
             )));
         }
     };
@@ -558,7 +558,7 @@ fn convert_sequence_value(
             .unwrap_or("Object");
         Err(invocation_error(format!(
             "Cannot store object of class \"{}\" in {component}[]",
-            value.java_class_name()
+            value.class_name()
         )))
     }
 }
@@ -574,12 +574,12 @@ fn sequence_values(
             "Cannot convert primitive byte[] to Object[]",
         )),
         Some(TemplateValue::Object(object)) => object
-            .java_iterable_values()
+            .iterable_values()
             .ok_or_else(|| invocation_error("Cannot convert target to array/List/Set")),
         Some(TemplateValue::Null) | None => Err(invocation_error("Target cannot be null")),
         Some(value) => Err(invocation_error(format!(
             "Cannot convert object of class \"{}\" to array/List/Set",
-            value.java_class_name()
+            value.class_name()
         ))),
     }
 }
@@ -592,7 +592,7 @@ fn required_list(
         Some(TemplateValue::Null) | None => Err(invocation_error("Target cannot be null")),
         Some(value) => Err(invocation_error(format!(
             "Target of class {} is not an array, List or Set",
-            value.java_class_name()
+            value.class_name()
         ))),
     }
 }

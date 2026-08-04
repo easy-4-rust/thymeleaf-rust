@@ -155,14 +155,14 @@ impl ElementProcessorIterator {
             }) {
                 return Err(TemplateProcessingException::new(Some(format!(
                     "Two different registered processors have returned zero as a result of their comparison, which is forbidden. Offending processors are {} and {}",
-                    new_processor.java_class_name(),
+                    new_processor.class_name(),
                     old_processors
                         .iter()
                         .find(|old_processor| {
                             compare_processors(new_processor, old_processor) == Ordering::Equal
                         })
                         .expect("the preceding equality check must identify an offending processor")
-                        .java_class_name()
+                        .class_name()
                 ))));
             }
         }
@@ -213,7 +213,7 @@ mod tests {
             Some(self)
         }
 
-        fn java_class_name(&self) -> &'static str {
+        fn class_name(&self) -> &'static str {
             self.name
         }
 

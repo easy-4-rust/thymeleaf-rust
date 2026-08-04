@@ -83,7 +83,7 @@ pub trait IPreProcessor: Send + Sync {
     /// # 返回值
     ///
     /// 返回当前具体实现的稳定完整类名。
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         std::any::type_name::<Self>()
     }
 }

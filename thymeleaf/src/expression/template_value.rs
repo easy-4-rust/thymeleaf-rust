@@ -15,7 +15,7 @@ use super::LiteralValue;
 /// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub trait TemplateObject: Any + Send + Sync {
     /// 返回用于诊断和类型分派的 Java 风格运行时类名。
-    fn java_class_name(&self) -> &str;
+    fn class_name(&self) -> &str;
 
     /// 返回 Java `Object#toString()` 对应 UTF-16 文本。
     fn to_utf16_string(&self) -> Utf16String;
@@ -24,12 +24,12 @@ pub trait TemplateObject: Any + Send + Sync {
     fn as_any(&self) -> &dyn Any;
 
     /// 执行 Java `Object#equals` 等价比较。
-    fn java_equals(&self, other: &dyn TemplateObject) -> bool {
+    fn template_equals(&self, other: &dyn TemplateObject) -> bool {
         std::ptr::eq(self.as_any(), other.as_any())
     }
 
     /// 若对象实现 Java Comparable，则执行同类对象比较。
-    fn java_compare_to(
+    fn template_compare_to(
         &self,
         _other: &dyn TemplateObject,
     ) -> Option<Result<Ordering, TemplateObjectComparisonError>> {
@@ -40,7 +40,7 @@ pub trait TemplateObject: Any + Send + Sync {
     ///
     /// 默认对象不可迭代；Link 参数归一化等 Java 反射路径通过此 capability 保留
     /// 动态对象行为。
-    fn java_iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
+    fn iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
         None
     }
 
@@ -49,9 +49,7 @@ pub trait TemplateObject: Any + Send + Sync {
     /// Standard JavaScript Serializer 对 JavaBean 使用 Introspector、对 record 使用
     /// record component 顺序。Rust 宿主对象通过该 capability 暴露等价属性；返回
     /// `None` 表示对象没有可枚举属性。
-    fn java_serializable_properties(
-        &self,
-    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
+    fn serializable_properties(&self) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         None
     }
 
@@ -59,7 +57,7 @@ pub trait TemplateObject: Any + Send + Sync {
     ///
     /// 外层 `None` 表示没有代理；`Some(None)` 表示序列化为 JSON null。Optional 等
     /// 包装类型可借此保留 Java 模块的解包语义。
-    fn java_serializable_value(&self) -> Option<Option<Arc<TemplateValue>>> {
+    fn serializable_value(&self) -> Option<Option<Arc<TemplateValue>>> {
         None
     }
 
@@ -67,7 +65,7 @@ pub trait TemplateObject: Any + Send + Sync {
     ///
     /// 外层 `None` 表示对象不提供该属性访问器；`Some(Ok(None))` 表示属性存在但值为
     /// Java null；错误保留宿主 getter 抛出的运行时异常。
-    fn java_get_property(
+    fn get_property(
         &self,
         _property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -78,7 +76,7 @@ pub trait TemplateObject: Any + Send + Sync {
     ///
     /// 外层 `None` 表示对象不提供该方法；`Some(Ok(None))` 表示方法返回 Java
     /// null；错误保留宿主方法抛出的运行时异常。
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         _method_name: &Utf16String,
         _arguments: &[Option<Arc<TemplateValue>>],
@@ -171,7 +169,7 @@ impl TemplateValue {
             Self::Bytes(_) => EvaluationValue::Other("[B".to_owned()),
             Self::List(_) => EvaluationValue::Other("java.util.List".to_owned()),
             Self::Map(_) => EvaluationValue::Other("java.util.Map".to_owned()),
-            Self::Object(value) => EvaluationValue::Other(value.java_class_name().to_owned()),
+            Self::Object(value) => EvaluationValue::Other(value.class_name().to_owned()),
             Self::NoOp => {
                 EvaluationValue::Other("org.thymeleaf.standard.expression.NoOpToken".to_owned())
             }
@@ -250,7 +248,7 @@ impl TemplateValue {
     /// 执行 Java 对象的 `equals` 等价比较。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn java_equals(&self, other: &Self) -> bool {
+    pub fn template_equals(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Null, Self::Null) => true,
             (Self::Boolean(left), Self::Boolean(right)) => left == right,
@@ -266,12 +264,11 @@ impl TemplateValue {
                     && left
                         .iter()
                         .zip(right.iter())
-                        .all(|(left, right)| left.java_equals(right))
+                        .all(|(left, right)| left.template_equals(right))
             }
             (Self::Map(left), Self::Map(right)) => java_map_equals(left, right),
             (Self::Object(left), Self::Object(right)) => {
-                left.java_class_name() == right.java_class_name()
-                    && left.java_equals(right.as_ref())
+                left.class_name() == right.class_name() && left.template_equals(right.as_ref())
             }
             (Self::Literal(left), Self::Literal(right)) => Arc::ptr_eq(left, right),
             (Self::NoOp, Self::NoOp) => true,
@@ -281,7 +278,7 @@ impl TemplateValue {
 
     /// 若两个对象具有相同 Java 运行时类且实现 Comparable，则返回比较结果。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn java_compare_to(
+    pub fn template_compare_to(
         &self,
         other: &Self,
     ) -> Option<Result<Ordering, TemplateObjectComparisonError>> {
@@ -296,9 +293,9 @@ impl TemplateValue {
             }
             (Self::Number(left), Self::Number(right)) => java_number_compare(left, right).map(Ok),
             (Self::Object(left), Self::Object(right))
-                if left.java_class_name() == right.java_class_name() =>
+                if left.class_name() == right.class_name() =>
             {
-                left.java_compare_to(right.as_ref())
+                left.template_compare_to(right.as_ref())
             }
             _ => None,
         }
@@ -307,7 +304,7 @@ impl TemplateValue {
     /// 返回 Java 风格运行时类名。
     #[must_use]
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
             Self::Null => "null",
             Self::Boolean(_) => "java.lang.Boolean",
@@ -319,7 +316,7 @@ impl TemplateValue {
             Self::Map(_) => "java.util.Map",
             Self::Literal(_) => "org.thymeleaf.standard.expression.LiteralValue",
             Self::NoOp => "org.thymeleaf.standard.expression.NoOpToken",
-            Self::Object(object) => object.java_class_name(),
+            Self::Object(object) => object.class_name(),
         }
     }
 }
@@ -440,8 +437,8 @@ fn java_map_equals(
             .enumerate()
             .find(|(index, (right_key, right_value))| {
                 !matched[*index]
-                    && left_key.java_equals(right_key)
-                    && left_value.java_equals(right_value)
+                    && left_key.template_equals(right_key)
+                    && left_value.template_equals(right_value)
             })
             .is_some_and(|(index, _)| {
                 matched[index] = true;
@@ -465,7 +462,7 @@ impl Debug for TemplateValue {
             Self::NoOp => formatter.write_str("NoOp"),
             Self::Object(value) => formatter
                 .debug_struct("Object")
-                .field("java_class_name", &value.java_class_name())
+                .field("class_name", &value.class_name())
                 .finish_non_exhaustive(),
             Self::SafeHtml(value) => formatter.debug_tuple("SafeHtml").field(value).finish(),
         }

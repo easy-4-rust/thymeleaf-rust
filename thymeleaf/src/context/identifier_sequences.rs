@@ -18,7 +18,7 @@ pub enum IdentifierSequencesError {
 impl IdentifierSequencesError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::NullId => "java.lang.IllegalArgumentException",
             Self::MissingPrevious(_) => "org.thymeleaf.exceptions.TemplateProcessingException",

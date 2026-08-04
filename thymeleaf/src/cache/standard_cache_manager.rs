@@ -315,7 +315,7 @@ impl Default for StandardCacheManager {
 }
 
 impl ICacheManager for StandardCacheManager {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.cache.StandardCacheManager"
     }
 

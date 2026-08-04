@@ -24,7 +24,7 @@ pub(crate) enum TextParsingCommentError {
 
 impl TextParsingCommentError {
     /// 返回 Java 异常全限定名。
-    pub(crate) const fn java_class_name(&self) -> &'static str {
+    pub(crate) const fn class_name(&self) -> &'static str {
         match self {
             Self::TextParse(_) => "org.thymeleaf.templateparser.text.TextParseException",
             Self::NullArrayLoad | Self::NullStringValue => "java.lang.NullPointerException",
@@ -398,7 +398,7 @@ mod tests {
         )
         .expect_err("handler failure");
         assert_eq!(
-            error.java_class_name(),
+            error.class_name(),
             "org.thymeleaf.templateparser.text.TextParseException"
         );
         assert_eq!(
@@ -413,7 +413,7 @@ mod tests {
         assert!(!TextParsingCommentUtil::is_comment_block_start(None, 0, 1).expect("short"));
         let error =
             TextParsingCommentUtil::is_comment_block_start(None, 0, 2).expect_err("null load");
-        assert_eq!(error.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(error.class_name(), "java.lang.NullPointerException");
         assert_eq!(
             error.java_message().to_string_lossy(),
             "Cannot load from char array because \"<parameter1>\" is null"
@@ -539,7 +539,7 @@ mod tests {
             "Index -1 out of bounds for length 3"
         );
         assert_eq!(
-            runtime_errors[2].java_class_name(),
+            runtime_errors[2].class_name(),
             "java.lang.StringIndexOutOfBoundsException"
         );
         assert_eq!(

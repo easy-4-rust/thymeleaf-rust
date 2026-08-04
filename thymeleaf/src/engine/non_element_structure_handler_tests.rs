@@ -543,11 +543,7 @@ fn boundary_state(handler: &TemplateBoundariesStructureHandler) -> String {
 fn emit_validate_error(output: &mut String, key: &str, result: Result<(), ValidateError>) {
     match result {
         Ok(()) => emit(output, key, "NONE"),
-        Err(error) => emit(
-            output,
-            key,
-            format!("{}:{}", error.java_class_name(), error),
-        ),
+        Err(error) => emit(output, key, format!("{}:{}", error.class_name(), error)),
     }
 }
 

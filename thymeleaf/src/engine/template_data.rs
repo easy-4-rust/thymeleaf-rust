@@ -98,7 +98,7 @@ impl TemplateData {
 }
 
 impl TemplateObject for TemplateData {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.engine.TemplateData"
     }
 
@@ -110,7 +110,7 @@ impl TemplateObject for TemplateData {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -159,7 +159,7 @@ struct TemplateResourceExpressionObject {
 }
 
 impl TemplateObject for TemplateResourceExpressionObject {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.templateresource.ITemplateResource"
     }
 
@@ -171,7 +171,7 @@ impl TemplateObject for TemplateResourceExpressionObject {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -200,7 +200,7 @@ struct CacheEntryValidityExpressionObject {
 }
 
 impl TemplateObject for CacheEntryValidityExpressionObject {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.cache.ICacheEntryValidity"
     }
 
@@ -212,7 +212,7 @@ impl TemplateObject for CacheEntryValidityExpressionObject {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -325,7 +325,7 @@ mod tests {
 
     fn assert_property(data: &TemplateData, property: &str, expected: Option<&str>) {
         let actual = data
-            .java_get_property(&Utf16String::from_rust_str(property))
+            .get_property(&Utf16String::from_rust_str(property))
             .expect("TemplateData JavaBean property")
             .expect("TemplateData getter must not fail")
             .and_then(|value| value.to_utf16_string())
@@ -335,7 +335,7 @@ mod tests {
 
     fn object_property(data: &TemplateData, property: &str) -> Arc<dyn TemplateObject> {
         let value = data
-            .java_get_property(&Utf16String::from_rust_str(property))
+            .get_property(&Utf16String::from_rust_str(property))
             .expect("TemplateData JavaBean property")
             .expect("TemplateData getter must not fail")
             .expect("non-null Java object");
@@ -347,7 +347,7 @@ mod tests {
 
     fn assert_object_property(object: &dyn TemplateObject, property: &str, expected: Option<&str>) {
         let actual = object
-            .java_get_property(&Utf16String::from_rust_str(property))
+            .get_property(&Utf16String::from_rust_str(property))
             .expect("nested JavaBean property")
             .expect("nested getter must not fail")
             .and_then(|value| value.to_utf16_string())

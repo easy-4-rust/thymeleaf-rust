@@ -271,9 +271,9 @@ fn write_value(
             } else if let Some(temporal) = value.as_any().downcast_ref::<TemporalValue>() {
                 let formatted = temporal.to_javascript_iso_string();
                 write_json_string(writer, formatted.as_utf16(), escape_all_slashes)
-            } else if let Some(serializable) = value.java_serializable_value() {
+            } else if let Some(serializable) = value.serializable_value() {
                 write_value(serializable.as_deref(), writer, escape_all_slashes)
-            } else if let Some(properties) = value.java_serializable_properties() {
+            } else if let Some(properties) = value.serializable_properties() {
                 writer.write_utf16(&[u16::from(b'{')])?;
                 for (index, (name, property_value)) in properties.iter().enumerate() {
                     if index != 0 {

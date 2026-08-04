@@ -13,12 +13,12 @@ use thymeleaf::util::Utf16String;
 pub struct ExceptionLazyContextVariable;
 
 impl TemplateObject for ExceptionLazyContextVariable {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.templateengine.features.lazy.ExceptionLazyContextVariable"
     }
 
     fn to_utf16_string(&self) -> Utf16String {
-        Utf16String::from_rust_str(self.java_class_name())
+        Utf16String::from_rust_str(self.class_name())
     }
 
     fn as_any(&self) -> &dyn Any {

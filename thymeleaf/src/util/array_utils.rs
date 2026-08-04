@@ -20,7 +20,7 @@ pub trait ArrayElementValue {
     ///
     /// # 返回
     /// 当前元素的精确 Java 运行时类名。
-    fn java_class_name(&self) -> &str;
+    fn class_name(&self) -> &str;
 
     /// 判断当前对象能否赋值给指定 Java 组件类。
     ///
@@ -30,42 +30,42 @@ pub trait ArrayElementValue {
     /// # 返回
     /// Java `ArrayStoreException` 检查通过时返回 `true`。
     fn is_instance_of(&self, component_class_name: &str) -> bool {
-        component_class_name == "java.lang.Object" || component_class_name == self.java_class_name()
+        component_class_name == "java.lang.Object" || component_class_name == self.class_name()
     }
 }
 
 impl ArrayElementValue for String {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.String"
     }
 }
 
 impl ArrayElementValue for i32 {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.Integer"
     }
 }
 
 impl ArrayElementValue for i64 {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.Long"
     }
 }
 
 impl ArrayElementValue for f64 {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.Double"
     }
 }
 
 impl ArrayElementValue for f32 {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.Float"
     }
 }
 
 impl ArrayElementValue for bool {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.lang.Boolean"
     }
 }
@@ -267,9 +267,9 @@ impl ArrayUtilsError {
     /// # 返回
     /// 当前错误对应的 JVM 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
-            Self::Validation(error) => error.java_class_name(),
+            Self::Validation(error) => error.class_name(),
             Self::CannotConvert { .. } | Self::InvalidRange { .. } => {
                 "java.lang.IllegalArgumentException"
             }
@@ -703,11 +703,9 @@ impl ArrayUtils {
                         let mut computed: Option<&str> = None;
                         for element in elements.iter().flatten() {
                             computed = match computed {
-                                None => Some(element.java_class_name()),
+                                None => Some(element.class_name()),
                                 Some("java.lang.Object") => Some("java.lang.Object"),
-                                Some(current) if current == element.java_class_name() => {
-                                    Some(current)
-                                }
+                                Some(current) if current == element.class_name() => Some(current),
                                 Some(_) => Some("java.lang.Object"),
                             };
                         }
@@ -764,7 +762,7 @@ mod tests {
     }
 
     impl ArrayElementValue for Value {
-        fn java_class_name(&self) -> &str {
+        fn class_name(&self) -> &str {
             match self {
                 Self::Text(_) => "java.lang.String",
                 Self::Number(_) => "java.lang.Integer",
@@ -808,14 +806,14 @@ mod tests {
         );
         let error = ArrayUtils::to_string_array(Some(ArrayTarget::Iterable(&mixed)))
             .expect_err("array store");
-        assert_eq!(error.java_class_name(), "java.lang.ArrayStoreException");
+        assert_eq!(error.class_name(), "java.lang.ArrayStoreException");
 
         let error = ArrayUtils::to_array::<Value>(Some(ArrayTarget::PrimitiveArray {
             class_name: "[I",
             component_class_name: "int",
         }))
         .expect_err("class cast");
-        assert_eq!(error.java_class_name(), "java.lang.ClassCastException");
+        assert_eq!(error.class_name(), "java.lang.ClassCastException");
     }
 
     #[test]
@@ -837,7 +835,7 @@ mod tests {
         assert_eq!(
             ArrayUtils::copy_of_with_type(Some(&source), 1, Some(&integer_type))
                 .expect_err("store")
-                .java_class_name(),
+                .class_name(),
             "java.lang.ArrayStoreException"
         );
     }
@@ -864,12 +862,12 @@ mod tests {
 
     #[test]
     fn runtime_adapters_cover_builtin_classes_types_and_owned_results() {
-        assert_eq!(String::new().java_class_name(), "java.lang.String");
-        assert_eq!(0_i32.java_class_name(), "java.lang.Integer");
-        assert_eq!(0_i64.java_class_name(), "java.lang.Long");
-        assert_eq!(0_f64.java_class_name(), "java.lang.Double");
-        assert_eq!(0_f32.java_class_name(), "java.lang.Float");
-        assert_eq!(false.java_class_name(), "java.lang.Boolean");
+        assert_eq!(String::new().class_name(), "java.lang.String");
+        assert_eq!(0_i32.class_name(), "java.lang.Integer");
+        assert_eq!(0_i64.class_name(), "java.lang.Long");
+        assert_eq!(0_f64.class_name(), "java.lang.Double");
+        assert_eq!(0_f32.class_name(), "java.lang.Float");
+        assert_eq!(false.class_name(), "java.lang.Boolean");
         assert!("text".to_owned().is_instance_of("java.lang.Object"));
         assert!(!0_i32.is_instance_of("java.lang.String"));
 

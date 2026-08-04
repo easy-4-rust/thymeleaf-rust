@@ -235,7 +235,7 @@ mod tests {
     struct Text(String);
 
     impl ArrayElementValue for Text {
-        fn java_class_name(&self) -> &str {
+        fn class_name(&self) -> &str {
             "java.lang.String"
         }
     }

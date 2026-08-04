@@ -47,7 +47,7 @@ impl AbstractDialect {
 }
 
 impl IDialect for AbstractDialect {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.dialect.AbstractDialect"
     }
 

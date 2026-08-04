@@ -42,7 +42,7 @@ impl<F> IProcessor for AbstractProcessingInstructionProcessor<F>
 where
     F: Send + Sync,
 {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         self.adapter.processor_class_name()
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {

@@ -495,7 +495,7 @@ fn emit_validate_error(
 ) {
     match result {
         Ok(()) => emit(output, key, "NONE"),
-        Err(error) => emit(output, key, format!("{}:{error}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("{}:{error}", error.class_name())),
     }
 }
 
@@ -506,7 +506,7 @@ fn emit_constructor_error<T>(
 ) {
     match result {
         Ok(_) => emit(output, key, "NONE"),
-        Err(error) => emit(output, key, format!("{}:{error}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("{}:{error}", error.class_name())),
     }
 }
 

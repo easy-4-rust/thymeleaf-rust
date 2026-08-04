@@ -296,7 +296,7 @@ struct ContextExpressionObject {
 }
 
 impl TemplateObject for ContextExpressionObject {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.context.IExpressionContext"
     }
 
@@ -308,14 +308,14 @@ impl TemplateObject for ContextExpressionObject {
         self
     }
 
-    fn java_equals(&self, other: &dyn TemplateObject) -> bool {
+    fn template_equals(&self, other: &dyn TemplateObject) -> bool {
         other
             .as_any()
             .downcast_ref::<Self>()
             .is_some_and(|other| Weak::ptr_eq(&self.context, &other.context))
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
@@ -326,7 +326,7 @@ impl TemplateObject for ContextExpressionObject {
 }
 
 impl TemplateObject for Locale {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.util.Locale"
     }
 
@@ -340,7 +340,7 @@ impl TemplateObject for Locale {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>> {
@@ -354,7 +354,7 @@ impl TemplateObject for Locale {
         Some(Ok(Some(Arc::new(TemplateValue::string(value)))))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -377,7 +377,7 @@ impl TemplateObject for Locale {
 macro_rules! stateless_template_object {
     ($type:ty, $class_name:literal) => {
         impl TemplateObject for $type {
-            fn java_class_name(&self) -> &str {
+            fn class_name(&self) -> &str {
                 $class_name
             }
 
@@ -389,7 +389,7 @@ macro_rules! stateless_template_object {
                 self
             }
 
-            fn java_invoke_method(
+            fn invoke_method(
                 &self,
                 method_name: &Utf16String,
                 arguments: &[Option<Arc<TemplateValue>>],
@@ -404,7 +404,7 @@ macro_rules! stateless_template_object {
                 )
             }
 
-            fn java_get_property(
+            fn get_property(
                 &self,
                 property_name: &Utf16String,
             ) -> Option<Result<Option<Arc<TemplateValue>>, super::TemplateObjectPropertyError>>

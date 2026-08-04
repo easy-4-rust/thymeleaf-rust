@@ -367,7 +367,7 @@ fn emit_result(
             key,
             format!(
                 "ERR:{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 to_utf16_hex(&error.message())
             ),
         ),
@@ -398,7 +398,7 @@ fn utf16_string_hash(value: &Utf16String) -> i32 {
 }
 
 fn mix_error(hash: u64, error: &CharArrayWrapperSequenceError) -> u64 {
-    let hash = mix_rust_str(hash, error.java_class_name());
+    let hash = mix_rust_str(hash, error.class_name());
     mix_string(hash, &error.message())
 }
 

@@ -29,13 +29,13 @@ pub enum AggregateCharSequenceError {
 impl AggregateCharSequenceError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
             Self::NullComponent
             | Self::NullComponentArgument
             | Self::NullComponents
             | Self::NullContainedComponent => "java.lang.IllegalArgumentException",
-            Self::Sequence(error) => error.java_class_name(),
+            Self::Sequence(error) => error.class_name(),
         }
     }
 }

@@ -23,7 +23,7 @@ impl OgnlError {
 
     /// 返回 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         "ognl.OgnlException"
     }
 }

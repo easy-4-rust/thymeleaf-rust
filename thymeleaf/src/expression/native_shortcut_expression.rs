@@ -128,16 +128,16 @@ fn read_property(
             "isEmpty" | "empty" => Ok(Some(Arc::new(TemplateValue::Boolean(value.is_empty())))),
             _ => Err(not_applicable(name, target)),
         },
-        TemplateValue::Object(value) => match value.java_get_property(property_name) {
+        TemplateValue::Object(value) => match value.get_property(property_name) {
             Some(result) => result.map_err(|error| NativeShortcutError::PropertyGetter {
                 property_name: name,
-                class_name: value.java_class_name().to_owned(),
+                class_name: value.class_name().to_owned(),
                 message: error.to_string(),
             }),
             None => Err(NativeShortcutError::NotApplicable(
                 NativeShortcutExpressionNotApplicableError::new(
                     name,
-                    value.java_class_name().to_owned(),
+                    value.class_name().to_owned(),
                 ),
             )),
         },
@@ -151,7 +151,7 @@ fn read_property(
 fn not_applicable(property_name: String, target: &TemplateValue) -> NativeShortcutError {
     NativeShortcutError::NotApplicable(NativeShortcutExpressionNotApplicableError::new(
         property_name,
-        target.java_class_name().to_owned(),
+        target.class_name().to_owned(),
     ))
 }
 

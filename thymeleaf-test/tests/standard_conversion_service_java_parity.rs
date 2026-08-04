@@ -65,7 +65,7 @@ fn cover_public_adapter_contracts() {
     assert_eq!(describe_result(borrowed_object), "9");
 
     let runtime = StandardConversionError::runtime("example.Exception", "failure");
-    assert_eq!(runtime.java_class_name(), "example.Exception");
+    assert_eq!(runtime.class_name(), "example.Exception");
     assert_eq!(runtime.to_string(), "failure");
 
     let unavailable = match service.convert(
@@ -77,7 +77,7 @@ fn cover_public_adapter_contracts() {
         Err(error) => error,
     };
     assert_eq!(
-        unavailable.java_class_name(),
+        unavailable.class_name(),
         "java.lang.IllegalArgumentException"
     );
 }
@@ -370,20 +370,12 @@ fn emit_outcome(
 ) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", describe_result(value))),
-        Err(error) => emit(
-            output,
-            key,
-            format!("ERR:{}:{}", error.java_class_name(), error),
-        ),
+        Err(error) => emit(output, key, format!("ERR:{}:{}", error.class_name(), error)),
     }
 }
 
 fn emit_error(output: &mut String, key: &str, error: &StandardConversionError) {
-    emit(
-        output,
-        key,
-        format!("ERR:{}:{}", error.java_class_name(), error),
-    );
+    emit(output, key, format!("ERR:{}:{}", error.class_name(), error));
 }
 
 fn describe_result(result: ConversionResult<'_>) -> String {

@@ -396,10 +396,7 @@ fn export_standard_factory(output: &mut BTreeMap<String, String>) {
         emit(
             output,
             &format!("standard.ordinary.{name}"),
-            value.map_or_else(
-                || "null".to_owned(),
-                |value| value.java_class_name().to_owned(),
-            ),
+            value.map_or_else(|| "null".to_owned(), |value| value.class_name().to_owned()),
         );
     }
 
@@ -425,7 +422,7 @@ fn export_standard_factory(output: &mut BTreeMap<String, String>) {
         emit(
             output,
             &format!("standard.template.{name}"),
-            value.java_class_name(),
+            value.class_name(),
         );
     }
 
@@ -462,7 +459,7 @@ fn export_standard_factory(output: &mut BTreeMap<String, String>) {
             .expect_err("removed servlet object");
         let class = error.downcast_ref::<ValidateError>().map_or(
             "java.lang.IllegalArgumentException",
-            ValidateError::java_class_name,
+            ValidateError::class_name,
         );
         emit(
             output,
@@ -628,7 +625,7 @@ fn same_context_value(
 ) -> bool {
     left.as_ref()
         .zip(right.as_ref())
-        .is_some_and(|(left, right)| left.java_equals(right))
+        .is_some_and(|(left, right)| left.template_equals(right))
 }
 
 fn parse_golden(input: &str) -> BTreeMap<String, String> {
@@ -684,7 +681,7 @@ fn emit_wrapper_value(
 ) {
     match result {
         Ok(value) => emit(output, key, value_string(&value)),
-        Err(error) => emit(output, key, format!("{}:{error}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("{}:{error}", error.class_name())),
     }
 }
 
@@ -695,7 +692,7 @@ fn emit_wrapper_result<T: ToString>(
 ) {
     match result {
         Ok(value) => emit(output, key, value),
-        Err(error) => emit(output, key, format!("{}:{error}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("{}:{error}", error.class_name())),
     }
 }
 
@@ -706,7 +703,7 @@ fn emit_wrapper_unit(
 ) {
     match result {
         Ok(()) => emit(output, key, "NONE"),
-        Err(error) => emit(output, key, format!("{}:{error}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("{}:{error}", error.class_name())),
     }
 }
 

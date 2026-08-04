@@ -25,7 +25,7 @@ impl IteratorValue {
 }
 
 impl TemplateObject for IteratorValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.util.Iterator"
     }
 
@@ -37,7 +37,7 @@ impl TemplateObject for IteratorValue {
         self
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

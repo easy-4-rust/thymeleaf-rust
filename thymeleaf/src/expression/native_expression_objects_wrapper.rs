@@ -348,7 +348,7 @@ impl std::fmt::Display for NativeExpressionObjectsWrapper<'_> {
 impl NativeExpressionObjectsWrapperError {
     /// 返回对应 Java 异常类型。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::NullKey | Self::NullStringKey => "java.lang.NullPointerException",
             Self::Restricted { .. } | Self::Build { .. } => {

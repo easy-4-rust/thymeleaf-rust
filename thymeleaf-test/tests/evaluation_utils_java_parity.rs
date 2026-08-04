@@ -57,7 +57,7 @@ fn cover_public_adapter_contracts() {
         .set_value(Some("ignored".to_owned()))
         .expect_err("entry is immutable");
     assert_eq!(
-        unsupported.java_class_name(),
+        unsupported.class_name(),
         "java.lang.UnsupportedOperationException"
     );
     let first = MapEntry::new(Some("a".to_owned()), Some("1".to_owned()));
@@ -609,7 +609,7 @@ fn describe_number_outcome(value: &EvaluationValue) -> String {
             );
             format!("OK:{description}")
         }
-        Err(error) => format!("ERR:{}", error.java_class_name()),
+        Err(error) => format!("ERR:{}", error.class_name()),
     }
 }
 
@@ -682,7 +682,7 @@ fn describe_element(value: &Option<EvaluationElement<String>>) -> String {
             format!("java.lang.Character:{value:x}")
         }
         Some(EvaluationElement::MapEntry(value)) => {
-            format!("{}:{value}", value.java_class_name())
+            format!("{}:{value}", value.class_name())
         }
     }
 }
@@ -694,7 +694,7 @@ fn emit_array_error<T>(
 ) {
     match result {
         Ok(_) => emit(output, key, "OK:unexpected"),
-        Err(error) => emit(output, key, format!("ERR:{}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("ERR:{}", error.class_name())),
     }
 }
 
@@ -710,11 +710,7 @@ fn emit_result<T: std::fmt::Display>(
                 EvaluationError::Validation(_) => format!(":{error}"),
                 _ => String::new(),
             };
-            emit(
-                output,
-                key,
-                format!("ERR:{}{message}", error.java_class_name()),
-            );
+            emit(output, key, format!("ERR:{}{message}", error.class_name()));
         }
     }
 }

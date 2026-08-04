@@ -203,7 +203,7 @@ impl VernalPrincipalObject {
 }
 
 impl TemplateObject for VernalPrincipalObject {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.springframework.security.core.Authentication"
     }
 
@@ -215,9 +215,7 @@ impl TemplateObject for VernalPrincipalObject {
         self
     }
 
-    fn java_serializable_properties(
-        &self,
-    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
+    fn serializable_properties(&self) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![
             (
                 Utf16String::from_rust_str("name"),
@@ -238,7 +236,7 @@ impl TemplateObject for VernalPrincipalObject {
         ])
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -258,7 +256,7 @@ impl TemplateObject for VernalPrincipalObject {
         Some(Ok(value))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

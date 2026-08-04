@@ -10,7 +10,7 @@ use super::{
 /// 对应 Java 语义：`AbstractLazyCharSequence` 的 Rust 侧类型 `LazyCharSequenceResolver`。
 pub trait LazyCharSequenceResolver: Send + Sync {
     /// 返回 Java 具体子类全限定名，供基类 `equals` 执行精确类判断。
-    fn java_class_name(&self) -> &str;
+    fn class_name(&self) -> &str;
 
     /// 对应子类 `resolveText()`；允许返回 Java null。
     fn resolve_text(&self) -> Option<Utf16String>;
@@ -59,7 +59,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
         if std::ptr::eq(self, other) {
             return Ok(true);
         }
-        if self.resolver.java_class_name() != other.resolver.java_class_name() {
+        if self.resolver.class_name() != other.resolver.class_name() {
             return Ok(false);
         }
         let left = self.get_text().ok_or(TextUtilsError::NullPointer)?;

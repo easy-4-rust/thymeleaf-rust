@@ -437,7 +437,7 @@ mod tests {
     fn describe_error(error: &TextParserReaderError) -> String {
         format!(
             "{}:{}",
-            error.java_class_name(),
+            error.class_name(),
             error
                 .java_message()
                 .map_or_else(|| "null".to_owned(), |message| message.to_string_lossy())
@@ -989,7 +989,7 @@ mod tests {
         let error = overflow_failure
             .read_range(&mut [0], 0, 1)
             .expect_err("补全跨缓冲区前缀时的委托异常必须传播");
-        assert_eq!(error.java_class_name(), "java.io.IOException");
+        assert_eq!(error.class_name(), "java.io.IOException");
         assert_eq!(
             error
                 .java_message()

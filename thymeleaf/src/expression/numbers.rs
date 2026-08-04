@@ -190,7 +190,7 @@ impl Numbers {
 }
 
 impl TemplateObject for Numbers {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.expression.Numbers"
     }
 
@@ -202,7 +202,7 @@ impl TemplateObject for Numbers {
         self
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -249,7 +249,7 @@ fn number(value: &Option<Arc<TemplateValue>>) -> Result<Option<&NumberValue>, Nu
         Some(TemplateValue::Number(number)) => Ok(Some(number)),
         Some(value) => Err(NumbersError::new(format!(
             "{} cannot be cast to java.lang.Number",
-            value.java_class_name()
+            value.class_name()
         ))),
     }
 }

@@ -48,9 +48,9 @@ impl AbstractConfigurableTemplateResolver {
     ///
     /// 对应 Java: `AbstractConfigurableTemplateResolver#AbstractConfigurableTemplateResolver()`。
     #[must_use]
-    pub fn new(java_class_name: &str) -> Self {
+    pub fn new(class_name: &str) -> Self {
         Self {
-            resolver: AbstractTemplateResolver::new(java_class_name),
+            resolver: AbstractTemplateResolver::new(class_name),
             prefix: None,
             suffix: None,
             force_suffix: false,

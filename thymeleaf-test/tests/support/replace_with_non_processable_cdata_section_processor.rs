@@ -51,8 +51,8 @@ impl IProcessor for ReplaceWithNonProcessableCDATASectionProcessor {
     fn as_cdata_section_processor(&self) -> Option<&dyn ICDATASectionProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        self.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.processor.class_name()
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {
         self.processor.get_template_mode()

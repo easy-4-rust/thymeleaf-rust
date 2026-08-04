@@ -436,7 +436,7 @@ impl Strings {
 }
 
 impl TemplateObject for Strings {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.expression.Strings"
     }
 
@@ -448,7 +448,7 @@ impl TemplateObject for Strings {
         self
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

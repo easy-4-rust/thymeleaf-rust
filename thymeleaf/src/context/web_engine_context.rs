@@ -539,7 +539,7 @@ impl RequestParameterMap {
 }
 
 impl TemplateObject for RequestParameterMap {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.context.WebEngineContext$RequestParameterMap"
     }
 
@@ -553,7 +553,7 @@ impl TemplateObject for RequestParameterMap {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -568,7 +568,7 @@ impl TemplateObject for RequestParameterMap {
         })))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -598,7 +598,7 @@ impl SessionAttributeMap {
 }
 
 impl TemplateObject for SessionAttributeMap {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.context.WebEngineContext$SessionAttributeMap"
     }
 
@@ -615,7 +615,7 @@ impl TemplateObject for SessionAttributeMap {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -626,7 +626,7 @@ impl TemplateObject for SessionAttributeMap {
             .and_then(resolve_lazy)))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -658,7 +658,7 @@ impl ApplicationAttributeMap {
 }
 
 impl TemplateObject for ApplicationAttributeMap {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.context.WebEngineContext$ApplicationAttributeMap"
     }
 
@@ -672,7 +672,7 @@ impl TemplateObject for ApplicationAttributeMap {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -683,7 +683,7 @@ impl TemplateObject for ApplicationAttributeMap {
             .and_then(resolve_lazy)))
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -764,7 +764,7 @@ impl RequestParameterValues {
 }
 
 impl TemplateObject for RequestParameterValues {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.context.WebEngineContext$RequestParameterValues"
     }
 
@@ -784,7 +784,7 @@ impl TemplateObject for RequestParameterValues {
         self
     }
 
-    fn java_iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
+    fn iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
         Some(
             self.parameter_values
                 .iter()

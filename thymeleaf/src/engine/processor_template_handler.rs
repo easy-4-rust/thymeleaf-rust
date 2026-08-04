@@ -1300,7 +1300,7 @@ fn handle_standalone_element_state(
             if !vars.processor_iterator.last_was_repeated() {
                 reject_modified_body_for_model_processor(
                     &vars,
-                    processor.java_class_name(),
+                    processor.class_name(),
                     tag.as_ref(),
                 )?;
                 vars.processor_iterator
@@ -1346,7 +1346,7 @@ fn handle_standalone_element_state(
         } else {
             return Err(processing_error(&format!(
                 "An element has an associated processor of type {} which is neither a Tag Element Processor nor a Model Element Processor.",
-                processor.java_class_name()
+                processor.class_name()
             )));
         }
     }
@@ -1917,7 +1917,7 @@ fn handle_open_element_state(
             if !vars.processor_iterator.last_was_repeated() {
                 reject_modified_body_for_model_processor(
                     &vars,
-                    processor.java_class_name(),
+                    processor.class_name(),
                     tag.as_ref(),
                 )?;
                 vars.processor_iterator
@@ -1963,7 +1963,7 @@ fn handle_open_element_state(
         } else {
             return Err(processing_error(&format!(
                 "An element has an associated processor of type {} which is neither a Tag Element Processor nor a Model Element Processor.",
-                processor.java_class_name()
+                processor.class_name()
             )));
         }
     }

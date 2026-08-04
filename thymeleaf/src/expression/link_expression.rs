@@ -214,7 +214,7 @@ fn normalize_parameter_value(value: Option<Arc<TemplateValue>>) -> Option<Arc<Te
                 .collect(),
         )))),
         TemplateValue::Object(object) => object
-            .java_iterable_values()
+            .iterable_values()
             .map(|values| Arc::new(TemplateValue::List(Arc::new(values))))
             .or(Some(value)),
         _ => Some(value),

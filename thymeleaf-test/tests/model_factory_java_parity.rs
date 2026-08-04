@@ -204,7 +204,7 @@ fn attribute_model_processor_construction() {
     );
     assert_eq!(processor.get_template_mode(), Some(TemplateMode::HTML));
     assert_eq!(processor.get_precedence(), 1000);
-    assert_eq!(processor.java_class_name(), "com.example.MyModelProcessor");
+    assert_eq!(processor.class_name(), "com.example.MyModelProcessor");
 }
 
 #[test]

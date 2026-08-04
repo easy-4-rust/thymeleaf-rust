@@ -21,7 +21,7 @@ impl CorpusStringArray {
 }
 
 impl TemplateObject for CorpusStringArray {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "[Ljava.lang.String;"
     }
 
@@ -36,11 +36,11 @@ impl TemplateObject for CorpusStringArray {
         self
     }
 
-    fn java_iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
+    fn iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
         Some(self.values.clone())
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {

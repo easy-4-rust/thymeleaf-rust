@@ -14,7 +14,7 @@ const RAW_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.raw.RawPar
 /// 保存这些可观察元数据；同类型原因还携带可继承的行列信息。
 pub struct RawParseCause {
     error: Box<dyn Error + Send + Sync>,
-    java_class_name: String,
+    class_name: String,
     java_message: Option<Utf16String>,
     raw_parse_location: Option<(i32, i32, Utf16String)>,
 }
@@ -25,7 +25,7 @@ impl RawParseCause {
     /// # 参数
     ///
     /// - `error`：底层 Rust 错误。
-    /// - `java_class_name`：Java 运行时类全限定名。
+    /// - `class_name`：Java 运行时类全限定名。
     /// - `java_message`：可空的 `Throwable#getMessage()`。
     ///
     /// # 返回
@@ -35,12 +35,12 @@ impl RawParseCause {
     /// 对应 Java 语义：`RawParseException` 的 `with_java_metadata` 行为（Rust 侧辅助/私有路径）。
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
-        java_class_name: impl Into<String>,
+        class_name: impl Into<String>,
         java_message: Option<Utf16String>,
     ) -> Self {
         Self {
             error,
-            java_class_name: java_class_name.into(),
+            class_name: class_name.into(),
             java_message,
             raw_parse_location: None,
         }
@@ -70,7 +70,7 @@ impl RawParseCause {
         });
         Self {
             error: Box::new(exception),
-            java_class_name: RAW_PARSE_EXCEPTION_CLASS.to_owned(),
+            class_name: RAW_PARSE_EXCEPTION_CLASS.to_owned(),
             java_message,
             raw_parse_location,
         }
@@ -78,9 +78,9 @@ impl RawParseCause {
 
     /// 返回原因的 Java 运行时类全限定名。
     #[must_use]
-    /// 对应 Java 语义：`RawParseException` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
-    pub fn java_class_name(&self) -> &str {
-        &self.java_class_name
+    /// 对应 Java 语义：`RawParseException` 的 `class_name` 行为（Rust 侧辅助/私有路径）。
+    pub fn class_name(&self) -> &str {
+        &self.class_name
     }
 
     fn source_error(&self) -> &(dyn Error + 'static) {
@@ -92,7 +92,7 @@ impl Debug for RawParseCause {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("RawParseCause")
-            .field("java_class_name", &self.java_class_name)
+            .field("class_name", &self.class_name)
             .field("java_message", &self.java_message)
             .field("raw_parse_location", &self.raw_parse_location)
             .finish_non_exhaustive()

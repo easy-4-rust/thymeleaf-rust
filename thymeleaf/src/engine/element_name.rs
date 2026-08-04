@@ -30,7 +30,7 @@ pub enum ElementNameError {
 impl ElementNameError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::InvalidElementName => "java.lang.IllegalArgumentException",
             Self::EmptyCompleteElementNames => "java.lang.ArrayIndexOutOfBoundsException",

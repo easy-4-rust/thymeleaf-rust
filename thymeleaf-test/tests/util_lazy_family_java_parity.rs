@@ -364,7 +364,7 @@ fn processor_configuration_utils_unwrap_matches_java() {
     let unwrapped = ProcessorConfigurationUtils::unwrap_element(wrapped.as_ref());
     // unwrap 恢复原处理器：类名一致、方言 precedence 还原为 None
     assert_eq!(
-        unwrapped.java_class_name(),
+        unwrapped.class_name(),
         "org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor"
     );
     assert_eq!(

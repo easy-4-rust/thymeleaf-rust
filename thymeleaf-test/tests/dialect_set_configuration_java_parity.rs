@@ -878,10 +878,10 @@ fn format_pre(processors: Vec<&dyn IPreProcessor>) -> String {
         .iter()
         .map(|processor| {
             let simple = processor
-                .java_class_name()
+                .class_name()
                 .rsplit('$')
                 .next()
-                .unwrap_or(processor.java_class_name());
+                .unwrap_or(processor.class_name());
             format!("{simple}:{}", processor.get_precedence())
         })
         .collect::<Vec<_>>()
@@ -894,10 +894,10 @@ fn format_post(processors: Vec<&dyn IPostProcessor>) -> String {
         .iter()
         .map(|processor| {
             let simple = processor
-                .java_class_name()
+                .class_name()
                 .rsplit('$')
                 .next()
-                .unwrap_or(processor.java_class_name());
+                .unwrap_or(processor.class_name());
             format!("{simple}:{}", processor.get_precedence())
         })
         .collect::<Vec<_>>()
@@ -956,7 +956,7 @@ fn emit_build_error(
             emit(
                 output,
                 key,
-                format!("{}:{}|cause={cause}", error.java_class_name(), error),
+                format!("{}:{}|cause={cause}", error.class_name(), error),
             );
         }
     }
@@ -972,7 +972,7 @@ fn emit_validate_error<T>(
         Err(error) => emit(
             output,
             key,
-            format!("{}:{}|cause=null", error.java_class_name(), error),
+            format!("{}:{}|cause=null", error.class_name(), error),
         ),
     }
 }
@@ -1058,7 +1058,7 @@ impl CapabilityDialect {
 }
 
 impl IDialect for CapabilityDialect {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         DIALECT_CLASS
     }
 
@@ -1147,7 +1147,7 @@ impl IPreProcessor for ProbePreProcessor {
         self.handler_class.as_ref()
     }
 
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         self.class_name
     }
 }
@@ -1172,7 +1172,7 @@ impl IPostProcessor for ProbePostProcessor {
         self.handler_class.as_ref()
     }
 
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         self.class_name
     }
 }

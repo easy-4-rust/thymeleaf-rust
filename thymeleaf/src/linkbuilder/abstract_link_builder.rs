@@ -30,15 +30,15 @@ impl<F> AbstractLinkBuilder<F> {
     ///
     /// # 参数
     ///
-    /// - `java_class_name`：具体 Java 子类的全限定名。
+    /// - `class_name`：具体 Java 子类的全限定名。
     /// - `build_link`：承接具体子类链接构建逻辑的线程安全闭包。
     ///
     /// # 返回值
     ///
     /// 名称已初始化、顺序为空的抽象构建器等价对象。
-    pub fn new(java_class_name: &'static str, build_link: F) -> Self {
+    pub fn new(class_name: &'static str, build_link: F) -> Self {
         Self {
-            name: Some(Utf16String::from_rust_str(java_class_name)),
+            name: Some(Utf16String::from_rust_str(class_name)),
             order: None,
             build_link,
         }

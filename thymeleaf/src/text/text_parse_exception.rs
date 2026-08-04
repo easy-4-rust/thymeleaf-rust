@@ -15,7 +15,7 @@ const TEXT_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.text.Text
 /// 还保存其可空行列，以复现上游 `instanceof TextParseException` 继承逻辑。
 pub struct TextParseCause {
     error: Box<dyn Error + Send + Sync>,
-    java_class_name: String,
+    class_name: String,
     java_message: Option<Utf16String>,
     text_parse_location: Option<(i32, i32, Utf16String)>,
 }
@@ -25,7 +25,7 @@ impl TextParseCause {
     ///
     /// # 参数
     /// - `error`：原因对象，所有权转移但分配身份保持不变。
-    /// - `java_class_name`：Java `getClass().getName()`。
+    /// - `class_name`：Java `getClass().getName()`。
     /// - `java_message`：Java `Throwable#getMessage()`，允许 null 和孤立代理项。
     ///
     /// # 返回
@@ -34,12 +34,12 @@ impl TextParseCause {
     #[must_use]
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
-        java_class_name: impl Into<String>,
+        class_name: impl Into<String>,
         java_message: Option<Utf16String>,
     ) -> Self {
         Self {
             error,
-            java_class_name: java_class_name.into(),
+            class_name: class_name.into(),
             java_message,
             text_parse_location: None,
         }
@@ -69,7 +69,7 @@ impl TextParseCause {
         });
         Self {
             error: Box::new(exception),
-            java_class_name: TEXT_PARSE_EXCEPTION_CLASS.to_owned(),
+            class_name: TEXT_PARSE_EXCEPTION_CLASS.to_owned(),
             java_message,
             text_parse_location,
         }
@@ -79,10 +79,10 @@ impl TextParseCause {
     ///
     /// # 返回
     /// 构造适配器时保存的 `Throwable#getClass().getName()`。
-    /// 对应 Java 语义：`TextParseException` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`TextParseException` 的 `class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
-        &self.java_class_name
+    pub fn class_name(&self) -> &str {
+        &self.class_name
     }
 
     fn source_error(&self) -> &(dyn Error + 'static) {
@@ -94,7 +94,7 @@ impl Debug for TextParseCause {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("TextParseCause")
-            .field("java_class_name", &self.java_class_name)
+            .field("class_name", &self.class_name)
             .field("java_message", &self.java_message)
             .field("text_parse_location", &self.text_parse_location)
             .finish_non_exhaustive()
@@ -401,7 +401,7 @@ mod tests {
         let source_identity = exception.source().expect("source") as *const dyn Error as *const ();
         assert_eq!(source_identity, identity);
         assert_eq!(
-            exception.get_cause().expect("cause").java_class_name(),
+            exception.get_cause().expect("cause").class_name(),
             "example.PlainError"
         );
     }

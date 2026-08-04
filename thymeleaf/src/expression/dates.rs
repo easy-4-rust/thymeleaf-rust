@@ -167,7 +167,7 @@ impl Dates {
 }
 
 impl TemplateObject for Dates {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.expression.Dates"
     }
 
@@ -179,7 +179,7 @@ impl TemplateObject for Dates {
         self
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

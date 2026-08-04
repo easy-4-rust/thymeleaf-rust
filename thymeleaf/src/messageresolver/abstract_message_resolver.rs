@@ -15,20 +15,20 @@ pub struct AbstractMessageResolver {
 impl AbstractMessageResolver {
     /// 创建默认名称为具体 Java 类名、顺序为 null 的解析器。
     ///
-    /// `java_class_name` 对应 Java 构造期间 `this.getClass().getName()` 的结果，
+    /// `class_name` 对应 Java 构造期间 `this.getClass().getName()` 的结果，
     /// 因而由具体 Rust 解析器传入其 Java 对象全限定名。
     ///
     /// # 参数
     ///
-    /// - `java_class_name`：具体解析器对应的 Java 全限定类名。
+    /// - `class_name`：具体解析器对应的 Java 全限定类名。
     ///
     /// # 返回值
     ///
     /// 名称已初始化、顺序仍为 `None` 的公共解析器状态。
     #[must_use]
-    pub fn new(java_class_name: &str) -> Self {
+    pub fn new(class_name: &str) -> Self {
         Self {
-            name: Some(Utf16String::from_rust_str(java_class_name)),
+            name: Some(Utf16String::from_rust_str(class_name)),
             order: None,
         }
     }

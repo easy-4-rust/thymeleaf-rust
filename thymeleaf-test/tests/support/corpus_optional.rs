@@ -31,7 +31,7 @@ impl CorpusOptional {
 }
 
 impl TemplateObject for CorpusOptional {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         self.class_name
     }
 
@@ -53,11 +53,11 @@ impl TemplateObject for CorpusOptional {
         self
     }
 
-    fn java_serializable_value(&self) -> Option<Option<Arc<TemplateValue>>> {
+    fn serializable_value(&self) -> Option<Option<Arc<TemplateValue>>> {
         Some(self.value.clone())
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

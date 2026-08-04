@@ -385,7 +385,7 @@ struct CustomPreProcessor {
     mode: TemplateMode,
     handler_class: TemplateHandlerClass,
     precedence: i32,
-    java_class_name: &'static str,
+    class_name: &'static str,
 }
 
 impl CustomPreProcessor {
@@ -393,13 +393,13 @@ impl CustomPreProcessor {
         mode: TemplateMode,
         handler_class: TemplateHandlerClass,
         precedence: i32,
-        java_class_name: &'static str,
+        class_name: &'static str,
     ) -> Self {
         Self {
             mode,
             handler_class,
             precedence,
-            java_class_name,
+            class_name,
         }
     }
 }
@@ -417,8 +417,8 @@ impl IPreProcessor for CustomPreProcessor {
         Some(&self.handler_class)
     }
 
-    fn java_class_name(&self) -> &'static str {
-        self.java_class_name
+    fn class_name(&self) -> &'static str {
+        self.class_name
     }
 }
 
@@ -426,7 +426,7 @@ struct CustomPostProcessor {
     mode: TemplateMode,
     handler_class: TemplateHandlerClass,
     precedence: i32,
-    java_class_name: &'static str,
+    class_name: &'static str,
 }
 
 impl CustomPostProcessor {
@@ -434,13 +434,13 @@ impl CustomPostProcessor {
         mode: TemplateMode,
         handler_class: TemplateHandlerClass,
         precedence: i32,
-        java_class_name: &'static str,
+        class_name: &'static str,
     ) -> Self {
         Self {
             mode,
             handler_class,
             precedence,
-            java_class_name,
+            class_name,
         }
     }
 }
@@ -458,8 +458,8 @@ impl IPostProcessor for CustomPostProcessor {
         Some(&self.handler_class)
     }
 
-    fn java_class_name(&self) -> &'static str {
-        self.java_class_name
+    fn class_name(&self) -> &'static str {
+        self.class_name
     }
 }
 
@@ -615,7 +615,7 @@ fn emit_validate_error(output: &mut String, key: &str, error: ValidateError) {
         key,
         format!(
             "{}:{}",
-            error.java_class_name(),
+            error.class_name(),
             error.get_message().unwrap_or("null")
         ),
     );

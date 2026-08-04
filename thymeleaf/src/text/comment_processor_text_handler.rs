@@ -30,7 +30,7 @@ pub(crate) enum CommentProcessorTextHandlerRuntimeError {
     ArrayIndex { index: i32, length: usize },
     /// `System.arraycopy` 参数校验失败。
     ArrayCopy {
-        java_class_name: &'static str,
+        class_name: &'static str,
         java_message: Option<Utf16String>,
     },
     /// `getNext()` 返回 null 后直接调用 `handleText`。
@@ -44,14 +44,14 @@ pub(crate) enum CommentProcessorTextHandlerRuntimeError {
 impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_null_source() -> Self {
         Self::ArrayCopy {
-            java_class_name: "java.lang.NullPointerException",
+            class_name: "java.lang.NullPointerException",
             java_message: None,
         }
     }
 
     fn arraycopy_negative_length(length: i32) -> Self {
         Self::ArrayCopy {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: length {length} is negative"
             ))),
@@ -60,7 +60,7 @@ impl CommentProcessorTextHandlerRuntimeError {
 
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self::ArrayCopy {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             ))),
@@ -69,7 +69,7 @@ impl CommentProcessorTextHandlerRuntimeError {
 
     fn arraycopy_destination_index(index: i32, length: usize) -> Self {
         Self::ArrayCopy {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: destination index {index} out of bounds for char[{length}]"
             ))),
@@ -78,7 +78,7 @@ impl CommentProcessorTextHandlerRuntimeError {
 
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self::ArrayCopy {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             ))),
@@ -87,7 +87,7 @@ impl CommentProcessorTextHandlerRuntimeError {
 
     fn arraycopy_last_destination(index: i64, length: usize) -> Self {
         Self::ArrayCopy {
-            java_class_name: "java.lang.ArrayIndexOutOfBoundsException",
+            class_name: "java.lang.ArrayIndexOutOfBoundsException",
             java_message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last destination index {index} out of bounds for char[{length}]"
             ))),
@@ -99,15 +99,13 @@ impl CommentProcessorTextHandlerRuntimeError {
     /// # 返回
     /// 与固定 JVM Oracle 中 `Throwable#getClass().getName()` 一致的名称。
     #[must_use]
-    pub(crate) const fn java_class_name(&self) -> &'static str {
+    pub(crate) const fn class_name(&self) -> &'static str {
         match self {
             Self::NullCharArrayLoad | Self::NullNextText => "java.lang.NullPointerException",
             Self::ArrayIndex { .. } => "java.lang.ArrayIndexOutOfBoundsException",
-            Self::ArrayCopy {
-                java_class_name, ..
-            } => java_class_name,
-            Self::Locator(error) => error.java_class_name(),
-            Self::Element(error) => error.java_class_name(),
+            Self::ArrayCopy { class_name, .. } => class_name,
+            Self::Locator(error) => error.class_name(),
+            Self::Element(error) => error.class_name(),
         }
     }
 
@@ -1111,7 +1109,7 @@ mod tests {
             Ok(error) => {
                 return format!(
                     "{};message={}",
-                    error.java_class_name(),
+                    error.class_name(),
                     error
                         .java_message()
                         .map_or_else(|| "null".to_owned(), |message| hex(message.as_utf16()))
@@ -1122,7 +1120,7 @@ mod tests {
         match payload.downcast::<ChainedTextHandlerRuntimeError>() {
             Ok(error) => format!(
                 "{};message={}",
-                error.java_class_name(),
+                error.class_name(),
                 hex(error.java_message().as_utf16())
             ),
             Err(_) => panic!("unknown panic payload"),
@@ -1771,10 +1769,7 @@ mod tests {
         let element_error = element_panic
             .downcast::<CommentProcessorTextHandlerRuntimeError>()
             .expect("panic payload 应为注释处理器运行时异常");
-        assert_eq!(
-            element_error.java_class_name(),
-            "java.lang.NullPointerException"
-        );
+        assert_eq!(element_error.class_name(), "java.lang.NullPointerException");
 
         let state = Rc::new(RefCell::new(RecordingState::default()));
         let mut recording = RecordingHandler {

@@ -63,12 +63,12 @@ pub enum AttributeDefinitionsError {
 impl AttributeDefinitionsError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
             Self::IllegalArgument(_) => "java.lang.IllegalArgumentException",
             Self::Configuration(_) => "org.thymeleaf.exceptions.ConfigurationException",
-            Self::AttributeNames(error) => error.java_class_name(),
-            Self::AttributeDefinition(error) => error.java_class_name(),
+            Self::AttributeNames(error) => error.class_name(),
+            Self::AttributeDefinition(error) => error.class_name(),
         }
     }
 }
@@ -349,7 +349,7 @@ impl AttributeDefinitions {
             {
                 return Err(AttributeDefinitionsError::Configuration(format!(
                     "{mode} processors must return {mode} element names and {mode} attribute names (processor: {})",
-                    processor.java_class_name()
+                    processor.class_name()
                 )));
             }
             let Some(attribute_match) = attribute_match else {

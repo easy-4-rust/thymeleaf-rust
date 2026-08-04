@@ -46,7 +46,7 @@ impl FastStringWriterError {
     /// # 返回
     /// Java Golden 中 `Throwable#getClass().getName()` 的精确结果。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::NegativeBufferSize => "java.lang.IllegalArgumentException",
             Self::StringRange { .. } | Self::CharArrayRange => {
@@ -388,7 +388,7 @@ mod tests {
             .write_string_range(Some(&Utf16String::from_rust_str("abc")), i32::MAX, 1)
             .expect_err("overflowing Java range");
         assert_eq!(
-            string_error.java_class_name(),
+            string_error.class_name(),
             "java.lang.IndexOutOfBoundsException"
         );
         assert_eq!(

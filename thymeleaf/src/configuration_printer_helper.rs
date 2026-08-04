@@ -76,9 +76,7 @@ impl ConfigurationPrinterHelper {
             "[THYMELEAF] * Cache Manager implementation: {}",
             configuration
                 .get_cache_manager()
-                .map_or("[no caches]", |cache_manager| {
-                    cache_manager.java_class_name()
-                }),
+                .map_or("[no caches]", |cache_manager| cache_manager.class_name()),
         );
 
         log.line("[THYMELEAF] * Template resolvers:");
@@ -98,7 +96,7 @@ impl ConfigurationPrinterHelper {
         for (index, dialect_configuration) in dialects.iter().enumerate() {
             let dialect = dialect_configuration.get_dialect();
             let dialect_name = dialect.get_name().map(str::to_owned);
-            let dialect_class_name = dialect.java_class_name().to_owned();
+            let dialect_class_name = dialect.class_name().to_owned();
             if dialects.len() > 1 {
                 log.optional_parameters(
                     "[THYMELEAF] * Dialect [{} of {}]: {} ({})",
@@ -346,7 +344,7 @@ fn print_element_processor(log: &mut ConfigLogBuilder, processor: &dyn IProcesso
             &element_name,
             &attribute_name,
             &processor.get_precedence(),
-            &processor.java_class_name(),
+            &processor.class_name(),
         ],
     );
 }
@@ -359,7 +357,7 @@ fn print_processor_group(log: &mut ConfigLogBuilder, label: &str, processors: &[
     for processor in processors {
         log.parameters(
             "[THYMELEAF]             * [{}]: {}",
-            &[&processor.get_precedence(), &processor.java_class_name()],
+            &[&processor.get_precedence(), &processor.class_name()],
         );
     }
 }
@@ -390,7 +388,7 @@ fn print_pre_processors_for_template_mode(
     for processor in values {
         log.parameters(
             "[THYMELEAF]             * [{}]: {}",
-            &[&processor.get_precedence(), &processor.java_class_name()],
+            &[&processor.get_precedence(), &processor.class_name()],
         );
     }
 }
@@ -421,7 +419,7 @@ fn print_post_processors_for_template_mode(
     for processor in values {
         log.parameters(
             "[THYMELEAF]             * [{}]: {}",
-            &[&processor.get_precedence(), &processor.java_class_name()],
+            &[&processor.get_precedence(), &processor.class_name()],
         );
     }
 }

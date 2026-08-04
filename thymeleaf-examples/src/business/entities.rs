@@ -1,6 +1,6 @@
 //! GTVG 业务实体 —— 对应 Java `business/entities/*.java`（6 个 POJO）。
 //!
-//! 实体实现 [`TemplateObject`]，通过 `java_get_property` 暴露 JavaBean 属性，
+//! 实体实现 [`TemplateObject`]，通过 `get_property` 暴露 JavaBean 属性，
 //! 供模板表达式（`${o.customer.name}`、`*{purchasePrice}` 等）按原语义读取。
 
 use std::sync::Arc;
@@ -54,7 +54,7 @@ pub struct OrderLine {
 }
 
 impl TemplateObject for OrderLine {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.OrderLine"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -63,7 +63,7 @@ impl TemplateObject for OrderLine {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -89,7 +89,7 @@ pub struct Product {
 }
 
 impl TemplateObject for Product {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Product"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -98,7 +98,7 @@ impl TemplateObject for Product {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -124,7 +124,7 @@ pub struct Customer {
 }
 
 impl TemplateObject for Customer {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Customer"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -133,7 +133,7 @@ impl TemplateObject for Customer {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -158,7 +158,7 @@ pub struct Order {
 }
 
 impl TemplateObject for Order {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Order"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -167,7 +167,7 @@ impl TemplateObject for Order {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -193,7 +193,7 @@ pub struct User {
 }
 
 impl TemplateObject for User {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.User"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -202,7 +202,7 @@ impl TemplateObject for User {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -234,7 +234,7 @@ pub struct Comment {
 }
 
 impl TemplateObject for Comment {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.examples.core.gtvg.jakarta.business.entities.Comment"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -243,7 +243,7 @@ impl TemplateObject for Comment {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<

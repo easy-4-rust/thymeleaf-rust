@@ -55,8 +55,8 @@ impl IProcessor for PrecedenceModifyLocalVariableModelProcessor {
         Some(self)
     }
 
-    fn java_class_name(&self) -> &'static str {
-        self.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.processor.class_name()
     }
 
     fn get_template_mode(&self) -> Option<TemplateMode> {

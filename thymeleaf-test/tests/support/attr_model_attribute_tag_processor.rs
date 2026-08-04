@@ -54,8 +54,8 @@ impl IProcessor for AttrModelAttributeTagProcessor {
     fn as_element_processor(&self) -> Option<&dyn IElementProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        self.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.processor.class_name()
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {
         self.processor.get_template_mode()

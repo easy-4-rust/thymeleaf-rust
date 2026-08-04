@@ -69,7 +69,7 @@ impl<F> TemplateObject for LazyContextVariable<Option<Arc<TemplateValue>>, F>
 where
     F: Fn() -> Option<Arc<TemplateValue>> + Send + Sync + 'static,
 {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.context.LazyContextVariable"
     }
 

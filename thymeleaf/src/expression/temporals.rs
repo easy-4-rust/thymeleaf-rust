@@ -210,7 +210,7 @@ impl Temporals {
 }
 
 impl TemplateObject for Temporals {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.expression.Temporals"
     }
 
@@ -222,7 +222,7 @@ impl TemplateObject for Temporals {
         self
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

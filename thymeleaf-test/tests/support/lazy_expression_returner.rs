@@ -10,19 +10,19 @@ use thymeleaf::util::Utf16String;
 pub struct LazyExpressionReturner;
 
 impl TemplateObject for LazyExpressionReturner {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.templateengine.features.lazy.LazyExpressionReturner"
     }
 
     fn to_utf16_string(&self) -> Utf16String {
-        Utf16String::from_rust_str(self.java_class_name())
+        Utf16String::from_rust_str(self.class_name())
     }
 
     fn as_any(&self) -> &dyn Any {
         self
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],
@@ -39,7 +39,7 @@ impl TemplateObject for LazyExpressionReturner {
 struct LazyExpressionValue;
 
 impl TemplateObject for LazyExpressionValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.templateengine.features.lazy.LazyExpressionReturner$1"
     }
 

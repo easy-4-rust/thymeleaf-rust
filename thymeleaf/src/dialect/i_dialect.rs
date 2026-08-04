@@ -13,7 +13,7 @@ pub trait IDialect: std::any::Any + Send + Sync {
     ///
     /// 这是 Rust 动态类型适配入口，不增加 Java 接口方法；配置错误消息通过它保留
     /// 方言实现类身份，而不是误用面向用户的 [`IDialect::get_name`]。
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         std::any::type_name::<Self>()
     }
 

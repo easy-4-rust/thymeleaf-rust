@@ -105,7 +105,7 @@ impl IPreProcessor for PreProcessor {
         Some(PreProcessor::get_handler_class(self))
     }
 
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.preprocessor.PreProcessor"
     }
 }

@@ -71,7 +71,7 @@ impl TokenError {
     /// # 返回
     /// NullPointer、StringIndexOutOfBounds 或保存的运行时异常类名。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         match self {
             Self::NullPointer => "java.lang.NullPointerException",
             Self::StringIndexOutOfBounds { .. } => "java.lang.StringIndexOutOfBoundsException",
@@ -392,7 +392,7 @@ mod tests {
             .get_string_representation()
             .err()
             .expect("runtime error");
-        assert_eq!(error.java_class_name(), "java.lang.IllegalStateException");
+        assert_eq!(error.class_name(), "java.lang.IllegalStateException");
         assert_eq!(error.to_string(), "boom");
     }
 
@@ -407,7 +407,7 @@ mod tests {
             let error = Token::<Utf16String>::is_token_char(Some(&empty), position)
                 .expect_err("index failure");
             assert_eq!(
-                error.java_class_name(),
+                error.class_name(),
                 "java.lang.StringIndexOutOfBoundsException"
             );
         }

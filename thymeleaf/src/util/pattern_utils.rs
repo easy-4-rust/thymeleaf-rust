@@ -30,7 +30,7 @@ impl PatternUtilsError {
     /// `java.lang.NullPointerException` 或
     /// `java.util.regex.PatternSyntaxException`。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::NullPointer => "java.lang.NullPointerException",
             Self::PatternSyntax { .. } => "java.util.regex.PatternSyntaxException",
@@ -308,14 +308,14 @@ mod tests {
     fn maps_null_and_syntax_failures_with_stable_metadata() {
         let null = PatternUtils::str_pattern_to_pattern(None).expect_err("null");
         assert_eq!(null, PatternUtilsError::NullPointer);
-        assert_eq!(null.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(null.class_name(), "java.lang.NullPointerException");
         assert_eq!(null.get_message(), None);
         assert_eq!(null.get_pattern(), None);
         assert_eq!(null.to_string(), "");
 
         let syntax = PatternUtils::str_pattern_to_pattern(Some("{")).expect_err("syntax");
         assert_eq!(
-            syntax.java_class_name(),
+            syntax.class_name(),
             "java.util.regex.PatternSyntaxException"
         );
         assert_eq!(syntax.get_pattern(), Some("^{$"));

@@ -40,7 +40,7 @@ struct Person {
 }
 
 impl TemplateObject for Person {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "com.example.Person"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -49,7 +49,7 @@ impl TemplateObject for Person {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<
@@ -64,7 +64,7 @@ impl TemplateObject for Person {
             _ => None,
         }
     }
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         _arguments: &[Option<Arc<TemplateValue>>],

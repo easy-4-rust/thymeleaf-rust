@@ -23,9 +23,9 @@ impl DialectSetConfigurationError {
     ///
     /// 返回 `IllegalArgumentException` 或 Thymeleaf `ConfigurationException` 的限定名。
     #[must_use]
-    pub fn java_class_name(&self) -> &'static str {
+    pub fn class_name(&self) -> &'static str {
         match self {
-            Self::IllegalArgument(error) => error.java_class_name(),
+            Self::IllegalArgument(error) => error.class_name(),
             Self::Configuration(_) => "org.thymeleaf.exceptions.ConfigurationException",
         }
     }

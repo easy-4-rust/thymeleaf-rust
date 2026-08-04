@@ -157,14 +157,14 @@ pub trait ComparableValue {
     ///
     /// # 错误
     /// null、运行时类型不兼容或用户比较逻辑失败时返回类型化错误。
-    fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError>;
+    fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError>;
 }
 
 macro_rules! impl_java_comparable_ord {
     ($($type:ty),+ $(,)?) => {
         $(
             impl ComparableValue for $type {
-                fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
+                fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
                     Ok(self.cmp(other))
                 }
             }
@@ -175,19 +175,19 @@ macro_rules! impl_java_comparable_ord {
 impl_java_comparable_ord!(bool, i8, i16, i32, i64, u16);
 
 impl ComparableValue for String {
-    fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
+    fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         Ok(self.encode_utf16().cmp(other.encode_utf16()))
     }
 }
 
 impl ComparableValue for f32 {
-    fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
+    fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         Ok(java_f32_compare(*self, *other))
     }
 }
 
 impl ComparableValue for f64 {
-    fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
+    fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         Ok(java_f64_compare(*self, *other))
     }
 }
@@ -196,9 +196,9 @@ impl<T> ComparableValue for Option<T>
 where
     T: ComparableValue,
 {
-    fn java_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
+    fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
         match (self, other) {
-            (Some(left), Some(right)) => left.java_compare_to(right),
+            (Some(left), Some(right)) => left.template_compare_to(right),
             _ => Err(ListUtilsError::NaturalOrderingNull),
         }
     }
@@ -728,7 +728,7 @@ impl ListUtils {
         let sorted = match comparator {
             Some(comparator) => stable_sort(elements, comparator),
             None => {
-                let mut natural = |left: &T, right: &T| left.java_compare_to(right);
+                let mut natural = |left: &T, right: &T| left.template_compare_to(right);
                 stable_sort(elements, &mut natural)
             }
         };
@@ -1133,7 +1133,7 @@ mod tests {
     fn comparator_sort_is_stable_nullable_and_supports_non_comparable_types() {
         let source = vec!["c".to_owned(), "a".to_owned(), "b".to_owned()];
         let view: &dyn ListView<String> = &source;
-        let mut descending = |left: &String, right: &String| right.java_compare_to(left);
+        let mut descending = |left: &String, right: &String| right.template_compare_to(left);
         let sorted = ListUtils::sort_with_comparator(Some(view), Some(&mut descending)).unwrap();
         assert_eq!(
             sorted.iter().map(String::as_str).collect::<Vec<_>>(),
@@ -1324,7 +1324,7 @@ mod tests {
                     "right comparison failed",
                 ))
             } else {
-                left.java_compare_to(right)
+                left.template_compare_to(right)
             }
         };
         assert!(
@@ -1352,33 +1352,33 @@ mod tests {
         assert_eq!(
             "\u{1f600}"
                 .to_owned()
-                .java_compare_to(&"\u{e000}".to_owned()),
+                .template_compare_to(&"\u{e000}".to_owned()),
             Ok(Ordering::Less)
         );
-        assert_eq!((-0.0_f64).java_compare_to(&0.0_f64), Ok(Ordering::Less));
-        assert_eq!(1.0_f64.java_compare_to(&2.0_f64), Ok(Ordering::Less));
-        assert_eq!(2.0_f64.java_compare_to(&1.0_f64), Ok(Ordering::Greater));
+        assert_eq!((-0.0_f64).template_compare_to(&0.0_f64), Ok(Ordering::Less));
+        assert_eq!(1.0_f64.template_compare_to(&2.0_f64), Ok(Ordering::Less));
+        assert_eq!(2.0_f64.template_compare_to(&1.0_f64), Ok(Ordering::Greater));
         assert_eq!(
-            f64::NAN.java_compare_to(&f64::INFINITY),
+            f64::NAN.template_compare_to(&f64::INFINITY),
             Ok(Ordering::Greater)
         );
-        assert_eq!((-0.0_f32).java_compare_to(&0.0_f32), Ok(Ordering::Less));
-        assert_eq!(1.0_f32.java_compare_to(&2.0_f32), Ok(Ordering::Less));
-        assert_eq!(2.0_f32.java_compare_to(&1.0_f32), Ok(Ordering::Greater));
+        assert_eq!((-0.0_f32).template_compare_to(&0.0_f32), Ok(Ordering::Less));
+        assert_eq!(1.0_f32.template_compare_to(&2.0_f32), Ok(Ordering::Less));
+        assert_eq!(2.0_f32.template_compare_to(&1.0_f32), Ok(Ordering::Greater));
         assert_eq!(
-            f32::NAN.java_compare_to(&f32::INFINITY),
+            f32::NAN.template_compare_to(&f32::INFINITY),
             Ok(Ordering::Greater)
         );
         assert_eq!(
-            Some("a".to_owned()).java_compare_to(&Some("b".to_owned())),
+            Some("a".to_owned()).template_compare_to(&Some("b".to_owned())),
             Ok(Ordering::Less)
         );
-        assert_eq!(false.java_compare_to(&true), Ok(Ordering::Less));
-        assert_eq!(1_i8.java_compare_to(&2), Ok(Ordering::Less));
-        assert_eq!(1_i16.java_compare_to(&2), Ok(Ordering::Less));
-        assert_eq!(1_i32.java_compare_to(&2), Ok(Ordering::Less));
-        assert_eq!(1_i64.java_compare_to(&2), Ok(Ordering::Less));
-        assert_eq!(1_u16.java_compare_to(&2), Ok(Ordering::Less));
+        assert_eq!(false.template_compare_to(&true), Ok(Ordering::Less));
+        assert_eq!(1_i8.template_compare_to(&2), Ok(Ordering::Less));
+        assert_eq!(1_i16.template_compare_to(&2), Ok(Ordering::Less));
+        assert_eq!(1_i32.template_compare_to(&2), Ok(Ordering::Less));
+        assert_eq!(1_i64.template_compare_to(&2), Ok(Ordering::Less));
+        assert_eq!(1_u16.template_compare_to(&2), Ok(Ordering::Less));
     }
 
     #[test]

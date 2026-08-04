@@ -19,7 +19,7 @@ impl CorpusByteArrayInputStream {
 }
 
 impl TemplateObject for CorpusByteArrayInputStream {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.io.ByteArrayInputStream"
     }
 

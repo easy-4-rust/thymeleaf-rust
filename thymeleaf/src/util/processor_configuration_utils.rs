@@ -153,7 +153,7 @@ impl ProcessorConfigurationUtils {
         let element = processor.as_element_processor().ok_or_else(|| {
             configuration_error(format!(
                 "Unknown element processor interface implemented by {}",
-                processor.java_class_name()
+                processor.class_name()
             ))
         })?;
         if element.as_element_tag_processor().is_some() {
@@ -170,7 +170,7 @@ impl ProcessorConfigurationUtils {
         }
         Err(configuration_error(format!(
             "Unknown element processor interface implemented by {}",
-            processor.java_class_name()
+            processor.class_name()
         )))
     }
 
@@ -366,8 +366,8 @@ macro_rules! implement_base_processor {
                 self.base.processor.set_element_definitions(definitions);
             }
 
-            fn java_class_name(&self) -> &'static str {
-                self.base.processor.java_class_name()
+            fn class_name(&self) -> &'static str {
+                self.base.processor.class_name()
             }
 
             fn get_dialect_precedence(&self) -> Option<i32> {
@@ -442,8 +442,8 @@ impl IProcessor for ElementTagProcessorWrapper {
     fn as_element_processor(&self) -> Option<&dyn IElementProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        self.base.base.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.base.base.processor.class_name()
     }
     fn get_dialect_precedence(&self) -> Option<i32> {
         Some(self.base.base.dialect_precedence)
@@ -520,8 +520,8 @@ impl IProcessor for ElementModelProcessorWrapper {
     fn as_element_processor(&self) -> Option<&dyn IElementProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        self.base.base.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.base.base.processor.class_name()
     }
     fn get_dialect_precedence(&self) -> Option<i32> {
         Some(self.base.base.dialect_precedence)
@@ -738,8 +738,8 @@ impl IPreProcessor for PreProcessorWrapper {
         self.pre_processor.get_handler_class()
     }
 
-    fn java_class_name(&self) -> &'static str {
-        self.pre_processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.pre_processor.class_name()
     }
 }
 
@@ -802,8 +802,8 @@ impl IPostProcessor for PostProcessorWrapper {
         self.post_processor.get_handler_class()
     }
 
-    fn java_class_name(&self) -> &'static str {
-        self.post_processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.post_processor.class_name()
     }
 }
 
@@ -826,7 +826,7 @@ fn require_capability(
     } else {
         Err(configuration_error(format!(
             "Processor {} does not implement the required {kind} processor interface",
-            processor.java_class_name()
+            processor.class_name()
         )))
     }
 }

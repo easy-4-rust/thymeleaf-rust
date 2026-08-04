@@ -65,7 +65,7 @@ pub enum AttributeNamesError {
 impl AttributeNamesError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::IllegalArgument(_)
             | Self::UnknownTemplateMode(_)
@@ -73,7 +73,7 @@ impl AttributeNamesError {
                 "java.lang.IllegalArgumentException"
             }
             Self::StringIndexOutOfBounds { .. } => "java.lang.StringIndexOutOfBoundsException",
-            Self::AttributeName(error) => error.java_class_name(),
+            Self::AttributeName(error) => error.class_name(),
             Self::RepositoryAliasCollision => "java.lang.IndexOutOfBoundsException",
         }
     }

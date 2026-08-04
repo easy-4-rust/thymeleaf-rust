@@ -1034,7 +1034,7 @@ fn error_chain_matches_class(expected_class: &str, error: &(dyn Error + 'static)
             error.is::<std::io::Error>()
                 || error
                     .downcast_ref::<TextParserReaderError>()
-                    .is_some_and(|error| error.java_class_name() == "java.io.IOException")
+                    .is_some_and(|error| error.class_name() == "java.io.IOException")
         }
         "java.lang.Exception" => true,
         "java.lang.RuntimeException" => {
@@ -1068,7 +1068,7 @@ fn error_chain(error: &(dyn Error + 'static)) -> Vec<(String, String)> {
             } else if error.is::<std::io::Error>() {
                 "java.io.IOException"
             } else if let Some(error) = error.downcast_ref::<TextParserReaderError>() {
-                error.java_class_name()
+                error.class_name()
             } else if error.is::<OgnlError>() {
                 "ognl.OgnlException"
             } else if error.is::<ClassNotFoundError>() {

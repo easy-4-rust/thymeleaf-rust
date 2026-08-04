@@ -13,7 +13,7 @@ pub trait ICacheManager: Send + Sync {
     ///
     /// 该对象安全适配保留 Java `getClass().getName()` 的可观察信息；迁移自 Java 的
     /// 实现应覆盖为原始全限定类名，第三方 Rust 实现默认返回 Rust 类型全名。
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         std::any::type_name::<Self>()
     }
 

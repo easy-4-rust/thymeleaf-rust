@@ -194,9 +194,9 @@ impl<T> MapEntry<T> {
     ///
     /// # 返回
     /// 原 Map 条目实现类或 `EvaluationUtils$MapEntry`。
-    /// 对应 Java 语义：`EvaluationUtils` 的 `java_class_name` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`EvaluationUtils` 的 `class_name` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_class_name(&self) -> &str {
+    pub fn class_name(&self) -> &str {
         &self.class_name
     }
 
@@ -434,9 +434,9 @@ impl EvaluationError {
     /// # 返回
     /// 原实现会抛出的 JVM 异常类名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
-            Self::Validation(error) => error.java_class_name(),
+            Self::Validation(error) => error.class_name(),
             Self::NullPointer => "java.lang.NullPointerException",
             Self::NumberFormat => "java.lang.NumberFormatException",
             Self::ClassCast { .. } => "java.lang.ClassCastException",

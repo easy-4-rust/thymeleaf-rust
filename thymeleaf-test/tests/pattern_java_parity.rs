@@ -82,14 +82,14 @@ fn pattern_utils_and_spec_match_java_golden() {
     }
 
     let null = PatternUtils::str_pattern_to_pattern(None).expect_err("null");
-    emit(&mut output, "pattern.null", null.java_class_name());
+    emit(&mut output, "pattern.null", null.class_name());
     let syntax = PatternUtils::str_pattern_to_pattern(Some("{")).expect_err("syntax");
     emit(
         &mut output,
         "pattern.syntax",
         format!(
             "{}:{}",
-            syntax.java_class_name(),
+            syntax.class_name(),
             syntax.get_pattern().expect("pattern")
         ),
     );
@@ -284,18 +284,18 @@ fn emit_spec_error(
             key,
             format!(
                 "{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 error.get_message().unwrap_or("null")
             ),
         ),
-        Err(error) => emit(output, key, error.java_class_name()),
+        Err(error) => emit(output, key, error.class_name()),
     }
 }
 
 fn emit_spec_result_class(output: &mut String, key: &str, result: Result<bool, PatternSpecError>) {
     match result {
         Ok(value) => emit(output, key, value),
-        Err(error) => emit(output, key, error.java_class_name()),
+        Err(error) => emit(output, key, error.class_name()),
     }
 }
 

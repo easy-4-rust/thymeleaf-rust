@@ -169,7 +169,7 @@ fn emit_parse_utf16(output: &mut String, key: &str, input: Option<&Utf16String>)
             &format!("parse.{key}"),
             format!(
                 "ERR:{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 to_utf16_hex(error.message().as_utf16())
             ),
         ),

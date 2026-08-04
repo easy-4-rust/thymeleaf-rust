@@ -106,7 +106,7 @@ impl Fragment {
 }
 
 impl super::TemplateObject for Fragment {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.standard.expression.Fragment"
     }
 

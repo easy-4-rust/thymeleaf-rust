@@ -92,7 +92,7 @@ impl Default for SaTokenDialect {
 }
 
 impl IDialect for SaTokenDialect {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect"
     }
 

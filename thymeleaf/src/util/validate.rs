@@ -32,7 +32,7 @@ impl ValidateError {
     /// # 返回
     /// `java.lang.IllegalArgumentException` 或 `java.lang.NullPointerException`。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         match self {
             Self::IllegalArgument { .. } => "java.lang.IllegalArgumentException",
             Self::NullPointer => "java.lang.NullPointerException",
@@ -283,10 +283,7 @@ mod tests {
         let error = Validate::not_null::<i32>(None, None).expect_err("error");
         assert_eq!(error.get_message(), None);
         assert_eq!(error.to_string(), "");
-        assert_eq!(
-            error.java_class_name(),
-            "java.lang.IllegalArgumentException"
-        );
+        assert_eq!(error.class_name(), "java.lang.IllegalArgumentException");
     }
 
     #[test]
@@ -385,7 +382,7 @@ mod tests {
         let error =
             Validate::contains_no_nulls_array::<i32>(None, Some("ignored")).expect_err("error");
         assert_eq!(error, ValidateError::NullPointer);
-        assert_eq!(error.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(error.class_name(), "java.lang.NullPointerException");
         assert_eq!(error.get_message(), None);
     }
 

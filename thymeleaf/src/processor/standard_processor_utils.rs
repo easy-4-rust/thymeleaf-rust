@@ -127,8 +127,8 @@ macro_rules! delegate_standard_element_tag_processor {
                 Some(self)
             }
 
-            fn java_class_name(&self) -> &'static str {
-                crate::processor::IProcessor::java_class_name(&self.$field)
+            fn class_name(&self) -> &'static str {
+                crate::processor::IProcessor::class_name(&self.$field)
             }
 
             fn get_template_mode(&self) -> Option<crate::TemplateMode> {

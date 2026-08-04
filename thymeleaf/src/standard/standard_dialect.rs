@@ -185,7 +185,7 @@ impl Default for StandardDialect {
 }
 
 impl IDialect for StandardDialect {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         "org.thymeleaf.standard.StandardDialect"
     }
 

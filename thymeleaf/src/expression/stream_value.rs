@@ -30,7 +30,7 @@ impl StreamValue {
 }
 
 impl TemplateObject for StreamValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.util.stream.Stream"
     }
 
@@ -42,11 +42,11 @@ impl TemplateObject for StreamValue {
         self
     }
 
-    fn java_iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
+    fn iterable_values(&self) -> Option<Vec<Arc<TemplateValue>>> {
         self.consume()
     }
 
-    fn java_invoke_method(
+    fn invoke_method(
         &self,
         method_name: &Utf16String,
         arguments: &[Option<Arc<TemplateValue>>],

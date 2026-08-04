@@ -31,10 +31,10 @@ pub(crate) enum TextParsingAttributeSequenceError {
 
 impl TextParsingAttributeSequenceError {
     /// 返回对应 Java 异常全限定名。
-    pub(crate) const fn java_class_name(&self) -> &'static str {
+    pub(crate) const fn class_name(&self) -> &'static str {
         match self {
             Self::TextParse(_) => "org.thymeleaf.templateparser.text.TextParseException",
-            Self::Scanning(error) => error.java_class_name(),
+            Self::Scanning(error) => error.class_name(),
             Self::NullHandler => "java.lang.NullPointerException",
             Self::StringRange { .. } => "java.lang.StringIndexOutOfBoundsException",
         }
@@ -688,7 +688,7 @@ mod tests {
     fn error_adapter_preserves_sources_and_all_messages() {
         let text_parse = TextParsingAttributeSequenceError::TextParse(Box::default());
         assert_eq!(
-            text_parse.java_class_name(),
+            text_parse.class_name(),
             "org.thymeleaf.templateparser.text.TextParseException"
         );
         assert_eq!(text_parse.java_message().to_string_lossy(), "null");
@@ -697,7 +697,7 @@ mod tests {
         let scan = TextParsingAttributeSequenceError::Scanning(
             super::TextParsingUtilError::NullDirectLocator,
         );
-        assert_eq!(scan.java_class_name(), "java.lang.NullPointerException");
+        assert_eq!(scan.class_name(), "java.lang.NullPointerException");
         assert_eq!(
             scan.to_string(),
             "Cannot load from int array because \"<parameter4>\" is null"
@@ -710,7 +710,7 @@ mod tests {
             length: 3,
         };
         assert_eq!(
-            range.java_class_name(),
+            range.class_name(),
             "java.lang.StringIndexOutOfBoundsException"
         );
         assert_eq!(
@@ -720,10 +720,7 @@ mod tests {
         assert!(std::error::Error::source(&range).is_none());
 
         let null_handler = TextParsingAttributeSequenceError::NullHandler;
-        assert_eq!(
-            null_handler.java_class_name(),
-            "java.lang.NullPointerException"
-        );
+        assert_eq!(null_handler.class_name(), "java.lang.NullPointerException");
         assert_eq!(null_handler.to_string(), super::NULL_HANDLER_MESSAGE);
 
         let mut handler = RecordingHandler::new(Mode::Normal);
@@ -1055,7 +1052,7 @@ mod tests {
     fn describe_error(error: &TextParsingAttributeSequenceError) -> String {
         format!(
             "ERR:{}:{}",
-            error.java_class_name(),
+            error.class_name(),
             to_utf16_hex(&error.java_message())
         )
     }

@@ -4,7 +4,7 @@
 //! （10 个方法：无 pattern 逐类型 formatterFor 分派）。
 //!
 //! 与现有 `temporal_utils_java_parity.rs` 的区别：本文件直接断言
-//! `Temporals.java_invoke_method` 的**表达式对象分派路径**（参数校验、null
+//! `Temporals.invoke_method` 的**表达式对象分派路径**（参数校验、null
 //! 折叠、返回类型），而非底层 `TemporalFormattingUtils`。
 //!
 //! Java 夹具：`new Temporals(Locale.US, ZoneOffset.UTC)`；期望值以 Java 21
@@ -65,7 +65,7 @@ fn call(
     arguments: &[Option<Arc<TemplateValue>>],
 ) -> Option<Arc<TemplateValue>> {
     temporals
-        .java_invoke_method(&js(method), arguments)
+        .invoke_method(&js(method), arguments)
         .expect("invoke succeeds")
         .expect("invoke returns value")
 }
@@ -156,7 +156,7 @@ fn temporals_format_null_and_locale_matches_java() {
     assert_null(&temporals, "format");
 
     // Java testFormatWithLocaleAndNullTemporal：format(null, Locale.GERMANY) == null。
-    // java_invoke_method 无法直接传 Locale 对象（该路径由语料 dateformat-* 覆盖），
+    // invoke_method 无法直接传 Locale 对象（该路径由语料 dateformat-* 覆盖），
     // 此处用 de 配置实例验证 null 折叠。
     let temporals_de = Temporals::with_default_zone_id(locale_de(), Tz::UTC).expect("temporals");
     assert_null(&temporals_de, "format");

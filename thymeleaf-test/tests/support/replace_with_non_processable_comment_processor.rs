@@ -46,8 +46,8 @@ impl IProcessor for ReplaceWithNonProcessableCommentProcessor {
     fn as_comment_processor(&self) -> Option<&dyn ICommentProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        self.processor.java_class_name()
+    fn class_name(&self) -> &'static str {
+        self.processor.class_name()
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {
         self.processor.get_template_mode()

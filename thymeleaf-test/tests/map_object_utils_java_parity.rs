@@ -273,7 +273,7 @@ fn emit_outcome<T: Display>(output: &mut String, key: &str, result: Result<T, Va
             key,
             format!(
                 "{}:{}",
-                error.java_class_name(),
+                error.class_name(),
                 error.get_message().unwrap_or("null")
             ),
         ),

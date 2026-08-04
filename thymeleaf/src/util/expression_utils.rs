@@ -60,7 +60,7 @@ impl ExpressionUtils {
     /// 判断类型是否实现禁止成员调用的高风险 SPI。
     ///
     /// 对应 Java: `ExpressionUtils#isTypeBlockedForMemberCalls(Class)`；Rust 无
-    /// `Class#isAssignableFrom`，由 `TemplateObject::java_class_name` 的稳定类型名承接。
+    /// `Class#isAssignableFrom`，由 `TemplateObject::class_name` 的稳定类型名承接。
     #[must_use]
     pub(crate) fn is_type_blocked_for_member_calls(type_name: &str) -> bool {
         BLOCKED_MEMBER_CALL_JAVA_SUPERS_NAMES.contains(&type_name)
@@ -103,7 +103,7 @@ impl ExpressionUtils {
             return !ALLOWED_CLASS_METHODS.contains(&normalized.as_str())
                 && !matches!(normalized.as_str(), "hashCode" | "equals" | "compareTo");
         };
-        let class_name = target.java_class_name();
+        let class_name = target.class_name();
         if class_name == "java.lang.Class" {
             return !ALLOWED_CLASS_METHODS.contains(&normalized.as_str());
         }

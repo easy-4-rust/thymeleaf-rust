@@ -35,14 +35,14 @@ fn cover_public_adapter_contracts() {
     ));
 
     let runtime = TokenError::runtime("example.TokenException", "failure");
-    assert_eq!(runtime.java_class_name(), "example.TokenException");
+    assert_eq!(runtime.class_name(), "example.TokenException");
     assert_eq!(runtime.to_string(), "failure");
 
     let one = Utf16String::from_rust_str("a");
     let index_error =
         Token::<Utf16String>::is_token_char(Some(&one), i32::MAX).expect_err("index error");
     assert_eq!(
-        index_error.java_class_name(),
+        index_error.class_name(),
         "java.lang.StringIndexOutOfBoundsException"
     );
     assert_eq!(
@@ -171,11 +171,7 @@ fn emit_exception_cases(output: &mut String) {
     );
     match TokenParsingTracer::trace(None) {
         Ok(_) => emit(output, "trace.null", "OK:unexpected"),
-        Err(error) => emit(
-            output,
-            "trace.null",
-            format!("ERR:{}", error.java_class_name()),
-        ),
+        Err(error) => emit(output, "trace.null", format!("ERR:{}", error.class_name())),
     }
 }
 
@@ -361,7 +357,7 @@ impl TokenValue for OwnedProbe {
 fn emit_boolean_outcome(output: &mut String, key: &str, result: Result<bool, TokenError>) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{value}")),
-        Err(error) => emit(output, key, format!("ERR:{}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("ERR:{}", error.class_name())),
     }
 }
 
@@ -372,18 +368,14 @@ fn emit_class_outcome(
 ) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", describe_string_result(value))),
-        Err(error) => emit(output, key, format!("ERR:{}", error.java_class_name())),
+        Err(error) => emit(output, key, format!("ERR:{}", error.class_name())),
     }
 }
 
 fn emit_outcome(output: &mut String, key: &str, result: Result<TokenStringResult<'_>, TokenError>) {
     match result {
         Ok(value) => emit(output, key, format!("OK:{}", describe_string_result(value))),
-        Err(error) => emit(
-            output,
-            key,
-            format!("ERR:{}:{}", error.java_class_name(), error),
-        ),
+        Err(error) => emit(output, key, format!("ERR:{}:{}", error.class_name(), error)),
     }
 }
 

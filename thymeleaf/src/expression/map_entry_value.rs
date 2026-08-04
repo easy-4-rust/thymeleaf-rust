@@ -22,7 +22,7 @@ impl MapEntryValue {
 }
 
 impl TemplateObject for MapEntryValue {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.util.Map$Entry"
     }
 
@@ -46,7 +46,7 @@ impl TemplateObject for MapEntryValue {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {

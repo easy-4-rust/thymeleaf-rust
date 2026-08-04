@@ -85,7 +85,7 @@ fn serialize_value(use_jackson: bool, value: Option<&TemplateValue>) -> String {
 struct SomeObjectA;
 
 impl TemplateObject for SomeObjectA {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.inline.ScriptInlineTest$SomeObjectA"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -94,9 +94,7 @@ impl TemplateObject for SomeObjectA {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn java_serializable_properties(
-        &self,
-    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
+    fn serializable_properties(&self) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![(js("one"), Some(string_value("value number one")))])
     }
 }
@@ -106,7 +104,7 @@ impl TemplateObject for SomeObjectA {
 struct SomeObjectB;
 
 impl TemplateObject for SomeObjectB {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.inline.ScriptInlineTest$SomeObjectB"
     }
     fn to_utf16_string(&self) -> Utf16String {
@@ -115,9 +113,7 @@ impl TemplateObject for SomeObjectB {
     fn as_any(&self) -> &dyn Any {
         self
     }
-    fn java_serializable_properties(
-        &self,
-    ) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
+    fn serializable_properties(&self) -> Option<Vec<(Utf16String, Option<Arc<TemplateValue>>)>> {
         Some(vec![
             (js("one"), Some(string_value("value number one"))),
             (js("two"), Some(integer_value(1231))),

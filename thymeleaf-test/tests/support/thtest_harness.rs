@@ -386,7 +386,7 @@ fn update_request_parameter_map(
     let mut entries = current_entries.as_ref().clone();
     if let Some((_, current_value)) = entries
         .iter_mut()
-        .find(|(candidate, _)| candidate.java_equals(key.as_ref()))
+        .find(|(candidate, _)| candidate.template_equals(key.as_ref()))
     {
         let TemplateValue::Object(values) = current_value.as_ref() else {
             return Err("request parameter value is not an object".to_owned());
@@ -422,7 +422,7 @@ fn update_context_map_path(
     let mut entries = current_entries.as_ref().clone();
     if let Some((_, existing)) = entries
         .iter_mut()
-        .find(|(candidate, _)| candidate.java_equals(key.as_ref()))
+        .find(|(candidate, _)| candidate.template_equals(key.as_ref()))
     {
         *existing = if remaining.is_empty() {
             value

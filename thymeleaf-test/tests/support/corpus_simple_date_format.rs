@@ -20,7 +20,7 @@ impl CorpusSimpleDateFormat {
 }
 
 impl TemplateObject for CorpusSimpleDateFormat {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "java.text.SimpleDateFormat"
     }
 

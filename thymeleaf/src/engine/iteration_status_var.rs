@@ -18,7 +18,7 @@ pub enum IterationStatusVarError {
 impl IterationStatusVarError {
     /// 返回对应 Java 异常全限定名。
     #[must_use]
-    pub const fn java_class_name(&self) -> &'static str {
+    pub const fn class_name(&self) -> &'static str {
         "java.lang.NullPointerException"
     }
 }
@@ -165,7 +165,7 @@ impl IterationStatusVar {
 }
 
 impl TemplateObject for IterationStatusVar {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.engine.IterationStatusVar"
     }
 
@@ -177,7 +177,7 @@ impl TemplateObject for IterationStatusVar {
         self
     }
 
-    fn java_get_property(
+    fn get_property(
         &self,
         property_name: &Utf16String,
     ) -> Option<Result<Option<Arc<TemplateValue>>, TemplateObjectPropertyError>> {
@@ -244,13 +244,13 @@ mod tests {
         assert_property(&unknown, "odd", Some("true"));
         assert_property(&unknown, "first", Some("true"));
         let last = unknown
-            .java_get_property(&Utf16String::from_rust_str("last"))
+            .get_property(&Utf16String::from_rust_str("last"))
             .expect("last property accessor")
             .expect_err("last property must preserve Java null-unboxing error");
         assert_eq!(last.to_string(), unknown_last_error());
         assert!(
             unknown
-                .java_get_property(&Utf16String::from_rust_str("missing"))
+                .get_property(&Utf16String::from_rust_str("missing"))
                 .is_none()
         );
 
@@ -297,7 +297,7 @@ mod tests {
         let last = status
             .is_last()
             .map(|value| value.to_string())
-            .unwrap_or_else(|error| format!("{}:{}", error.java_class_name(), error));
+            .unwrap_or_else(|error| format!("{}:{}", error.class_name(), error));
         format!(
             "{values},last={last},text={}",
             status.to_utf16_string().to_string_lossy()
@@ -314,7 +314,7 @@ mod tests {
 
     fn assert_property(status: &IterationStatusVar, property: &str, expected: Option<&str>) {
         let actual = status
-            .java_get_property(&Utf16String::from_rust_str(property))
+            .get_property(&Utf16String::from_rust_str(property))
             .expect("known JavaBean property")
             .expect("known property must not fail")
             .and_then(|value| value.to_utf16_string())

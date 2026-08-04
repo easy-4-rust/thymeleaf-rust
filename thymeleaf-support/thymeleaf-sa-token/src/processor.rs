@@ -310,8 +310,8 @@ impl IProcessor for SecAuthorizeTagProcessor {
     fn as_element_processor(&self) -> Option<&dyn IElementProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        IProcessor::java_class_name(&self.processor)
+    fn class_name(&self) -> &'static str {
+        IProcessor::class_name(&self.processor)
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {
         IProcessor::get_template_mode(&self.processor)
@@ -348,8 +348,8 @@ impl IProcessor for SecAuthenticationTagProcessor {
     fn as_element_processor(&self) -> Option<&dyn IElementProcessor> {
         Some(self)
     }
-    fn java_class_name(&self) -> &'static str {
-        IProcessor::java_class_name(&self.processor)
+    fn class_name(&self) -> &'static str {
+        IProcessor::class_name(&self.processor)
     }
     fn get_template_mode(&self) -> Option<TemplateMode> {
         IProcessor::get_template_mode(&self.processor)

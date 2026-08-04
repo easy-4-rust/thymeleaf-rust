@@ -91,7 +91,7 @@ impl<F> IProcessor for AbstractAttributeModelProcessor<F>
 where
     F: Send + Sync,
 {
-    fn java_class_name(&self) -> &'static str {
+    fn class_name(&self) -> &'static str {
         self.processor_class_name
     }
 

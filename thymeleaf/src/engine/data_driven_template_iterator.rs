@@ -289,7 +289,7 @@ impl<T> Iterator for DataDrivenTemplateIterator<T> {
 }
 
 impl TemplateObject for Mutex<DataDrivenTemplateIterator<Arc<TemplateValue>>> {
-    fn java_class_name(&self) -> &str {
+    fn class_name(&self) -> &str {
         "org.thymeleaf.engine.DataDrivenTemplateIterator"
     }
 
