@@ -115,8 +115,8 @@ pub(crate) fn collapse_java_null(value: Option<Arc<TemplateValue>>) -> Option<Ar
     }
 }
 
-/// 对应 Java 语义：`BinaryOperationExpression` 的 `java_values_equal` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_values_equal(
+/// 对应 Java 语义：`BinaryOperationExpression` 的 `values_equal` 行为（Rust 侧辅助/私有路径）。
+pub(crate) fn values_equal(
     left: Option<&Arc<TemplateValue>>,
     right: Option<&Arc<TemplateValue>>,
 ) -> StandardExpressionResult<bool> {

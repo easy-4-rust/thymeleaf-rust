@@ -93,7 +93,7 @@ fn describe_error(error: &TextParserReaderError) -> String {
         "{}:{}",
         error.class_name(),
         error
-            .java_message()
+            .message()
             .map_or_else(|| "null".to_owned(), |message| message.to_string_lossy())
     )
 }

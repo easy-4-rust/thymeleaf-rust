@@ -55,7 +55,7 @@ impl AssignationUtils {
         allow_parameters_without_value: bool,
     ) -> Option<AssignationSequence> {
         ExpressionParsingUtil::parse_assignation_sequence(
-            &java_trim(input),
+            &trim(input),
             allow_parameters_without_value,
         )
     }
@@ -68,7 +68,7 @@ fn parse_error(kind: &str, input: &Utf16String) -> super::StandardExpressionErro
     ))))
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
+fn trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()

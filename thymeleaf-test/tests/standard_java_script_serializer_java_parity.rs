@@ -355,7 +355,7 @@ fn script_inline_collection_variable() {
 // ===========================================================================
 
 #[test]
-fn java_date_serializes_with_colon_offset_never_z() {
+fn date_serializes_with_colon_offset_never_z() {
     // Java JacksonThymeleafISO8601DateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZ"
     // + insert(26, ':')：UTC 日期 -> "...+00:00"（非 "Z"）。
     let utc = DateUtils::create(

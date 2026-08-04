@@ -83,7 +83,7 @@ impl Error for PatternUtilsError {}
 /// 边界，以复现 `Pattern.matcher(value).matches()` 而不是 `find()`。
 #[derive(Clone, Debug)]
 pub struct StringPattern {
-    java_pattern: String,
+    process_pattern: String,
     regex: Regex,
 }
 
@@ -95,7 +95,7 @@ impl StringPattern {
     /// 对应 Java 语义：`PatternUtils` 的 `as_str` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn as_str(&self) -> &str {
-        &self.java_pattern
+        &self.process_pattern
     }
 
     /// 对整个输入执行 Java `Matcher#matches()` 语义。
@@ -140,22 +140,22 @@ impl PatternUtils {
         pattern: Option<&str>,
     ) -> Result<StringPattern, PatternUtilsError> {
         let pattern = pattern.ok_or(PatternUtilsError::NullPointer)?;
-        let java_pattern = java_pattern_source(pattern);
-        let translated_pattern = translate_java_regex(&java_pattern);
+        let process_pattern = pattern_source(pattern);
+        let translated_pattern = translate_java_regex(&process_pattern);
         let full_match_pattern = format!(r"\A(?:{translated_pattern})\z");
         let regex =
             Regex::new(&full_match_pattern).map_err(|error| PatternUtilsError::PatternSyntax {
-                pattern: java_pattern.clone(),
+                pattern: process_pattern.clone(),
                 message: error.to_string(),
             })?;
         Ok(StringPattern {
-            java_pattern,
+            process_pattern,
             regex,
         })
     }
 }
 
-fn java_pattern_source(pattern: &str) -> String {
+fn pattern_source(pattern: &str) -> String {
     let pattern = pattern
         .replace('.', r"\.")
         .replace('(', r"\(")

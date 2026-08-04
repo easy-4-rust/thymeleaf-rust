@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::{Arc, OnceLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::templatemode::TemplateMode;
-use crate::util::{Utf16String, java_case_fold_unit};
+use crate::util::{Utf16String, case_fold_unit};
 
 use super::{ElementName, ElementNameError, HTMLElementName, TextElementName, XMLElementName};
 
@@ -225,7 +225,7 @@ impl ElementNames {
         let element_name = element_name.ok_or(ElementNamesError::IllegalArgument(
             "Name cannot be null (nor empty if prefix is not empty)",
         ))?;
-        if java_trim_is_empty(element_name) && has_non_blank_prefix(prefix) {
+        if trim_is_empty(element_name) && has_non_blank_prefix(prefix) {
             return Err(ElementNamesError::IllegalArgument(
                 "Name cannot be null (nor empty if prefix is not empty)",
             ));
@@ -347,7 +347,7 @@ fn repository_key(mode: TemplateMode, value: &Utf16String) -> Vec<u16> {
         value
             .as_utf16()
             .iter()
-            .map(|unit| java_case_fold_unit(*unit))
+            .map(|unit| case_fold_unit(*unit))
             .collect()
     }
 }
@@ -422,7 +422,7 @@ fn require_non_blank_name(name: Option<&Utf16String>) -> Result<&Utf16String, El
     let name = name.ok_or(ElementNamesError::IllegalArgument(
         "Name cannot be null or empty",
     ))?;
-    if java_trim_is_empty(name) {
+    if trim_is_empty(name) {
         return Err(ElementNamesError::IllegalArgument(
             "Name cannot be null or empty",
         ));
@@ -458,12 +458,12 @@ fn checked_buffer(
     Ok(&buffer[start..start + count])
 }
 
-fn java_trim_is_empty(value: &Utf16String) -> bool {
+fn trim_is_empty(value: &Utf16String) -> bool {
     value.as_utf16().iter().all(|unit| *unit <= 0x20)
 }
 
 fn has_non_blank_prefix(prefix: Option<&Utf16String>) -> bool {
-    prefix.is_some_and(|value| !java_trim_is_empty(value))
+    prefix.is_some_and(|value| !trim_is_empty(value))
 }
 
 fn namespaced(prefix: &Utf16String, name: &Utf16String) -> Utf16String {
@@ -479,7 +479,7 @@ fn equals_ascii_ignore_case(value: &[u16], expected: &str) -> bool {
             .iter()
             .zip(expected.bytes())
             .all(|(actual, expected)| {
-                java_case_fold_unit(*actual) == java_case_fold_unit(u16::from(expected))
+                case_fold_unit(*actual) == case_fold_unit(u16::from(expected))
             })
 }
 

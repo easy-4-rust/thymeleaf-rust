@@ -111,7 +111,7 @@ impl FragmentExpression {
     /// 对应 Java: `FragmentExpression#parseFragmentExpression()`。
     pub fn parse_fragment_expression(input: Option<&Utf16String>) -> Option<Self> {
         let input = input?;
-        let trimmed = java_trim(input.as_utf16());
+        let trimmed = trim(input.as_utf16());
         if trimmed.len() < 3
             || trimmed[0] != b'~' as u16
             || trimmed[1] != b'{' as u16
@@ -119,7 +119,7 @@ impl FragmentExpression {
         {
             return None;
         }
-        let content = java_trim(&trimmed[2..trimmed.len() - 1]);
+        let content = trim(&trimmed[2..trimmed.len() - 1]);
         if content.is_empty() {
             return Some(Self::empty());
         }
@@ -127,24 +127,24 @@ impl FragmentExpression {
     }
 
     fn parse_fragment_expression_content(input: &Utf16String) -> Option<Self> {
-        let trimmed = java_trim(input.as_utf16());
+        let trimmed = trim(input.as_utf16());
         if trimmed.is_empty() {
             return Some(Self::empty());
         }
         let parameter_start = index_of_last_parentheses_group(trimmed);
         let (without_parameters, mut parameters) = match parameter_start {
             Some(position) => (
-                java_trim(&trimmed[..position]),
-                Some(java_trim(&trimmed[position + 1..trimmed.len() - 1])),
+                trim(&trimmed[..position]),
+                Some(trim(&trimmed[position + 1..trimmed.len() - 1])),
             ),
             None => (trimmed, None),
         };
         let separator = find_double_colon(without_parameters);
         let (mut template_name, mut fragment_spec) = match separator {
-            None => (java_trim(without_parameters), None),
+            None => (trim(without_parameters), None),
             Some(position) => (
-                java_trim(&without_parameters[..position]),
-                Some(java_trim(&without_parameters[position + 2..])),
+                trim(&without_parameters[..position]),
+                Some(trim(&without_parameters[position + 2..])),
             ),
         };
         if separator.is_none() && template_name.is_empty() {
@@ -164,7 +164,7 @@ impl FragmentExpression {
         };
 
         let mut synthetic = false;
-        let parameter_sequence = match parameters.filter(|value| !java_trim(value).is_empty()) {
+        let parameter_sequence = match parameters.filter(|value| !trim(value).is_empty()) {
             None => None,
             Some(value) => {
                 let value = Utf16String::from_utf16(value.to_vec());
@@ -252,7 +252,7 @@ impl FragmentExpression {
         let mut template_name_stack = Vec::new();
         if template_name
             .as_ref()
-            .is_none_or(|value| java_trim(value.as_utf16()).is_empty())
+            .is_none_or(|value| trim(value.as_utf16()).is_empty())
         {
             if fragments.as_ref().is_none_or(Vec::is_empty) {
                 return Ok(None);
@@ -329,11 +329,11 @@ impl FragmentExpression {
             && units.last() == Some(&(b']' as u16))
             && units[units.len() - 2] != b'\'' as u16
         {
-            Utf16String::from_utf16(java_trim(&units[1..units.len() - 1]).to_vec())
+            Utf16String::from_utf16(trim(&units[1..units.len() - 1]).to_vec())
         } else {
             value
         };
-        (!java_trim(normalized.as_utf16()).is_empty()).then(|| vec![normalized])
+        (!trim(normalized.as_utf16()).is_empty()).then(|| vec![normalized])
     }
 }
 
@@ -506,7 +506,7 @@ fn create_synthetic_parameters(
 }
 
 fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let input = Utf16String::from_utf16(java_trim(input).to_vec());
+    let input = Utf16String::from_utf16(trim(input).to_vec());
     if let Ok(expression) = ExpressionParsingUtil::parse_expression(&input) {
         return Some(expression);
     }
@@ -517,7 +517,7 @@ fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression
 }
 
 fn parse_template_name_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let input = java_trim(input);
+    let input = trim(input);
     let contains_standard_expression = input.windows(2).any(|window| {
         matches!(
             window,
@@ -568,7 +568,7 @@ fn find_double_colon(input: &[u16]) -> Option<usize> {
         .position(|window| window == [b':' as u16, b':' as u16])
 }
 
-fn java_trim(input: &[u16]) -> &[u16] {
+fn trim(input: &[u16]) -> &[u16] {
     let start = input
         .iter()
         .position(|unit| *unit > 0x20)

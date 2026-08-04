@@ -31,13 +31,12 @@ impl FragmentSignatureUtils {
         }) {
             return Ok(cached);
         }
-        let parsed =
-            Self::internal_parse_fragment_signature(&java_trim(input)).ok_or_else(|| {
-                Box::new(TemplateProcessingException::new(Some(format!(
-                    "Could not parse as fragment signature: \"{}\"",
-                    input.to_string_lossy()
-                )))) as super::StandardExpressionError
-            })?;
+        let parsed = Self::internal_parse_fragment_signature(&trim(input)).ok_or_else(|| {
+            Box::new(TemplateProcessingException::new(Some(format!(
+                "Could not parse as fragment signature: \"{}\"",
+                input.to_string_lossy()
+            )))) as super::StandardExpressionError
+        })?;
         let parsed = Arc::new(parsed);
         if let Some(configuration) = configuration {
             ExpressionCache::put_fragment_signature_into_cache(
@@ -162,7 +161,7 @@ fn read_recovering_poison<T>(lock: &RwLock<T>) -> RwLockReadGuard<'_, T> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
+fn trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()

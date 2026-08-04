@@ -539,10 +539,10 @@ fn parse_time_zone(value: Option<&str>) -> TimeZoneValue {
     let Some(value) = value else {
         return TimeZoneValue::Named(default_time_zone(), None);
     };
-    if let Some(fixed_offset) = java_fixed_time_zone(value) {
+    if let Some(fixed_offset) = fixed_time_zone(value) {
         return TimeZoneValue::Fixed(fixed_offset);
     }
-    if let Some((time_zone, display_name)) = java_short_time_zone(value) {
+    if let Some((time_zone, display_name)) = short_time_zone(value) {
         return TimeZoneValue::Named(time_zone, Some(display_name.to_owned()));
     }
     let time_zone = value.parse::<Tz>().unwrap_or(chrono_tz::UTC);
@@ -558,7 +558,7 @@ fn parse_time_zone(value: Option<&str>) -> TimeZoneValue {
     )
 }
 
-fn java_fixed_time_zone(value: &str) -> Option<FixedOffset> {
+fn fixed_time_zone(value: &str) -> Option<FixedOffset> {
     let suffix = value
         .strip_prefix("GMT")
         .or_else(|| value.strip_prefix("UTC"))?;
@@ -587,7 +587,7 @@ fn java_fixed_time_zone(value: &str) -> Option<FixedOffset> {
     FixedOffset::east_opt(sign * (hours * 3_600 + minutes * 60))
 }
 
-fn java_short_time_zone(value: &str) -> Option<(Tz, &'static str)> {
+fn short_time_zone(value: &str) -> Option<(Tz, &'static str)> {
     let canonical = match value {
         "GMT" | "UTC" | "UT" | "GMT+00:00" | "GMT-00:00" => "UTC",
         "ACT" => "Australia/Darwin",

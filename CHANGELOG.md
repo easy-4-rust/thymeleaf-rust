@@ -18,7 +18,10 @@
   `TemplateObject` 边界方法 `java_class_name`→`class_name`、
   `java_invoke_method`→`invoke_method` 等 8 项。
   模板语言可见的 Java 对象契约（UTF-16 语义、toString 格式、corpus 断言、
-  `%EXCEPTION` 字符串键）全部保持。API baseline 已用 cargo-public-api 再生成。
+  `%EXCEPTION` 字符串键）全部保持。另清理 60+ 个内部 `java_*` 辅助函数
+  （`java_trim`→`trim`、`java_message`→`message`、`java_hash_code`→`hash_code`、
+  `CharSequenceValue` 的 `java_length`/`java_char_at`/`java_to_string`→
+  `length`/`char_at`/`to_utf16_string` 等）。API baseline 已用 cargo-public-api 再生成。
 - **安全模型修正（预先存在的 CI 失败）**：`ExpressionUtils::is_type_forbidden`
   改为默认拒绝（仅白名单 + `java.time.*`/`org.thymeleaf.*` 受信前缀放行；
   无包名裸类名仍由解析器报 `ClassNotFound`，保持 corpus 契约）；

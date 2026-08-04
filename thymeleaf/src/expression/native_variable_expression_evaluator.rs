@@ -532,7 +532,7 @@ fn parse_expression(
     apply_shortcuts: bool,
     use_selection_as_root: bool,
 ) -> ComputedOGNLExpression {
-    let trimmed = java_trim(source);
+    let trimmed = trim(source);
     let expression = parse_ognl_range(trimmed.as_utf16(), apply_shortcuts, use_selection_as_root)
         .unwrap_or(ComputedExpression::Unsupported);
     ComputedOGNLExpression { expression }
@@ -543,7 +543,7 @@ fn parse_ognl_range(
     apply_shortcuts: bool,
     use_selection_as_root: bool,
 ) -> Option<ComputedExpression> {
-    let input = java_trim_units(input);
+    let input = trim_units(input);
     if input.is_empty() {
         return None;
     }
@@ -563,7 +563,7 @@ fn parse_ognl_range(
             .map(ComputedExpression::Sequence);
     }
     if let Some(position) = find_assignment_operator(input) {
-        let target = java_trim_units(&input[..position]);
+        let target = trim_units(&input[..position]);
         if target.first() != Some(&(b'#' as u16))
             || target.len() < 2
             || !target[1..].iter().copied().all(is_ascii_identifier_part)
@@ -690,7 +690,7 @@ fn parse_ognl_range(
     }
     if let Some(position) = find_word_operator(input, OP_INSTANCEOF) {
         let value = parse_ognl_range(&input[..position], apply_shortcuts, use_selection_as_root)?;
-        let type_name = java_trim_units(&input[position + OP_INSTANCEOF.len()..]);
+        let type_name = trim_units(&input[position + OP_INSTANCEOF.len()..]);
         if type_name.is_empty()
             || !type_name
                 .iter()
@@ -794,7 +794,7 @@ fn parse_ognl_operand(
     match expression {
         ComputedExpression::Operation(expression) => Some(expression),
         expression => Some(Arc::new(OgnlLeafExpression {
-            source: Utf16String::from_utf16(java_trim_units(input).to_vec()),
+            source: Utf16String::from_utf16(trim_units(input).to_vec()),
             expression: Box::new(expression),
             use_selection_as_root,
         })),
@@ -974,18 +974,18 @@ fn parse_collection_literal(
 }
 
 fn split_ognl_entries(input: &[u16]) -> Option<Vec<&[u16]>> {
-    if java_trim_units(input).is_empty() {
+    if trim_units(input).is_empty() {
         return Some(Vec::new());
     }
     let mut entries = Vec::new();
     let mut start = 0;
     scan_top_level(input, |position, unit| {
         if unit == b',' as u16 {
-            entries.push(java_trim_units(&input[start..position]));
+            entries.push(trim_units(&input[start..position]));
             start = position + 1;
         }
     });
-    entries.push(java_trim_units(&input[start..]));
+    entries.push(trim_units(&input[start..]));
     entries
         .iter()
         .all(|entry| !entry.is_empty())
@@ -1001,7 +1001,7 @@ fn parse_static_reference(
         return None;
     }
     let second_at = input[1..].iter().position(|unit| *unit == b'@' as u16)? + 1;
-    let type_name = Utf16String::from_utf16(java_trim_units(&input[1..second_at]).to_vec());
+    let type_name = Utf16String::from_utf16(trim_units(&input[1..second_at]).to_vec());
     if type_name.is_empty() {
         return None;
     }
@@ -1118,16 +1118,16 @@ fn parse_suffix_steps(
             *position += 1;
             if input.get(*position) == Some(&(b'{' as u16)) {
                 let end = find_closing_delimiter(input, *position, b'{' as u16, b'}' as u16)?;
-                let body = java_trim_units(&input[*position + 1..end]);
+                let body = trim_units(&input[*position + 1..end]);
                 let (selection, body) = match body.first().copied() {
                     Some(value) if value == b'?' as u16 => {
-                        (Some(SelectionKind::All), java_trim_units(&body[1..]))
+                        (Some(SelectionKind::All), trim_units(&body[1..]))
                     }
                     Some(value) if value == b'^' as u16 => {
-                        (Some(SelectionKind::First), java_trim_units(&body[1..]))
+                        (Some(SelectionKind::First), trim_units(&body[1..]))
                     }
                     Some(value) if value == b'$' as u16 => {
-                        (Some(SelectionKind::Last), java_trim_units(&body[1..]))
+                        (Some(SelectionKind::Last), trim_units(&body[1..]))
                     }
                     _ => (None, body),
                 };
@@ -1172,7 +1172,7 @@ fn parse_suffix_steps(
         }
         let start = *position + 1;
         let end = find_closing_delimiter(input, *position, b'[' as u16, b']' as u16)?;
-        let index = java_trim_units(&input[start..end]);
+        let index = trim_units(&input[start..end]);
         *position = end + 1;
         if index.len() == 1
             && let Some(subscript) = match index[0] {
@@ -1324,7 +1324,7 @@ fn find_closing_delimiter(
 }
 
 fn split_method_arguments(input: &[u16]) -> Option<Vec<&[u16]>> {
-    if java_trim_units(input).is_empty() {
+    if trim_units(input).is_empty() {
         return Some(Vec::new());
     }
     let mut arguments = Vec::new();
@@ -1359,7 +1359,7 @@ fn split_method_arguments(input: &[u16]) -> Option<Vec<&[u16]>> {
         } else if unit == b'}' as u16 {
             braces = braces.checked_sub(1)?;
         } else if unit == b',' as u16 && parentheses == 0 && brackets == 0 && braces == 0 {
-            arguments.push(java_trim_units(&input[start..position]));
+            arguments.push(trim_units(&input[start..position]));
             start = position + 1;
         }
         position += 1;
@@ -1367,7 +1367,7 @@ fn split_method_arguments(input: &[u16]) -> Option<Vec<&[u16]>> {
     if quote.is_some() || parentheses != 0 || brackets != 0 || braces != 0 {
         return None;
     }
-    arguments.push(java_trim_units(&input[start..]));
+    arguments.push(trim_units(&input[start..]));
     Some(arguments)
 }
 
@@ -2337,7 +2337,7 @@ fn read_static_field(
     }
     ThymeleafACLClassResolver::class_for_name(type_name)?;
     if member == "class" {
-        return Ok(Some(java_class_value(type_name)));
+        return Ok(Some(class_value(type_name)));
     }
     let value = match (type_name, member) {
         ("java.lang.Math", "PI") => {
@@ -2608,7 +2608,7 @@ impl super::TemplateObject for ClassObjectValue {
     }
 }
 
-fn java_class_value(type_name: &str) -> Arc<TemplateValue> {
+fn class_value(type_name: &str) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::Object(Arc::new(ClassObjectValue {
         type_name: Utf16String::from_rust_str(type_name),
     })))
@@ -2631,7 +2631,7 @@ fn invoke_dynamic_method(
                 .to_utf16_string()
                 .map(|value| Arc::new(TemplateValue::string(value))));
         }
-        ("getClass", []) => return Ok(Some(java_class_value(target.class_name()))),
+        ("getClass", []) => return Ok(Some(class_value(target.class_name()))),
         ("equals", [other]) => {
             return Ok(Some(Arc::new(TemplateValue::Boolean(
                 other
@@ -2854,7 +2854,7 @@ fn invoke_utf16_string_method(
                 Utf16String::from_utf16(output),
             ))))
         }
-        ("trim" | "strip", []) => Ok(Some(Arc::new(TemplateValue::string(java_trim(value))))),
+        ("trim" | "strip", []) => Ok(Some(Arc::new(TemplateValue::string(trim(value))))),
         ("toUpperCase", []) => Ok(Some(Arc::new(TemplateValue::string(
             Utf16String::from_rust_str(&value.to_string_lossy().to_uppercase()),
         )))),
@@ -3018,7 +3018,7 @@ fn read_dynamic_property(
             // 因而名为 class 的上下文变量必须遮蔽反射类属性。
             return result.map_err(|error| processing_error(error.to_string()));
         }
-        return Ok(Some(java_class_value(target.class_name())));
+        return Ok(Some(class_value(target.class_name())));
     }
     match target {
         TemplateValue::Map(entries) => match name.to_string_lossy().as_str() {
@@ -3146,11 +3146,11 @@ fn convert_to_string(
     })
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
-    Utf16String::from_utf16(java_trim_units(input.as_utf16()).to_vec())
+fn trim(input: &Utf16String) -> Utf16String {
+    Utf16String::from_utf16(trim_units(input.as_utf16()).to_vec())
 }
 
-fn java_trim_units(input: &[u16]) -> &[u16] {
+fn trim_units(input: &[u16]) -> &[u16] {
     let start = input
         .iter()
         .position(|unit| *unit > 0x20)
@@ -3269,13 +3269,13 @@ fn find_binary_operator<'a>(
         }
     });
     found.filter(|(position, operator)| {
-        !java_trim_units(&input[..*position]).is_empty()
-            && !java_trim_units(&input[*position + operator.len()..]).is_empty()
+        !trim_units(&input[..*position]).is_empty()
+            && !trim_units(&input[*position + operator.len()..]).is_empty()
     })
 }
 
 fn is_unary_sign_position(input: &[u16], position: usize) -> bool {
-    let prefix = java_trim_units(&input[..position]);
+    let prefix = trim_units(&input[..position]);
     let Some(last) = prefix.last().copied() else {
         return true;
     };
@@ -3341,8 +3341,8 @@ fn find_inclusion_operator(input: &[u16]) -> Option<(usize, usize, bool)> {
             position
         };
         let operator_length = position + OP_IN.len() - operator_start;
-        if !java_trim_units(&input[..operator_start]).is_empty()
-            && !java_trim_units(&input[position + OP_IN.len()..]).is_empty()
+        if !trim_units(&input[..operator_start]).is_empty()
+            && !trim_units(&input[position + OP_IN.len()..]).is_empty()
             && found
                 .as_ref()
                 .is_none_or(|(old_position, _, _)| operator_start > *old_position)

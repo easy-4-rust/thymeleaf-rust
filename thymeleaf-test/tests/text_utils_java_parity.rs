@@ -38,12 +38,12 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
     assert!(length_failure.as_utf16_string().is_none());
     assert!(char_failure.as_utf16_string().is_none());
 
-    let string_error = good.java_char_at(-1).unwrap_err();
+    let string_error = good.char_at(-1).unwrap_err();
     assert_eq!(
         string_error.class_name(),
         "java.lang.StringIndexOutOfBoundsException"
     );
-    assert!(good.java_char_at(1).is_err());
+    assert!(good.char_at(1).is_err());
     assert!(!string_error.to_string().is_empty());
     let dynamic = TextUtilsError::SequenceAccess {
         class_name: "example.Failure".to_owned(),
@@ -72,10 +72,10 @@ fn text_utils_public_failure_and_short_circuit_contracts_are_exhaustive() {
 
     let shared = Arc::new(RwLock::new(vec!['a' as u16]));
     let wrapper = CharArrayWrapperSequence::with_range(Some(shared), 0, 1).unwrap();
-    assert_eq!(wrapper.java_length(), Ok(1));
-    assert_eq!(wrapper.java_char_at(0), Ok('a' as u16));
+    assert_eq!(CharSequenceValue::length(&wrapper), Ok(1));
+    assert_eq!(CharSequenceValue::char_at(&wrapper, 0), Ok('a' as u16));
     assert!(wrapper.as_utf16_string().is_none());
-    error!(wrapper.java_char_at(1));
+    error!(CharSequenceValue::char_at(&wrapper, 1));
 
     error!(TextUtils::equals_sequences(false, None, Some(&good)));
     error!(TextUtils::equals_sequences(false, Some(&good), None));
@@ -965,8 +965,8 @@ fn emit_dynamic_sequence_traces(output: &mut String) {
 fn emit_case_fold_digest(output: &mut String) {
     let mut digest = 0xcbf29ce484222325_u64;
     for source in u16::MIN..=u16::MAX {
-        let upper = java_case_map(source, true);
-        let lower = java_case_map(source, false);
+        let upper = case_map(source, true);
+        let lower = case_map(source, false);
         digest = mix(
             digest,
             bool_i32(TextUtils::equals_chars(false, Some(&[source]), Some(&[upper])).unwrap()),
@@ -1049,7 +1049,7 @@ fn java(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn java_case_map(source: u16, upper: bool) -> u16 {
+fn case_map(source: u16, upper: bool) -> u16 {
     // Golden 的完整 BMP 输入本身同时验证生产实现；这里用已固定的 JDK 21 数据
     // 构造 Java 侧传入的 upper/lower 参数，不调用 Rust Unicode 大小写 API。
     const DATA: &[u8] = include_bytes!("../../thymeleaf/src/util/text_utils_case_map.bin");
@@ -1469,14 +1469,14 @@ fn exercise_binary_failures(good: &Utf16String, chars: &[u16], length_failure: &
 struct LengthFailure;
 
 impl CharSequenceValue for LengthFailure {
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Err(TextUtilsError::SequenceAccess {
             class_name: "example.LengthFailure".to_owned(),
             message: None,
         })
     }
 
-    fn java_char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
         Err(TextUtilsError::SequenceAccess {
             class_name: "example.LengthFailure".to_owned(),
             message: None,
@@ -1491,11 +1491,11 @@ impl CharSequenceValue for LengthFailure {
 struct CharFailure;
 
 impl CharSequenceValue for CharFailure {
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok(1)
     }
 
-    fn java_char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
         Err(TextUtilsError::SequenceAccess {
             class_name: "example.CharFailure".to_owned(),
             message: None,
@@ -1526,14 +1526,14 @@ impl ProbeSequence {
 }
 
 impl CharSequenceValue for ProbeSequence {
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         self.trace.lock().expect("trace lock").push_str("L;");
         Ok(self.value.len() as i32)
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         write!(self.trace.lock().expect("trace lock"), "C{index};").unwrap();
-        self.value.java_char_at(index)
+        self.value.char_at(index)
     }
 
     fn as_utf16_string(&self) -> Option<&Utf16String> {

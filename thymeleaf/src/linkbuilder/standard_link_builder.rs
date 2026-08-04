@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::{Utf16String, java_lower};
+use crate::util::{Utf16String, to_lower_unit};
 
 use super::ILinkBuilder;
 
@@ -367,7 +367,7 @@ fn starts_with_java_ignore_case(units: &[u16], expected: &[u8]) -> bool {
         && units
             .iter()
             .zip(expected)
-            .all(|(unit, expected)| java_lower(*unit) == u16::from(*expected))
+            .all(|(unit, expected)| to_lower_unit(*unit) == u16::from(*expected))
 }
 
 fn find_last_unit(units: &[u16], needle: u16) -> Option<usize> {
@@ -464,12 +464,12 @@ fn format_parameter_value_as_unescaped_variable_template(
                     result.push(u16::from(b','));
                 }
                 if !matches!(value.as_ref(), TemplateValue::Null) {
-                    result.extend_from_slice(java_value_string(value).as_utf16());
+                    result.extend_from_slice(value_string(value).as_utf16());
                 }
             }
             Utf16String::from_utf16(result)
         }
-        Some(value) => java_value_string(value),
+        Some(value) => value_string(value),
     }
 }
 
@@ -499,10 +499,7 @@ fn process_all_remaining_parameters_as_query_params(
                     append_utf16_string(result, &escape_uri_query_param(&parameter_name));
                     if !matches!(value.as_ref(), TemplateValue::Null) {
                         result.push(u16::from(b'='));
-                        append_utf16_string(
-                            result,
-                            &escape_uri_query_param(&java_value_string(value)),
-                        );
+                        append_utf16_string(result, &escape_uri_query_param(&value_string(value)));
                     }
                 }
             }
@@ -512,14 +509,14 @@ fn process_all_remaining_parameters_as_query_params(
                 }
                 append_utf16_string(result, &escape_uri_query_param(&parameter_name));
                 result.push(u16::from(b'='));
-                append_utf16_string(result, &escape_uri_query_param(&java_value_string(value)));
+                append_utf16_string(result, &escape_uri_query_param(&value_string(value)));
             }
         }
         parameter_index += 1;
     }
 }
 
-fn java_value_string(value: &TemplateValue) -> Utf16String {
+fn value_string(value: &TemplateValue) -> Utf16String {
     value
         .to_utf16_string()
         .unwrap_or_else(|| Utf16String::from_rust_str("null"))

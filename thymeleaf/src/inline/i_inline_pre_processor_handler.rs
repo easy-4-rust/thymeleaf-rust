@@ -499,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn java_golden_covers_all_callbacks_and_nullable_mutable_buffers() {
+    fn golden_covers_all_callbacks_and_nullable_mutable_buffers() {
         let expected = fixture();
         assert_eq!(expected["baseline"], JAVA_BASELINE);
         assert_eq!(expected.len(), 1 + Event::ALL.len() * 2);

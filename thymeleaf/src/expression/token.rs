@@ -27,18 +27,18 @@ pub trait TokenValue {
     ///
     /// # 错误
     /// 自定义 `toString()` 抛出的运行时异常必须保留类别和消息。
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError>;
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError>;
 }
 
 impl TokenValue for Utf16String {
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         Ok(TokenStringResult::Borrowed(self))
     }
 }
 
 impl<T: TokenValue> TokenValue for Arc<T> {
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
-        self.as_ref().java_token_to_string()
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+        self.as_ref().token_to_string()
     }
 }
 
@@ -147,7 +147,7 @@ impl<T: TokenValue> Token<T> {
         self.value
             .as_ref()
             .ok_or(TokenError::NullPointer)?
-            .java_token_to_string()
+            .token_to_string()
     }
 
     /// 返回 Java `toString()` 的结果。
@@ -341,7 +341,7 @@ mod tests {
     }
 
     impl TokenValue for Probe {
-        fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+        fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
             match &self.result {
                 ProbeResult::Null => Ok(TokenStringResult::Null),
                 ProbeResult::Value(value) => Ok(TokenStringResult::Borrowed(value)),

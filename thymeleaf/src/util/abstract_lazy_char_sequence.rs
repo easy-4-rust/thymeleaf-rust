@@ -72,7 +72,7 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
     pub fn hash_code(&self) -> Result<i32, TextUtilsError> {
         self.get_text()
             .ok_or(TextUtilsError::NullPointer)
-            .map(|value| value.java_hash_code())
+            .map(|value| value.hash_code())
     }
 
     /// 返回解析后的 Java String。
@@ -83,28 +83,28 @@ impl<R: LazyCharSequenceResolver> AbstractLazyCharSequence<R> {
 }
 
 impl<R: LazyCharSequenceResolver> CharSequenceValue for AbstractLazyCharSequence<R> {
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.get_text().ok_or(TextUtilsError::NullPointer)?.len() as i32)
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         self.get_text()
             .ok_or(TextUtilsError::NullPointer)?
-            .java_char_at(index)
+            .char_at(index)
     }
 
     fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.to_utf16_string()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.get_text()
             .ok_or(TextUtilsError::NullPointer)?
-            .java_sub_sequence(start, end)
+            .sub_sequence(start, end)
     }
 
     fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {

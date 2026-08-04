@@ -124,24 +124,24 @@ impl Comment {
 }
 
 impl CharSequenceValue for Comment {
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         "org.thymeleaf.engine.Comment"
     }
 
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok((self.prefix.len() as i32)
             .wrapping_add(self.textual_event.get_content_length()?)
             .wrapping_add(self.suffix.len() as i32))
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         let prefix_length = self.prefix.len() as i32;
         if index < prefix_length {
-            return self.prefix.java_char_at(index);
+            return self.prefix.char_at(index);
         }
         let content_end = prefix_length.wrapping_add(self.textual_event.get_content_length()?);
         if index >= content_end {
-            return self.suffix.java_char_at(index.wrapping_sub(content_end));
+            return self.suffix.char_at(index.wrapping_sub(content_end));
         }
         self.textual_event
             .char_at_content(index.wrapping_sub(prefix_length))
@@ -151,11 +151,11 @@ impl CharSequenceValue for Comment {
         None
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.compute_comment()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         let prefix_length = self.prefix.len() as i32;
         let content_end = prefix_length.wrapping_add(self.textual_event.get_content_length()?);
         if start >= prefix_length && end < content_end {
@@ -164,7 +164,7 @@ impl CharSequenceValue for Comment {
                 end.wrapping_sub(prefix_length),
             );
         }
-        self.compute_comment()?.java_sub_sequence(start, end)
+        self.compute_comment()?.sub_sequence(start, end)
     }
 }
 

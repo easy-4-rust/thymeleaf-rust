@@ -31,20 +31,19 @@ impl EachUtils {
         if let Some(cached) = ExpressionCache::get_each_from_cache(configuration, &preprocessed) {
             return Ok(cached);
         }
-        let parsed =
-            ExpressionParsingUtil::parse_each(&java_trim(&preprocessed)).ok_or_else(|| {
-                Box::new(TemplateProcessingException::new(Some(format!(
-                    "Could not parse as each: \"{}\"",
-                    input.to_string_lossy()
-                )))) as super::StandardExpressionError
-            })?;
+        let parsed = ExpressionParsingUtil::parse_each(&trim(&preprocessed)).ok_or_else(|| {
+            Box::new(TemplateProcessingException::new(Some(format!(
+                "Could not parse as each: \"{}\"",
+                input.to_string_lossy()
+            )))) as super::StandardExpressionError
+        })?;
         let parsed = Arc::new(parsed);
         ExpressionCache::put_each_into_cache(configuration, &preprocessed, Arc::clone(&parsed));
         Ok(parsed)
     }
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
+fn trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()

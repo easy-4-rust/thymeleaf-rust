@@ -15,7 +15,7 @@ const RAW_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.raw.RawPar
 pub struct RawParseCause {
     error: Box<dyn Error + Send + Sync>,
     class_name: String,
-    java_message: Option<Utf16String>,
+    message: Option<Utf16String>,
     raw_parse_location: Option<(i32, i32, Utf16String)>,
 }
 
@@ -26,7 +26,7 @@ impl RawParseCause {
     ///
     /// - `error`：底层 Rust 错误。
     /// - `class_name`：Java 运行时类全限定名。
-    /// - `java_message`：可空的 `Throwable#getMessage()`。
+    /// - `message`：可空的 `Throwable#getMessage()`。
     ///
     /// # 返回
     ///
@@ -36,12 +36,12 @@ impl RawParseCause {
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
         class_name: impl Into<String>,
-        java_message: Option<Utf16String>,
+        message: Option<Utf16String>,
     ) -> Self {
         Self {
             error,
             class_name: class_name.into(),
-            java_message,
+            message,
             raw_parse_location: None,
         }
     }
@@ -58,12 +58,12 @@ impl RawParseCause {
     #[must_use]
     /// 对应 Java 语义：`RawParseException` 的 `from_raw_parse` 行为（Rust 侧辅助/私有路径）。
     pub fn from_raw_parse(exception: RawParseException) -> Self {
-        let java_message = exception.message.clone();
+        let message = exception.message.clone();
         let raw_parse_location = exception.line.zip(exception.col).map(|(line, col)| {
             (
                 line,
                 col,
-                java_message
+                message
                     .clone()
                     .expect("located RawParseException always has a message"),
             )
@@ -71,7 +71,7 @@ impl RawParseCause {
         Self {
             error: Box::new(exception),
             class_name: RAW_PARSE_EXCEPTION_CLASS.to_owned(),
-            java_message,
+            message,
             raw_parse_location,
         }
     }
@@ -93,7 +93,7 @@ impl Debug for RawParseCause {
         formatter
             .debug_struct("RawParseCause")
             .field("class_name", &self.class_name)
-            .field("java_message", &self.java_message)
+            .field("message", &self.message)
             .field("raw_parse_location", &self.raw_parse_location)
             .finish_non_exhaustive()
     }
@@ -328,7 +328,7 @@ fn compose_inherited_message(
     if let Some(message) = message {
         return Some(message.clone());
     }
-    cause.and_then(|cause| cause.java_message.clone())
+    cause.and_then(|cause| cause.message.clone())
 }
 
 fn message_prefix(line: i32, col: i32) -> Utf16String {

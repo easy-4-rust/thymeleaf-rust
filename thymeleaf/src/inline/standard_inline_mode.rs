@@ -54,12 +54,12 @@ impl StandardInlineMode {
         let Some(mode) = mode else {
             return Err(StandardInlineModeParseError::NullOrEmpty);
         };
-        if java_trim(mode.as_utf16()).is_empty() {
+        if trim(mode.as_utf16()).is_empty() {
             return Err(StandardInlineModeParseError::NullOrEmpty);
         }
 
         for candidate in Self::VALUES {
-            if java_equals_ignore_case_ascii(mode.as_utf16(), candidate.name().as_bytes()) {
+            if equals_ignore_case_ascii(mode.as_utf16(), candidate.name().as_bytes()) {
                 return Ok(candidate);
             }
         }
@@ -143,7 +143,7 @@ impl StandardInlineModeParseError {
     }
 }
 
-fn java_trim(units: &[u16]) -> &[u16] {
+fn trim(units: &[u16]) -> &[u16] {
     let start = units
         .iter()
         .position(|unit| *unit > 0x0020)
@@ -155,15 +155,15 @@ fn java_trim(units: &[u16]) -> &[u16] {
     &units[start..end]
 }
 
-fn java_equals_ignore_case_ascii(actual: &[u16], expected: &[u8]) -> bool {
+fn equals_ignore_case_ascii(actual: &[u16], expected: &[u8]) -> bool {
     actual.len() == expected.len()
         && actual
             .iter()
             .zip(expected)
-            .all(|(actual, expected)| java_code_unit_equals_ascii_ignore_case(*actual, *expected))
+            .all(|(actual, expected)| code_unit_equals_ascii_ignore_case(*actual, *expected))
 }
 
-fn java_code_unit_equals_ascii_ignore_case(actual: u16, expected: u8) -> bool {
+fn code_unit_equals_ascii_ignore_case(actual: u16, expected: u8) -> bool {
     let expected = u16::from(expected);
     actual == expected
         || (expected >= u16::from(b'A') && expected <= u16::from(b'Z') && actual == expected + 0x20)

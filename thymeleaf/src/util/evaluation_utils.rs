@@ -89,17 +89,17 @@ pub trait HashCodeValue {
     ///
     /// # 返回
     /// 与对象 `hashCode()` 相同、按二进制补码溢出的值。
-    fn java_hash_code(&self) -> i32;
+    fn hash_code(&self) -> i32;
 }
 
 impl HashCodeValue for i32 {
-    fn java_hash_code(&self) -> i32 {
+    fn hash_code(&self) -> i32 {
         *self
     }
 }
 
 impl HashCodeValue for String {
-    fn java_hash_code(&self) -> i32 {
+    fn hash_code(&self) -> i32 {
         self.encode_utf16().fold(0_i32, |hash, unit| {
             hash.wrapping_mul(31).wrapping_add(i32::from(unit))
         })
@@ -107,7 +107,7 @@ impl HashCodeValue for String {
 }
 
 impl HashCodeValue for Utf16String {
-    fn java_hash_code(&self) -> i32 {
+    fn hash_code(&self) -> i32 {
         self.as_utf16().iter().fold(0_i32, |hash, unit| {
             hash.wrapping_mul(31).wrapping_add(i32::from(*unit))
         })
@@ -218,15 +218,12 @@ impl<T: HashCodeValue> MapEntry<T> {
     /// # 返回
     /// `31 * keyHash + valueHash`，按 Java `int` 规则溢出。
     #[must_use]
-    pub fn java_hash_code(&self) -> i32 {
-        let key_hash = self
-            .entry_key
-            .as_ref()
-            .map_or(0, HashCodeValue::java_hash_code);
+    pub fn hash_code(&self) -> i32 {
+        let key_hash = self.entry_key.as_ref().map_or(0, HashCodeValue::hash_code);
         let value_hash = self
             .entry_value
             .as_ref()
-            .map_or(0, HashCodeValue::java_hash_code);
+            .map_or(0, HashCodeValue::hash_code);
         key_hash.wrapping_mul(31).wrapping_add(value_hash)
     }
 }
@@ -625,7 +622,7 @@ fn number_is_non_zero(number: &NumberValue) -> bool {
 }
 
 fn string_is_true(value: &Utf16String) -> bool {
-    let trimmed = java_trim(value.as_utf16());
+    let trimmed = trim(value.as_utf16());
     !equals_ascii_ignore_case(trimmed, b"false")
         && !equals_ascii_ignore_case(trimmed, b"off")
         && !equals_ascii_ignore_case(trimmed, b"no")
@@ -676,7 +673,7 @@ fn parse_java_big_decimal(value: &Utf16String) -> Option<BigDecimalValue> {
     {
         return None;
     }
-    let trimmed = java_trim(units);
+    let trimmed = trim(units);
     let mut ascii = String::with_capacity(trimmed.len());
     for unit in trimmed {
         if matches!(*unit, value if value == u16::from(b'+') || value == u16::from(b'-')
@@ -684,13 +681,13 @@ fn parse_java_big_decimal(value: &Utf16String) -> Option<BigDecimalValue> {
         {
             ascii.push(u8::try_from(*unit).expect("matched ASCII syntax unit") as char);
         } else {
-            ascii.push(char::from(b'0' + java_decimal_digit(*unit)?));
+            ascii.push(char::from(b'0' + decimal_digit(*unit)?));
         }
     }
     BigDecimalValue::parse(&ascii).ok()
 }
 
-fn java_trim(units: &[u16]) -> &[u16] {
+fn trim(units: &[u16]) -> &[u16] {
     let mut start = 0;
     while start < units.len() && units[start] <= 0x20 {
         start += 1;
@@ -702,7 +699,7 @@ fn java_trim(units: &[u16]) -> &[u16] {
     &units[start..end]
 }
 
-fn java_decimal_digit(unit: u16) -> Option<u8> {
+fn decimal_digit(unit: u16) -> Option<u8> {
     for zero in JAVA_BMP_DECIMAL_ZEROES {
         if let Some(offset) = unit.checked_sub(*zero)
             && offset <= 9

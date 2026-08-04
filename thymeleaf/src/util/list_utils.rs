@@ -182,13 +182,13 @@ impl ComparableValue for String {
 
 impl ComparableValue for f32 {
     fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
-        Ok(java_f32_compare(*self, *other))
+        Ok(f32_compare(*self, *other))
     }
 }
 
 impl ComparableValue for f64 {
     fn template_compare_to(&self, other: &Self) -> Result<Ordering, ListUtilsError> {
-        Ok(java_f64_compare(*self, *other))
+        Ok(f64_compare(*self, *other))
     }
 }
 
@@ -574,7 +574,7 @@ impl ListUtils {
     /// target 为 null 时返回精确参数错误。
     pub fn size<T>(target: Option<&dyn ListView<T>>) -> Result<i32, ValidateError> {
         Validate::not_null(target, Some("Cannot get list size of null"))?;
-        Ok(java_list_size(target.expect("validated target").len()))
+        Ok(list_size(target.expect("validated target").len()))
     }
 
     /// 判断列表是否为 null 或为空。
@@ -803,23 +803,23 @@ fn merge<T>(
     Ok(result)
 }
 
-fn java_list_size(size: usize) -> i32 {
+fn list_size(size: usize) -> i32 {
     i32::try_from(size).unwrap_or(i32::MAX)
 }
 
-fn java_f32_compare(left: f32, right: f32) -> Ordering {
+fn f32_compare(left: f32, right: f32) -> Ordering {
     if left < right {
         Ordering::Less
     } else if left > right {
         Ordering::Greater
     } else {
-        let left_bits = java_f32_bits(left);
-        let right_bits = java_f32_bits(right);
+        let left_bits = f32_bits(left);
+        let right_bits = f32_bits(right);
         left_bits.cmp(&right_bits)
     }
 }
 
-fn java_f32_bits(value: f32) -> i32 {
+fn f32_bits(value: f32) -> i32 {
     if value.is_nan() {
         0x7fc0_0000_u32 as i32
     } else {
@@ -827,19 +827,19 @@ fn java_f32_bits(value: f32) -> i32 {
     }
 }
 
-fn java_f64_compare(left: f64, right: f64) -> Ordering {
+fn f64_compare(left: f64, right: f64) -> Ordering {
     if left < right {
         Ordering::Less
     } else if left > right {
         Ordering::Greater
     } else {
-        let left_bits = java_f64_bits(left);
-        let right_bits = java_f64_bits(right);
+        let left_bits = f64_bits(left);
+        let right_bits = f64_bits(right);
         left_bits.cmp(&right_bits)
     }
 }
 
-fn java_f64_bits(value: f64) -> i64 {
+fn f64_bits(value: f64) -> i64 {
     if value.is_nan() {
         0x7ff8_0000_0000_0000_u64 as i64
     } else {
@@ -1018,7 +1018,7 @@ mod tests {
         assert!(!ListUtils::is_empty(Some(view)));
         assert!(ListUtils::is_empty(Some(empty_view)));
         assert!(ListUtils::is_empty(None::<&dyn ListView<Option<String>>>));
-        assert_eq!(super::java_list_size(usize::MAX), i32::MAX);
+        assert_eq!(super::list_size(usize::MAX), i32::MAX);
 
         assert_eq!(ListUtils::contains(Some(view), &None), Ok(true));
         assert_eq!(
@@ -1348,7 +1348,7 @@ mod tests {
     }
 
     #[test]
-    fn java_comparable_matches_utf16_and_float_wrapper_ordering() {
+    fn comparable_matches_utf16_and_float_wrapper_ordering() {
         assert_eq!(
             "\u{1f600}"
                 .to_owned()
@@ -1382,7 +1382,7 @@ mod tests {
     }
 
     #[test]
-    fn java_list_delegates_list_view_operations() {
+    fn list_delegates_list_view_operations() {
         let list = ListValue::owned(vec![Some("one".to_owned()), None], ListTypeValue::ArrayList);
         let view: &dyn ListView<Option<String>> = &list;
         assert_eq!(view.len(), 2);

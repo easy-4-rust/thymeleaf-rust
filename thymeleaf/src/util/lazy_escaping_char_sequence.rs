@@ -75,28 +75,28 @@ pub(crate) fn escape_text_immediately(
 }
 
 impl CharSequenceValue for LazyEscapingCharSequence {
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         "org.thymeleaf.util.LazyEscapingCharSequence"
     }
 
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
-        self.sequence.java_length()
+    fn length(&self) -> Result<i32, TextUtilsError> {
+        self.sequence.length()
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
-        self.sequence.java_char_at(index)
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+        self.sequence.char_at(index)
     }
 
     fn as_utf16_string(&self) -> Option<&Utf16String> {
         None
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
-        self.sequence.java_to_string()
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
+        self.sequence.to_utf16_string()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
-        self.sequence.java_sub_sequence(start, end)
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+        self.sequence.sub_sequence(start, end)
     }
 
     fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {

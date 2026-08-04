@@ -252,7 +252,7 @@ impl TemplateValue {
         match (self, other) {
             (Self::Null, Self::Null) => true,
             (Self::Boolean(left), Self::Boolean(right)) => left == right,
-            (Self::Number(left), Self::Number(right)) => java_number_equals(left, right),
+            (Self::Number(left), Self::Number(right)) => number_equals(left, right),
             (Self::Character(left), Self::Character(right)) => left == right,
             (Self::String(left), Self::String(right))
             | (Self::SafeHtml(left), Self::SafeHtml(right))
@@ -266,7 +266,7 @@ impl TemplateValue {
                         .zip(right.iter())
                         .all(|(left, right)| left.template_equals(right))
             }
-            (Self::Map(left), Self::Map(right)) => java_map_equals(left, right),
+            (Self::Map(left), Self::Map(right)) => map_equals(left, right),
             (Self::Object(left), Self::Object(right)) => {
                 left.class_name() == right.class_name() && left.template_equals(right.as_ref())
             }
@@ -291,7 +291,7 @@ impl TemplateValue {
             | (Self::SafeHtml(left), Self::String(right)) => {
                 Some(Ok(left.as_utf16().cmp(right.as_utf16())))
             }
-            (Self::Number(left), Self::Number(right)) => java_number_compare(left, right).map(Ok),
+            (Self::Number(left), Self::Number(right)) => number_compare(left, right).map(Ok),
             (Self::Object(left), Self::Object(right))
                 if left.class_name() == right.class_name() =>
             {
@@ -308,7 +308,7 @@ impl TemplateValue {
         match self {
             Self::Null => "null",
             Self::Boolean(_) => "java.lang.Boolean",
-            Self::Number(number) => java_number_class_name(number),
+            Self::Number(number) => number_class_name(number),
             Self::Character(_) => "java.lang.Character",
             Self::String(_) | Self::SafeHtml(_) => "java.lang.String",
             Self::Bytes(_) => "[B",
@@ -322,7 +322,7 @@ impl TemplateValue {
 }
 
 impl super::ConversionObject for TemplateValue {
-    fn java_to_string(
+    fn to_utf16_string(
         &self,
     ) -> Result<super::Utf16StringConversionResult<'_>, super::StandardConversionError> {
         Ok(match self {
@@ -337,7 +337,7 @@ impl super::ConversionObject for TemplateValue {
     }
 }
 
-fn java_number_equals(left: &NumberValue, right: &NumberValue) -> bool {
+fn number_equals(left: &NumberValue, right: &NumberValue) -> bool {
     match (left, right) {
         (NumberValue::BigDecimal(left), NumberValue::BigDecimal(right)) => left == right,
         (NumberValue::BigInteger(left), NumberValue::BigInteger(right)) => left == right,
@@ -365,7 +365,7 @@ fn java_number_equals(left: &NumberValue, right: &NumberValue) -> bool {
     }
 }
 
-fn java_number_compare(left: &NumberValue, right: &NumberValue) -> Option<Ordering> {
+fn number_compare(left: &NumberValue, right: &NumberValue) -> Option<Ordering> {
     match (left, right) {
         (NumberValue::BigDecimal(left), NumberValue::BigDecimal(right)) => {
             Some(left.compare_java(right))
@@ -375,10 +375,8 @@ fn java_number_compare(left: &NumberValue, right: &NumberValue) -> Option<Orderi
         (NumberValue::Short(left), NumberValue::Short(right)) => Some(left.cmp(right)),
         (NumberValue::Integer(left), NumberValue::Integer(right)) => Some(left.cmp(right)),
         (NumberValue::Long(left), NumberValue::Long(right)) => Some(left.cmp(right)),
-        (NumberValue::Float(left), NumberValue::Float(right)) => Some(java_f32_cmp(*left, *right)),
-        (NumberValue::Double(left), NumberValue::Double(right)) => {
-            Some(java_f64_cmp(*left, *right))
-        }
+        (NumberValue::Float(left), NumberValue::Float(right)) => Some(f32_cmp(*left, *right)),
+        (NumberValue::Double(left), NumberValue::Double(right)) => Some(f64_cmp(*left, *right)),
         _ => None,
     }
 }
@@ -399,7 +397,7 @@ fn normalized_f64_bits(value: f64) -> u64 {
     }
 }
 
-fn java_f32_cmp(left: f32, right: f32) -> Ordering {
+fn f32_cmp(left: f32, right: f32) -> Ordering {
     if left < right {
         return Ordering::Less;
     }
@@ -411,7 +409,7 @@ fn java_f32_cmp(left: f32, right: f32) -> Ordering {
     ))
 }
 
-fn java_f64_cmp(left: f64, right: f64) -> Ordering {
+fn f64_cmp(left: f64, right: f64) -> Ordering {
     if left < right {
         return Ordering::Less;
     }
@@ -423,7 +421,7 @@ fn java_f64_cmp(left: f64, right: f64) -> Ordering {
     ))
 }
 
-fn java_map_equals(
+fn map_equals(
     left: &[(Arc<TemplateValue>, Arc<TemplateValue>)],
     right: &[(Arc<TemplateValue>, Arc<TemplateValue>)],
 ) -> bool {
@@ -469,7 +467,7 @@ impl Debug for TemplateValue {
     }
 }
 
-fn java_number_class_name(number: &NumberValue) -> &str {
+fn number_class_name(number: &NumberValue) -> &str {
     match number {
         NumberValue::BigDecimal(_) => "java.math.BigDecimal",
         NumberValue::BigInteger(_) => "java.math.BigInteger",

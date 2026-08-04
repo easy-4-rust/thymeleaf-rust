@@ -22,7 +22,7 @@ impl ExpressionParsingNode {
     /// 对应 Java 语义：`ExpressionParsingNode` 的 `from_input` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn from_input(input: Utf16String) -> Self {
         Self {
-            input: Some(java_trim(&input)),
+            input: Some(trim(&input)),
             expression: None,
         }
     }
@@ -92,7 +92,7 @@ impl ExpressionParsingNode {
     }
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
+fn trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let mut start = 0;
     while start < units.len() && units[start] <= 0x20 {

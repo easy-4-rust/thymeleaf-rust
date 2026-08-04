@@ -283,7 +283,7 @@ impl ToStringProbe {
 }
 
 impl ConversionObject for ToStringProbe {
-    fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
+    fn to_utf16_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
         match &self.result {
             Ok(Some(value)) => Ok(Utf16StringConversionResult::Owned(value.clone())),
             Ok(None) => Ok(Utf16StringConversionResult::Null),
@@ -304,7 +304,7 @@ struct BorrowingProbe {
 }
 
 impl ConversionObject for BorrowingProbe {
-    fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
+    fn to_utf16_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError> {
         Ok(Utf16StringConversionResult::Borrowed(&self.value))
     }
 }
@@ -317,7 +317,7 @@ impl AbstractStandardConversionService for CustomService {
         context: Option<&dyn Any>,
         object: &'a dyn ConversionObject,
     ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
-        let value = match object.java_to_string()? {
+        let value = match object.to_utf16_string()? {
             Utf16StringConversionResult::Null => "null".to_owned(),
             Utf16StringConversionResult::Borrowed(value) => value.to_string_lossy(),
             Utf16StringConversionResult::Owned(value) => value.to_string_lossy(),

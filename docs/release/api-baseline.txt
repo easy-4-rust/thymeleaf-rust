@@ -4708,13 +4708,13 @@ pub fn thymeleaf::CDATASection::write(&self, &mut dyn thymeleaf::TemplateWriter)
 impl thymeleaf::engine::IEngineTemplateEvent for thymeleaf::CDATASection
 impl thymeleaf::util::CharSequenceValue for thymeleaf::CDATASection
 pub fn thymeleaf::CDATASection::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::CDATASection::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::CDATASection::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sequence_class_name(&self) -> &str
+pub fn thymeleaf::CDATASection::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::CDATASection::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::CDATASection
 impl core::marker::Send for thymeleaf::CDATASection
@@ -4830,13 +4830,13 @@ pub fn thymeleaf::Comment::write(&self, &mut dyn thymeleaf::TemplateWriter) -> c
 impl thymeleaf::engine::IEngineTemplateEvent for thymeleaf::Comment
 impl thymeleaf::util::CharSequenceValue for thymeleaf::Comment
 pub fn thymeleaf::Comment::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::Comment::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::Comment::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sequence_class_name(&self) -> &str
+pub fn thymeleaf::Comment::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::Comment::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::Comment
 impl core::marker::Send for thymeleaf::Comment
@@ -6324,13 +6324,13 @@ pub fn thymeleaf::Text::get_text(&self) -> core::result::Result<core::option::Op
 impl thymeleaf::engine::IEngineTemplateEvent for thymeleaf::Text
 impl thymeleaf::util::CharSequenceValue for thymeleaf::Text
 pub fn thymeleaf::Text::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::Text::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::Text::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sequence_class_name(&self) -> &str
+pub fn thymeleaf::Text::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::Text::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::Text
 impl core::marker::Send for thymeleaf::Text
@@ -7685,7 +7685,7 @@ pub fn thymeleaf::TemplateValue::clone(&self) -> thymeleaf::TemplateValue
 impl core::fmt::Debug for thymeleaf::TemplateValue
 pub fn thymeleaf::TemplateValue::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl thymeleaf::expression::ConversionObject for thymeleaf::TemplateValue
-pub fn thymeleaf::TemplateValue::java_to_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
+pub fn thymeleaf::TemplateValue::to_utf16_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
 impl core::marker::Freeze for thymeleaf::TemplateValue
 impl core::marker::Send for thymeleaf::TemplateValue
 impl core::marker::Sync for thymeleaf::TemplateValue
@@ -11626,9 +11626,9 @@ impl thymeleaf::expression::ComplexExpression for thymeleaf::expression::OrExpre
 impl thymeleaf::expression::ComplexExpression for thymeleaf::expression::RemainderExpression
 impl thymeleaf::expression::ComplexExpression for thymeleaf::expression::SubtractionExpression
 pub trait thymeleaf::expression::ConversionObject: core::any::Any
-pub fn thymeleaf::expression::ConversionObject::java_to_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
+pub fn thymeleaf::expression::ConversionObject::to_utf16_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
 impl thymeleaf::expression::ConversionObject for thymeleaf::TemplateValue
-pub fn thymeleaf::TemplateValue::java_to_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
+pub fn thymeleaf::TemplateValue::to_utf16_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
 pub trait thymeleaf::expression::EqualsNotEqualsExpression: thymeleaf::expression::ComplexExpression
 pub fn thymeleaf::expression::EqualsNotEqualsExpression::equals_operator() -> thymeleaf::util::Utf16String
 pub fn thymeleaf::expression::EqualsNotEqualsExpression::equals_operator_2() -> thymeleaf::util::Utf16String
@@ -12548,11 +12548,11 @@ pub fn thymeleaf::LazyContextVariable<core::option::Option<alloc::sync::Arc<thym
 pub fn thymeleaf::LazyContextVariable<core::option::Option<alloc::sync::Arc<thymeleaf::TemplateValue>>, F>::template_equals(&self, &dyn thymeleaf::TemplateObject) -> bool
 pub fn thymeleaf::LazyContextVariable<core::option::Option<alloc::sync::Arc<thymeleaf::TemplateValue>>, F>::to_utf16_string(&self) -> thymeleaf::util::Utf16String
 pub trait thymeleaf::expression::TokenValue
-pub fn thymeleaf::expression::TokenValue::java_token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
+pub fn thymeleaf::expression::TokenValue::token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
 impl thymeleaf::expression::TokenValue for thymeleaf::util::Utf16String
-pub fn thymeleaf::util::Utf16String::java_token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
+pub fn thymeleaf::util::Utf16String::token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
 impl<T: thymeleaf::expression::TokenValue> thymeleaf::expression::TokenValue for alloc::sync::Arc<T>
-pub fn alloc::sync::Arc<T>::java_token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
+pub fn alloc::sync::Arc<T>::token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
 pub type thymeleaf::expression::ExpressionObjectNames = alloc::sync::Arc<[core::option::Option<thymeleaf::util::Utf16String>]>
 pub type thymeleaf::expression::FragmentParameterMap = indexmap::map::IndexMap<core::option::Option<thymeleaf::util::Utf16String>, core::option::Option<alloc::sync::Arc<thymeleaf::TemplateValue>>>
 pub type thymeleaf::expression::OgnlRuntimeError = alloc::boxed::Box<(dyn core::error::Error + core::marker::Send + core::marker::Sync)>
@@ -20995,7 +20995,7 @@ impl<T> tracing::instrument::WithSubscriber for thymeleaf::text::CSSTemplatePars
 pub struct thymeleaf::text::ChainedTextHandlerRuntimeError
 impl thymeleaf::text::ChainedTextHandlerRuntimeError
 pub const fn thymeleaf::text::ChainedTextHandlerRuntimeError::class_name(&self) -> &'static str
-pub fn thymeleaf::text::ChainedTextHandlerRuntimeError::java_message(&self) -> thymeleaf::util::Utf16String
+pub fn thymeleaf::text::ChainedTextHandlerRuntimeError::message(&self) -> thymeleaf::util::Utf16String
 impl core::clone::Clone for thymeleaf::text::ChainedTextHandlerRuntimeError
 pub fn thymeleaf::text::ChainedTextHandlerRuntimeError::clone(&self) -> thymeleaf::text::ChainedTextHandlerRuntimeError
 impl core::cmp::Eq for thymeleaf::text::ChainedTextHandlerRuntimeError
@@ -21230,7 +21230,7 @@ pub struct thymeleaf::text::TextParserReaderError
 impl thymeleaf::text::TextParserReaderError
 pub fn thymeleaf::text::TextParserReaderError::class_name(&self) -> &str
 pub fn thymeleaf::text::TextParserReaderError::io(&str) -> Self
-pub fn thymeleaf::text::TextParserReaderError::java_message(&self) -> core::option::Option<thymeleaf::util::Utf16String>
+pub fn thymeleaf::text::TextParserReaderError::message(&self) -> core::option::Option<thymeleaf::util::Utf16String>
 pub fn thymeleaf::text::TextParserReaderError::new(&str, core::option::Option<thymeleaf::util::Utf16String>) -> Self
 impl core::clone::Clone for thymeleaf::text::TextParserReaderError
 pub fn thymeleaf::text::TextParserReaderError::clone(&self) -> thymeleaf::text::TextParserReaderError
@@ -23002,13 +23002,13 @@ impl<R: thymeleaf::LazyCharSequenceResolver> thymeleaf::IWritableCharSequence fo
 pub fn thymeleaf::AbstractLazyCharSequence<R>::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl<R: thymeleaf::LazyCharSequenceResolver> thymeleaf::util::CharSequenceValue for thymeleaf::AbstractLazyCharSequence<R>
 pub fn thymeleaf::AbstractLazyCharSequence<R>::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_class_name(&self) -> &str
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::AbstractLazyCharSequence<R>::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl<R> !core::marker::Freeze for thymeleaf::AbstractLazyCharSequence<R>
 impl<R> core::marker::Send for thymeleaf::AbstractLazyCharSequence<R>
@@ -23054,13 +23054,13 @@ impl thymeleaf::IWritableCharSequence for thymeleaf::AggregateCharSequence
 pub fn thymeleaf::AggregateCharSequence::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::AggregateCharSequence
 pub fn thymeleaf::AggregateCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::AggregateCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::AggregateCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::AggregateCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::AggregateCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::AggregateCharSequence
 impl core::marker::Send for thymeleaf::AggregateCharSequence
@@ -23287,13 +23287,13 @@ impl core::cmp::PartialEq for thymeleaf::util::CharArrayWrapperSequence
 pub fn thymeleaf::util::CharArrayWrapperSequence::eq(&self, &Self) -> bool
 impl thymeleaf::util::CharSequenceValue for thymeleaf::util::CharArrayWrapperSequence
 pub fn thymeleaf::util::CharArrayWrapperSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::CharArrayWrapperSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::CharArrayWrapperSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl core::marker::Freeze for thymeleaf::util::CharArrayWrapperSequence
 impl core::marker::Send for thymeleaf::util::CharArrayWrapperSequence
@@ -23864,13 +23864,13 @@ impl thymeleaf::IWritableCharSequence for thymeleaf::util::LazyEscapingCharSeque
 pub fn thymeleaf::util::LazyEscapingCharSequence::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::util::LazyEscapingCharSequence
 pub fn thymeleaf::util::LazyEscapingCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::LazyEscapingCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::LazyEscapingCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::util::LazyEscapingCharSequence
 impl core::marker::Send for thymeleaf::util::LazyEscapingCharSequence
@@ -23904,13 +23904,13 @@ impl thymeleaf::IWritableCharSequence for thymeleaf::LazyProcessingCharSequence
 pub fn thymeleaf::LazyProcessingCharSequence::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::LazyProcessingCharSequence
 pub fn thymeleaf::LazyProcessingCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::LazyProcessingCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::LazyProcessingCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::LazyProcessingCharSequence
 impl core::marker::Send for thymeleaf::LazyProcessingCharSequence
@@ -24115,7 +24115,7 @@ impl<T> tracing::instrument::Instrument for thymeleaf::util::LoggingUtils
 impl<T> tracing::instrument::WithSubscriber for thymeleaf::util::LoggingUtils
 pub struct thymeleaf::util::MapEntry<T>
 impl<T: thymeleaf::util::HashCodeValue> thymeleaf::util::MapEntry<T>
-pub fn thymeleaf::util::MapEntry<T>::java_hash_code(&self) -> i32
+pub fn thymeleaf::util::MapEntry<T>::hash_code(&self) -> i32
 impl<T> thymeleaf::util::MapEntry<T>
 pub fn thymeleaf::util::MapEntry<T>::class_name(&self) -> &str
 pub fn thymeleaf::util::MapEntry<T>::get_key(&self) -> core::option::Option<&T>
@@ -24849,19 +24849,19 @@ impl core::hash::Hash for thymeleaf::util::Utf16String
 pub fn thymeleaf::util::Utf16String::hash<__H: core::hash::Hasher>(&self, &mut __H)
 impl core::marker::StructuralPartialEq for thymeleaf::util::Utf16String
 impl thymeleaf::expression::TokenValue for thymeleaf::util::Utf16String
-pub fn thymeleaf::util::Utf16String::java_token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
+pub fn thymeleaf::util::Utf16String::token_to_string(&self) -> core::result::Result<thymeleaf::expression::TokenStringResult<'_>, thymeleaf::expression::TokenError>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::util::Utf16String
 pub fn thymeleaf::util::Utf16String::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::Utf16String::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::Utf16String::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::Utf16String::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::Utf16String::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::HashCodeValue for thymeleaf::util::Utf16String
-pub fn thymeleaf::util::Utf16String::java_hash_code(&self) -> i32
+pub fn thymeleaf::util::Utf16String::hash_code(&self) -> i32
 impl core::marker::Freeze for thymeleaf::util::Utf16String
 impl core::marker::Send for thymeleaf::util::Utf16String
 impl core::marker::Sync for thymeleaf::util::Utf16String
@@ -25076,103 +25076,103 @@ pub fn i64::class_name(&self) -> &str
 pub fn i64::is_instance_of(&self, &str) -> bool
 pub trait thymeleaf::util::CharSequenceValue: core::marker::Send + core::marker::Sync
 pub fn thymeleaf::util::CharSequenceValue::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::CharSequenceValue::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharSequenceValue::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharSequenceValue::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::CharSequenceValue::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharSequenceValue::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharSequenceValue::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharSequenceValue::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharSequenceValue::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharSequenceValue::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharSequenceValue::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::CharSequenceValue::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharSequenceValue::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharSequenceValue::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharSequenceValue::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::CharSequenceValue::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::AggregateCharSequence
 pub fn thymeleaf::AggregateCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::AggregateCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::AggregateCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::AggregateCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::AggregateCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::CDATASection
 pub fn thymeleaf::CDATASection::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::CDATASection::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::CDATASection::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sequence_class_name(&self) -> &str
+pub fn thymeleaf::CDATASection::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::CDATASection::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::Comment
 pub fn thymeleaf::Comment::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::Comment::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::Comment::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sequence_class_name(&self) -> &str
+pub fn thymeleaf::Comment::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::Comment::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::LazyProcessingCharSequence
 pub fn thymeleaf::LazyProcessingCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::LazyProcessingCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::LazyProcessingCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::Text
 pub fn thymeleaf::Text::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::Text::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::Text::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sequence_class_name(&self) -> &str
+pub fn thymeleaf::Text::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::Text::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::util::CharArrayWrapperSequence
 pub fn thymeleaf::util::CharArrayWrapperSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::CharArrayWrapperSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::CharArrayWrapperSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::CharArrayWrapperSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::CharArrayWrapperSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::util::LazyEscapingCharSequence
 pub fn thymeleaf::util::LazyEscapingCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::LazyEscapingCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::LazyEscapingCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::LazyEscapingCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::LazyEscapingCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::util::Utf16String
 pub fn thymeleaf::util::Utf16String::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::util::Utf16String::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::util::Utf16String::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::util::Utf16String::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::sequence_class_name(&self) -> &str
+pub fn thymeleaf::util::Utf16String::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::util::Utf16String::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::util::Utf16String::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl<R: thymeleaf::LazyCharSequenceResolver> thymeleaf::util::CharSequenceValue for thymeleaf::AbstractLazyCharSequence<R>
 pub fn thymeleaf::AbstractLazyCharSequence<R>::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_class_name(&self) -> &str
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::AbstractLazyCharSequence<R>::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 pub trait thymeleaf::util::ComparableValue
 pub fn thymeleaf::util::ComparableValue::template_compare_to(&self, &Self) -> core::result::Result<core::cmp::Ordering, thymeleaf::util::ListUtilsError>
@@ -25201,13 +25201,13 @@ pub fn thymeleaf::util::ComparatorValue::compare(&mut self, &T, &T) -> core::res
 impl<T, F> thymeleaf::util::ComparatorValue<T> for F where F: core::ops::function::FnMut(&T, &T) -> core::result::Result<core::cmp::Ordering, thymeleaf::util::ListUtilsError>
 pub fn F::compare(&mut self, &T, &T) -> core::result::Result<core::cmp::Ordering, thymeleaf::util::ListUtilsError>
 pub trait thymeleaf::util::HashCodeValue
-pub fn thymeleaf::util::HashCodeValue::java_hash_code(&self) -> i32
+pub fn thymeleaf::util::HashCodeValue::hash_code(&self) -> i32
 impl thymeleaf::util::HashCodeValue for alloc::string::String
-pub fn alloc::string::String::java_hash_code(&self) -> i32
+pub fn alloc::string::String::hash_code(&self) -> i32
 impl thymeleaf::util::HashCodeValue for i32
-pub fn i32::java_hash_code(&self) -> i32
+pub fn i32::hash_code(&self) -> i32
 impl thymeleaf::util::HashCodeValue for thymeleaf::util::Utf16String
-pub fn thymeleaf::util::Utf16String::java_hash_code(&self) -> i32
+pub fn thymeleaf::util::Utf16String::hash_code(&self) -> i32
 pub trait thymeleaf::util::IWritableCharSequence: thymeleaf::util::CharSequenceValue
 pub fn thymeleaf::util::IWritableCharSequence::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl thymeleaf::IWritableCharSequence for thymeleaf::AggregateCharSequence
@@ -27383,7 +27383,7 @@ pub fn thymeleaf::TemplateValue::clone(&self) -> thymeleaf::TemplateValue
 impl core::fmt::Debug for thymeleaf::TemplateValue
 pub fn thymeleaf::TemplateValue::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 impl thymeleaf::expression::ConversionObject for thymeleaf::TemplateValue
-pub fn thymeleaf::TemplateValue::java_to_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
+pub fn thymeleaf::TemplateValue::to_utf16_string(&self) -> core::result::Result<thymeleaf::expression::Utf16StringConversionResult<'_>, thymeleaf::expression::StandardConversionError>
 impl core::marker::Freeze for thymeleaf::TemplateValue
 impl core::marker::Send for thymeleaf::TemplateValue
 impl core::marker::Sync for thymeleaf::TemplateValue
@@ -27691,13 +27691,13 @@ impl<R: thymeleaf::LazyCharSequenceResolver> thymeleaf::IWritableCharSequence fo
 pub fn thymeleaf::AbstractLazyCharSequence<R>::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl<R: thymeleaf::LazyCharSequenceResolver> thymeleaf::util::CharSequenceValue for thymeleaf::AbstractLazyCharSequence<R>
 pub fn thymeleaf::AbstractLazyCharSequence<R>::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AbstractLazyCharSequence<R>::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_class_name(&self) -> &str
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AbstractLazyCharSequence<R>::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::AbstractLazyCharSequence<R>::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl<R> !core::marker::Freeze for thymeleaf::AbstractLazyCharSequence<R>
 impl<R> core::marker::Send for thymeleaf::AbstractLazyCharSequence<R>
@@ -27969,13 +27969,13 @@ impl thymeleaf::IWritableCharSequence for thymeleaf::AggregateCharSequence
 pub fn thymeleaf::AggregateCharSequence::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::AggregateCharSequence
 pub fn thymeleaf::AggregateCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::AggregateCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::AggregateCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::AggregateCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::AggregateCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::AggregateCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::AggregateCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::AggregateCharSequence
 impl core::marker::Send for thymeleaf::AggregateCharSequence
@@ -28314,13 +28314,13 @@ pub fn thymeleaf::CDATASection::write(&self, &mut dyn thymeleaf::TemplateWriter)
 impl thymeleaf::engine::IEngineTemplateEvent for thymeleaf::CDATASection
 impl thymeleaf::util::CharSequenceValue for thymeleaf::CDATASection
 pub fn thymeleaf::CDATASection::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::CDATASection::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::CDATASection::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::CDATASection::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sequence_class_name(&self) -> &str
+pub fn thymeleaf::CDATASection::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::CDATASection::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::CDATASection::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::CDATASection
 impl core::marker::Send for thymeleaf::CDATASection
@@ -28556,13 +28556,13 @@ pub fn thymeleaf::Comment::write(&self, &mut dyn thymeleaf::TemplateWriter) -> c
 impl thymeleaf::engine::IEngineTemplateEvent for thymeleaf::Comment
 impl thymeleaf::util::CharSequenceValue for thymeleaf::Comment
 pub fn thymeleaf::Comment::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::Comment::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::Comment::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Comment::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sequence_class_name(&self) -> &str
+pub fn thymeleaf::Comment::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Comment::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::Comment::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::Comment
 impl core::marker::Send for thymeleaf::Comment
@@ -29863,13 +29863,13 @@ impl thymeleaf::IWritableCharSequence for thymeleaf::LazyProcessingCharSequence
 pub fn thymeleaf::LazyProcessingCharSequence::write(&self, &mut dyn thymeleaf::TemplateWriter) -> core::io::error::Result<()>
 impl thymeleaf::util::CharSequenceValue for thymeleaf::LazyProcessingCharSequence
 pub fn thymeleaf::LazyProcessingCharSequence::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::LazyProcessingCharSequence::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::LazyProcessingCharSequence::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_class_name(&self) -> &str
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::LazyProcessingCharSequence::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::LazyProcessingCharSequence::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::LazyProcessingCharSequence
 impl core::marker::Send for thymeleaf::LazyProcessingCharSequence
@@ -31537,13 +31537,13 @@ pub fn thymeleaf::Text::get_text(&self) -> core::result::Result<core::option::Op
 impl thymeleaf::engine::IEngineTemplateEvent for thymeleaf::Text
 impl thymeleaf::util::CharSequenceValue for thymeleaf::Text
 pub fn thymeleaf::Text::as_utf16_string(&self) -> core::option::Option<&thymeleaf::util::Utf16String>
-pub fn thymeleaf::Text::java_char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sequence_class_name(&self) -> &str
-pub fn thymeleaf::Text::java_sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
-pub fn thymeleaf::Text::java_to_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::char_at(&self, i32) -> core::result::Result<u16, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::length(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sequence_class_name(&self) -> &str
+pub fn thymeleaf::Text::sequence_equals(&self, &dyn thymeleaf::util::CharSequenceValue) -> core::result::Result<bool, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sequence_hash_code(&self) -> core::result::Result<i32, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::sub_sequence(&self, i32, i32) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
+pub fn thymeleaf::Text::to_utf16_string(&self) -> core::result::Result<thymeleaf::util::Utf16String, thymeleaf::util::TextUtilsError>
 pub fn thymeleaf::Text::write_direct(&self, &mut dyn thymeleaf::TemplateWriter) -> core::option::Option<core::io::error::Result<()>>
 impl !core::marker::Freeze for thymeleaf::Text
 impl core::marker::Send for thymeleaf::Text

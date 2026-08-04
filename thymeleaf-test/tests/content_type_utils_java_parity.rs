@@ -283,7 +283,7 @@ fn emit_option_result<T: Display>(
     match result {
         Ok(value) => emit_ok_option(output, key, value),
         Err(error) => {
-            let (class_name, message) = java_error(&error);
+            let (class_name, message) = error_parts(&error);
             emit(
                 output,
                 key,
@@ -304,7 +304,7 @@ fn emit_ok_option<T: Display>(output: &mut String, key: &str, value: Option<T>) 
     );
 }
 
-fn java_error(error: &ContentTypeError) -> (&'static str, &str) {
+fn error_parts(error: &ContentTypeError) -> (&'static str, &str) {
     match error {
         ContentTypeError::MissingMimeType => (
             "ArrayIndexOutOfBoundsException",

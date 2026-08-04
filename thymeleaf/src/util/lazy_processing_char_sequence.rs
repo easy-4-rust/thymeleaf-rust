@@ -73,24 +73,24 @@ impl CharSequenceValue for LazyProcessingCharSequence {
         None
     }
 
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         "org.thymeleaf.util.LazyProcessingCharSequence"
     }
 
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.resolve_text()?.len() as i32)
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
-        self.resolve_text()?.java_char_at(index)
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+        self.resolve_text()?.char_at(index)
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.resolve_text()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
-        self.resolve_text()?.java_sub_sequence(start, end)
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+        self.resolve_text()?.sub_sequence(start, end)
     }
 
     fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {

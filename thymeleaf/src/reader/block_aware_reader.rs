@@ -439,7 +439,7 @@ mod tests {
             "{}:{}",
             error.class_name(),
             error
-                .java_message()
+                .message()
                 .map_or_else(|| "null".to_owned(), |message| message.to_string_lossy())
         )
     }
@@ -726,7 +726,7 @@ mod tests {
 
     /// SOURCE_PARITY：固定 Java Oracle 同时覆盖输出、每次 read 返回值、异常和 close。
     #[test]
-    fn java_golden_matches_text_comment_reader_streaming_contract() {
+    fn golden_matches_text_comment_reader_streaming_contract() {
         assert_eq!(generate_golden(), JAVA_GOLDEN);
     }
 
@@ -991,9 +991,7 @@ mod tests {
             .expect_err("补全跨缓冲区前缀时的委托异常必须传播");
         assert_eq!(error.class_name(), "java.io.IOException");
         assert_eq!(
-            error
-                .java_message()
-                .map(|message| message.to_string_lossy()),
+            error.message().map(|message| message.to_string_lossy()),
             Some("read-boom".to_owned())
         );
 

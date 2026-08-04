@@ -100,7 +100,7 @@ fn normalize(text: &str) -> String {
 }
 
 /// 对应 Apache Commons IOUtils.readLines：按 `\n` 切分并剔除文件尾空行。
-fn java_read_lines(contents: &str) -> Vec<&str> {
+fn read_lines(contents: &str) -> Vec<&str> {
     let mut lines: Vec<&str> = contents.split('\n').collect();
     if lines.last() == Some(&"") {
         lines.pop();
@@ -306,12 +306,12 @@ fn html_block_selector_matches_java() {
         let test_bytes = fixture_bytes(test_file);
         let test_contents = String::from_utf8(test_bytes).expect("test fixture UTF-8");
         // Java: IOUtils.readLines（末尾空行剔除）+ StringUtils.join(lines, '\n')
-        let test_lines = java_read_lines(&test_contents);
+        let test_lines = read_lines(&test_contents);
         let test_contents = test_lines.join("\n");
 
         let result_bytes = fixture_bytes(result_file);
         let result_contents = String::from_utf8(result_bytes).expect("result fixture UTF-8");
-        let result_lines = java_read_lines(&result_contents);
+        let result_lines = read_lines(&result_contents);
         let block_selector = result_lines[0];
         let expected = result_lines[1..].join("\n");
 

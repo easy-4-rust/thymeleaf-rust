@@ -118,7 +118,7 @@ mod tests {
         let error = TextParsingLiteralUtil::is_regex_literal_start(Some(&truncated), 1, 3)
             .expect_err("comment lookahead bounds");
         assert_eq!(
-            error.java_message().to_string_lossy(),
+            error.message().to_string_lossy(),
             "Index 2 out of bounds for length 2"
         );
     }

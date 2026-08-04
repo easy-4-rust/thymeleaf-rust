@@ -56,7 +56,7 @@ impl StandardExpressionPreprocessor {
             return Ok(Utf16String::from_utf16(unescape_marks(units)));
         }
         output.extend_from_slice(&unescape_marks(&units[current..]));
-        Ok(java_trim_owned(output))
+        Ok(trim_owned(output))
     }
 }
 
@@ -82,7 +82,7 @@ fn unescape_marks(input: &[u16]) -> Vec<u16> {
     output
 }
 
-fn java_trim_owned(input: Vec<u16>) -> Utf16String {
+fn trim_owned(input: Vec<u16>) -> Utf16String {
     let start = input
         .iter()
         .position(|unit| *unit > 0x20)

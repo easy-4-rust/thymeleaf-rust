@@ -72,7 +72,7 @@ impl AbstractStandardInliner {
         if !EngineEventUtils::is_inlineable_text(Some(text)).map_err(box_error)? {
             return Ok(None);
         }
-        let content = text.java_to_string().map_err(box_error)?;
+        let content = text.to_utf16_string().map_err(box_error)?;
         self.perform_inlining(
             context,
             &content,
@@ -108,7 +108,7 @@ impl AbstractStandardInliner {
         if !EngineEventUtils::is_inlineable_cdata(Some(cdata_section)).map_err(box_error)? {
             return Ok(None);
         }
-        let content = cdata_section.java_to_string().map_err(box_error)?;
+        let content = cdata_section.to_utf16_string().map_err(box_error)?;
         self.perform_inlining(
             context,
             &content,
@@ -144,7 +144,7 @@ impl AbstractStandardInliner {
         if !EngineEventUtils::is_inlineable_comment(Some(comment)).map_err(box_error)? {
             return Ok(None);
         }
-        let content = comment.java_to_string().map_err(box_error)?;
+        let content = comment.to_utf16_string().map_err(box_error)?;
         self.perform_inlining(
             context,
             &content,

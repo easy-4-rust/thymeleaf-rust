@@ -56,21 +56,21 @@ fn aggregate_char_sequence_exhaustive_matches_utf16_string_semantics() {
                 // assertEquals(text, as.toString())
                 assert_eq!(text, aggregate.to_utf16_string().expect("toString"));
                 // assertTrue(text.hashCode() == as.hashCode())
-                assert_eq!(
-                    text.java_hash_code(),
-                    aggregate.hash_code().expect("hash code")
-                );
+                assert_eq!(text.hash_code(), aggregate.hash_code().expect("hash code"));
                 // assertTrue(text.hashCode() == TextUtils.hashCode(str0, str1, str2))
                 assert_eq!(
-                    text.java_hash_code(),
+                    text.hash_code(),
                     TextUtils::hash_triple(Some(&text_str0), Some(&text_str1), Some(&text_str2),)
                         .expect("TextUtils hashCode")
                 );
                 // assertTrue(textLen == as.length())
-                assert_eq!(text.len() as i32, aggregate.java_length().expect("length"));
+                assert_eq!(
+                    text.len() as i32,
+                    CharSequenceValue::length(&aggregate).expect("length")
+                );
 
                 // charAt 逐位置
-                let aggregate_len = aggregate.java_length().expect("length");
+                let aggregate_len = CharSequenceValue::length(&aggregate).expect("length");
                 for index in 0..aggregate_len {
                     assert_eq!(
                         text.as_utf16()[index as usize],

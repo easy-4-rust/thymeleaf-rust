@@ -59,15 +59,15 @@ impl Text {
 }
 
 impl CharSequenceValue for Text {
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         "org.thymeleaf.engine.Text"
     }
 
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         self.textual_event.get_content_length()
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         self.textual_event.char_at_content(index)
     }
 
@@ -75,13 +75,13 @@ impl CharSequenceValue for Text {
         None
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.textual_event
             .get_content_text()?
             .ok_or(TextUtilsError::NullPointer)
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.textual_event.content_sub_sequence(start, end)
     }
 }

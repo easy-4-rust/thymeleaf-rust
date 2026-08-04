@@ -41,28 +41,28 @@ const MAX_CONSECUTIVE_ZERO_READS: usize = 1024;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct TextParserRuntimeError {
     class_name: &'static str,
-    java_message: Option<Utf16String>,
+    message: Option<Utf16String>,
 }
 
 impl TextParserRuntimeError {
     fn illegal_argument(message: &'static str) -> Self {
         Self {
             class_name: "java.lang.IllegalArgumentException",
-            java_message: Some(Utf16String::from_rust_str(message)),
+            message: Some(Utf16String::from_rust_str(message)),
         }
     }
 
     fn negative_array_size(size: i32) -> Self {
         Self {
             class_name: "java.lang.NegativeArraySizeException",
-            java_message: Some(Utf16String::from_rust_str(&size.to_string())),
+            message: Some(Utf16String::from_rust_str(&size.to_string())),
         }
     }
 
     fn array_index(index: i32, length: usize) -> Self {
         Self {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             ))),
         }
@@ -71,7 +71,7 @@ impl TextParserRuntimeError {
     fn string_range(offset: i32, len: i32, length: usize) -> Self {
         Self {
             class_name: "java.lang.StringIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "Range [{offset}, {offset} + {len}) out of bounds for length {length}"
             ))),
         }
@@ -125,7 +125,7 @@ impl TextParserRuntimeError {
     fn null_reader() -> Self {
         Self {
             class_name: "java.lang.NullPointerException",
-            java_message: Some(Utf16String::from_rust_str(
+            message: Some(Utf16String::from_rust_str(
                 NULL_PARSE_DOCUMENT_READER_MESSAGE,
             )),
         }
@@ -134,7 +134,7 @@ impl TextParserRuntimeError {
     fn null_handler() -> Self {
         Self {
             class_name: "java.lang.NullPointerException",
-            java_message: Some(Utf16String::from_rust_str(
+            message: Some(Utf16String::from_rust_str(
                 NULL_PARSE_DOCUMENT_HANDLER_MESSAGE,
             )),
         }
@@ -144,17 +144,17 @@ impl TextParserRuntimeError {
     ///
     /// # 参数
     /// - `class_name`：Java 异常全限定名；
-    /// - `java_message`：可空 Java UTF-16 消息。
+    /// - `message`：可空 Java UTF-16 消息。
     ///
     /// 对应 Java 语义：`TextParser` 的 `with_java_metadata` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub(crate) fn with_java_metadata(
         class_name: &'static str,
-        java_message: Option<Utf16String>,
+        message: Option<Utf16String>,
     ) -> Self {
         Self {
             class_name,
-            java_message,
+            message,
         }
     }
 
@@ -165,10 +165,10 @@ impl TextParserRuntimeError {
     }
 
     /// 返回 Java `Throwable#getMessage()`。
-    /// 对应 Java 语义：`TextParser` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`TextParser` 的 `message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub(crate) fn java_message(&self) -> Option<Utf16String> {
-        self.java_message.clone()
+    pub(crate) fn message(&self) -> Option<Utf16String> {
+        self.message.clone()
     }
 }
 
@@ -176,7 +176,7 @@ impl Display for TextParserRuntimeError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(
             &self
-                .java_message
+                .message
                 .as_ref()
                 .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
@@ -192,17 +192,17 @@ impl Error for TextParserRuntimeError {}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TextParserReaderError {
     class_name: String,
-    java_message: Option<Utf16String>,
+    message: Option<Utf16String>,
 }
 
 impl TextParserReaderError {
     /// 创建带 Java 元数据的 Reader 失败。
     /// 对应 Java 语义：`TextParser` 的 `new` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn new(class_name: &str, java_message: Option<Utf16String>) -> Self {
+    pub fn new(class_name: &str, message: Option<Utf16String>) -> Self {
         Self {
             class_name: class_name.to_owned(),
-            java_message,
+            message,
         }
     }
 
@@ -224,10 +224,10 @@ impl TextParserReaderError {
     }
 
     /// 返回可空 Java 消息。
-    /// 对应 Java 语义：`TextParser` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`TextParser` 的 `message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_message(&self) -> Option<Utf16String> {
-        self.java_message.clone()
+    pub fn message(&self) -> Option<Utf16String> {
+        self.message.clone()
     }
 }
 
@@ -235,7 +235,7 @@ impl Display for TextParserReaderError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(
             &self
-                .java_message
+                .message
                 .as_ref()
                 .map_or_else(|| "null".to_owned(), Utf16String::to_string_lossy),
         )
@@ -336,7 +336,7 @@ impl BufferPool {
         }
         let mut buffers = Vec::with_capacity(pool_size as usize);
         for _ in 0..pool_size {
-            buffers.push(Some(java_char_array(pool_buffer_size)));
+            buffers.push(Some(char_array(pool_buffer_size)));
         }
         Self {
             state: Mutex::new(BufferPoolState { buffers }),
@@ -348,7 +348,7 @@ impl BufferPool {
     fn allocate_buffer(&self, buffer_size: i32) -> AllocatedBuffer {
         if buffer_size != self.pool_buffer_size {
             return AllocatedBuffer {
-                buffer: java_char_array(buffer_size),
+                buffer: char_array(buffer_size),
                 pool_index: None,
             };
         }
@@ -362,7 +362,7 @@ impl BufferPool {
             }
         }
         AllocatedBuffer {
-            buffer: java_char_array(buffer_size),
+            buffer: char_array(buffer_size),
             pool_index: None,
         }
     }
@@ -583,7 +583,7 @@ impl TextParser {
             } else if status.offset < buffer_content_size {
                 let content_to_move = buffer_content_size.wrapping_sub(status.offset);
                 let active = &mut allocated_buffer.as_mut().expect("active buffer").buffer;
-                java_arraycopy_within(active, status.offset, 0, content_to_move);
+                array_copy_within(active, status.offset, 0, content_to_move);
                 read_offset = content_to_move;
                 read_len = buffer_size.wrapping_sub(read_offset);
                 status.offset = 0;
@@ -697,7 +697,7 @@ impl TextParser {
         let mut new_buffer = None;
         let growth = catch_unwind(AssertUnwindSafe(|| {
             new_buffer = Some(self.pool.allocate_buffer(*buffer_size));
-            java_arraycopy(
+            array_copy(
                 &allocated_buffer.as_ref().expect("old buffer").buffer,
                 0,
                 &mut new_buffer.as_mut().expect("new buffer").buffer,
@@ -1061,7 +1061,7 @@ fn nano_time() -> i64 {
     elapsed as i64
 }
 
-fn java_char_array(size: i32) -> Vec<u16> {
+fn char_array(size: i32) -> Vec<u16> {
     if size < 0 {
         panic_runtime(TextParserRuntimeError::negative_array_size(size));
     }
@@ -1094,7 +1094,7 @@ fn array_unit(buffer: &[u16], index: i32) -> u16 {
     buffer[index as usize]
 }
 
-fn java_arraycopy(
+fn array_copy(
     source: &[u16],
     source_offset: i32,
     destination: &mut [u16],
@@ -1134,12 +1134,7 @@ fn java_arraycopy(
         .copy_from_slice(&source[source_offset as usize..source_end as usize]);
 }
 
-fn java_arraycopy_within(
-    buffer: &mut [u16],
-    source_offset: i32,
-    destination_offset: i32,
-    len: i32,
-) {
+fn array_copy_within(buffer: &mut [u16], source_offset: i32, destination_offset: i32, len: i32) {
     if len < 0 {
         panic_runtime(TextParserRuntimeError::arraycopy_negative_length(len));
     }
@@ -1224,9 +1219,9 @@ fn count_locator(locator: &mut [i32], character: u16) {
 
 fn reader_error_as_text_parse(error: TextParserReaderError) -> Box<TextParseException> {
     let class_name = error.class_name.clone();
-    let java_message = error.java_message.clone();
+    let message = error.message.clone();
     Box::new(TextParseException::with_cause(Some(
-        TextParseCause::with_java_metadata(Box::new(error), class_name, java_message),
+        TextParseCause::with_java_metadata(Box::new(error), class_name, message),
     )))
 }
 
@@ -1236,7 +1231,7 @@ fn panic_payload_to_cause(
     let payload = match payload.downcast::<TextParserRuntimeError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = error.java_message();
+            let message = error.message();
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ));
@@ -1246,7 +1241,7 @@ fn panic_payload_to_cause(
     let payload = match payload.downcast::<TextParsingUtilError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = error.java_message();
+            let message = error.message();
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ));
@@ -1256,7 +1251,7 @@ fn panic_payload_to_cause(
     let payload = match payload.downcast::<TextParsingElementError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = Some(error.java_message());
+            let message = Some(error.message());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ));
@@ -1266,7 +1261,7 @@ fn panic_payload_to_cause(
     let payload = match payload.downcast::<TextParsingCommentError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = Some(error.java_message());
+            let message = Some(error.message());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ));
@@ -1286,7 +1281,7 @@ fn panic_payload_to_cause(
     let payload = match payload.downcast::<EventProcessorTextHandlerRuntimeError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = Some(error.java_message().clone());
+            let message = Some(error.message().clone());
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ));
@@ -1296,7 +1291,7 @@ fn panic_payload_to_cause(
     let payload = match payload.downcast::<CommentProcessorTextHandlerRuntimeError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = error.java_message();
+            let message = error.message();
             return Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ));
@@ -1306,7 +1301,7 @@ fn panic_payload_to_cause(
     match payload.downcast::<ChainedTextHandlerRuntimeError>() {
         Ok(error) => {
             let class_name = error.class_name();
-            let message = Some(error.java_message());
+            let message = Some(error.message());
             Ok(TextParseCause::with_java_metadata(
                 error, class_name, message,
             ))
@@ -1331,8 +1326,8 @@ mod tests {
         AllocatedBuffer, BufferPool, ITextHandler, MAX_CONSECUTIVE_ZERO_READS,
         MAX_UNCONSUMED_BUFFER_SIZE, ParsingLocatorError, StringTextParserReader,
         TextParseException, TextParser, TextParserReader, TextParserReaderError,
-        TextParserRuntimeError, Utf16String, array_unit, comment_bool_value, comment_parse,
-        count_locator, element_bool_value, element_parse, java_arraycopy, java_arraycopy_within,
+        TextParserRuntimeError, Utf16String, array_copy, array_copy_within, array_unit,
+        comment_bool_value, comment_parse, count_locator, element_bool_value, element_parse,
         panic_payload_to_cause, utf16_string_from_range, util_i32_value,
     };
     use crate::text::{
@@ -2259,7 +2254,7 @@ mod tests {
                 "{};message={}",
                 error.class_name(),
                 error
-                    .java_message()
+                    .message()
                     .map_or_else(|| "null".to_owned(), |message| hex(message.as_utf16()))
             ),
             Err(_) => panic!("unknown panic payload"),
@@ -2289,7 +2284,7 @@ mod tests {
     }
 
     #[test]
-    fn java_golden_matches_streaming_parser_pool_and_failure_semantics() {
+    fn golden_matches_streaming_parser_pool_and_failure_semantics() {
         assert_eq!(generate_golden(), JAVA_GOLDEN);
     }
 
@@ -2360,13 +2355,13 @@ mod tests {
     fn runtime_adapters_preserve_distinct_jvm_failure_contracts() {
         let error = TextParserReaderError::new("example.ReaderError", None);
         assert_eq!(error.class_name(), "example.ReaderError");
-        assert_eq!(error.java_message(), None);
+        assert_eq!(error.message(), None);
         assert_eq!(error.to_string(), "null");
         let io_error = TextParserReaderError::io("reader-message");
         assert_eq!(io_error.class_name(), "java.io.IOException");
         assert_eq!(
             io_error
-                .java_message()
+                .message()
                 .expect("IOException has a message")
                 .to_string_lossy(),
             "reader-message"
@@ -2430,21 +2425,21 @@ mod tests {
         });
 
         let mut destination = [0_u16; 2];
-        assert_runtime_error(|| java_arraycopy(&[1, 2], 0, &mut destination, 0, -1));
-        assert_runtime_error(|| java_arraycopy(&[1, 2], -1, &mut destination, 0, 1));
-        assert_runtime_error(|| java_arraycopy(&[1, 2], 0, &mut destination, -1, 1));
-        assert_runtime_error(|| java_arraycopy(&[1, 2], 1, &mut destination, 0, 2));
-        assert_runtime_error(|| java_arraycopy(&[1, 2], 0, &mut destination, 1, 2));
-        java_arraycopy(&[1, 2], 0, &mut destination, 0, 2);
+        assert_runtime_error(|| array_copy(&[1, 2], 0, &mut destination, 0, -1));
+        assert_runtime_error(|| array_copy(&[1, 2], -1, &mut destination, 0, 1));
+        assert_runtime_error(|| array_copy(&[1, 2], 0, &mut destination, -1, 1));
+        assert_runtime_error(|| array_copy(&[1, 2], 1, &mut destination, 0, 2));
+        assert_runtime_error(|| array_copy(&[1, 2], 0, &mut destination, 1, 2));
+        array_copy(&[1, 2], 0, &mut destination, 0, 2);
         assert_eq!(destination, [1, 2]);
 
-        assert_runtime_error(|| java_arraycopy_within(&mut [1, 2], 0, 0, -1));
-        assert_runtime_error(|| java_arraycopy_within(&mut [1, 2], -1, 0, 1));
-        assert_runtime_error(|| java_arraycopy_within(&mut [1, 2], 0, -1, 1));
-        assert_runtime_error(|| java_arraycopy_within(&mut [1, 2], 1, 0, 2));
-        assert_runtime_error(|| java_arraycopy_within(&mut [1, 2], 0, 1, 2));
+        assert_runtime_error(|| array_copy_within(&mut [1, 2], 0, 0, -1));
+        assert_runtime_error(|| array_copy_within(&mut [1, 2], -1, 0, 1));
+        assert_runtime_error(|| array_copy_within(&mut [1, 2], 0, -1, 1));
+        assert_runtime_error(|| array_copy_within(&mut [1, 2], 1, 0, 2));
+        assert_runtime_error(|| array_copy_within(&mut [1, 2], 0, 1, 2));
         let mut overlapping = [1, 2, 3];
-        java_arraycopy_within(&mut overlapping, 0, 1, 2);
+        array_copy_within(&mut overlapping, 0, 1, 2);
         assert_eq!(overlapping, [1, 1, 2]);
     }
 

@@ -41,15 +41,15 @@ impl TextParsingAttributeSequenceError {
     }
 
     /// 返回 Java `String.valueOf(Throwable#getMessage())` 的 UTF-16 表示。
-    /// 对应 Java 语义：`TextParsingAttributeSequenceUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> Utf16String {
+    /// 对应 Java 语义：`TextParsingAttributeSequenceUtil` 的 `message` 行为（Rust 侧辅助/私有路径）。
+    pub(crate) fn message(&self) -> Utf16String {
         match self {
             Self::TextParse(exception) => exception
                 .get_message()
                 .cloned()
                 .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             Self::Scanning(error) => error
-                .java_message()
+                .message()
                 .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             Self::NullHandler => Utf16String::from_rust_str(NULL_HANDLER_MESSAGE),
             Self::StringRange {
@@ -65,7 +65,7 @@ impl TextParsingAttributeSequenceError {
 
 impl Display for TextParsingAttributeSequenceError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.java_message().to_string_lossy())
+        formatter.write_str(&self.message().to_string_lossy())
     }
 }
 
@@ -691,7 +691,7 @@ mod tests {
             text_parse.class_name(),
             "org.thymeleaf.templateparser.text.TextParseException"
         );
-        assert_eq!(text_parse.java_message().to_string_lossy(), "null");
+        assert_eq!(text_parse.message().to_string_lossy(), "null");
         assert!(std::error::Error::source(&text_parse).is_some());
 
         let scan = TextParsingAttributeSequenceError::Scanning(
@@ -1053,7 +1053,7 @@ mod tests {
         format!(
             "ERR:{}:{}",
             error.class_name(),
-            to_utf16_hex(&error.java_message())
+            to_utf16_hex(&error.message())
         )
     }
 

@@ -6,7 +6,7 @@ use crate::util::{Utf16String, ValidateError};
 use super::{
     BinaryOperationExpression, ComplexExpression, IStandardExpression,
     StandardExpressionExecutionContext, StandardExpressionResult, TemplateValue,
-    binary_operation_expression::{collapse_java_null, execute_operands, java_values_equal},
+    binary_operation_expression::{collapse_java_null, execute_operands, values_equal},
 };
 
 /// Standard Expression 不相等表达式。
@@ -50,7 +50,7 @@ impl IStandardExpression for NotEqualsExpression {
         let (left, right) = execute_operands(&self.operation, context, execution_context)?;
         let left = collapse_java_null(left);
         let right = collapse_java_null(right);
-        Ok(Some(Arc::new(TemplateValue::Boolean(!java_values_equal(
+        Ok(Some(Arc::new(TemplateValue::Boolean(!values_equal(
             left.as_ref(),
             right.as_ref(),
         )?))))

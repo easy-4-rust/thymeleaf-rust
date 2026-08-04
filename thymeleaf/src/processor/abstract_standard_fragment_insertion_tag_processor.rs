@@ -370,7 +370,7 @@ fn compute_fragment(
     let parser = StandardExpressions::get_expression_parser(context.get_configuration()).map_err(
         |error| expression_processing_error("Could not obtain Standard Expression parser", error),
     )?;
-    let trimmed = java_trim(input);
+    let trimmed = trim(input);
     if AbstractStandardFragmentInsertionTagProcessor::should_be_wrapped_as_fragment_expression(
         &trimmed,
     ) {
@@ -533,7 +533,7 @@ fn attribute_error(error: crate::engine::AttributesError) -> Box<dyn TemplateEng
     ))
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
+fn trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()

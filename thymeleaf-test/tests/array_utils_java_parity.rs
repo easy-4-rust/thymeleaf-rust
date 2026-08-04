@@ -71,7 +71,7 @@ fn array_utils_and_expression_facade_match_java_golden() {
     emit(
         &mut output,
         "to_array.reference.class",
-        java_array_class(result.as_array()),
+        array_class(result.as_array()),
     );
     emit_error(
         &mut output,
@@ -323,11 +323,7 @@ fn array_utils_and_expression_facade_match_java_golden() {
 
     let copied = ArrayUtils::copy_of(Some(&strings), 5).expect("extended copy");
     emit_array(&mut output, "copy.reference.extend", &copied);
-    emit(
-        &mut output,
-        "copy.reference.class",
-        java_array_class(&copied),
-    );
+    emit(&mut output, "copy.reference.class", array_class(&copied));
     emit(&mut output, "copy.reference.distinct", true);
     emit_array(
         &mut output,
@@ -525,7 +521,7 @@ fn accepts_integer(value: &Value) -> bool {
     matches!(value, Value::Integer(_))
 }
 
-fn java_array_class<T>(array: &ObjectArrayValue<T>) -> String {
+fn array_class<T>(array: &ObjectArrayValue<T>) -> String {
     format!("[L{};", array.component_class_name())
 }
 
@@ -541,7 +537,7 @@ fn emit_array_result<T: Display>(
 }
 
 fn emit_array<T: Display>(output: &mut String, key: &str, array: &ObjectArrayValue<T>) {
-    let mut value = format!("{}:[", java_array_class(array));
+    let mut value = format!("{}:[", array_class(array));
     for (index, element) in array.as_slice().iter().enumerate() {
         if index > 0 {
             value.push_str(", ");

@@ -363,7 +363,7 @@ impl ContentType {
         let Some(content_type) = content_type else {
             return Ok(None);
         };
-        if java_trim(content_type).is_empty() {
+        if trim(content_type).is_empty() {
             return Ok(None);
         }
 
@@ -373,17 +373,17 @@ impl ContentType {
             .next()
             .ok_or(ContentTypeError::MissingMimeType)?
             .to_lowercase();
-        let mime_type = java_trim(&mime_type).to_owned();
+        let mime_type = trim(&mime_type).to_owned();
         let mut parameters = IndexMap::with_capacity(2);
         for token in tokens {
-            let token = java_trim(&token.to_lowercase()).to_owned();
+            let token = trim(&token.to_lowercase()).to_owned();
             if let Some(equal_position) = token.find('=') {
                 parameters.insert(
-                    java_trim(&token[..equal_position]).to_owned(),
-                    java_trim(&token[equal_position + 1..]).to_owned(),
+                    trim(&token[..equal_position]).to_owned(),
+                    trim(&token[equal_position + 1..]).to_owned(),
                 );
             } else {
-                parameters.insert(java_trim(&token).to_owned(), String::new());
+                parameters.insert(trim(&token).to_owned(), String::new());
             }
         }
         Ok(Some(Self {
@@ -499,11 +499,11 @@ fn template_mode_for_mime_type(mime_type: &str) -> Option<TemplateMode> {
 
 fn normalized_template_extension(template_name: Option<&str>) -> Option<String> {
     let template_name = template_name?;
-    if java_trim(template_name).is_empty() {
+    if trim(template_name).is_empty() {
         return None;
     }
     let point_position = template_name.rfind('.')?;
-    Some(java_trim(&template_name[point_position..].to_lowercase()).to_owned())
+    Some(trim(&template_name[point_position..].to_lowercase()).to_owned())
 }
 
 fn compute_file_extension_from_request_path(
@@ -565,7 +565,7 @@ fn canonical_charset_name(charset_name: &str) -> Option<&'static str> {
     }
 }
 
-fn java_trim(value: &str) -> &str {
+fn trim(value: &str) -> &str {
     value.trim_matches(|character| character <= '\u{0020}')
 }
 

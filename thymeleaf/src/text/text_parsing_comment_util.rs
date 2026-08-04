@@ -34,8 +34,8 @@ impl TextParsingCommentError {
     }
 
     /// 返回 Java `Throwable#getMessage()` 的 UTF-16 表示。
-    /// 对应 Java 语义：`TextParsingCommentUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> Utf16String {
+    /// 对应 Java 语义：`TextParsingCommentUtil` 的 `message` 行为（Rust 侧辅助/私有路径）。
+    pub(crate) fn message(&self) -> Utf16String {
         match self {
             Self::TextParse(exception) => exception
                 .get_message()
@@ -59,7 +59,7 @@ impl TextParsingCommentError {
 
 impl Display for TextParsingCommentError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.java_message().to_string_lossy())
+        formatter.write_str(&self.message().to_string_lossy())
     }
 }
 
@@ -402,7 +402,7 @@ mod tests {
             "org.thymeleaf.templateparser.text.TextParseException"
         );
         assert_eq!(
-            error.java_message().to_string_lossy(),
+            error.message().to_string_lossy(),
             "(Line = 41, Column = 43) handler"
         );
         assert!(std::error::Error::source(&error).is_some());
@@ -415,7 +415,7 @@ mod tests {
             TextParsingCommentUtil::is_comment_block_start(None, 0, 2).expect_err("null load");
         assert_eq!(error.class_name(), "java.lang.NullPointerException");
         assert_eq!(
-            error.java_message().to_string_lossy(),
+            error.message().to_string_lossy(),
             "Cannot load from char array because \"<parameter1>\" is null"
         );
         let buffer: Vec<u16> = "/*//*/".encode_utf16().collect();
@@ -429,7 +429,7 @@ mod tests {
         let error = TextParsingCommentUtil::is_comment_block_start(Some(&buffer), -1, 2)
             .expect_err("negative index");
         assert_eq!(
-            error.java_message().to_string_lossy(),
+            error.message().to_string_lossy(),
             "Index -1 out of bounds for length 6"
         );
     }
@@ -440,13 +440,13 @@ mod tests {
         let short = TextParsingCommentUtil::parse_comment(None, 0, 3, 1, 2, &mut handler)
             .expect_err("null string");
         assert_eq!(
-            short.java_message().to_string_lossy(),
+            short.message().to_string_lossy(),
             "Cannot read the array length because \"value\" is null"
         );
         let long = TextParsingCommentUtil::parse_comment(None, 0, 4, 1, 2, &mut handler)
             .expect_err("null load");
         assert_eq!(
-            long.java_message().to_string_lossy(),
+            long.message().to_string_lossy(),
             "Cannot load from char array because \"<parameter1>\" is null"
         );
 
@@ -455,7 +455,7 @@ mod tests {
             TextParsingCommentUtil::parse_comment(Some(&mut truncated), 0, 4, 1, 2, &mut handler)
                 .expect_err("block end array access");
         assert_eq!(
-            end_error.java_message().to_string_lossy(),
+            end_error.message().to_string_lossy(),
             "Index 2 out of bounds for length 2"
         );
 
@@ -464,14 +464,14 @@ mod tests {
             TextParsingCommentUtil::parse_comment(Some(&mut buffer), 0, 6, 1, 2, &mut handler)
                 .expect_err("string range");
         assert_eq!(
-            range.java_message().to_string_lossy(),
+            range.message().to_string_lossy(),
             "Range [0, 0 + 6) out of bounds for length 5"
         );
         let malformed =
             TextParsingCommentUtil::parse_comment(Some(&mut buffer), 0, 3, 1, 2, &mut handler)
                 .expect_err("malformed");
         assert_eq!(
-            malformed.java_message().to_string_lossy(),
+            malformed.message().to_string_lossy(),
             "(Line = 1, Column = 2) Could not parse as a well-formed Comment: \"/*a\""
         );
     }
@@ -531,11 +531,11 @@ mod tests {
             },
         ];
         assert_eq!(
-            runtime_errors[0].java_message().to_string_lossy(),
+            runtime_errors[0].message().to_string_lossy(),
             "Cannot read the array length because \"value\" is null"
         );
         assert_eq!(
-            runtime_errors[1].java_message().to_string_lossy(),
+            runtime_errors[1].message().to_string_lossy(),
             "Index -1 out of bounds for length 3"
         );
         assert_eq!(
@@ -549,7 +549,7 @@ mod tests {
         assert!(runtime_errors.iter().all(|error| error.source().is_none()));
 
         let null_message = TextParsingCommentError::TextParse(Box::default());
-        assert_eq!(null_message.java_message().to_string_lossy(), "null");
+        assert_eq!(null_message.message().to_string_lossy(), "null");
     }
 
     #[test]

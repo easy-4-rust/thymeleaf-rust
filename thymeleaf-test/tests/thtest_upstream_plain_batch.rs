@@ -989,7 +989,7 @@ fn expected_exception_matches(
         ));
     }
     if let Some(pattern) = expected_message_pattern {
-        let pattern = java_pattern_to_rust(pattern)?;
+        let pattern = pattern_to_rust(pattern)?;
         let expression =
             regex::Regex::new(&format!("^(?:{pattern})$")).map_err(|error| error.to_string())?;
         if !error_chain(error)
@@ -1088,7 +1088,7 @@ fn error_chain(error: &(dyn Error + 'static)) -> Vec<(String, String)> {
     chain
 }
 
-fn java_pattern_to_rust(pattern: &str) -> Result<String, String> {
+fn pattern_to_rust(pattern: &str) -> Result<String, String> {
     let characters = pattern.chars().collect::<Vec<_>>();
     let mut translated = String::with_capacity(pattern.len());
     let mut position = 0_usize;

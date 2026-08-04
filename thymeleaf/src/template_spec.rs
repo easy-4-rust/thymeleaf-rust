@@ -873,7 +873,7 @@ mod tests {
     }
 
     #[test]
-    fn java_equals_preserves_identity_order_and_null_output_bug() {
+    fn equals_preserves_identity_order_and_null_output_bug() {
         let without_content_type = TemplateSpec::with_template_mode(Some("index"), None).unwrap();
         let same_fields = TemplateSpec::with_template_mode(Some("index"), None).unwrap();
         assert_eq!(

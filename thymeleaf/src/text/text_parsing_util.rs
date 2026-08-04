@@ -51,8 +51,8 @@ impl TextParsingUtilError {
     /// 返回 Java `Throwable#getMessage()`。
     ///
     /// `None` 仅对应 null text 的无消息 NPE。
-    /// 对应 Java 语义：`TextParsingUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> Option<Utf16String> {
+    /// 对应 Java 语义：`TextParsingUtil` 的 `message` 行为（Rust 侧辅助/私有路径）。
+    pub(crate) fn message(&self) -> Option<Utf16String> {
         let message = match self {
             Self::NullText => return None,
             Self::NullDirectLocator => {
@@ -76,7 +76,7 @@ impl Display for TextParsingUtilError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(
             &self
-                .java_message()
+                .message()
                 .map_or_else(|| "null".to_owned(), |message| message.to_string_lossy()),
         )
     }
@@ -1465,7 +1465,7 @@ mod tests {
                 error.class_name(),
                 to_utf16_hex(
                     &error
-                        .java_message()
+                        .message()
                         .unwrap_or_else(|| Utf16String::from_rust_str("null"))
                 )
             ),

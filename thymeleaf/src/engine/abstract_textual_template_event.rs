@@ -70,7 +70,7 @@ impl AbstractTextualTemplateEvent {
         if let Some(value) = read_lock(&self.computed_content_string).as_ref() {
             return Ok(Some(value.clone()));
         }
-        let value = sequence(self)?.java_to_string()?;
+        let value = sequence(self)?.to_utf16_string()?;
         *write_lock(&self.computed_content_string) = Some(value.clone());
         Ok(Some(value))
     }
@@ -85,7 +85,7 @@ impl AbstractTextualTemplateEvent {
         if cached >= 0 {
             return Ok(cached);
         }
-        let length = sequence(self)?.java_length()?;
+        let length = sequence(self)?.length()?;
         *write_lock(&self.computed_content_length) = length;
         Ok(length)
     }
@@ -94,12 +94,12 @@ impl AbstractTextualTemplateEvent {
     /// 对应 Java: `AbstractTextualTemplateEvent#charAtContent()`。
     pub fn char_at_content(&self, index: i32) -> Result<u16, TextUtilsError> {
         if let Some(value) = self.content_string.as_ref() {
-            return value.java_char_at(index);
+            return value.char_at(index);
         }
         if let Some(value) = read_lock(&self.computed_content_string).as_ref() {
-            return value.java_char_at(index);
+            return value.char_at(index);
         }
-        sequence(self)?.java_char_at(index)
+        sequence(self)?.char_at(index)
     }
 
     /// 返回指定 UTF-16 子序列。
@@ -110,12 +110,12 @@ impl AbstractTextualTemplateEvent {
         end: i32,
     ) -> Result<Utf16String, TextUtilsError> {
         if let Some(value) = self.content_string.as_ref() {
-            return value.java_sub_sequence(start, end);
+            return value.sub_sequence(start, end);
         }
         if let Some(value) = read_lock(&self.computed_content_string).as_ref() {
-            return value.java_sub_sequence(start, end);
+            return value.sub_sequence(start, end);
         }
-        sequence(self)?.java_sub_sequence(start, end)
+        sequence(self)?.sub_sequence(start, end)
     }
 
     /// 判断非空内容是否全部为 Java whitespace。
@@ -134,7 +134,7 @@ impl AbstractTextualTemplateEvent {
                 let character = self.char_at_content(remaining)?;
                 if character != u16::from(b' ')
                     && character != u16::from(b'\n')
-                    && !java_is_whitespace(character)
+                    && !is_whitespace(character)
                 {
                     whitespace = false;
                     break;
@@ -192,7 +192,7 @@ fn sequence(
     event.content.as_deref().ok_or(TextUtilsError::NullPointer)
 }
 
-fn java_is_whitespace(character: u16) -> bool {
+fn is_whitespace(character: u16) -> bool {
     matches!(
         char::from_u32(u32::from(character)),
         Some(

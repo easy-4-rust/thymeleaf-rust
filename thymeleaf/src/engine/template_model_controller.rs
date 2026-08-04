@@ -526,9 +526,9 @@ impl TemplateModelController {
         let Some(text) = event.into_text() else {
             return Ok(None);
         };
-        let length = text.java_length().map_err(text_error)?;
+        let length = text.length().map_err(text_error)?;
         for index in 0..length {
-            if !is_java_whitespace(text.java_char_at(index).map_err(text_error)?) {
+            if !is_java_whitespace(text.char_at(index).map_err(text_error)?) {
                 return Ok(None);
             }
         }

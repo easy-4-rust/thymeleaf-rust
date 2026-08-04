@@ -105,7 +105,7 @@ impl Error for TextUtilsError {}
 /// 提前复制成不可变字符串。
 pub trait CharSequenceValue: Send + Sync {
     /// 返回 Java 运行时类名；自定义适配器应覆盖为原对象的全限定类名。
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         std::any::type_name::<Self>()
     }
 
@@ -113,7 +113,7 @@ pub trait CharSequenceValue: Send + Sync {
     ///
     /// # 返回
     /// Java `int` 长度，或实现抛出的运行时异常。
-    fn java_length(&self) -> Result<i32, TextUtilsError>;
+    fn length(&self) -> Result<i32, TextUtilsError>;
 
     /// 调用 Java `CharSequence#charAt(int)`。
     ///
@@ -122,7 +122,7 @@ pub trait CharSequenceValue: Send + Sync {
     ///
     /// # 返回
     /// 单个 Java `char`，或实现抛出的运行时异常。
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError>;
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError>;
 
     /// 暴露真实 Java `String` 快路径。
     ///
@@ -134,9 +134,9 @@ pub trait CharSequenceValue: Send + Sync {
     ///
     /// 默认实现按当前 `length/charAt` 复制；自定义 Java `CharSequence` 若覆盖
     /// `toString()`，对应 Rust 适配器也必须覆盖此方法。
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
-        let length = self.java_length()?;
-        self.java_sub_sequence(0, length)
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
+        let length = self.length()?;
+        self.sub_sequence(0, length)
     }
 
     /// 在对象同时对应 Java `IWritableCharSequence` 时直接写出。
@@ -147,13 +147,13 @@ pub trait CharSequenceValue: Send + Sync {
     }
 
     /// 返回 Java `Object#hashCode()`；覆盖过 hashCode 的适配器必须同步覆盖。
-    fn java_sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
+    fn sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
         let address = self as *const Self as *const () as usize;
         Ok((address as u64 ^ ((address as u64) >> 32)) as i32)
     }
 
     /// 执行 Java `equals(Object)`；默认保留引用身份语义。
-    fn java_sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
+    fn sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
         Ok(std::ptr::eq(
             self as *const Self as *const (),
             other as *const dyn CharSequenceValue as *const (),
@@ -163,8 +163,8 @@ pub trait CharSequenceValue: Send + Sync {
     /// 调用 Java `CharSequence#subSequence(int, int)`。
     ///
     /// 默认实现逐 UTF-16 代码单元复制；具有不同异常或视图语义的自定义序列可以覆盖。
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
-        let length = self.java_length()?;
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+        let length = self.length()?;
         if start < 0 || end < start || end > length {
             return Err(TextUtilsError::StringIndexOutOfBounds {
                 index: if start < 0 || start > length {
@@ -177,22 +177,22 @@ pub trait CharSequenceValue: Send + Sync {
         }
         let mut value = Vec::with_capacity((end - start) as usize);
         for index in start..end {
-            value.push(self.java_char_at(index)?);
+            value.push(self.char_at(index)?);
         }
         Ok(Utf16String::from_utf16(value))
     }
 }
 
 impl CharSequenceValue for Utf16String {
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         "java.lang.String"
     }
 
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.len() as i32)
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         let index_usize =
             usize::try_from(index).map_err(|_| TextUtilsError::StringIndexOutOfBounds {
                 index,
@@ -211,19 +211,19 @@ impl CharSequenceValue for Utf16String {
         Some(self)
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         Ok(self.clone())
     }
 
-    fn java_sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
-        Ok(self.java_hash_code())
+    fn sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
+        Ok(self.hash_code())
     }
 
-    fn java_sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
+    fn sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
         Ok(other.as_utf16_string().is_some_and(|value| value == self))
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         let start = usize::try_from(start).map_err(|_| TextUtilsError::StringIndexOutOfBounds {
             index: start,
             length: self.len(),
@@ -249,11 +249,11 @@ impl CharSequenceValue for Utf16String {
 }
 
 impl CharSequenceValue for CharArrayWrapperSequence {
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.length())
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         self.char_at(index)
             .map_err(|error| TextUtilsError::SequenceAccess {
                 class_name: error.class_name().to_owned(),
@@ -295,8 +295,8 @@ impl TextUtils {
         {
             return Ok(left.as_utf16() == right.as_utf16());
         }
-        let text1_len = text1.java_length()?;
-        let text2_len = text2.java_length()?;
+        let text1_len = text1.length()?;
+        let text2_len = text2.length()?;
         Self::equals_sequences_range(
             case_sensitive,
             Some(text1),
@@ -470,8 +470,8 @@ impl TextUtils {
         {
             return Ok(text.as_utf16().starts_with(prefix.as_utf16()));
         }
-        let text_len = text.java_length()?;
-        let prefix_len = prefix.java_length()?;
+        let text_len = text.length()?;
+        let prefix_len = prefix.length()?;
         Self::starts_with_sequences_range(
             case_sensitive,
             Some(text),
@@ -657,8 +657,8 @@ impl TextUtils {
         {
             return Ok(text.as_utf16().ends_with(suffix.as_utf16()));
         }
-        let text_len = text.java_length()?;
-        let suffix_len = suffix.java_length()?;
+        let text_len = text.length()?;
+        let suffix_len = suffix.length()?;
         Self::ends_with_sequences_range(
             case_sensitive,
             Some(text),
@@ -843,8 +843,8 @@ impl TextUtils {
         {
             return Ok(slice_contains(text.as_utf16(), fragment.as_utf16()));
         }
-        let text_len = text.java_length()?;
-        let fragment_len = fragment.java_length()?;
+        let text_len = text.length()?;
+        let fragment_len = fragment.length()?;
         Self::contains_sequences_range(
             case_sensitive,
             Some(text),
@@ -1023,8 +1023,8 @@ impl TextUtils {
     ) -> Result<i32, TextUtilsError> {
         let text1 = require_sequence(text1, FIRST_TEXT_NULL)?;
         let text2 = require_sequence(text2, SECOND_TEXT_NULL)?;
-        let text1_len = text1.java_length()?;
-        let text2_len = text2.java_length()?;
+        let text1_len = text1.length()?;
+        let text2_len = text2.length()?;
         Self::compare_sequences_range(
             case_sensitive,
             Some(text1),
@@ -1397,7 +1397,7 @@ impl TextUtils {
             let mid = unsigned_midpoint(low, high);
             let mid_value = sequence_value_at(values, mid)?;
             let mid_value = mid_value.ok_or(TextUtilsError::NullPointer)?;
-            let mid_len = mid_value.java_length()?;
+            let mid_len = mid_value.length()?;
             let comparison = Self::compare_sequence_and_chars_range(
                 case_sensitive,
                 Some(mid_value),
@@ -1443,7 +1443,7 @@ impl TextUtils {
             let mid = unsigned_midpoint(low, high);
             let mid_value = sequence_value_at(values, mid)?;
             let mid_value = mid_value.ok_or(TextUtilsError::NullPointer)?;
-            let mid_len = mid_value.java_length()?;
+            let mid_len = mid_value.length()?;
             let comparison = Self::compare_sequences_range(
                 case_sensitive,
                 Some(text),
@@ -1597,7 +1597,7 @@ enum TextRef<'a> {
 impl TextRef<'_> {
     fn char_at(self, index: i32) -> Result<u16, TextUtilsError> {
         match self {
-            Self::Sequence(sequence) => sequence.java_char_at(index),
+            Self::Sequence(sequence) => sequence.char_at(index),
             Self::Chars(chars) => array_char_at(chars, index),
         }
     }
@@ -1620,7 +1620,7 @@ fn require_chars<'a>(
 fn implicit_sequence_length(
     sequence: Option<&dyn CharSequenceValue>,
 ) -> Result<i32, TextUtilsError> {
-    sequence.ok_or(TextUtilsError::NullPointer)?.java_length()
+    sequence.ok_or(TextUtilsError::NullPointer)?.length()
 }
 
 fn implicit_array_length(chars: Option<&[u16]>) -> Result<i32, TextUtilsError> {
@@ -1849,11 +1849,11 @@ fn compare_core(
             if case_sensitive {
                 return Ok(i32::from(c1) - i32::from(c2));
             }
-            c1 = java_upper(c1);
-            c2 = java_upper(c2);
+            c1 = to_upper_unit(c1);
+            c2 = to_upper_unit(c2);
             if c1 != c2 {
-                c1 = java_lower(c1);
-                c2 = java_lower(c2);
+                c1 = to_lower_unit(c1);
+                c2 = to_lower_unit(c2);
                 if c1 != c2 {
                     return Ok(i32::from(c1) - i32::from(c2));
                 }
@@ -1865,7 +1865,7 @@ fn compare_core(
 }
 
 fn hash_part_whole(hash: i32, text: Option<&dyn CharSequenceValue>) -> Result<i32, TextUtilsError> {
-    let length = text.ok_or(TextUtilsError::NullPointer)?.java_length()?;
+    let length = text.ok_or(TextUtilsError::NullPointer)?.length()?;
     hash_part_range(hash, text, 0, length)
 }
 
@@ -1878,7 +1878,7 @@ fn hash_part_range(
     // Java 的 && 短路决定 null 是否在 String 快路径中提前触发 length()。
     if hash == 0 && begin_index == 0 {
         let sequence = text.ok_or(TextUtilsError::NullPointer)?;
-        if end_index == sequence.java_length()?
+        if end_index == sequence.length()?
             && let Some(string) = sequence.as_utf16_string()
         {
             let mut string_hash = 0_i32;
@@ -1893,7 +1893,7 @@ fn hash_part_range(
         let sequence = text.ok_or(TextUtilsError::NullPointer)?;
         hash = hash
             .wrapping_mul(31)
-            .wrapping_add(i32::from(sequence.java_char_at(index)?));
+            .wrapping_add(i32::from(sequence.char_at(index)?));
         index = index.wrapping_add(1);
     }
     Ok(hash)
@@ -1906,20 +1906,20 @@ fn chars_equal(case_sensitive: bool, mut c1: u16, mut c2: u16) -> bool {
     if case_sensitive {
         return false;
     }
-    c1 = java_upper(c1);
-    c2 = java_upper(c2);
-    c1 == c2 || java_lower(c1) == java_lower(c2)
+    c1 = to_upper_unit(c1);
+    c2 = to_upper_unit(c2);
+    c1 == c2 || to_lower_unit(c1) == to_lower_unit(c2)
 }
 
-fn java_upper(value: u16) -> u16 {
+fn to_upper_unit(value: u16) -> u16 {
     case_map(value, true)
 }
 
 /// 按 JDK 21 `Character.toLowerCase(char)` 对单个 UTF-16 code unit 做简单小写映射。
 ///
 /// 返回值仍是单个 code unit，不使用可能扩张为多个字符的字符串级 lowercase。
-/// 对应 Java 语义：`TextUtils` 的 `java_lower` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_lower(value: u16) -> u16 {
+/// 对应 Java 语义：`TextUtils` 的 `to_lower_unit` 行为（Rust 侧辅助/私有路径）。
+pub(crate) fn to_lower_unit(value: u16) -> u16 {
     case_map(value, false)
 }
 
@@ -1955,9 +1955,9 @@ fn case_map(value: u16, upper: bool) -> u16 {
     }
 }
 
-/// 对应 Java 语义：`TextUtils` 的 `java_case_fold_unit` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_case_fold_unit(value: u16) -> u16 {
-    java_lower(java_upper(value))
+/// 对应 Java 语义：`TextUtils` 的 `case_fold_unit` 行为（Rust 侧辅助/私有路径）。
+pub(crate) fn case_fold_unit(value: u16) -> u16 {
+    to_lower_unit(to_upper_unit(value))
 }
 
 fn read_u16(bytes: &[u8], offset: usize) -> u16 {
@@ -1984,12 +1984,12 @@ mod tests {
     }
 
     impl CharSequenceValue for PlainSequence {
-        fn java_length(&self) -> Result<i32, TextUtilsError> {
+        fn length(&self) -> Result<i32, TextUtilsError> {
             Ok(self.0.len() as i32)
         }
 
-        fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
-            self.0.java_char_at(index)
+        fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+            self.0.char_at(index)
         }
 
         fn as_utf16_string(&self) -> Option<&Utf16String> {
@@ -2000,11 +2000,11 @@ mod tests {
     struct LengthFailure;
 
     impl CharSequenceValue for LengthFailure {
-        fn java_length(&self) -> Result<i32, TextUtilsError> {
+        fn length(&self) -> Result<i32, TextUtilsError> {
             Err(dynamic_error())
         }
 
-        fn java_char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
+        fn char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
             Err(dynamic_error())
         }
 
@@ -2016,11 +2016,11 @@ mod tests {
     struct CharFailure;
 
     impl CharSequenceValue for CharFailure {
-        fn java_length(&self) -> Result<i32, TextUtilsError> {
+        fn length(&self) -> Result<i32, TextUtilsError> {
             Ok(1)
         }
 
-        fn java_char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
+        fn char_at(&self, _index: i32) -> Result<u16, TextUtilsError> {
             Err(dynamic_error())
         }
 
@@ -2042,7 +2042,7 @@ mod tests {
 
     #[test]
     fn exposes_every_error_and_dynamic_sequence_adapter_path() {
-        let string_error = java("x").java_char_at(-1).unwrap_err();
+        let string_error = java("x").char_at(-1).unwrap_err();
         assert_eq!(
             string_error.class_name(),
             "java.lang.StringIndexOutOfBoundsException"
@@ -2055,7 +2055,7 @@ mod tests {
             string_error.to_string(),
             "Index -1 out of bounds for length 1"
         );
-        assert!(java("x").java_char_at(1).is_err());
+        assert!(java("x").char_at(1).is_err());
 
         let null = TextUtilsError::NullPointer;
         assert_eq!(null.class_name(), "java.lang.NullPointerException");
@@ -2072,10 +2072,10 @@ mod tests {
 
         let shared = Arc::new(RwLock::new(vec!['a' as u16]));
         let wrapper = CharArrayWrapperSequence::with_range(Some(shared), 0, 1).unwrap();
-        assert_eq!(wrapper.java_length().unwrap(), 1);
-        assert_eq!(wrapper.java_char_at(0).unwrap(), 'a' as u16);
+        assert_eq!(CharSequenceValue::length(&wrapper).unwrap(), 1);
+        assert_eq!(CharSequenceValue::char_at(&wrapper, 0).unwrap(), 'a' as u16);
         assert!(wrapper.as_utf16_string().is_none());
-        let dynamic = wrapper.java_char_at(1).unwrap_err();
+        let dynamic = CharSequenceValue::char_at(&wrapper, 1).unwrap_err();
         assert_eq!(
             dynamic.class_name(),
             "java.lang.ArrayIndexOutOfBoundsException"
@@ -2620,8 +2620,8 @@ mod tests {
         let plain = PlainSequence::new("aa");
         let length_failure = LengthFailure;
         let char_failure = CharFailure;
-        assert!(length_failure.java_char_at(0).is_err());
-        assert_eq!(char_failure.java_length(), Ok(1));
+        assert!(length_failure.char_at(0).is_err());
+        assert_eq!(char_failure.length(), Ok(1));
         assert!(length_failure.as_utf16_string().is_none());
         assert!(char_failure.as_utf16_string().is_none());
 

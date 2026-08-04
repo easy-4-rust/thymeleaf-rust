@@ -118,19 +118,19 @@ impl StandardConditionalCommentUtils {
         text: Option<&dyn CharSequenceValue>,
     ) -> Result<Option<ConditionalCommentParsingResult>, TextUtilsError> {
         let text = text.ok_or(TextUtilsError::NullPointer)?;
-        let len = text.java_length()?;
+        let len = text.length()?;
         let mut i = 4;
 
-        while i < len && is_java_whitespace(text.java_char_at(i)?) {
+        while i < len && is_java_whitespace(text.char_at(i)?) {
             i += 1;
         }
-        if i >= len || text.java_char_at(i)? != u16::from(b'[') {
+        if i >= len || text.char_at(i)? != u16::from(b'[') {
             return Ok(None);
         }
         i += 1;
         let start_expression_offset = i;
 
-        while i < len && text.java_char_at(i)? != u16::from(b']') {
+        while i < len && text.char_at(i)? != u16::from(b']') {
             i += 1;
         }
         if i >= len {
@@ -139,26 +139,26 @@ impl StandardConditionalCommentUtils {
         let start_expression_len = i - start_expression_offset;
         i += 1;
 
-        while i < len && is_java_whitespace(text.java_char_at(i)?) {
+        while i < len && is_java_whitespace(text.char_at(i)?) {
             i += 1;
         }
-        if i >= len || text.java_char_at(i)? != u16::from(b'>') {
+        if i >= len || text.char_at(i)? != u16::from(b'>') {
             return Ok(None);
         }
         i += 1;
         let content_offset = i;
 
         i = len.wrapping_sub(4);
-        while i > content_offset && is_java_whitespace(text.java_char_at(i)?) {
+        while i > content_offset && is_java_whitespace(text.char_at(i)?) {
             i -= 1;
         }
-        if i <= content_offset || text.java_char_at(i)? != u16::from(b']') {
+        if i <= content_offset || text.char_at(i)? != u16::from(b']') {
             return Ok(None);
         }
         i -= 1;
         let end_expression_last_pos = i + 1;
 
-        while i > content_offset && text.java_char_at(i)? != u16::from(b'[') {
+        while i > content_offset && text.char_at(i)? != u16::from(b'[') {
             i -= 1;
         }
         if i <= content_offset {
@@ -168,14 +168,14 @@ impl StandardConditionalCommentUtils {
         let end_expression_len = end_expression_last_pos - end_expression_offset;
         i -= 1;
 
-        while i >= content_offset && is_java_whitespace(text.java_char_at(i)?) {
+        while i >= content_offset && is_java_whitespace(text.char_at(i)?) {
             i -= 1;
         }
-        if i <= content_offset || text.java_char_at(i)? != u16::from(b'!') {
+        if i <= content_offset || text.char_at(i)? != u16::from(b'!') {
             return Ok(None);
         }
         i -= 1;
-        if i <= content_offset || text.java_char_at(i)? != u16::from(b'<') {
+        if i <= content_offset || text.char_at(i)? != u16::from(b'<') {
             return Ok(None);
         }
         i -= 1;

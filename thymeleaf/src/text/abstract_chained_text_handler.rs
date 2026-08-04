@@ -38,9 +38,9 @@ impl ChainedTextHandlerRuntimeError {
     ///
     /// # 返回
     /// 精确保留失败回调签名及字段表达式 `this.next`。
-    /// 对应 Java 语义：`AbstractChainedTextHandler` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
+    /// 对应 Java 语义：`AbstractChainedTextHandler` 的 `message` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
-    pub fn java_message(&self) -> Utf16String {
+    pub fn message(&self) -> Utf16String {
         Utf16String::from_rust_str(&format!(
             "Cannot invoke \"{HANDLER_CLASS}.{}\" because \"this.next\" is null",
             self.method_signature
@@ -50,7 +50,7 @@ impl ChainedTextHandlerRuntimeError {
 
 impl Display for ChainedTextHandlerRuntimeError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.java_message().to_string_lossy())
+        formatter.write_str(&self.message().to_string_lossy())
     }
 }
 
@@ -630,7 +630,7 @@ mod tests {
         let cloned = error.as_ref().clone();
         assert_eq!(*error, cloned);
         assert_eq!(error.class_name(), "java.lang.NullPointerException");
-        assert_eq!(error.to_string(), error.java_message().to_string_lossy());
+        assert_eq!(error.to_string(), error.message().to_string_lossy());
         assert_eq!(describe_utf16_string(None), "null");
     }
 
@@ -755,7 +755,7 @@ mod tests {
                 format!(
                     "class={};message={};buffer={}",
                     error.class_name(),
-                    describe_utf16_string(Some(&error.java_message())),
+                    describe_utf16_string(Some(&error.message())),
                     describe_buffer(Some(&buffer))
                 ),
             );

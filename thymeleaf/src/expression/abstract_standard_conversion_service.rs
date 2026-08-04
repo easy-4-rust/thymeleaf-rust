@@ -35,7 +35,7 @@ pub trait AbstractStandardConversionService: Send + Sync {
         _context: Option<&dyn Any>,
         object: &'a dyn ConversionObject,
     ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
-        object.java_to_string()
+        object.to_utf16_string()
     }
 
     /// 执行字符串之外的目标类型转换。

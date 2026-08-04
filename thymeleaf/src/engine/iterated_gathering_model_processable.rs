@@ -328,30 +328,25 @@ impl IteratedGatheringModelProcessable {
         let mut middle = clone_model(inner);
         let mut last = clone_model(inner);
         if Arc::ptr_eq(first_body, last_body) {
-            replace_text(
-                &mut first,
-                1,
-                first_value.java_sub_sequence(0, last_cut as i32),
-            )?;
+            replace_text(&mut first, 1, first_value.sub_sequence(0, last_cut as i32))?;
             replace_text(
                 &mut middle,
                 1,
-                first_value.java_sub_sequence(first_cut as i32, last_cut as i32),
+                first_value.sub_sequence(first_cut as i32, last_cut as i32),
             )?;
             replace_text(
                 &mut last,
                 1,
-                first_value.java_sub_sequence(first_cut as i32, first_value.len() as i32),
+                first_value.sub_sequence(first_cut as i32, first_value.len() as i32),
             )?;
         } else {
             if first_cut > 0 {
-                let text =
-                    first_value.java_sub_sequence(first_cut as i32, first_value.len() as i32);
+                let text = first_value.sub_sequence(first_cut as i32, first_value.len() as i32);
                 replace_text(&mut middle, 1, text.clone())?;
                 replace_text(&mut last, 1, text)?;
             }
             if last_cut < last_value.len() {
-                let text = last_value.java_sub_sequence(0, last_cut as i32);
+                let text = last_value.sub_sequence(0, last_cut as i32);
                 replace_text(&mut first, last_body_index, text.clone())?;
                 replace_text(&mut middle, last_body_index, text)?;
             }

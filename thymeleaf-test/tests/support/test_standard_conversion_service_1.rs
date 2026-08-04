@@ -21,7 +21,7 @@ impl AbstractStandardConversionService for TestStandardConversionService1 {
         _context: Option<&dyn Any>,
         object: &'a dyn ConversionObject,
     ) -> Result<Utf16StringConversionResult<'a>, StandardConversionError> {
-        let converted = match object.java_to_string()? {
+        let converted = match object.to_utf16_string()? {
             Utf16StringConversionResult::Null => "null".to_owned(),
             Utf16StringConversionResult::Borrowed(value) => value.to_string_lossy(),
             Utf16StringConversionResult::Owned(value) => value.to_string_lossy(),

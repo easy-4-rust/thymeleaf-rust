@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use crate::engine::{ElementNameError, ElementNameKind, ElementNameValue};
 use crate::templatemode::TemplateMode;
-use crate::util::{Utf16String, java_case_fold_unit};
+use crate::util::{Utf16String, case_fold_unit};
 
 /// `MatchingElementName` 构造、匹配和显示错误。
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -233,7 +233,6 @@ fn text_equals(case_sensitive: bool, left: &Utf16String, right: &Utf16String) ->
             .zip(right.as_utf16())
             .all(|(left, right)| {
                 left == right
-                    || (!case_sensitive
-                        && java_case_fold_unit(*left) == java_case_fold_unit(*right))
+                    || (!case_sensitive && case_fold_unit(*left) == case_fold_unit(*right))
             })
 }

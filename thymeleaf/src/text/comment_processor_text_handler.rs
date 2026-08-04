@@ -31,7 +31,7 @@ pub(crate) enum CommentProcessorTextHandlerRuntimeError {
     /// `System.arraycopy` 参数校验失败。
     ArrayCopy {
         class_name: &'static str,
-        java_message: Option<Utf16String>,
+        message: Option<Utf16String>,
     },
     /// `getNext()` 返回 null 后直接调用 `handleText`。
     NullNextText,
@@ -45,14 +45,14 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_null_source() -> Self {
         Self::ArrayCopy {
             class_name: "java.lang.NullPointerException",
-            java_message: None,
+            message: None,
         }
     }
 
     fn arraycopy_negative_length(length: i32) -> Self {
         Self::ArrayCopy {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: length {length} is negative"
             ))),
         }
@@ -61,7 +61,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self::ArrayCopy {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -70,7 +70,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_destination_index(index: i32, length: usize) -> Self {
         Self::ArrayCopy {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: destination index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -79,7 +79,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self::ArrayCopy {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -88,7 +88,7 @@ impl CommentProcessorTextHandlerRuntimeError {
     fn arraycopy_last_destination(index: i64, length: usize) -> Self {
         Self::ArrayCopy {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Some(Utf16String::from_rust_str(&format!(
+            message: Some(Utf16String::from_rust_str(&format!(
                 "arraycopy: last destination index {index} out of bounds for char[{length}]"
             ))),
         }
@@ -114,23 +114,23 @@ impl CommentProcessorTextHandlerRuntimeError {
     /// # 返回
     /// `None` 仅表示 HotSpot `System.arraycopy` 的 null-source NPE 消息为 null。
     #[must_use]
-    pub(crate) fn java_message(&self) -> Option<Utf16String> {
+    pub(crate) fn message(&self) -> Option<Utf16String> {
         match self {
             Self::NullCharArrayLoad => Some(Utf16String::from_rust_str(NULL_CHAR_ARRAY_MESSAGE)),
             Self::ArrayIndex { index, length } => Some(Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             ))),
-            Self::ArrayCopy { java_message, .. } => java_message.clone(),
+            Self::ArrayCopy { message, .. } => message.clone(),
             Self::NullNextText => Some(Utf16String::from_rust_str(NULL_NEXT_TEXT_MESSAGE)),
             Self::Locator(error) => Some(error.message()),
-            Self::Element(error) => Some(error.java_message()),
+            Self::Element(error) => Some(error.message()),
         }
     }
 }
 
 impl Display for CommentProcessorTextHandlerRuntimeError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        match self.java_message() {
+        match self.message() {
             Some(message) => formatter.write_str(&message.to_string_lossy()),
             None => formatter.write_str("null"),
         }
@@ -269,7 +269,7 @@ impl CommentProcessorTextHandler {
             }
         }
 
-        java_arraycopy(
+        array_copy(
             buffer,
             offset,
             self.filtered_text_buffer
@@ -701,7 +701,7 @@ fn array_unit(buffer: Option<&[u16]>, index: i32) -> u16 {
     buffer[index as usize]
 }
 
-fn java_arraycopy(
+fn array_copy(
     source: Option<&[u16]>,
     source_offset: i32,
     destination: &mut [u16],
@@ -1040,7 +1040,7 @@ mod tests {
         )
     }
 
-    fn java_chars(value: &str) -> Vec<u16> {
+    fn chars(value: &str) -> Vec<u16> {
         value.encode_utf16().collect()
     }
 
@@ -1050,9 +1050,9 @@ mod tests {
         line: i32,
         col: i32,
     ) -> Result<(), Box<TextParseException>> {
-        let mut buffer = java_chars(&format!("/*{content}*/"));
+        let mut buffer = chars(&format!("/*{content}*/"));
         let outer_len = buffer.len() as i32;
-        let content_len = java_chars(content).len() as i32;
+        let content_len = chars(content).len() as i32;
         handler.handle_comment(Some(&mut buffer), 2, content_len, 0, outer_len, line, col)
     }
 
@@ -1111,7 +1111,7 @@ mod tests {
                     "{};message={}",
                     error.class_name(),
                     error
-                        .java_message()
+                        .message()
                         .map_or_else(|| "null".to_owned(), |message| hex(message.as_utf16()))
                 );
             }
@@ -1121,7 +1121,7 @@ mod tests {
             Ok(error) => format!(
                 "{};message={}",
                 error.class_name(),
-                hex(error.java_message().as_utf16())
+                hex(error.message().as_utf16())
             ),
             Err(_) => panic!("unknown panic payload"),
         }
@@ -1135,7 +1135,7 @@ mod tests {
         handler: &mut CommentProcessorTextHandler,
         trigger: &str,
     ) -> Result<(), Box<TextParseException>> {
-        let mut name = java_chars("x");
+        let mut name = chars("x");
         match trigger {
             "documentEnd" => handler.handle_document_end(1, 2, 3, 4),
             "comment" => comment(handler, "normal", 30, 31),
@@ -1207,14 +1207,14 @@ mod tests {
         let (mut inherited, inherited_state) = handler(true);
         emit(&mut output, "initial.state", state(&inherited));
         inherited.handle_document_start(1, 2, 3).unwrap();
-        let mut plain = java_chars("plain");
+        let mut plain = chars("plain");
         inherited.handle_text(Some(&mut plain), 0, 5, 4, 5).unwrap();
         for (kind, value, line, col) in [
             ("standaloneEnd", "s", 6, 7),
             ("openEnd", "o", 8, 9),
             ("closeEnd", "c", 10, 11),
         ] {
-            let mut chars = java_chars(value);
+            let mut chars = chars(value);
             match kind {
                 "standaloneEnd" => inherited
                     .handle_standalone_element_end(Some(&mut chars), 0, 1, true, line, col)
@@ -1227,7 +1227,7 @@ mod tests {
                     .unwrap(),
             }
         }
-        let mut attribute = java_chars("a");
+        let mut attribute = chars("a");
         inherited
             .handle_attribute(
                 Some(&mut attribute),
@@ -1361,7 +1361,7 @@ mod tests {
         for (index, text) in texts.iter().enumerate() {
             let (mut delimiter, delimiter_state) = handler(true);
             comment(&mut delimiter, "[(${x})]", 1, 2).unwrap();
-            let mut chars = java_chars(text);
+            let mut chars = chars(text);
             let len = chars.len() as i32;
             delimiter
                 .handle_text(
@@ -1394,7 +1394,7 @@ mod tests {
         ] {
             let (mut flush, flush_state) = handler(true);
             comment(&mut flush, "[(${x})]", 1, 2).unwrap();
-            let mut text = java_chars("abc;rest");
+            let mut text = chars("abc;rest");
             flush.handle_text(Some(&mut text), 0, 8, 10, 20).unwrap();
             fire_trigger(&mut flush, trigger).unwrap();
             emit(
@@ -1411,13 +1411,13 @@ mod tests {
 
         let (mut delayed, delayed_state) = handler(true);
         comment(&mut delayed, "[(${x})]", 1, 2).unwrap();
-        let mut text = java_chars("abc;rest");
+        let mut text = chars("abc;rest");
         delayed.handle_text(Some(&mut text), 0, 8, 10, 20).unwrap();
-        let mut x = java_chars("x");
+        let mut x = chars("x");
         delayed
             .handle_open_element_end(Some(&mut x), 0, 1, 30, 31)
             .unwrap();
-        let mut a = java_chars("a");
+        let mut a = chars("a");
         delayed
             .handle_attribute(
                 Some(&mut a),
@@ -1463,11 +1463,11 @@ mod tests {
 
         let (mut chunks, chunks_state) = handler(true);
         comment(&mut chunks, "[(${x})]", 1, 2).unwrap();
-        let mut first = java_chars("ab");
+        let mut first = chars("ab");
         chunks
             .handle_text(Some(&mut first), 0, 2, 100, 101)
             .unwrap();
-        let mut second = java_chars("c;rest");
+        let mut second = chars("c;rest");
         chunks
             .handle_text(Some(&mut second), 0, 6, 200, 201)
             .unwrap();
@@ -1481,7 +1481,7 @@ mod tests {
 
         let (mut failure, failure_state) = handler(true);
         comment(&mut failure, "[(${x})]", 1, 2).unwrap();
-        let mut failure_text = java_chars("abc;rest");
+        let mut failure_text = chars("abc;rest");
         failure
             .handle_text(Some(&mut failure_text), 0, 8, 10, 20)
             .unwrap();
@@ -1509,12 +1509,12 @@ mod tests {
 
         let (mut after_flush, after_flush_state) = handler(true);
         comment(&mut after_flush, "[(${x})]", 1, 2).unwrap();
-        let mut after_text = java_chars("abc;rest");
+        let mut after_text = chars("abc;rest");
         after_flush
             .handle_text(Some(&mut after_text), 0, 8, 10, 20)
             .unwrap();
         after_flush_state.borrow_mut().fail_event = Some("openStart");
-        let mut x = java_chars("x");
+        let mut x = chars("x");
         emit(
             &mut output,
             "failure.afterFlush",
@@ -1555,7 +1555,7 @@ mod tests {
             "[[a]b]c)x",
         ];
         for (index, value) in compute_values.iter().enumerate() {
-            let chars = java_chars(value);
+            let chars = chars(value);
             let mut locator = [10, 20];
             emit_compute(
                 &mut output,
@@ -1574,7 +1574,7 @@ mod tests {
             &mut output,
             "arraycopy.nullSource",
             throwable(&mut || {
-                super::java_arraycopy(None, 0, &mut destination, 0, 1);
+                super::array_copy(None, 0, &mut destination, 0, 1);
                 Ok(())
             }),
         );
@@ -1583,7 +1583,7 @@ mod tests {
             &mut output,
             "arraycopy.negativeLen",
             throwable(&mut || {
-                super::java_arraycopy(Some(&source), 0, &mut destination, 0, -1);
+                super::array_copy(Some(&source), 0, &mut destination, 0, -1);
                 Ok(())
             }),
         );
@@ -1591,7 +1591,7 @@ mod tests {
             &mut output,
             "arraycopy.sourceIndex",
             throwable(&mut || {
-                super::java_arraycopy(Some(&source), -1, &mut destination, 0, 1);
+                super::array_copy(Some(&source), -1, &mut destination, 0, 1);
                 Ok(())
             }),
         );
@@ -1599,7 +1599,7 @@ mod tests {
             &mut output,
             "arraycopy.destinationIndex",
             throwable(&mut || {
-                super::java_arraycopy(Some(&source), 0, &mut destination, -1, 1);
+                super::array_copy(Some(&source), 0, &mut destination, -1, 1);
                 Ok(())
             }),
         );
@@ -1608,7 +1608,7 @@ mod tests {
             &mut output,
             "arraycopy.lastSource",
             throwable(&mut || {
-                super::java_arraycopy(Some(&source), 0, &mut wide_destination, 0, 2);
+                super::array_copy(Some(&source), 0, &mut wide_destination, 0, 2);
                 Ok(())
             }),
         );
@@ -1617,7 +1617,7 @@ mod tests {
             &mut output,
             "arraycopy.lastDestination",
             throwable(&mut || {
-                super::java_arraycopy(Some(&wide_source), 0, &mut destination, 0, 2);
+                super::array_copy(Some(&wide_source), 0, &mut destination, 0, 2);
                 Ok(())
             }),
         );
@@ -1628,7 +1628,7 @@ mod tests {
             "invalid.comment.null",
             throwable(&mut || predicate.handle_comment(None, 0, 3, 0, 0, 1, 1)),
         );
-        let mut abc = java_chars("abc");
+        let mut abc = chars("abc");
         emit(
             &mut output,
             "invalid.comment.negativeOffset",
@@ -1655,7 +1655,7 @@ mod tests {
 
         let (mut negative_filter, _) = handler(true);
         comment(&mut negative_filter, "[(${x})]", 1, 2).unwrap();
-        let mut a = java_chars("a");
+        let mut a = chars("a");
         emit(
             &mut output,
             "invalid.filter.negativeLen",
@@ -1676,17 +1676,17 @@ mod tests {
             1,
             Some(&mut locator),
         );
-        let chars = java_chars("a");
+        let units = chars("a");
         let mut locator = [1, 2];
         emit_compute(
             &mut output,
             "invalid.compute.negativeOffset",
-            Some(&chars),
+            Some(&units),
             -1,
             1,
             Some(&mut locator),
         );
-        let terminator = java_chars(";");
+        let terminator = chars(";");
         emit_compute(
             &mut output,
             "invalid.compute.nullLocatorTerminator",
@@ -1698,12 +1698,12 @@ mod tests {
         emit_compute(
             &mut output,
             "invalid.compute.nullLocatorText",
-            Some(&chars),
+            Some(&units),
             0,
             1,
             None,
         );
-        let newline = java_chars("\n");
+        let newline = chars("\n");
         let mut short_locator = [i32::MAX];
         emit_compute(
             &mut output,
@@ -1737,7 +1737,7 @@ mod tests {
     }
 
     #[test]
-    fn java_golden_matches_comment_unwrapping_filtering_and_failure_state() {
+    fn golden_matches_comment_unwrapping_filtering_and_failure_state() {
         assert_eq!(generate_golden(), JAVA_GOLDEN);
     }
 
@@ -1775,11 +1775,11 @@ mod tests {
         let mut recording = RecordingHandler {
             state: Rc::clone(&state),
         };
-        let mut comment_buffer = java_chars("/*x*/");
+        let mut comment_buffer = chars("/*x*/");
         recording
             .handle_comment(Some(&mut comment_buffer), 2, 1, 0, 5, 1, 2)
             .unwrap();
-        let mut invalid_range = java_chars("x");
+        let mut invalid_range = chars("x");
         recording
             .record("range", Some(&mut invalid_range), -1, 2, String::new())
             .unwrap();
@@ -1808,13 +1808,13 @@ mod tests {
 
         let (mut filtered, filtered_state) = handler(true);
         comment(&mut filtered, "[(${x})]", 1, 2).unwrap();
-        let mut remainder = java_chars(";tail");
+        let mut remainder = chars(";tail");
         filtered
             .handle_text(Some(&mut remainder), 0, 5, 3, 4)
             .unwrap();
         filtered_state.borrow_mut().fail_event = Some("text");
         assert!(comment(&mut filtered, "normal", 5, 6).is_err());
-        let mut name = java_chars("x");
+        let mut name = chars("x");
         assert!(
             filtered
                 .handle_standalone_element_start(Some(&mut name), 0, 1, true, 5, 6)

@@ -44,15 +44,15 @@ fn cover_public_adapter_contracts() {
         .expect("integer result");
     assert!(!owned.is_borrowed_from(source_decimal));
 
-    assert_eq!(7_i32.java_hash_code(), 7);
-    assert_eq!("Aa".to_owned().java_hash_code(), 2_112);
-    assert_eq!(Utf16String::from_rust_str("Aa").java_hash_code(), 2_112);
+    assert_eq!(7_i32.hash_code(), 7);
+    assert_eq!("Aa".to_owned().hash_code(), 2_112);
+    assert_eq!(Utf16String::from_rust_str("Aa").hash_code(), 2_112);
 
     let mut null_entry = MapEntry::<String>::new(None, None);
     assert_eq!(null_entry.get_key(), None);
     assert_eq!(null_entry.get_value(), None);
     assert_eq!(null_entry.to_string(), "null=null");
-    assert_eq!(null_entry.java_hash_code(), 0);
+    assert_eq!(null_entry.hash_code(), 0);
     let unsupported = null_entry
         .set_value(Some("ignored".to_owned()))
         .expect_err("entry is immutable");
@@ -335,7 +335,7 @@ fn emit_collection_cases(output: &mut String) {
     );
     emit(output, "list.map.fresh_entry", fresh_entry);
     let entry_hash = match map_list.as_slice().first() {
-        Some(Some(EvaluationElement::MapEntry(entry))) => entry.java_hash_code(),
+        Some(Some(EvaluationElement::MapEntry(entry))) => entry.hash_code(),
         _ => panic!("map list must contain entry"),
     };
     emit(output, "list.map.entry_hash", entry_hash);
@@ -672,10 +672,10 @@ fn describe_element(value: &Option<EvaluationElement<String>>) -> String {
         Some(EvaluationElement::Integer(value)) => format!("java.lang.Integer:{value}"),
         Some(EvaluationElement::Long(value)) => format!("java.lang.Long:{value}"),
         Some(EvaluationElement::Float(value)) => {
-            format!("java.lang.Float:{}", java_float(*value))
+            format!("java.lang.Float:{}", float_string(*value))
         }
         Some(EvaluationElement::Double(value)) => {
-            format!("java.lang.Double:{}", java_double(*value))
+            format!("java.lang.Double:{}", double_string(*value))
         }
         Some(EvaluationElement::Boolean(value)) => format!("java.lang.Boolean:{value}"),
         Some(EvaluationElement::Character(value)) => {
@@ -726,7 +726,7 @@ fn format_index_set(values: &indexmap::IndexSet<bool>) -> String {
     )
 }
 
-fn java_float(value: f32) -> String {
+fn float_string(value: f32) -> String {
     if value == 0.0 && value.is_sign_negative() {
         "-0.0".to_owned()
     } else {
@@ -734,7 +734,7 @@ fn java_float(value: f32) -> String {
     }
 }
 
-fn java_double(value: f64) -> String {
+fn double_string(value: f64) -> String {
     if value == 0.0 && value.is_sign_negative() {
         "-0.0".to_owned()
     } else {

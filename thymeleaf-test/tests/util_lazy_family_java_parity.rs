@@ -83,7 +83,7 @@ fn lazy_escaping_char_sequence_html_text_xml_raw_match_java() {
         // 惰性缓存：to_utf16_string 后再次写出同一结果
         assert_eq!(
             sequence
-                .java_to_string()
+                .to_utf16_string()
                 .expect("to string")
                 .to_string_lossy(),
             "a&lt;b&gt;&amp;c&quot;d&#39;e"
@@ -151,32 +151,32 @@ fn lazy_escaping_char_sequence_null_arguments_match_java() {
 fn abstract_lazy_char_sequence_contract_matches_java() {
     // 经 LazyEscapingCharSequence 观察基类合同（Java AbstractLazyCharSequence）
     let sequence = escaping_sequence(TemplateMode::RAW, "hello");
-    assert_eq!(sequence.java_length().expect("length"), 5);
+    assert_eq!(sequence.length().expect("length"), 5);
     assert_eq!(
-        char::from_u32(sequence.java_char_at(0).expect("char at 0") as u32).expect("char"),
+        char::from_u32(sequence.char_at(0).expect("char at 0") as u32).expect("char"),
         'h'
     );
     assert_eq!(
-        char::from_u32(sequence.java_char_at(4).expect("char at 4") as u32).expect("char"),
+        char::from_u32(sequence.char_at(4).expect("char at 4") as u32).expect("char"),
         'o'
     );
     assert_eq!(
         sequence
-            .java_sub_sequence(1, 3)
+            .sub_sequence(1, 3)
             .expect("sub sequence")
             .to_string_lossy(),
         "el"
     );
     assert_eq!(
         sequence
-            .java_to_string()
+            .to_utf16_string()
             .expect("to string")
             .to_string_lossy(),
         "hello"
     );
     // Java 类名（equals 用精确类判断）
     assert_eq!(
-        sequence.java_sequence_class_name(),
+        sequence.sequence_class_name(),
         "org.thymeleaf.util.LazyEscapingCharSequence"
     );
 }
@@ -242,7 +242,7 @@ fn lazy_processing_char_sequence_processes_model_matches_java() {
         .expect("parsed model");
     let lazy = LazyProcessingCharSequence::new(engine_context, Arc::from(model));
     assert_eq!(
-        lazy.java_to_string()
+        lazy.to_utf16_string()
             .expect("processed text")
             .to_string_lossy(),
         "<p>world</p>",

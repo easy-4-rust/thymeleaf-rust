@@ -31,9 +31,9 @@ fn sequence(value: &str) -> Arc<dyn CharSequenceValue> {
 /// 逐字符提取（对应上游 extractText 辅助方法）。
 fn extract_text(sequence: &dyn CharSequenceValue) -> String {
     let mut result = String::new();
-    let length = sequence.java_length().expect("sequence length").max(0) as usize;
+    let length = sequence.length().expect("sequence length").max(0) as usize;
     for i in 0..length {
-        let c = sequence.java_char_at(i as i32).expect("char at index");
+        let c = sequence.char_at(i as i32).expect("char at index");
         result.push(char::from_u32(c as u32).expect("valid char"));
     }
     result
@@ -81,13 +81,13 @@ fn text_subsection() {
     // 对应 Java TextTest#testSubsection
     let c1 = Text::new(Some(sequence("something")));
     assert_eq!(
-        c1.java_sub_sequence(4, 9)
+        c1.sub_sequence(4, 9)
             .expect("subsequence")
             .to_string_lossy(),
         "thing"
     );
     assert_eq!(
-        c1.java_sub_sequence(0, 4)
+        c1.sub_sequence(0, 4)
             .expect("subsequence")
             .to_string_lossy(),
         "some"
@@ -95,13 +95,13 @@ fn text_subsection() {
 
     let c1 = Text::with_location(Some(sequence("something")), Some(js("test")), 1, 1);
     assert_eq!(
-        c1.java_sub_sequence(4, 9)
+        c1.sub_sequence(4, 9)
             .expect("subsequence")
             .to_string_lossy(),
         "thing"
     );
     assert_eq!(
-        c1.java_sub_sequence(0, 4)
+        c1.sub_sequence(0, 4)
             .expect("subsequence")
             .to_string_lossy(),
         "some"
@@ -241,13 +241,13 @@ fn comment_subsection() {
     // 对应 Java CommentTest#testSubsection（全文含 <!-- --> 的切片）
     let c1 = Comment::new(Some(sequence("something")));
     assert_eq!(
-        c1.java_sub_sequence(1, 5)
+        c1.sub_sequence(1, 5)
             .expect("subsequence")
             .to_string_lossy(),
         "!--s"
     );
     assert_eq!(
-        c1.java_sub_sequence(4, 8)
+        c1.sub_sequence(4, 8)
             .expect("subsequence")
             .to_string_lossy(),
         "some"
@@ -255,13 +255,13 @@ fn comment_subsection() {
 
     let c1 = Comment::with_location(Some(sequence("something")), Some(js("test")), 1, 1);
     assert_eq!(
-        c1.java_sub_sequence(1, 5)
+        c1.sub_sequence(1, 5)
             .expect("subsequence")
             .to_string_lossy(),
         "!--s"
     );
     assert_eq!(
-        c1.java_sub_sequence(4, 8)
+        c1.sub_sequence(4, 8)
             .expect("subsequence")
             .to_string_lossy(),
         "some"
@@ -386,13 +386,13 @@ fn cdata_section_subsection() {
     // 对应 Java CDATASectionTest#testSubsection（全文含 <![CDATA[ ]]> 的切片）
     let c1 = CDATASection::new(Some(sequence("something")));
     assert_eq!(
-        c1.java_sub_sequence(3, 8)
+        c1.sub_sequence(3, 8)
             .expect("subsequence")
             .to_string_lossy(),
         "CDATA"
     );
     assert_eq!(
-        c1.java_sub_sequence(9, 13)
+        c1.sub_sequence(9, 13)
             .expect("subsequence")
             .to_string_lossy(),
         "some"
@@ -400,13 +400,13 @@ fn cdata_section_subsection() {
 
     let c1 = CDATASection::with_location(Some(sequence("something")), Some(js("test")), 1, 1);
     assert_eq!(
-        c1.java_sub_sequence(3, 8)
+        c1.sub_sequence(3, 8)
             .expect("subsequence")
             .to_string_lossy(),
         "CDATA"
     );
     assert_eq!(
-        c1.java_sub_sequence(9, 13)
+        c1.sub_sequence(9, 13)
             .expect("subsequence")
             .to_string_lossy(),
         "some"

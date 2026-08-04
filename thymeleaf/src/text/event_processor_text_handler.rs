@@ -22,28 +22,28 @@ const REPOSITORY_INITIAL_INC: usize = 5;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct EventProcessorTextHandlerRuntimeError {
     class_name: &'static str,
-    java_message: Utf16String,
+    message: Utf16String,
 }
 
 impl EventProcessorTextHandlerRuntimeError {
     fn illegal_argument(message: &'static str) -> Self {
         Self {
             class_name: "java.lang.IllegalArgumentException",
-            java_message: Utf16String::from_rust_str(message),
+            message: Utf16String::from_rust_str(message),
         }
     }
 
     fn negative_array_size(len: i32) -> Self {
         Self {
             class_name: "java.lang.NegativeArraySizeException",
-            java_message: Utf16String::from_rust_str(&len.to_string()),
+            message: Utf16String::from_rust_str(&len.to_string()),
         }
     }
 
     fn array_index(index: i32, length: usize) -> Self {
         Self {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Utf16String::from_rust_str(&format!(
+            message: Utf16String::from_rust_str(&format!(
                 "Index {index} out of bounds for length {length}"
             )),
         }
@@ -52,7 +52,7 @@ impl EventProcessorTextHandlerRuntimeError {
     fn arraycopy_source_index(index: i32, length: usize) -> Self {
         Self {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Utf16String::from_rust_str(&format!(
+            message: Utf16String::from_rust_str(&format!(
                 "arraycopy: source index {index} out of bounds for char[{length}]"
             )),
         }
@@ -61,7 +61,7 @@ impl EventProcessorTextHandlerRuntimeError {
     fn arraycopy_last_source(index: i64, length: usize) -> Self {
         Self {
             class_name: "java.lang.ArrayIndexOutOfBoundsException",
-            java_message: Utf16String::from_rust_str(&format!(
+            message: Utf16String::from_rust_str(&format!(
                 "arraycopy: last source index {index} out of bounds for char[{length}]"
             )),
         }
@@ -82,14 +82,14 @@ impl EventProcessorTextHandlerRuntimeError {
     /// # 返回
     /// 与固定 JDK Oracle 对齐的消息。
     #[must_use]
-    pub(crate) const fn java_message(&self) -> &Utf16String {
-        &self.java_message
+    pub(crate) const fn message(&self) -> &Utf16String {
+        &self.message
     }
 }
 
 impl Display for EventProcessorTextHandlerRuntimeError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.java_message.to_string_lossy())
+        formatter.write_str(&self.message.to_string_lossy())
     }
 }
 
@@ -576,8 +576,8 @@ fn exact_equals(
         return false;
     }
     for index in 0..first_len {
-        if java_array_get(first, first_offset.wrapping_add(index))
-            != java_array_get(second, second_offset.wrapping_add(index))
+        if array_get(first, first_offset.wrapping_add(index))
+            != array_get(second, second_offset.wrapping_add(index))
         {
             return false;
         }
@@ -601,8 +601,8 @@ fn compare_java_range(
         if before_decrement == 0 {
             break;
         }
-        let first = java_array_get(candidate, index);
-        let second = java_array_get(text, offset.wrapping_add(index));
+        let first = array_get(candidate, index);
+        let second = array_get(text, offset.wrapping_add(index));
         match first.cmp(&second) {
             std::cmp::Ordering::Equal => index = index.wrapping_add(1),
             ordering => return ordering,
@@ -611,7 +611,7 @@ fn compare_java_range(
     (candidate.len() as i32).cmp(&len)
 }
 
-fn java_array_get(text: &[u16], index: i32) -> u16 {
+fn array_get(text: &[u16], index: i32) -> u16 {
     if index < 0 || index as usize >= text.len() {
         panic_runtime(EventProcessorTextHandlerRuntimeError::array_index(
             index,
@@ -879,7 +879,7 @@ mod tests {
         (EventProcessorTextHandler::new(Some(Box::new(next))), state)
     }
 
-    fn java_chars(value: &str) -> Vec<u16> {
+    fn chars(value: &str) -> Vec<u16> {
         value.encode_utf16().collect()
     }
 
@@ -889,7 +889,7 @@ mod tests {
         line: i32,
         col: i32,
     ) -> Result<(), Box<TextParseException>> {
-        let mut chars = java_chars(name);
+        let mut chars = chars(name);
         let len = chars.len() as i32;
         attribute_buffer(handler, Some(chars.as_mut_slice()), 0, len, line, col)
     }
@@ -976,7 +976,7 @@ mod tests {
                 format!(
                     "{};message={}",
                     error.class_name(),
-                    hex(error.java_message().as_utf16())
+                    hex(error.message().as_utf16())
                 )
             }
         }
@@ -995,9 +995,9 @@ mod tests {
         );
 
         let (mut happy, happy_state) = handler();
-        let mut root = java_chars("root");
-        let mut id = java_chars("id");
-        let mut child = java_chars("child");
+        let mut root = chars("root");
+        let mut id = chars("id");
+        let mut child = chars("child");
         happy
             .handle_open_element_start(Some(&mut root), 0, 4, 1, 2)
             .unwrap();
@@ -1008,7 +1008,7 @@ mod tests {
         happy
             .handle_close_element_start(Some(&mut child), 0, 5, 7, 8)
             .unwrap();
-        let mut single = java_chars("single");
+        let mut single = chars("single");
         happy
             .handle_standalone_element_start(Some(&mut single), 0, 6, true, 9, 10)
             .unwrap();
@@ -1032,11 +1032,11 @@ mod tests {
         emit(&mut lines, "stack.closeEmpty.state", state(&empty));
 
         let (mut mismatch, _) = handler();
-        let mut alpha = java_chars("alpha");
+        let mut alpha = chars("alpha");
         mismatch
             .handle_open_element_start(Some(&mut alpha), 0, 5, 1, 1)
             .unwrap();
-        let mut beta = java_chars("beta");
+        let mut beta = chars("beta");
         emit(
             &mut lines,
             "stack.mismatch",
@@ -1057,7 +1057,7 @@ mod tests {
         unnamed
             .handle_open_element_start(Some(&mut blank), 0, 0, 1, 1)
             .unwrap();
-        let mut x = java_chars("x");
+        let mut x = chars("x");
         emit(
             &mut lines,
             "stack.unnamed",
@@ -1066,7 +1066,7 @@ mod tests {
 
         let (mut drain, _) = handler();
         for value in ["a", "b"] {
-            let mut chars = java_chars(value);
+            let mut chars = chars(value);
             drain
                 .handle_open_element_start(Some(&mut chars), 0, 1, 1, 1)
                 .unwrap();
@@ -1085,7 +1085,7 @@ mod tests {
         emit(&mut lines, "stack.drain.state", state(&drain));
 
         let (mut attributes, attribute_state) = handler();
-        let mut s = java_chars("s");
+        let mut s = chars("s");
         attributes
             .handle_standalone_element_start(Some(&mut s), 0, 1, false, 1, 1)
             .unwrap();
@@ -1111,11 +1111,11 @@ mod tests {
 
         let (mut mutation, mutation_state) = handler();
         mutation_state.borrow_mut().mutate_attribute_name = true;
-        let mut s = java_chars("s");
+        let mut s = chars("s");
         mutation
             .handle_standalone_element_start(Some(&mut s), 0, 1, false, 1, 1)
             .unwrap();
-        let mut mutable = java_chars("a");
+        let mut mutable = chars("a");
         attribute_buffer(&mut mutation, Some(&mut mutable), 0, 1, 1, 1).unwrap();
         mutation_state.borrow_mut().mutate_attribute_name = false;
         attribute(&mut mutation, "b", 2, 2).unwrap();
@@ -1124,7 +1124,7 @@ mod tests {
 
         let (mut open, open_state) = handler();
         open_state.borrow_mut().fail_event = Some("openStart");
-        let mut x = java_chars("x");
+        let mut x = chars("x");
         emit(
             &mut lines,
             "ordering.open.checked",
@@ -1133,7 +1133,7 @@ mod tests {
         emit(&mut lines, "ordering.open.state", state(&open));
 
         let (mut close, close_state) = handler();
-        let mut x = java_chars("x");
+        let mut x = chars("x");
         close
             .handle_open_element_start(Some(&mut x), 0, 1, 1, 1)
             .unwrap();
@@ -1147,7 +1147,7 @@ mod tests {
         emit(&mut lines, "ordering.close.state", state(&close));
 
         let (mut failed_attribute, failed_attribute_state) = handler();
-        let mut s = java_chars("s");
+        let mut s = chars("s");
         failed_attribute
             .handle_standalone_element_start(Some(&mut s), 0, 1, false, 1, 1)
             .unwrap();
@@ -1170,13 +1170,13 @@ mod tests {
         );
 
         let (mut standalone, standalone_state) = handler();
-        let mut s = java_chars("s");
+        let mut s = chars("s");
         standalone
             .handle_standalone_element_start(Some(&mut s), 0, 1, false, 1, 1)
             .unwrap();
         attribute(&mut standalone, "old", 1, 1).unwrap();
         standalone_state.borrow_mut().fail_event = Some("standaloneStart");
-        let mut t = java_chars("t");
+        let mut t = chars("t");
         emit(
             &mut lines,
             "ordering.standalone.checked",
@@ -1188,7 +1188,7 @@ mod tests {
 
         let (mut growth, _) = handler();
         for index in 0..11 {
-            let mut name = java_chars(&format!("e{index}"));
+            let mut name = chars(&format!("e{index}"));
             let len = name.len() as i32;
             growth
                 .handle_open_element_start(Some(&mut name), 0, len, 1, 1)
@@ -1196,7 +1196,7 @@ mod tests {
         }
         emit(&mut lines, "growth.stack.open", state(&growth));
         for index in (0..11).rev() {
-            let mut name = java_chars(&format!("e{index}"));
+            let mut name = chars(&format!("e{index}"));
             let len = name.len() as i32;
             growth
                 .handle_close_element_start(Some(&mut name), 0, len, 1, 1)
@@ -1215,7 +1215,7 @@ mod tests {
             let chars = if name == "\u{D7FF}" {
                 vec![0xD800]
             } else {
-                java_chars(name)
+                chars(name)
             };
             repository.get_structure_name(Some(&chars), 0, chars.len() as i32);
         }
@@ -1225,7 +1225,7 @@ mod tests {
             repository_state(&repository),
         );
         for index in 0..20 {
-            let chars = java_chars(&format!("n{index}"));
+            let chars = chars(&format!("n{index}"));
             repository.get_structure_name(Some(&chars), 0, chars.len() as i32);
         }
         emit(
@@ -1306,7 +1306,7 @@ mod tests {
         emit(&mut lines, "invalid.open.state", state(&invalid_open));
 
         let (mut invalid_close, _) = handler();
-        let mut x = java_chars("x");
+        let mut x = chars("x");
         invalid_close
             .handle_open_element_start(Some(&mut x), 0, 1, 1, 1)
             .unwrap();
@@ -1333,7 +1333,7 @@ mod tests {
     }
 
     #[test]
-    fn java_golden_matches_all_observable_event_processor_semantics() {
+    fn golden_matches_all_observable_event_processor_semantics() {
         assert_eq!(generate_golden(), JAVA_GOLDEN);
     }
 
@@ -1341,7 +1341,7 @@ mod tests {
     fn inherited_events_and_runtime_helpers_are_covered() {
         let (mut handler, _) = handler();
         handler.handle_document_start(1, 2, 3).unwrap();
-        let mut buffer = java_chars("x");
+        let mut buffer = chars("x");
         handler.handle_text(Some(&mut buffer), 0, 1, 1, 1).unwrap();
         handler
             .handle_comment(Some(&mut buffer), 0, 1, 0, 1, 1, 1)
@@ -1363,7 +1363,7 @@ mod tests {
         .downcast::<EventProcessorTextHandlerRuntimeError>()
         .unwrap();
         assert_eq!(
-            first_null.java_message().to_string_lossy(),
+            first_null.message().to_string_lossy(),
             "First text buffer being compared cannot be null"
         );
         assert_eq!(
@@ -1379,7 +1379,7 @@ mod tests {
         .downcast::<EventProcessorTextHandlerRuntimeError>()
         .unwrap();
         assert_eq!(
-            index.java_message().to_string_lossy(),
+            index.message().to_string_lossy(),
             "Index -1 out of bounds for length 1"
         );
 
@@ -1393,7 +1393,7 @@ mod tests {
             .unwrap_err()
             .downcast::<EventProcessorTextHandlerRuntimeError>()
             .unwrap();
-            assert_eq!(error.java_message().to_string_lossy(), expected);
+            assert_eq!(error.message().to_string_lossy(), expected);
         }
 
         let probe_state = Rc::new(RefCell::new(RecordingState::default()));

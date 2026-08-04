@@ -84,7 +84,7 @@ impl AggregateCharSequence {
         component: Option<AggregateComponent>,
     ) -> Result<Self, AggregateCharSequenceError> {
         let component = component.ok_or(AggregateCharSequenceError::NullComponent)?;
-        let length = component.java_length()?;
+        let length = component.length()?;
         Ok(Self::new_parts(vec![component], vec![0], length))
     }
 
@@ -95,8 +95,8 @@ impl AggregateCharSequence {
         component1: Option<AggregateComponent>,
     ) -> Result<Self, AggregateCharSequenceError> {
         let values = require_arguments([component0, component1])?;
-        let length0 = values[0].java_length()?;
-        let length = length0.wrapping_add(values[1].java_length()?);
+        let length0 = values[0].length()?;
+        let length = length0.wrapping_add(values[1].length()?);
         Ok(Self::new_parts(values, vec![0, length0], length))
     }
 
@@ -108,11 +108,9 @@ impl AggregateCharSequence {
         component2: Option<AggregateComponent>,
     ) -> Result<Self, AggregateCharSequenceError> {
         let values = require_arguments([component0, component1, component2])?;
-        let offset1 = values[0].java_length()?;
-        let offset2 = values[0]
-            .java_length()?
-            .wrapping_add(values[1].java_length()?);
-        let length = offset2.wrapping_add(values[2].java_length()?);
+        let offset1 = values[0].length()?;
+        let offset2 = values[0].length()?.wrapping_add(values[1].length()?);
+        let length = offset2.wrapping_add(values[2].length()?);
         Ok(Self::new_parts(values, vec![0, offset1, offset2], length))
     }
 
@@ -125,15 +123,13 @@ impl AggregateCharSequence {
         component3: Option<AggregateComponent>,
     ) -> Result<Self, AggregateCharSequenceError> {
         let values = require_arguments([component0, component1, component2, component3])?;
-        let offset1 = values[0].java_length()?;
-        let offset2 = values[0]
-            .java_length()?
-            .wrapping_add(values[1].java_length()?);
+        let offset1 = values[0].length()?;
+        let offset2 = values[0].length()?.wrapping_add(values[1].length()?);
         let offset3 = values[0]
-            .java_length()?
-            .wrapping_add(values[1].java_length()?)
-            .wrapping_add(values[2].java_length()?);
-        let length = offset3.wrapping_add(values[3].java_length()?);
+            .length()?
+            .wrapping_add(values[1].length()?)
+            .wrapping_add(values[2].length()?);
+        let length = offset3.wrapping_add(values[3].length()?);
         Ok(Self::new_parts(
             values,
             vec![0, offset1, offset2, offset3],
@@ -154,20 +150,18 @@ impl AggregateCharSequence {
     ) -> Result<Self, AggregateCharSequenceError> {
         let values =
             require_arguments([component0, component1, component2, component3, component4])?;
-        let offset1 = values[0].java_length()?;
-        let offset2 = values[0]
-            .java_length()?
-            .wrapping_add(values[1].java_length()?);
+        let offset1 = values[0].length()?;
+        let offset2 = values[0].length()?.wrapping_add(values[1].length()?);
         let offset3 = values[0]
-            .java_length()?
-            .wrapping_add(values[1].java_length()?)
-            .wrapping_add(values[2].java_length()?);
+            .length()?
+            .wrapping_add(values[1].length()?)
+            .wrapping_add(values[2].length()?);
         let offset4 = values[0]
-            .java_length()?
-            .wrapping_add(values[1].java_length()?)
-            .wrapping_add(values[2].java_length()?)
-            .wrapping_add(values[3].java_length()?);
-        let length = offset4.wrapping_add(values[3].java_length()?);
+            .length()?
+            .wrapping_add(values[1].length()?)
+            .wrapping_add(values[2].length()?)
+            .wrapping_add(values[3].length()?);
+        let length = offset4.wrapping_add(values[3].length()?);
         Ok(Self::new_parts(
             values,
             vec![0, offset1, offset2, offset3, offset4],
@@ -190,11 +184,11 @@ impl AggregateCharSequence {
         let mut total_length = 0_i32;
         for (index, component) in components.into_iter().enumerate() {
             let component = component.ok_or(AggregateCharSequenceError::NullContainedComponent)?;
-            let component_length = component.java_length()?;
+            let component_length = component.length()?;
             let offset = if index == 0 {
                 0
             } else {
-                offsets[index - 1].wrapping_add(values[index - 1].java_length()?)
+                offsets[index - 1].wrapping_add(values[index - 1].length()?)
             };
             values.push(component);
             offsets.push(offset);
@@ -226,8 +220,7 @@ impl AggregateCharSequence {
         }
         for component_index in (0..self.values.len()).rev() {
             if self.offsets[component_index] <= index {
-                return self.values[component_index]
-                    .java_char_at(index - self.offsets[component_index]);
+                return self.values[component_index].char_at(index - self.offsets[component_index]);
             }
         }
         Err(TextUtilsError::SequenceAccess {
@@ -295,16 +288,16 @@ impl AggregateCharSequence {
             return Ok(cached);
         }
         let mut hash = if self.values.len() == 1 {
-            self.values[0].java_sequence_hash_code()?
+            self.values[0].sequence_hash_code()?
         } else {
             0
         };
         if self.values.len() != 1 {
             for component in &self.values {
-                for index in 0..component.java_length()? {
+                for index in 0..component.length()? {
                     hash = hash
                         .wrapping_mul(31)
-                        .wrapping_add(i32::from(component.java_char_at(index)?));
+                        .wrapping_add(i32::from(component.char_at(index)?));
                 }
             }
         }
@@ -315,14 +308,14 @@ impl AggregateCharSequence {
     /// 按字符内容比较任意 Java CharSequence。
     /// 对应 Java: `AggregateCharSequence#contentEquals()`。
     pub fn content_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
-        if self.length != other.java_length()? {
+        if self.length != other.length()? {
             return Ok(false);
         }
-        if self.length == 0 || other.java_sequence_equals(self)? {
+        if self.length == 0 || other.sequence_equals(self)? {
             return Ok(true);
         }
         for index in 0..self.length {
-            if self.char_at(index)? != other.java_char_at(index)? {
+            if self.char_at(index)? != other.char_at(index)? {
                 return Ok(false);
             }
         }
@@ -336,7 +329,7 @@ impl AggregateCharSequence {
             return Ok(Utf16String::from_utf16(Vec::new()));
         }
         if self.values.len() == 1 {
-            return self.values[0].java_to_string();
+            return self.values[0].to_utf16_string();
         }
         let result_length =
             usize::try_from(self.length).map_err(|_| TextUtilsError::SequenceAccess {
@@ -345,7 +338,7 @@ impl AggregateCharSequence {
             })?;
         let mut result = vec![0_u16; result_length];
         for (component_index, component) in self.values.iter().enumerate() {
-            let component_length = component.java_length()?;
+            let component_length = component.length()?;
             for source_index in 0..component_length {
                 let destination_index = self.offsets[component_index].wrapping_add(source_index);
                 let destination_index = usize::try_from(destination_index).map_err(|_| {
@@ -360,7 +353,7 @@ impl AggregateCharSequence {
                         length: result.len(),
                     });
                 };
-                *slot = component.java_char_at(source_index)?;
+                *slot = component.char_at(source_index)?;
             }
         }
         Ok(Utf16String::from_utf16(result))
@@ -368,15 +361,15 @@ impl AggregateCharSequence {
 }
 
 impl CharSequenceValue for AggregateCharSequence {
-    fn java_sequence_class_name(&self) -> &str {
+    fn sequence_class_name(&self) -> &str {
         "org.thymeleaf.util.AggregateCharSequence"
     }
 
-    fn java_length(&self) -> Result<i32, TextUtilsError> {
+    fn length(&self) -> Result<i32, TextUtilsError> {
         Ok(self.length)
     }
 
-    fn java_char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
+    fn char_at(&self, index: i32) -> Result<u16, TextUtilsError> {
         self.char_at(index)
     }
 
@@ -384,11 +377,11 @@ impl CharSequenceValue for AggregateCharSequence {
         None
     }
 
-    fn java_to_string(&self) -> Result<Utf16String, TextUtilsError> {
+    fn to_utf16_string(&self) -> Result<Utf16String, TextUtilsError> {
         self.to_utf16_string()
     }
 
-    fn java_sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
+    fn sub_sequence(&self, start: i32, end: i32) -> Result<Utf16String, TextUtilsError> {
         self.sub_sequence(start, end)
     }
 
@@ -396,18 +389,18 @@ impl CharSequenceValue for AggregateCharSequence {
         Some(IWritableCharSequence::write(self, writer))
     }
 
-    fn java_sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
+    fn sequence_hash_code(&self) -> Result<i32, TextUtilsError> {
         self.hash_code()
     }
 
-    fn java_sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
-        if other.java_sequence_class_name() != "org.thymeleaf.util.AggregateCharSequence"
-            || self.length != other.java_length()?
+    fn sequence_equals(&self, other: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
+        if other.sequence_class_name() != "org.thymeleaf.util.AggregateCharSequence"
+            || self.length != other.length()?
         {
             return Ok(false);
         }
         for index in 0..self.length {
-            if self.char_at(index)? != other.java_char_at(index)? {
+            if self.char_at(index)? != other.char_at(index)? {
                 return Ok(false);
             }
         }
@@ -419,7 +412,7 @@ impl IWritableCharSequence for AggregateCharSequence {
     fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         for component in &self.values {
             let value = component
-                .java_to_string()
+                .to_utf16_string()
                 .map_err(|error| io::Error::other(error.to_string()))?;
             writer.write_utf16(value.as_utf16())?;
         }

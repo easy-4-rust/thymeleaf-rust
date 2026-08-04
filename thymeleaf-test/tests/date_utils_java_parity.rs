@@ -541,7 +541,7 @@ fn format_iso_uses_colon_offset_never_z() {
 }
 
 #[test]
-fn java_z_pattern_zero_offset_plus0000_and_x_uses_z() {
+fn z_pattern_zero_offset_plus0000_and_x_uses_z() {
     // java.time 模式字母（Java 21 实测）：'Z' 零偏移输出 "+0000"（非 "Z"）；
     // 'X'（count=1）与 'XXX'（count=3）零偏移输出 "Z"。
     let utc = DateUtils::create(

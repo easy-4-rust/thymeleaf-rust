@@ -31,7 +31,7 @@ impl MapUtils {
     pub fn size<K, V, S>(target: Option<&HashMap<K, V, S>>) -> Result<i32, ValidateError> {
         Validate::not_null(target, Some("Cannot get map size of null"))?;
         let size = target.expect("validated target").len();
-        Ok(java_map_size(size))
+        Ok(map_size(size))
     }
 
     /// 判断映射是否为 null 或没有条目。
@@ -254,7 +254,7 @@ impl MapUtils {
     }
 }
 
-fn java_map_size(size: usize) -> i32 {
+fn map_size(size: usize) -> i32 {
     i32::try_from(size).unwrap_or(i32::MAX)
 }
 
@@ -287,7 +287,7 @@ mod tests {
         assert!(!MapUtils::is_empty(Some(&map)));
         assert!(MapUtils::is_empty(Some(&empty)));
         assert!(MapUtils::is_empty(None::<&HashMap<String, String>>));
-        assert_eq!(super::java_map_size(usize::MAX), i32::MAX);
+        assert_eq!(super::map_size(usize::MAX), i32::MAX);
     }
 
     #[test]

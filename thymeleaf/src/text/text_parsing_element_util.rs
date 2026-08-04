@@ -87,17 +87,17 @@ impl TextParsingElementError {
     }
 
     /// 返回 Java `String.valueOf(Throwable#getMessage())` 的 UTF-16 表示。
-    /// 对应 Java 语义：`TextParsingElementUtil` 的 `java_message` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn java_message(&self) -> Utf16String {
+    /// 对应 Java 语义：`TextParsingElementUtil` 的 `message` 行为（Rust 侧辅助/私有路径）。
+    pub(crate) fn message(&self) -> Utf16String {
         match self {
             Self::TextParse(exception) => exception
                 .get_message()
                 .cloned()
                 .unwrap_or_else(|| Utf16String::from_rust_str("null")),
             Self::Scanning(error) => error
-                .java_message()
+                .message()
                 .unwrap_or_else(|| Utf16String::from_rust_str("null")),
-            Self::Attribute(error) => error.java_message(),
+            Self::Attribute(error) => error.message(),
             Self::NullArrayLoad => Utf16String::from_rust_str(NULL_ARRAY_LOAD_MESSAGE),
             Self::NullStringValue => Utf16String::from_rust_str(NULL_STRING_VALUE_MESSAGE),
             Self::ArrayIndex { index, length } => Utf16String::from_rust_str(&format!(
@@ -141,7 +141,7 @@ impl TextParsingElementError {
 
 impl Display for TextParsingElementError {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.java_message().to_string_lossy())
+        formatter.write_str(&self.message().to_string_lossy())
     }
 }
 
@@ -1181,7 +1181,7 @@ mod tests {
             text_parse.class_name(),
             "org.thymeleaf.templateparser.text.TextParseException"
         );
-        assert_eq!(text_parse.java_message().to_string_lossy(), "null");
+        assert_eq!(text_parse.message().to_string_lossy(), "null");
         assert_eq!(text_parse.text_parse_location(), None);
         assert!(std::error::Error::source(&text_parse).is_some());
 
@@ -1193,12 +1193,12 @@ mod tests {
         );
         assert!(std::error::Error::source(&scanning).is_some());
         let null_scanning = TextParsingElementError::from(TextParsingUtilError::NullText);
-        assert_eq!(null_scanning.java_message().to_string_lossy(), "null");
+        assert_eq!(null_scanning.message().to_string_lossy(), "null");
 
         let attribute =
             TextParsingElementError::from(TextParsingAttributeSequenceError::NullHandler);
         assert_eq!(attribute.class_name(), "java.lang.NullPointerException");
-        assert!(!attribute.java_message().as_utf16().is_empty());
+        assert!(!attribute.message().as_utf16().is_empty());
         assert!(std::error::Error::source(&attribute).is_some());
         let attribute_text = TextParsingElementError::from(
             TextParsingAttributeSequenceError::TextParse(Box::default()),
@@ -1211,7 +1211,7 @@ mod tests {
             TextParsingAttributeSequenceError::Scanning(TextParsingUtilError::NullText),
         );
         require(
-            attribute_scanning.java_message().to_string_lossy() == "null",
+            attribute_scanning.message().to_string_lossy() == "null",
             "attribute scanning conversion",
         );
 
@@ -1248,7 +1248,7 @@ mod tests {
             TextParsingElementError::NullOpenEndHandler,
             TextParsingElementError::NullCloseEndHandler,
         ] {
-            assert!(!error.java_message().as_utf16().is_empty());
+            assert!(!error.message().as_utf16().is_empty());
             assert!(std::error::Error::source(&error).is_none());
         }
 
@@ -1856,7 +1856,7 @@ mod tests {
         let base = format!(
             "ERR:{}:{}",
             error.class_name(),
-            to_utf16_hex(&error.java_message())
+            to_utf16_hex(&error.message())
         );
         error
             .text_parse_location()

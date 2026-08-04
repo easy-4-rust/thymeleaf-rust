@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use crate::util::{AggregateUtils, EvaluationUtils, NumberValue, Utf16String};
 
-use super::binary_operation_expression::{compare_java_values, java_values_equal};
+use super::binary_operation_expression::{compare_java_values, values_equal};
 use super::{
     ConversionResult, Conversions, ExecutionInfo, Ids, Messages, TemplateObjectMethodError,
     TemplateValue, Uris,
@@ -376,7 +376,7 @@ fn invoke_sequence(
         }
         "contains" if arguments.len() == 2 => {
             let values = required_list(&arguments[0])?;
-            let candidate = java_null(&arguments[1]);
+            let candidate = or_null(&arguments[1]);
             Ok(boolean_value(contains_value(values, &candidate)?))
         }
         "containsAll" if arguments.len() == 2 => {
@@ -427,11 +427,11 @@ fn invoke_maps(
         )),
         "isEmpty" if arguments.len() == 1 => Ok(boolean_value(entries.is_empty())),
         "containsKey" | "containsValue" if arguments.len() == 2 => {
-            let candidate = java_null(&arguments[1]);
+            let candidate = or_null(&arguments[1]);
             let mut found = false;
             for (key, value) in entries {
                 let target = if method == "containsKey" { key } else { value };
-                if java_values_equal(Some(target), Some(&candidate))
+                if values_equal(Some(target), Some(&candidate))
                     .map_err(|error| invocation_error(error.to_string()))?
                 {
                     found = true;
@@ -447,7 +447,7 @@ fn invoke_maps(
                 let mut found = false;
                 for (key, value) in entries {
                     let target = if keys { key } else { value };
-                    if java_values_equal(Some(target), Some(candidate))
+                    if values_equal(Some(target), Some(candidate))
                         .map_err(|error| invocation_error(error.to_string()))?
                     {
                         found = true;
@@ -471,7 +471,7 @@ fn invoke_objects(
     if method != "nullSafe" || arguments.len() != 2 {
         return Err(method_error("#objects", method, arguments));
     }
-    let default = java_null(&arguments[1]);
+    let default = or_null(&arguments[1]);
     match arguments[0].as_deref() {
         None | Some(TemplateValue::Null) => Ok(Some(default)),
         Some(TemplateValue::List(values)) => {
@@ -622,7 +622,7 @@ fn mode_value(value: Option<crate::TemplateMode>) -> Option<Arc<TemplateValue>> 
     value.map(|value| Arc::new(TemplateValue::Object(Arc::new(value))))
 }
 
-fn java_null(value: &Option<Arc<TemplateValue>>) -> Arc<TemplateValue> {
+fn or_null(value: &Option<Arc<TemplateValue>>) -> Arc<TemplateValue> {
     value
         .clone()
         .unwrap_or_else(|| Arc::new(TemplateValue::Null))
@@ -633,7 +633,7 @@ fn contains_value(
     candidate: &Arc<TemplateValue>,
 ) -> Result<bool, InvocationError> {
     for value in values {
-        if java_values_equal(Some(value), Some(candidate))
+        if values_equal(Some(value), Some(candidate))
             .map_err(|error| invocation_error(error.to_string()))?
         {
             return Ok(true);

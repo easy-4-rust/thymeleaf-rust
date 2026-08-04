@@ -323,7 +323,7 @@ impl SetUtils {
     /// Java `Set#size()` 对应的 `i32` 大小。
     pub fn size<T>(target: Option<&dyn SetView<T>>) -> Result<i32, ValidateError> {
         Validate::not_null(target, Some("Cannot get set size of null"))?;
-        Ok(java_set_size(target.expect("validated target").len()))
+        Ok(set_size(target.expect("validated target").len()))
     }
 
     /// 判断集合是否为 null 或没有元素。
@@ -449,7 +449,7 @@ impl SetUtils {
     }
 }
 
-fn java_set_size(size: usize) -> i32 {
+fn set_size(size: usize) -> i32 {
     i32::try_from(size).unwrap_or(i32::MAX)
 }
 
@@ -549,7 +549,7 @@ mod tests {
         assert!(!SetUtils::is_empty(Some(source_view)));
         assert!(SetUtils::is_empty(Some(empty_view)));
         assert!(SetUtils::is_empty(None::<&dyn SetView<Option<String>>>));
-        assert_eq!(super::java_set_size(usize::MAX), i32::MAX);
+        assert_eq!(super::set_size(usize::MAX), i32::MAX);
 
         assert_eq!(
             SetUtils::contains(Some(source_view), &Some("one".to_owned())),

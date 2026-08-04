@@ -44,7 +44,7 @@ impl TemporalCreationUtils {
         text: &str,
         pattern: Option<&str>,
     ) -> Result<TemporalValue, TemporalCreationError> {
-        let pattern = pattern.map_or("%Y-%m-%d".to_owned(), java_pattern);
+        let pattern = pattern.map_or("%Y-%m-%d".to_owned(), process_pattern);
         NaiveDate::parse_from_str(text, &pattern)
             .map(TemporalValue::LocalDate)
             .map_err(|error| invalid(error.to_string()))
@@ -57,7 +57,7 @@ impl TemporalCreationUtils {
         text: &str,
         pattern: Option<&str>,
     ) -> Result<TemporalValue, TemporalCreationError> {
-        let pattern = pattern.map_or("%Y-%m-%dT%H:%M:%S".to_owned(), java_pattern);
+        let pattern = pattern.map_or("%Y-%m-%dT%H:%M:%S".to_owned(), process_pattern);
         NaiveDateTime::parse_from_str(text, &pattern)
             .map(TemporalValue::LocalDateTime)
             .map_err(|error| invalid(error.to_string()))
@@ -156,8 +156,8 @@ fn default_zone() -> Tz {
         .unwrap_or(chrono_tz::UTC)
 }
 
-/// 对应 Java 语义：`TemporalCreationUtils` 的 `java_pattern` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_pattern(pattern: &str) -> String {
+/// 对应 Java 语义：`TemporalCreationUtils` 的 `process_pattern` 行为（Rust 侧辅助/私有路径）。
+pub(crate) fn process_pattern(pattern: &str) -> String {
     let mut output = String::new();
     let mut chars = pattern.chars().peekable();
     let mut quoted = false;

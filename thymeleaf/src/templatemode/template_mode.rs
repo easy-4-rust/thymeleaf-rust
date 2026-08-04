@@ -72,7 +72,7 @@ impl TemplateMode {
         let Some(mode) = mode else {
             return Err(TemplateModeParseError);
         };
-        if java_trim(mode).is_empty() {
+        if trim(mode).is_empty() {
             return Err(TemplateModeParseError);
         }
 
@@ -177,7 +177,7 @@ fn current_thread_index() -> String {
         .to_owned()
 }
 
-fn java_trim(value: &str) -> &str {
+fn trim(value: &str) -> &str {
     value.trim_matches(|character| character <= '\u{0020}')
 }
 

@@ -36,7 +36,7 @@ impl ExpressionParsingUtil {
     pub(crate) fn parse_expression(
         input: &Utf16String,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
-        let trimmed = java_trim(input.as_utf16());
+        let trimmed = trim(input.as_utf16());
         parse_range(trimmed).ok_or_else(|| {
             Box::new(TemplateProcessingException::new(Some(format!(
                 "Could not parse as expression: \"{}\"",
@@ -63,12 +63,12 @@ impl ExpressionParsingUtil {
     /// 解析 `iter[,status] : iterable` 声明。
     /// 对应 Java 语义：Java 接口/超类方法 `parseEach()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_each(input: &Utf16String) -> Option<Each> {
-        let input = java_trim(input.as_utf16());
+        let input = trim(input.as_utf16());
         let operator = find_top_level_character(input, b':' as u16)?;
         if operator == 0 || operator + 1 >= input.len() {
             return None;
         }
-        let left = java_trim(&input[..operator]);
+        let left = trim(&input[..operator]);
         let iterable = parse_range(&input[operator + 1..])?;
         let status_separator = find_top_level_character(left, b',' as u16);
         let (iter_var, status_var) = match status_separator {
@@ -85,7 +85,7 @@ impl ExpressionParsingUtil {
     /// 解析只允许 token 名称的 Fragment 签名。
     /// 对应 Java 语义：Java 接口/超类方法 `parseFragmentSignature()` 的 Rust 移植（`ExpressionParsingUtil` 继承路径）。
     pub(crate) fn parse_fragment_signature(input: &Utf16String) -> Option<FragmentSignature> {
-        let input = java_trim(input.as_utf16());
+        let input = trim(input.as_utf16());
         if input.is_empty() {
             return None;
         }
@@ -95,13 +95,12 @@ impl ExpressionParsingUtil {
             return None;
         }
         let fragment_name_end = parameter_start.unwrap_or(input.len());
-        let fragment_name =
-            Utf16String::from_utf16(java_trim(&input[..fragment_name_end]).to_vec());
+        let fragment_name = Utf16String::from_utf16(trim(&input[..fragment_name_end]).to_vec());
         let parameter_names = parameter_start.and_then(|start| {
             let parameters = &input[start + 1..input.len().saturating_sub(1)];
             let values = parameters
                 .split(|unit| *unit == b',' as u16)
-                .map(|value| Some(Utf16String::from_utf16(java_trim(value).to_vec())))
+                .map(|value| Some(Utf16String::from_utf16(trim(value).to_vec())))
                 .filter(|value| value.as_ref().is_some_and(|value| !value.is_empty()))
                 .collect::<Vec<_>>();
             (!values.is_empty()).then(|| Arc::new(RwLock::new(values)))
@@ -111,12 +110,12 @@ impl ExpressionParsingUtil {
 }
 
 fn parse_range(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let input = java_trim(input);
+    let input = trim(input);
     if input.is_empty() {
         return None;
     }
     if is_outer_parenthesized(input) {
-        return parse_range(java_trim(&input[1..input.len() - 1]));
+        return parse_range(trim(&input[1..input.len() - 1]));
     }
 
     if let Some((question, colon)) = find_conditional(input) {
@@ -240,7 +239,7 @@ fn parse_simple(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
 }
 
 fn parse_message(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let content = java_trim(&input[2..input.len() - 1]);
+    let content = trim(&input[2..input.len() - 1]);
     let (base_input, parameters_input) = split_trailing_parameters(content);
     let base = parse_link_base_default_as_literal(base_input)?;
     let parameters = match parameters_input {
@@ -253,7 +252,7 @@ fn parse_message(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
 }
 
 fn parse_link(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let content = java_trim(&input[2..input.len() - 1]);
+    let content = trim(&input[2..input.len() - 1]);
     let (base_input, parameters_input) = split_trailing_parameters(content);
     let base = parse_link_base_default_as_literal(base_input)?;
     let parameters = match parameters_input {
@@ -266,7 +265,7 @@ fn parse_link(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
 }
 
 fn parse_link_base_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let input = java_trim(input);
+    let input = trim(input);
     if input.len() >= 2 && input[0] == b'\'' as u16 && input[input.len() - 1] == b'\'' as u16 {
         // 显式文本字面量必须先按 TextLiteralExpression 解引号；路径兜底仅服务
         // `@{/path}` 这种无引号 base，不能把 `@{'/path'}` 的引号并入 URL。
@@ -299,7 +298,7 @@ fn parse_link_base_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandard
 }
 
 fn parse_default_as_literal(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
-    let input = java_trim(input);
+    let input = trim(input);
     parse_range(input).or_else(|| {
         let literal = TextLiteralExpression::wrap_string_into_literal(Some(
             &Utf16String::from_utf16(input.to_vec()),
@@ -330,7 +329,7 @@ fn parse_assignation_sequence(
         let (left, right) = match equals {
             Some(position) => {
                 let left = parse_default_as_literal(&range[..position])?;
-                let right_input = java_trim(&range[position + 1..]);
+                let right_input = trim(&range[position + 1..]);
                 let right = if right_input.is_empty() {
                     if !allow_parameters_without_value {
                         return None;
@@ -446,13 +445,13 @@ fn find_binary_operator<'a>(
         }
     });
     found.filter(|(position, operator)| {
-        !java_trim(&input[..*position]).is_empty()
-            && !java_trim(&input[*position + operator.len()..]).is_empty()
+        !trim(&input[..*position]).is_empty()
+            && !trim(&input[*position + operator.len()..]).is_empty()
     })
 }
 
 fn is_unary_sign_position(input: &[u16], position: usize) -> bool {
-    let prefix = java_trim(&input[..position]);
+    let prefix = trim(&input[..position]);
     let Some(last) = prefix.last().copied() else {
         return true;
     };
@@ -524,8 +523,8 @@ fn split_trailing_parameters(input: &[u16]) -> (&[u16], Option<&[u16]>) {
             level -= 1;
             if level == 0 && position > 0 {
                 return (
-                    java_trim(&input[..position]),
-                    Some(java_trim(&input[position + 1..input.len() - 1])),
+                    trim(&input[..position]),
+                    Some(trim(&input[position + 1..input.len() - 1])),
                 );
             }
         }
@@ -538,11 +537,11 @@ fn split_top_level(input: &[u16], separator: u16) -> Option<Vec<&[u16]>> {
     let mut start = 0;
     scan_top_level(input, |position, unit| {
         if unit == separator {
-            result.push(java_trim(&input[start..position]));
+            result.push(trim(&input[start..position]));
             start = position + 1;
         }
     });
-    result.push(java_trim(&input[start..]));
+    result.push(trim(&input[start..]));
     (!result.iter().any(|part| part.is_empty())).then_some(result)
 }
 
@@ -649,7 +648,7 @@ fn is_escaped(input: &[u16], position: usize) -> bool {
     slash_count % 2 == 1
 }
 
-fn java_trim(input: &[u16]) -> &[u16] {
+fn trim(input: &[u16]) -> &[u16] {
     let mut start = 0;
     while start < input.len() && input[start] <= 0x20 {
         start += 1;

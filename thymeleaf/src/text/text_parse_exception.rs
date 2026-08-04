@@ -16,7 +16,7 @@ const TEXT_PARSE_EXCEPTION_CLASS: &str = "org.thymeleaf.templateparser.text.Text
 pub struct TextParseCause {
     error: Box<dyn Error + Send + Sync>,
     class_name: String,
-    java_message: Option<Utf16String>,
+    message: Option<Utf16String>,
     text_parse_location: Option<(i32, i32, Utf16String)>,
 }
 
@@ -26,7 +26,7 @@ impl TextParseCause {
     /// # 参数
     /// - `error`：原因对象，所有权转移但分配身份保持不变。
     /// - `class_name`：Java `getClass().getName()`。
-    /// - `java_message`：Java `Throwable#getMessage()`，允许 null 和孤立代理项。
+    /// - `message`：Java `Throwable#getMessage()`，允许 null 和孤立代理项。
     ///
     /// # 返回
     /// 不携带 TextParseException 行列继承标记的原因。
@@ -35,12 +35,12 @@ impl TextParseCause {
     pub fn with_java_metadata(
         error: Box<dyn Error + Send + Sync>,
         class_name: impl Into<String>,
-        java_message: Option<Utf16String>,
+        message: Option<Utf16String>,
     ) -> Self {
         Self {
             error,
             class_name: class_name.into(),
-            java_message,
+            message,
             text_parse_location: None,
         }
     }
@@ -55,14 +55,14 @@ impl TextParseCause {
     /// 对应 Java 语义：`TextParseException` 的 `from_text_parse` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn from_text_parse(exception: TextParseException) -> Self {
-        let java_message = exception.message.clone();
+        let message = exception.message.clone();
         // 上游所有设置 line/col 的构造器也必定设置位置前缀消息，把这一不变量编码
         // 到适配状态中，避免产生 Java 不可构造的“有位置但消息为 null”组合。
         let text_parse_location = exception.line.zip(exception.col).map(|(line, col)| {
             (
                 line,
                 col,
-                java_message
+                message
                     .clone()
                     .expect("located TextParseException always has a message"),
             )
@@ -70,7 +70,7 @@ impl TextParseCause {
         Self {
             error: Box::new(exception),
             class_name: TEXT_PARSE_EXCEPTION_CLASS.to_owned(),
-            java_message,
+            message,
             text_parse_location,
         }
     }
@@ -95,7 +95,7 @@ impl Debug for TextParseCause {
         formatter
             .debug_struct("TextParseCause")
             .field("class_name", &self.class_name)
-            .field("java_message", &self.java_message)
+            .field("message", &self.message)
             .field("text_parse_location", &self.text_parse_location)
             .finish_non_exhaustive()
     }
@@ -347,7 +347,7 @@ fn compose_inherited_message(
     if let Some(message) = message {
         return Some(message.clone());
     }
-    cause.and_then(|cause| cause.java_message.clone())
+    cause.and_then(|cause| cause.message.clone())
 }
 
 fn message_prefix(line: i32, col: i32) -> Utf16String {

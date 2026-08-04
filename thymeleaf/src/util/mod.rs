@@ -94,7 +94,7 @@ pub use standard_processor_utils::StandardProcessorUtils;
 pub use string_utils::{StringUtils, StringUtilsError};
 pub use template_writer::TemplateWriter;
 pub use text_utils::{CharSequenceValue, TextUtils, TextUtilsError};
-pub(crate) use text_utils::{java_case_fold_unit, java_lower};
+pub(crate) use text_utils::{case_fold_unit, to_lower_unit};
 pub use utf16_string::{Utf16String, Utf16StringResult};
 pub use validate::{Validate, ValidateError};
 pub use version_utils::{VersionQualifier, VersionSpec, VersionUtils};

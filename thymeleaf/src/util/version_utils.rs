@@ -58,7 +58,7 @@ impl VersionUtils {
         let Some(version) = version else {
             return VersionSpec::unknown(build_timestamp);
         };
-        let version = java_trim_utf16(version);
+        let version = trim_utf16(version);
         if version.is_empty() {
             return VersionSpec::unknown(build_timestamp);
         }
@@ -368,7 +368,7 @@ fn parse_known_version(version: &[u16], build_timestamp: Option<&str>) -> Option
                     )
                 } else {
                     let qualifier = &version[end + 1..];
-                    if java_trim_utf16_units(qualifier).is_empty() {
+                    if trim_utf16_units(qualifier).is_empty() {
                         return None;
                     }
                     (
@@ -411,7 +411,7 @@ fn parse_known_version(version: &[u16], build_timestamp: Option<&str>) -> Option
 
 fn find_end_of_numeric_version(sequence: &[u16]) -> Option<usize> {
     for (index, unit) in sequence.iter().copied().enumerate() {
-        if unit != u16::from(b'.') && java_decimal_digit(unit).is_none() {
+        if unit != u16::from(b'.') && decimal_digit(unit).is_none() {
             if index > 1 && sequence[index - 1] == u16::from(b'.') {
                 return Some(index - 1);
             }
@@ -437,7 +437,7 @@ fn parse_java_i32(sequence: &[u16]) -> Option<i32> {
     let multiply_limit = limit / 10;
     let mut result = 0_i32;
     for unit in digits {
-        let digit = i32::from(java_decimal_digit(*unit)?);
+        let digit = i32::from(decimal_digit(*unit)?);
         if result < multiply_limit {
             return None;
         }
@@ -450,7 +450,7 @@ fn parse_java_i32(sequence: &[u16]) -> Option<i32> {
     Some(if negative { result } else { -result })
 }
 
-fn java_decimal_digit(unit: u16) -> Option<u8> {
+fn decimal_digit(unit: u16) -> Option<u8> {
     JAVA_BMP_DECIMAL_ZEROES.iter().find_map(|zero| {
         let offset = unit.checked_sub(*zero)?;
         (offset <= 9).then_some(offset as u8)
@@ -471,12 +471,12 @@ fn is_java_letter(unit: u16) -> bool {
     )
 }
 
-fn java_trim_utf16(value: &str) -> Vec<u16> {
+fn trim_utf16(value: &str) -> Vec<u16> {
     let units = value.encode_utf16().collect::<Vec<_>>();
-    java_trim_utf16_units(&units).to_vec()
+    trim_utf16_units(&units).to_vec()
 }
 
-fn java_trim_utf16_units(units: &[u16]) -> &[u16] {
+fn trim_utf16_units(units: &[u16]) -> &[u16] {
     let start = units
         .iter()
         .position(|unit| *unit > 0x20)
@@ -514,9 +514,8 @@ fn format_full_version(version: &str, build_timestamp: Option<&str>) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        VersionSpec, VersionUtils, compose_version, find_end_of_numeric_version,
-        format_full_version, is_java_letter, java_decimal_digit, java_trim_utf16_units,
-        parse_java_i32,
+        VersionSpec, VersionUtils, compose_version, decimal_digit, find_end_of_numeric_version,
+        format_full_version, is_java_letter, parse_java_i32, trim_utf16_units,
     };
 
     #[test]
@@ -605,9 +604,9 @@ mod tests {
         assert_eq!(qualifier.as_str(), None);
         assert_eq!(qualifier.to_string_lossy(), "\u{FFFD}");
 
-        assert_eq!(java_decimal_digit(u16::from(b'0')), Some(0));
-        assert_eq!(java_decimal_digit(0xFF19), Some(9));
-        assert_eq!(java_decimal_digit(u16::from(b'A')), None);
+        assert_eq!(decimal_digit(u16::from(b'0')), Some(0));
+        assert_eq!(decimal_digit(0xFF19), Some(9));
+        assert_eq!(decimal_digit(u16::from(b'A')), None);
         assert!(is_java_letter(u16::from(b'A')));
         assert!(is_java_letter(0x01C5));
         assert!(is_java_letter(0x02B0));
@@ -671,10 +670,10 @@ mod tests {
         assert_eq!(find_end_of_numeric_version(&immediate), Some(0));
 
         assert_eq!(
-            java_trim_utf16_units(&[0, 0x20, u16::from(b'x'), 0x20]),
+            trim_utf16_units(&[0, 0x20, u16::from(b'x'), 0x20]),
             &[u16::from(b'x')]
         );
-        assert!(java_trim_utf16_units(&[0, 0x20]).is_empty());
+        assert!(trim_utf16_units(&[0, 0x20]).is_empty());
         let qualifier = super::VersionQualifier::from_utf16(&[u16::from(b'R'), u16::from(b'C')]);
         assert_eq!(
             compose_version("1", Some(u16::from(b'-')), Some(&qualifier)),

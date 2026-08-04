@@ -66,9 +66,9 @@ fn inline_contract_and_no_op_singleton_match_java_golden() {
     );
 
     let context = PanicTemplateContext;
-    let text = Text::new(Some(java_sequence("text")));
-    let cdata = CDATASection::new(Some(java_sequence("cdata")));
-    let comment = Comment::new(Some(java_sequence("comment")));
+    let text = Text::new(Some(sequence("text")));
+    let cdata = CDATASection::new(Some(sequence("cdata")));
+    let comment = Comment::new(Some(sequence("comment")));
     emit_optional_sequence(
         &mut output,
         "noop.non_null.text",
@@ -314,7 +314,7 @@ fn java(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn java_sequence(value: &str) -> Arc<dyn CharSequenceValue> {
+fn sequence(value: &str) -> Arc<dyn CharSequenceValue> {
     Arc::new(java(value))
 }
 
@@ -339,7 +339,7 @@ fn emit_optional_sequence(
             output,
             key,
             value
-                .java_to_string()
+                .to_utf16_string()
                 .expect("inliner result must stringify")
                 .to_string_lossy(),
         ),

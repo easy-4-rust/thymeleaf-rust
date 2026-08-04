@@ -219,7 +219,7 @@ fn factory_text_event_contract_matches_java() {
         // IText 内容访问
         let content = text.get_text().expect("text access").expect("non-null");
         assert_eq!(content.to_string_lossy(), "hello");
-        assert_eq!(content.java_length().expect("length"), 5);
+        assert_eq!(content.length().expect("length"), 5);
     });
 }
 

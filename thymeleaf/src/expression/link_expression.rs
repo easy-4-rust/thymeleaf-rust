@@ -231,7 +231,7 @@ fn normalize_base(value: Option<&TemplateValue>) -> Utf16String {
     if is_empty_or_java_whitespace(&value) {
         return Utf16String::from_rust_str("");
     }
-    java_trim(&value)
+    trim(&value)
 }
 
 fn invalid_parameter_name(
@@ -248,7 +248,7 @@ fn invalid_parameter_name(
     )))))
 }
 
-fn java_trim(value: &Utf16String) -> Utf16String {
+fn trim(value: &Utf16String) -> Utf16String {
     let units = value.as_utf16();
     let mut start = 0;
     while start < units.len() && units[start] <= 0x20 {

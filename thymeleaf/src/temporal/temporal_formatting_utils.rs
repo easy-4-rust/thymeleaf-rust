@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::util::{Locale, Utf16String};
 
-use super::temporal_creation_utils::java_pattern;
+use super::temporal_creation_utils::process_pattern;
 use super::temporal_objects::java_short_zone;
 use super::{TemporalObjects, TemporalValue};
 
@@ -49,7 +49,7 @@ impl TemporalFormattingUtils {
             Some("MEDIUM") => localized_pattern(target, locale, "MEDIUM", &self.default_zone_id),
             Some("LONG") => localized_pattern(target, locale, "LONG", &self.default_zone_id),
             Some("FULL") => localized_pattern(target, locale, "FULL", &self.default_zone_id),
-            Some(pattern) => java_pattern(pattern),
+            Some(pattern) => process_pattern(pattern),
         };
 
         let formatted = match target {
@@ -72,7 +72,7 @@ impl TemporalFormattingUtils {
                 format!(
                     "{}{}",
                     value.format(&pattern),
-                    java_gmt_offset(value.offset().local_minus_utc())
+                    gmt_offset(value.offset().local_minus_utc())
                 )
             }
             TemporalValue::OffsetTime(value, offset)
@@ -82,7 +82,7 @@ impl TemporalFormattingUtils {
                 format!(
                     "{}{}",
                     value.format(&pattern),
-                    java_gmt_offset(offset.local_minus_utc())
+                    gmt_offset(offset.local_minus_utc())
                 )
             }
             TemporalValue::Year(value) if !has_explicit_pattern && zone_id.is_none() => {
@@ -442,7 +442,7 @@ fn format_year(year: i32, pattern: &str) -> String {
 }
 
 /// Java `appendLocalizedOffset(TextStyle.FULL)`：零偏移 → "GMT"，否则 "GMT+HH:MM"。
-fn java_gmt_offset(seconds: i32) -> String {
+fn gmt_offset(seconds: i32) -> String {
     if seconds == 0 {
         "GMT".to_owned()
     } else {

@@ -19,7 +19,7 @@ pub trait ConversionObject: Any {
     ///
     /// # 错误
     /// `toString()` 抛出的运行时异常必须按原类别和消息返回。
-    fn java_to_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError>;
+    fn to_utf16_string(&self) -> Result<Utf16StringConversionResult<'_>, StandardConversionError>;
 }
 
 /// 传给标准转换服务的 Java 运行时值分类。

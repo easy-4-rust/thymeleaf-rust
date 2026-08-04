@@ -27,7 +27,7 @@ impl TemplateObject for CorpusSimpleDateFormat {
     fn to_utf16_string(&self) -> Utf16String {
         Utf16String::from_rust_str(&format!(
             "java.text.SimpleDateFormat@{:x}",
-            self.pattern.java_hash_code()
+            self.pattern.hash_code()
         ))
     }
 

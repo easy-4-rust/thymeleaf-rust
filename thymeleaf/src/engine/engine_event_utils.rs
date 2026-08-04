@@ -117,13 +117,13 @@ fn parse_attribute_expression(
 }
 
 fn compute_whitespace(text: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
-    let mut remaining = text.java_length()?;
+    let mut remaining = text.length()?;
     if remaining == 0 {
         return Ok(false);
     }
     while remaining != 0 {
         remaining -= 1;
-        if !java_is_whitespace(text.java_char_at(remaining)?) {
+        if !is_whitespace(text.char_at(remaining)?) {
             return Ok(false);
         }
     }
@@ -136,7 +136,7 @@ fn compute_whitespace(text: &dyn CharSequenceValue) -> Result<bool, TextUtilsErr
 /// （事件版本：右向左扫描，后遇到的闭包覆盖前者，仅在 `n > 0` 时
 /// 识别闭包并跳过其前一个字符）。
 pub(crate) fn compute_inlineable(text: &dyn CharSequenceValue) -> Result<bool, TextUtilsError> {
-    let mut remaining = text.java_length()?;
+    let mut remaining = text.length()?;
     if remaining == 0 {
         return Ok(false);
     }
@@ -144,15 +144,15 @@ pub(crate) fn compute_inlineable(text: &dyn CharSequenceValue) -> Result<bool, T
     let mut inline = 0_u8;
     while remaining != 0 {
         remaining -= 1;
-        let current = text.java_char_at(remaining)?;
+        let current = text.char_at(remaining)?;
         if remaining > 0 && current == u16::from(b']') && previous == u16::from(b']') {
             inline = 1;
             remaining -= 1;
-            previous = text.java_char_at(remaining)?;
+            previous = text.char_at(remaining)?;
         } else if remaining > 0 && current == u16::from(b')') && previous == u16::from(b']') {
             inline = 2;
             remaining -= 1;
-            previous = text.java_char_at(remaining)?;
+            previous = text.char_at(remaining)?;
         } else if (inline == 1 && current == u16::from(b'[') && previous == u16::from(b'['))
             || (inline == 2 && current == u16::from(b'[') && previous == u16::from(b'('))
         {
@@ -164,7 +164,7 @@ pub(crate) fn compute_inlineable(text: &dyn CharSequenceValue) -> Result<bool, T
     Ok(false)
 }
 
-fn java_is_whitespace(character: u16) -> bool {
+fn is_whitespace(character: u16) -> bool {
     matches!(
         character,
         0x0009..=0x000D

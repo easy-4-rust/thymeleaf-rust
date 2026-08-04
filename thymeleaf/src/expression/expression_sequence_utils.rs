@@ -33,8 +33,8 @@ impl ExpressionSequenceUtils {
         {
             return Ok(cached);
         }
-        let parsed = Self::internal_parse_expression_sequence(&java_trim(&preprocessed))
-            .ok_or_else(|| {
+        let parsed =
+            Self::internal_parse_expression_sequence(&trim(&preprocessed)).ok_or_else(|| {
                 Box::new(TemplateProcessingException::new(Some(format!(
                     "Could not parse as expression sequence: \"{}\"",
                     input.to_string_lossy()
@@ -58,7 +58,7 @@ impl ExpressionSequenceUtils {
     }
 }
 
-fn java_trim(input: &Utf16String) -> Utf16String {
+fn trim(input: &Utf16String) -> Utf16String {
     let units = input.as_utf16();
     let start = units
         .iter()

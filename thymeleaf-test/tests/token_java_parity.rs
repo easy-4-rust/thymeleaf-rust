@@ -320,7 +320,7 @@ struct SharedStringProbe {
 }
 
 impl TokenValue for SharedStringProbe {
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         Ok(TokenStringResult::Borrowed(&self.shared))
     }
 }
@@ -328,7 +328,7 @@ impl TokenValue for SharedStringProbe {
 struct NullStringProbe;
 
 impl TokenValue for NullStringProbe {
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         Ok(TokenStringResult::Null)
     }
 }
@@ -336,7 +336,7 @@ impl TokenValue for NullStringProbe {
 struct ThrowingProbe;
 
 impl TokenValue for ThrowingProbe {
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         Err(TokenError::runtime(
             "java.lang.IllegalStateException",
             "boom",
@@ -347,7 +347,7 @@ impl TokenValue for ThrowingProbe {
 struct OwnedProbe;
 
 impl TokenValue for OwnedProbe {
-    fn java_token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
+    fn token_to_string(&self) -> Result<TokenStringResult<'_>, TokenError> {
         Ok(TokenStringResult::Owned(Utf16String::from_rust_str(
             "owned",
         )))
