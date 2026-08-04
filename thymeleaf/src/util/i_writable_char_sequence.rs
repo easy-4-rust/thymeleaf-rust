@@ -1,6 +1,6 @@
 use std::io;
 
-use super::{JavaCharSequence, JavaWriter};
+use super::{JavaCharSequence, TemplateWriter};
 
 /// 可直接写入 Java writer 的字符序列合同。
 ///
@@ -20,5 +20,5 @@ pub trait IWritableCharSequence: JavaCharSequence {
     /// # 错误
     ///
     /// 底层输出失败时返回 Java `IOException` 对应的 I/O 错误。
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()>;
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()>;
 }

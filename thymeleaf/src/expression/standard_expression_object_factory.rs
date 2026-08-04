@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::{Arc, LazyLock, Weak};
 
 use crate::context::IExpressionContext;
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 
 use super::{
     Aggregates, Arrays, Bools, Calendars, Conversions, Dates, ExecutionInfo, ExpressionObjectNames,
@@ -325,7 +325,7 @@ impl TemplateObject for ContextExpressionObject {
     }
 }
 
-impl TemplateObject for JavaLocale {
+impl TemplateObject for Locale {
     fn java_class_name(&self) -> &str {
         "java.util.Locale"
     }

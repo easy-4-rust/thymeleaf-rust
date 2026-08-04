@@ -27,7 +27,7 @@ use thymeleaf::expression::{
 };
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::text::TextParserReaderError;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{
     ITemplateEngine, ITemplateResolver, StandardDialect, TemplateEngine, TemplateMode,
@@ -1183,7 +1183,7 @@ fn unescape_test_resource_unicode(input: &str) -> Result<String, String> {
 }
 
 fn build_web_context(engine: &TemplateEngine, source: Option<&str>) -> Result<WebContext, String> {
-    let default_locale = JavaLocale::new(
+    let default_locale = Locale::new(
         Utf16String::from_rust_str("en"),
         Utf16String::from_rust_str(""),
     );

@@ -12,7 +12,7 @@ use thymeleaf::expression::{
     NativeExpressionObjectsWrapperError, StandardExpressionObjectFactory, StandardExpressionResult,
     TemplateValue,
 };
-use thymeleaf::util::{JavaLocale, Utf16String, ValidateError};
+use thymeleaf::util::{Locale, Utf16String, ValidateError};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -119,7 +119,7 @@ fn standard_expression_object_cache_does_not_retain_context() {
         configuration,
         TemplateData::new(None, None, None, Some(TemplateMode::HTML), None),
         None,
-        JavaLocale::new(js("en"), js("US")),
+        Locale::new(js("en"), js("US")),
         None,
     );
     let weak = Arc::downgrade(&context);
@@ -158,7 +158,7 @@ fn export_expression_objects(output: &mut BTreeMap<String, String>) {
         .expect("default configuration");
     let context: Arc<dyn IExpressionContext> = ExpressionContext::with_locale(
         Some(configuration),
-        Some(JavaLocale::new(js("en-US"), js("US"))),
+        Some(Locale::new(js("en-US"), js("US"))),
     )
     .expect("valid expression context");
     let factory = Arc::new(ProbeFactory::new());
@@ -313,7 +313,7 @@ fn export_standard_factory(output: &mut BTreeMap<String, String>) {
         .expect("default configuration");
     let context: Arc<dyn IExpressionContext> = ExpressionContext::with_locale(
         Some(Arc::clone(&configuration)),
-        Some(JavaLocale::new(js("fr-CA"), js("CA"))),
+        Some(Locale::new(js("fr-CA"), js("CA"))),
     )
     .expect("valid expression context");
     let first = StandardExpressionObjectFactory::new();
@@ -407,7 +407,7 @@ fn export_standard_factory(output: &mut BTreeMap<String, String>) {
         configuration,
         TemplateData::new(None, None, None, Some(TemplateMode::HTML), None),
         None,
-        JavaLocale::new(js("ja-JP"), js("JP")),
+        Locale::new(js("ja-JP"), js("JP")),
         None,
     );
     let selection = Arc::new(TemplateValue::string(js("selection")));

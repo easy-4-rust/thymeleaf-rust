@@ -27,7 +27,7 @@ use thymeleaf::context::Context;
 use thymeleaf::engine::{ITemplateHandler, OutputTemplateHandler, Text};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::model::IText;
-use thymeleaf::util::{Charset, JavaWriter, Utf16String};
+use thymeleaf::util::{Charset, TemplateWriter, Utf16String};
 use thymeleaf::{ITemplateResolver, TemplateEngine};
 
 fn js(value: &str) -> Utf16String {
@@ -60,7 +60,7 @@ struct CapturedWriter {
     buffer: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for CapturedWriter {
+impl TemplateWriter for CapturedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.buffer
             .lock()

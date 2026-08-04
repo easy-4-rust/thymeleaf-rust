@@ -2,7 +2,7 @@ use std::sync::{Arc, OnceLock, Weak};
 
 use crate::IEngineConfiguration;
 use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 use crate::web::IWebExchange;
 
 use super::ContextVariableEntries;
@@ -60,7 +60,7 @@ impl AbstractExpressionContext {
     /// 返回共享基础 Context。
     pub fn with_locale(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
     ) -> Result<Arc<Self>, ValidateError> {
         Self::with_locale_variables_and_web_exchange(configuration, locale, None, None)
     }
@@ -85,7 +85,7 @@ impl AbstractExpressionContext {
     /// 配置为空时返回与 Java 校验一致的参数错误。
     pub fn with_locale_and_variables(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
         variables: ContextVariableEntries<'_>,
     ) -> Result<Arc<Self>, ValidateError> {
         Self::with_locale_variables_and_web_exchange(configuration, locale, variables, None)
@@ -94,7 +94,7 @@ impl AbstractExpressionContext {
     /// 对应 Java 语义：`AbstractExpressionContext` 的 `with_locale_variables_and_web_exchange` 行为（Rust 侧辅助/私有路径）。
     pub(super) fn with_locale_variables_and_web_exchange(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
         variables: ContextVariableEntries<'_>,
         web_exchange: Option<Arc<dyn IWebExchange>>,
     ) -> Result<Arc<Self>, ValidateError> {
@@ -123,7 +123,7 @@ impl AbstractExpressionContext {
     ///
     /// Locale 为空时返回 `Locale cannot be null`。
     /// 对应 Java 语义：Java 接口/超类方法 `setLocale()` 的 Rust 移植（`AbstractExpressionContext` 继承路径）。
-    pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
+    pub fn set_locale(&self, locale: Option<Locale>) -> Result<(), ValidateError> {
         self.base.set_locale(locale)
     }
 
@@ -175,7 +175,7 @@ impl IContext for AbstractExpressionContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.base.get_locale()
     }
 

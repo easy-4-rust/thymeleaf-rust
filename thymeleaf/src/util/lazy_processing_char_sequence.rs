@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex, RwLock};
 use crate::context::ITemplateContext;
 use crate::model::IModel;
 
-use super::{IWritableCharSequence, JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
+use super::{IWritableCharSequence, JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
 
 /// 延迟执行 TemplateModel 并直接写入最终输出的字符序列。
 ///
@@ -91,13 +91,13 @@ impl JavaCharSequence for LazyProcessingCharSequence {
         self.resolve_text()?.java_sub_sequence(start, end)
     }
 
-    fn write_direct(&self, writer: &mut dyn JavaWriter) -> Option<io::Result<()>> {
+    fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {
         Some(IWritableCharSequence::write(self, writer))
     }
 }
 
 impl IWritableCharSequence for LazyProcessingCharSequence {
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         if let Some(text) = self
             .read_resolved_text()
             .map_err(|error| io::Error::other(error.to_string()))?
@@ -131,7 +131,7 @@ struct SharedUtf16Writer {
     output: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for SharedUtf16Writer {
+impl TemplateWriter for SharedUtf16Writer {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.output
             .lock()

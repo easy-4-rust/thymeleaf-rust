@@ -9,7 +9,7 @@ use num_bigint::BigInt;
 use thymeleaf::context::{ExpressionContext, IExpressionContext, WebExpressionContext};
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::linkbuilder::{AbstractLinkBuilder, ILinkBuilder, StandardLinkBuilder};
-use thymeleaf::util::{JavaBigDecimal, JavaLocale, JavaNumber, Utf16String, ValidateError};
+use thymeleaf::util::{JavaBigDecimal, JavaNumber, Locale, Utf16String, ValidateError};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateProcessingException,
@@ -955,7 +955,7 @@ impl IWebExchange for TestWebExchange {
         None
     }
 
-    fn get_locale(&self) -> Option<JavaLocale> {
+    fn get_locale(&self) -> Option<Locale> {
         None
     }
 

@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaLocale, JavaNumber, StringUtils, Utf16String};
+use crate::util::{JavaNumber, Locale, StringUtils, Utf16String};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -11,13 +11,13 @@ use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 ///
 /// 对应 Java: `org.thymeleaf.expression.Strings`。
 pub struct Strings {
-    locale: JavaLocale,
+    locale: Locale,
 }
 
 impl Strings {
     /// 使用当前表达式上下文 Locale 创建 `#strings`。
     #[must_use]
-    pub const fn new(locale: JavaLocale) -> Self {
+    pub const fn new(locale: Locale) -> Self {
         Self { locale }
     }
 
@@ -585,11 +585,11 @@ fn contains_java_value(values: &[Arc<TemplateValue>], candidate: &Arc<TemplateVa
 mod invoke_direct_tests {
     use super::Strings;
     use crate::expression::TemplateValue;
-    use crate::util::{JavaLocale, JavaNumber, Utf16String};
+    use crate::util::{JavaNumber, Locale, Utf16String};
     use std::sync::Arc;
 
     fn strings() -> Strings {
-        Strings::new(JavaLocale::new(
+        Strings::new(Locale::new(
             Utf16String::from_rust_str("en"),
             Utf16String::from_rust_str("US"),
         ))

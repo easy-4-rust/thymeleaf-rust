@@ -1,9 +1,9 @@
 use chrono_tz::Tz;
 
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 
 use super::temporal_formatting_utils::TemporalFormattingError;
-use super::{JavaTemporal, TemporalFormattingUtils};
+use super::{TemporalFormattingUtils, TemporalValue};
 
 /// Java temporal 数组批量格式化工具。
 ///
@@ -15,7 +15,7 @@ pub struct TemporalArrayUtils {
 impl TemporalArrayUtils {
     /// 使用 Locale 与默认 ZoneId 创建数组工具。
     /// 对应 Java 语义：`TemporalArrayUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(locale: JavaLocale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
+    pub fn new(locale: Locale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             formatting: TemporalFormattingUtils::new(locale, default_zone_id)?,
         })
@@ -25,9 +25,9 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayFormat()`。
     pub fn array_format(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
         pattern: Option<&str>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         target
             .iter()
@@ -42,7 +42,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayDay()`。
     pub fn array_day(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.day(value))
     }
@@ -51,7 +51,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayMonth()`。
     pub fn array_month(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.month(value))
     }
@@ -60,7 +60,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayYear()`。
     pub fn array_year(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.year(value))
     }
@@ -69,7 +69,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayDayOfWeek()`。
     pub fn array_day_of_week(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.day_of_week(value))
     }
@@ -78,7 +78,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayHour()`。
     pub fn array_hour(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.hour(value))
     }
@@ -87,7 +87,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayMinute()`。
     pub fn array_minute(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.minute(value))
     }
@@ -96,7 +96,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arraySecond()`。
     pub fn array_second(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.second(value))
     }
@@ -105,7 +105,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayNanosecond()`。
     pub fn array_nanosecond(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         self.map_integer(target, |utils, value| utils.nanosecond(value))
     }
@@ -114,7 +114,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayMonthName()`。
     pub fn array_month_name(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("MMMM"), None)
     }
@@ -123,7 +123,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayMonthNameShort()`。
     pub fn array_month_name_short(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("MMM"), None)
     }
@@ -132,7 +132,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayDayOfWeekName()`。
     pub fn array_day_of_week_name(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("EEEE"), None)
     }
@@ -141,7 +141,7 @@ impl TemporalArrayUtils {
     /// 对应 Java: `TemporalArrayUtils#arrayDayOfWeekNameShort()`。
     pub fn array_day_of_week_name_short(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         self.array_format(target, Some("EEE"), None)
     }
@@ -150,7 +150,7 @@ impl TemporalArrayUtils {
     /// 对应 Java 语义：`TemporalArrayUtils` 的 `array_format_iso` 行为（Rust 侧辅助/私有路径）。
     pub fn array_format_iso(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         target
             .iter()
@@ -160,10 +160,10 @@ impl TemporalArrayUtils {
 
     fn map_integer(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
         mapper: impl Fn(
             &TemporalFormattingUtils,
-            Option<&JavaTemporal>,
+            Option<&TemporalValue>,
         ) -> Result<Option<i32>, TemporalFormattingError>,
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         target

@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::engine::ITemplateHandler;
 use crate::exceptions::TemplateEngineException;
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::{ICloseElementTag, IModelVisitor, IOpenElementTag, IProcessableElementTag, IText};
 
@@ -83,5 +83,5 @@ pub trait ITemplateEvent: Send + Sync {
     /// # 错误
     ///
     /// 底层输出失败时返回 Java `IOException` 对应错误。
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()>;
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()>;
 }

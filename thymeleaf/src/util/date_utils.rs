@@ -10,7 +10,7 @@ use thiserror::Error;
 
 use crate::expression::{TemplateObject, TemplateValue};
 
-use super::{JavaLocale, JavaNumber, Utf16String};
+use super::{JavaNumber, Locale, Utf16String};
 
 /// Java `Date`/`Calendar` 的 Rust 时间值适配。
 /// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `JavaDate`。
@@ -251,7 +251,7 @@ impl DateUtils {
         second: Option<i32>,
         millisecond: Option<i32>,
         time_zone: Option<&str>,
-        _locale: Option<&JavaLocale>,
+        _locale: Option<&Locale>,
     ) -> Result<JavaDate, DateUtilsError> {
         let (Some(year), Some(month), Some(day)) = (year, month, day) else {
             return Err(invalid(format!(
@@ -307,14 +307,14 @@ impl DateUtils {
     /// 返回指定时区的当前 Calendar。
     /// 对应 Java: `DateUtils#createNow()`。
     #[must_use]
-    pub fn create_now(time_zone: Option<&str>, _locale: Option<&JavaLocale>) -> JavaDate {
+    pub fn create_now(time_zone: Option<&str>, _locale: Option<&Locale>) -> JavaDate {
         JavaDate::calendar_for_time_zone(Utc::now(), parse_time_zone(time_zone))
     }
 
     /// 返回指定时区当天零点 Calendar。
     /// 对应 Java: `DateUtils#createToday()`。
     #[must_use]
-    pub fn create_today(time_zone: Option<&str>, locale: Option<&JavaLocale>) -> JavaDate {
+    pub fn create_today(time_zone: Option<&str>, locale: Option<&Locale>) -> JavaDate {
         let now = Self::create_now(time_zone, locale);
         let midnight = now
             .local_date_time()
@@ -330,7 +330,7 @@ impl DateUtils {
     pub fn format(
         target: Option<&JavaDate>,
         pattern: Option<&Utf16String>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         let Some(target) = target else {
             return Ok(None);
@@ -368,7 +368,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#monthName(Object,Locale)`。
     pub fn month_name(
         target: Option<&JavaDate>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("MMMM")), locale)
     }
@@ -378,7 +378,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#monthNameShort(Object,Locale)`。
     pub fn month_name_short(
         target: Option<&JavaDate>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("MMM")), locale)
     }
@@ -410,7 +410,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#dayOfWeekName(Object,Locale)`。
     pub fn day_of_week_name(
         target: Option<&JavaDate>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("EEEE")), locale)
     }
@@ -420,7 +420,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#dayOfWeekNameShort(Object,Locale)`。
     pub fn day_of_week_name_short(
         target: Option<&JavaDate>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, DateUtilsError> {
         Self::format(target, Some(&Utf16String::from_rust_str("EEE")), locale)
     }
@@ -510,11 +510,11 @@ impl DateUtils {
 struct DateFormatKey {
     format: String,
     time_zone: Option<String>,
-    locale: JavaLocale,
+    locale: Locale,
 }
 
 impl DateFormatKey {
-    fn new(target: &JavaDate, format: Option<&Utf16String>, locale: &JavaLocale) -> Self {
+    fn new(target: &JavaDate, format: Option<&Utf16String>, locale: &Locale) -> Self {
         Self {
             format: format
                 .map(Utf16String::to_string_lossy)
@@ -692,7 +692,7 @@ fn resolve_local_datetime(time_zone: &JavaTimeZone, naive: NaiveDateTime) -> Dat
     }
 }
 
-fn default_long_pattern(locale: &JavaLocale) -> &'static str {
+fn default_long_pattern(locale: &Locale) -> &'static str {
     match locale.get_language().to_string_lossy().as_str() {
         "zh" | "ja" | "ko" => "yyyy年M月d日 HH:mm:ss z",
         _ => "MMMM d, yyyy 'at' h:mm:ss a z",
@@ -704,7 +704,7 @@ fn format_java_pattern(
     offset_seconds: i32,
     zone_display_name: &str,
     pattern: &str,
-    locale: &JavaLocale,
+    locale: &Locale,
 ) -> Result<Utf16String, DateUtilsError> {
     let mut output = String::new();
     let characters = pattern.chars().collect::<Vec<_>>();
@@ -756,7 +756,7 @@ fn append_pattern_field(
     zone_display_name: &str,
     field: char,
     count: usize,
-    locale: &JavaLocale,
+    locale: &Locale,
 ) -> Result<(), DateUtilsError> {
     match field {
         'G' => output.push_str(if date_time.year() > 0 { "AD" } else { "BC" }),
@@ -880,7 +880,7 @@ fn format_gmt_offset(seconds: i32) -> String {
     )
 }
 
-fn day_period(hour: u32, locale: &JavaLocale) -> &'static str {
+fn day_period(hour: u32, locale: &Locale) -> &'static str {
     match locale.get_language().to_string_lossy().as_str() {
         "zh" => {
             if hour < 12 {
@@ -899,7 +899,7 @@ fn day_period(hour: u32, locale: &JavaLocale) -> &'static str {
     }
 }
 
-fn localized_month_name(month: u32, locale: &JavaLocale, short: bool) -> &'static str {
+fn localized_month_name(month: u32, locale: &Locale, short: bool) -> &'static str {
     const EN_LONG: [&str; 12] = [
         "January",
         "February",
@@ -997,7 +997,7 @@ fn localized_month_name(month: u32, locale: &JavaLocale, short: bool) -> &'stati
     }
 }
 
-fn weekday_name(weekday: Weekday, locale: &JavaLocale, short: bool) -> &'static str {
+fn weekday_name(weekday: Weekday, locale: &Locale, short: bool) -> &'static str {
     let index = weekday.num_days_from_sunday() as usize;
     const EN_LONG: [&str; 7] = [
         "Sunday",
@@ -1047,7 +1047,7 @@ fn weekday_name(weekday: Weekday, locale: &JavaLocale, short: bool) -> &'static 
 
 fn localized_zone_display_name<'a>(
     zone_display_name: &'a str,
-    locale: &JavaLocale,
+    locale: &Locale,
     long: bool,
 ) -> &'a str {
     if !long || !matches!(zone_display_name, "UTC" | "GMT") {

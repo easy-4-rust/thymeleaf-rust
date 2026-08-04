@@ -9,7 +9,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, JavaLocale, Utf16String};
+use thymeleaf::util::{JavaDate, Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf_examples::business::calendar_util::calendar_for;
 use thymeleaf_examples::controllers::GtvgController;
@@ -46,14 +46,14 @@ fn build_template_engine() -> TemplateEngine {
 /// 构造 exchange —— 对应 `GTVGFilter#doFilter` 的 session 注入 + `buildExchange`。
 fn exchange_for(path: &str, parameters: &[(&str, &str)]) -> Arc<dyn IWebExchange> {
     let request = GtvgWebRequest::new(path, parameters);
-    Arc::new(GtvgWebExchange::new(request, JavaLocale::get_default()))
+    Arc::new(GtvgWebExchange::new(request, Locale::get_default()))
 }
 
 fn render(controller: &dyn GtvgController, path: &str, parameters: &[(&str, &str)]) -> String {
     // 固定进程默认 Locale（对应 Java CI 的 -Duser.language=en 等价语义）：CI 各平台
     // LANG 不同（ubuntu C.UTF-8 / macOS en_US.UTF-8），不固定时 macOS 会命中
     // home_en.properties 变体，破坏 "(from default messages)" 的默认消息回退断言。
-    JavaLocale::set_default(JavaLocale::new(
+    Locale::set_default(Locale::new(
         Utf16String::from_rust_str("C"),
         Utf16String::from_rust_str(""),
     ));
@@ -105,7 +105,7 @@ fn home_renders_welcome_today_and_links() {
 fn home_message_resolution_is_locale_sensitive() {
     let engine = build_template_engine();
     // home_en.properties 覆盖 home.properties（en Locale）
-    let locale = JavaLocale::new(
+    let locale = Locale::new(
         Utf16String::from_rust_str("en"),
         Utf16String::from_rust_str(""),
     );

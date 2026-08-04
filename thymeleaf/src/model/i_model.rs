@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::IEngineConfiguration;
 use crate::TemplateMode;
 use crate::engine::TemplateData;
-use crate::util::JavaWriter;
+use crate::util::TemplateWriter;
 
 use super::{IModelVisitor, ITemplateEvent};
 
@@ -58,7 +58,7 @@ pub trait IModel: Send + Sync {
     /// 依次把事件分派给 Visitor。
     fn accept(&self, visitor: &mut dyn IModelVisitor);
     /// 依次写出所有事件。
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()>;
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()>;
 }
 
 /// 模型变更或索引访问错误。

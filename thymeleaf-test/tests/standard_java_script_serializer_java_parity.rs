@@ -20,7 +20,7 @@ use std::sync::{Arc, Mutex};
 
 use thymeleaf::expression::{TemplateObject, TemplateValue};
 use thymeleaf::serializer::{IStandardJavaScriptSerializer, StandardJavaScriptSerializer};
-use thymeleaf::util::{DateUtils, JavaNumber, JavaWriter, Utf16String};
+use thymeleaf::util::{DateUtils, JavaNumber, TemplateWriter, Utf16String};
 use thymeleaf::{ITemplateResolver, TemplateEngine};
 
 // ===========================================================================
@@ -53,7 +53,7 @@ struct CapturedWriter {
     buffer: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for CapturedWriter {
+impl TemplateWriter for CapturedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.buffer
             .lock()

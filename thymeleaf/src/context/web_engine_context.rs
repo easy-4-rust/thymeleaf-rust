@@ -12,7 +12,7 @@ use crate::expression::{
 };
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::{JavaLocale, JavaNumber, Utf16String};
+use crate::util::{JavaNumber, Locale, Utf16String};
 use crate::web::IWebExchange;
 use crate::{IEngineConfiguration, TemplateMode, TemplateResolutionAttributes};
 
@@ -94,7 +94,7 @@ impl WebEngineContext {
         template_data: TemplateData,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
         web_exchange: Arc<dyn IWebExchange>,
-        locale: JavaLocale,
+        locale: Locale,
         variables: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     ) -> Arc<ExchangeAttributeMap> {
         let core_variables = variables.map(|variables| {
@@ -217,7 +217,7 @@ impl IContext for WebEngineContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.core.get_locale()
     }
 

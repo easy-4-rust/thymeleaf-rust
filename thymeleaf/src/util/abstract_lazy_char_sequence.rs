@@ -2,7 +2,8 @@ use std::io;
 use std::sync::RwLock;
 
 use super::{
-    IWritableCharSequence, JavaCharSequence, JavaHashCode, JavaWriter, TextUtilsError, Utf16String,
+    IWritableCharSequence, JavaCharSequence, JavaHashCode, TemplateWriter, TextUtilsError,
+    Utf16String,
 };
 
 /// `AbstractLazyCharSequence` 子类提供的延迟解析与未解析写出行为。
@@ -15,7 +16,7 @@ pub trait LazyCharSequenceResolver: Send + Sync {
     fn resolve_text(&self) -> Option<Utf16String>;
 
     /// 对应子类 `writeUnresolved(Writer)`。
-    fn write_unresolved(&self, writer: &mut dyn JavaWriter) -> io::Result<()>;
+    fn write_unresolved(&self, writer: &mut dyn TemplateWriter) -> io::Result<()>;
 }
 
 /// 可延迟解析完整文本、并在未解析时直接写入输出的字符序列基类。
@@ -106,13 +107,13 @@ impl<R: LazyCharSequenceResolver> JavaCharSequence for AbstractLazyCharSequence<
             .java_sub_sequence(start, end)
     }
 
-    fn write_direct(&self, writer: &mut dyn JavaWriter) -> Option<io::Result<()>> {
+    fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {
         Some(IWritableCharSequence::write(self, writer))
     }
 }
 
 impl<R: LazyCharSequenceResolver> IWritableCharSequence for AbstractLazyCharSequence<R> {
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         if let Some(value) = read_lock(&self.resolved_text).as_ref() {
             writer.write_utf16(value.as_utf16())
         } else {

@@ -2,7 +2,7 @@ use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateOutputException;
-use crate::util::{Charset, JavaWriter};
+use crate::util::{Charset, TemplateWriter};
 
 use super::i_throttled_template_writer_control::IThrottledTemplateWriterControl;
 use super::isse_throttled_template_writer_control::ISSEThrottledTemplateWriterControl;
@@ -63,7 +63,7 @@ impl SSEThrottledTemplateWriter {
     /// 对应 Java 语义：`SSEThrottledTemplateWriter` 的 `set_output_writer` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_output_writer(
         &mut self,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), TemplateOutputException> {
         self.writer.set_output_writer(writer)
     }
@@ -147,7 +147,7 @@ impl SSEThrottledTemplateWriter {
     }
 }
 
-impl JavaWriter for SSEThrottledTemplateWriter {
+impl TemplateWriter for SSEThrottledTemplateWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         Self::write_utf16(self, characters)
     }
@@ -215,7 +215,7 @@ mod tests {
     use super::super::template_flow_controller::TemplateFlowController;
     use super::SSEThrottledTemplateWriter;
     use crate::util::Charset;
-    use crate::util::JavaWriter;
+    use crate::util::TemplateWriter;
 
     #[test]
     fn framing_and_invalid_event_token_match_java_golden() {
@@ -336,7 +336,7 @@ mod tests {
 
     struct RecordingWriter(Arc<Mutex<Vec<u16>>>);
 
-    impl JavaWriter for RecordingWriter {
+    impl TemplateWriter for RecordingWriter {
         fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
             self.0
                 .lock()

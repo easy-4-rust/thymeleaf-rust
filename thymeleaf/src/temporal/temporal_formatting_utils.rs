@@ -2,24 +2,24 @@ use chrono::Timelike;
 use chrono_tz::Tz;
 use thiserror::Error;
 
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 
 use super::temporal_creation_utils::java_pattern;
 use super::temporal_objects::java_short_zone;
-use super::{JavaTemporal, TemporalObjects};
+use super::{TemporalObjects, TemporalValue};
 
 /// Java 8 Time 对象格式化及字段读取工具。
 ///
 /// 对应 Java: `org.thymeleaf.util.temporal.TemporalFormattingUtils`。
 pub struct TemporalFormattingUtils {
-    locale: JavaLocale,
+    locale: Locale,
     default_zone_id: Tz,
 }
 
 impl TemporalFormattingUtils {
     /// 使用 Locale 与默认 ZoneId 创建格式化工具。
     /// 对应 Java 语义：`TemporalFormattingUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(locale: JavaLocale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
+    pub fn new(locale: Locale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             locale,
             default_zone_id,
@@ -30,9 +30,9 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#format()`。
     pub fn format(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
         pattern: Option<&str>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
         zone_id: Option<Tz>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         let Some(target) = target else {
@@ -53,19 +53,19 @@ impl TemporalFormattingUtils {
         };
 
         let formatted = match target {
-            JavaTemporal::Instant(value) if !has_explicit_pattern && pattern.contains('Z') => {
+            TemporalValue::Instant(value) if !has_explicit_pattern && pattern.contains('Z') => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::LocalDate(value) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::LocalDate(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::LocalDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::LocalDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::LocalTime(value) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::LocalTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
-            JavaTemporal::OffsetDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::OffsetDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 // Java formatterFor(OffsetDateTime) = appendLocalized(LONG, MEDIUM)
                 // + appendLocalizedOffset(FULL)：偏移段为 "GMT"（零偏移）或
                 // "GMT+HH:MM"，由 format() 按目标自身偏移追加。
@@ -75,7 +75,7 @@ impl TemporalFormattingUtils {
                     java_gmt_offset(value.offset().local_minus_utc())
                 )
             }
-            JavaTemporal::OffsetTime(value, offset)
+            TemporalValue::OffsetTime(value, offset)
                 if !has_explicit_pattern && zone_id.is_none() =>
             {
                 // Java formatterFor(OffsetTime) = `HH:mm:ss` + appendLocalizedOffset(FULL)。
@@ -85,15 +85,15 @@ impl TemporalFormattingUtils {
                     java_gmt_offset(offset.local_minus_utc())
                 )
             }
-            JavaTemporal::Year(value) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::Year(value) if !has_explicit_pattern && zone_id.is_none() => {
                 format_year(*value, &pattern)
             }
-            JavaTemporal::YearMonth(year, month) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::YearMonth(year, month) if !has_explicit_pattern && zone_id.is_none() => {
                 let date = chrono::NaiveDate::from_ymd_opt(*year, *month, 1)
                     .ok_or_else(|| invalid("Invalid YearMonth"))?;
                 date.format(&pattern).to_string()
             }
-            JavaTemporal::ZonedDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
+            TemporalValue::ZonedDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 value.format(&pattern).to_string()
             }
             // Java: `DateTimeFormatter.ofPattern(pattern).withZone(zoneId)`
@@ -123,7 +123,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#day()`。
     pub fn day(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         target
             .map(|target| TemporalObjects::date_fields(target).map(|(_, _, day, _)| day as i32))
@@ -135,7 +135,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#month()`。
     pub fn month(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         target
             .map(|target| TemporalObjects::date_fields(target).map(|(_, month, _, _)| month as i32))
@@ -148,7 +148,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#monthName(Object)`。
     pub fn month_name(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("MMMM"), None, None)
     }
@@ -158,7 +158,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#monthNameShort(Object)`。
     pub fn month_name_short(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("MMM"), None, None)
     }
@@ -167,7 +167,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#year()`。
     pub fn year(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         target
             .map(|target| TemporalObjects::date_fields(target).map(|(year, _, _, _)| year))
@@ -179,7 +179,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#dayOfWeek()`。
     pub fn day_of_week(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         target
             .map(|target| {
@@ -194,7 +194,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#dayOfWeekName(Object)`。
     pub fn day_of_week_name(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("EEEE"), None, None)
     }
@@ -204,7 +204,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#dayOfWeekNameShort(Object)`。
     pub fn day_of_week_name_short(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         self.format(target, Some("EEE"), None, None)
     }
@@ -213,7 +213,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#hour()`。
     pub fn hour(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         self.time_field(target, 0)
     }
@@ -222,7 +222,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#minute()`。
     pub fn minute(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         self.time_field(target, 1)
     }
@@ -231,7 +231,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#second()`。
     pub fn second(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         self.time_field(target, 2)
     }
@@ -240,7 +240,7 @@ impl TemporalFormattingUtils {
     /// 对应 Java: `TemporalFormattingUtils#nanosecond()`。
     pub fn nanosecond(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         self.time_field(target, 3)
     }
@@ -253,19 +253,19 @@ impl TemporalFormattingUtils {
     /// ZonedDateTime）保留原始偏移，其余在默认 ZoneId 下组装。
     pub fn format_iso(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         let Some(target) = target else {
             return Ok(None);
         };
         let formatted = match target {
-            JavaTemporal::OffsetDateTime(value) => {
+            TemporalValue::OffsetDateTime(value) => {
                 value.format("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
             }
             // OffsetTime 与其余类型一致走 `zonedTime`：Java 在默认 ZoneId 下组装
             // （`ZonedDateTime.of(LocalDate.now(), localTime, defaultZoneId)`），
             // 偏移本身不参与。
-            JavaTemporal::ZonedDateTime(value) => {
+            TemporalValue::ZonedDateTime(value) => {
                 value.format("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
             }
             _ => TemporalObjects::zoned_time(target, self.default_zone_id)?
@@ -277,7 +277,7 @@ impl TemporalFormattingUtils {
 
     fn time_field(
         &self,
-        target: Option<&JavaTemporal>,
+        target: Option<&TemporalValue>,
         index: usize,
     ) -> Result<Option<i32>, TemporalFormattingError> {
         target
@@ -291,15 +291,15 @@ impl TemporalFormattingUtils {
 
 fn replace_java_fraction_markers(
     mut formatted: String,
-    target: &JavaTemporal,
+    target: &TemporalValue,
 ) -> Result<String, TemporalFormattingError> {
     let nanosecond = match target {
-        JavaTemporal::Instant(value) => value.nanosecond(),
-        JavaTemporal::LocalDate(_) | JavaTemporal::Year(_) | JavaTemporal::YearMonth(_, _) => 0,
-        JavaTemporal::LocalDateTime(value) => value.nanosecond(),
-        JavaTemporal::LocalTime(value) | JavaTemporal::OffsetTime(value, _) => value.nanosecond(),
-        JavaTemporal::OffsetDateTime(value) => value.nanosecond(),
-        JavaTemporal::ZonedDateTime(value) => value.nanosecond(),
+        TemporalValue::Instant(value) => value.nanosecond(),
+        TemporalValue::LocalDate(_) | TemporalValue::Year(_) | TemporalValue::YearMonth(_, _) => 0,
+        TemporalValue::LocalDateTime(value) => value.nanosecond(),
+        TemporalValue::LocalTime(value) | TemporalValue::OffsetTime(value, _) => value.nanosecond(),
+        TemporalValue::OffsetDateTime(value) => value.nanosecond(),
+        TemporalValue::ZonedDateTime(value) => value.nanosecond(),
     };
     const PREFIX: &str = "__THYMELEAF_FRACTION_";
     const SUFFIX: &str = "__";
@@ -341,15 +341,15 @@ fn invalid(message: impl Into<String>) -> TemporalFormattingError {
 }
 
 fn localized_pattern(
-    target: &JavaTemporal,
-    locale: &JavaLocale,
+    target: &TemporalValue,
+    locale: &Locale,
     style: &str,
     default_zone: &Tz,
 ) -> String {
-    let date_only = matches!(target, JavaTemporal::LocalDate(_));
+    let date_only = matches!(target, TemporalValue::LocalDate(_));
     let time_only = matches!(
         target,
-        JavaTemporal::LocalTime(_) | JavaTemporal::OffsetTime(_, _)
+        TemporalValue::LocalTime(_) | TemporalValue::OffsetTime(_, _)
     );
     let language = locale.get_language().to_string_lossy();
     let zh = language == "zh";

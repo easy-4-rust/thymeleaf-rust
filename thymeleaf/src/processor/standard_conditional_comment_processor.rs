@@ -7,7 +7,7 @@ use crate::context::ITemplateContext;
 use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::model::IComment;
 use crate::processor::IProcessor;
-use crate::util::{JavaWriter, StandardConditionalCommentUtils, Utf16String};
+use crate::util::{StandardConditionalCommentUtils, TemplateWriter, Utf16String};
 
 type CommentCallback = Box<
     dyn Fn(
@@ -169,7 +169,7 @@ struct SharedWriter {
     output: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for SharedWriter {
+impl TemplateWriter for SharedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.output
             .lock()

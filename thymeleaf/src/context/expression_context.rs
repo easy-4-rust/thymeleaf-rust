@@ -2,7 +2,7 @@ use std::sync::{Arc, OnceLock, Weak};
 
 use crate::IEngineConfiguration;
 use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 
 use super::ContextVariableEntries;
 use super::{AbstractExpressionContext, IContext, IContextVariableNames, IExpressionContext};
@@ -57,7 +57,7 @@ impl ExpressionContext {
     /// 返回保持具体类型身份的共享 Context。
     pub fn with_locale(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
     ) -> Result<Arc<Self>, ValidateError> {
         let base = AbstractExpressionContext::with_locale(configuration, locale)?;
         Ok(Self::from_base(base))
@@ -79,7 +79,7 @@ impl ExpressionContext {
     /// 返回保持输入变量插入顺序及值身份的共享 Context。
     pub fn with_locale_and_variables(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
         variables: ContextVariableEntries<'_>,
     ) -> Result<Arc<Self>, ValidateError> {
         let base =
@@ -105,7 +105,7 @@ impl ExpressionContext {
     ///
     /// `locale` 为空时返回 Java `IllegalArgumentException` 等价错误。
     /// 对应 Java 语义：Java 接口/超类方法 `setLocale()` 的 Rust 移植（`ExpressionContext` 继承路径）。
-    pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
+    pub fn set_locale(&self, locale: Option<Locale>) -> Result<(), ValidateError> {
         self.base.set_locale(locale)
     }
 
@@ -157,7 +157,7 @@ impl IContext for ExpressionContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.base.get_locale()
     }
 

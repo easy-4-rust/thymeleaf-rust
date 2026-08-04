@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use thiserror::Error;
 
-use super::{JavaLocale, Utf16String, ValidateError};
+use super::{Locale, Utf16String, ValidateError};
 
 static RANDOM_STATE: AtomicU64 = AtomicU64::new(0);
 const ALPHA_NUMERIC: &[u8] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -91,7 +91,7 @@ impl StringUtils {
     pub fn contains_ignore_case(
         target: Option<&Utf16String>,
         fragment: Option<&Utf16String>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<bool, StringUtilsError> {
         let target = required(target, "Cannot apply containsIgnoreCase on null")?;
         let fragment = required(fragment, "Fragment cannot be null")?;
@@ -364,7 +364,7 @@ impl StringUtils {
     /// 对应 Java: `StringUtils#toUpperCase()`。
     pub fn to_upper_case(
         target: Option<&Utf16String>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, StringUtilsError> {
         let locale = required(locale, "Locale cannot be null")?;
         Ok(target.map(|target| to_upper_case_for_locale(target, locale)))
@@ -374,7 +374,7 @@ impl StringUtils {
     /// 对应 Java: `StringUtils#toLowerCase()`。
     pub fn to_lower_case(
         target: Option<&Utf16String>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, StringUtilsError> {
         let locale = required(locale, "Locale cannot be null")?;
         Ok(target.map(|target| to_lower_case_for_locale(target, locale)))
@@ -411,7 +411,7 @@ impl StringUtils {
                     .filter(|unit| *unit > 0x20 && !is_java_whitespace(*unit))
                     .collect::<Vec<_>>(),
             );
-            to_lower_case_for_locale(&compact, &JavaLocale::get_default())
+            to_lower_case_for_locale(&compact, &Locale::get_default())
         })
     }
 
@@ -557,7 +557,7 @@ fn is_java_whitespace(unit: u16) -> bool {
     )
 }
 
-fn locale_is_turkic(locale: &JavaLocale) -> bool {
+fn locale_is_turkic(locale: &Locale) -> bool {
     matches!(
         locale
             .get_language()
@@ -568,7 +568,7 @@ fn locale_is_turkic(locale: &JavaLocale) -> bool {
     )
 }
 
-fn to_upper_case_for_locale(value: &Utf16String, locale: &JavaLocale) -> Utf16String {
+fn to_upper_case_for_locale(value: &Utf16String, locale: &Locale) -> Utf16String {
     let turkic = locale_is_turkic(locale);
     let text = value.to_string_lossy();
     let mut result = String::new();
@@ -584,7 +584,7 @@ fn to_upper_case_for_locale(value: &Utf16String, locale: &JavaLocale) -> Utf16St
     Utf16String::from_rust_str(&result)
 }
 
-fn to_lower_case_for_locale(value: &Utf16String, locale: &JavaLocale) -> Utf16String {
+fn to_lower_case_for_locale(value: &Utf16String, locale: &Locale) -> Utf16String {
     let turkic = locale_is_turkic(locale);
     let text = value.to_string_lossy();
     let mut result = String::new();

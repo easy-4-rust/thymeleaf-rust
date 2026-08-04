@@ -12,7 +12,7 @@ use thymeleaf::expression::{
     ExpressionObjectNames, IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult,
     TemplateValue,
 };
-use thymeleaf::util::{JavaLocale, JavaNumber, Utf16String, ValidateError};
+use thymeleaf::util::{JavaNumber, Locale, Utf16String, ValidateError};
 use thymeleaf::{IEngineConfiguration, ITemplateEngine, TemplateEngine};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -102,11 +102,11 @@ fn assert_shape_inventory(expected: &BTreeMap<String, String>) {
 }
 
 fn export_constructors_and_variables(output: &mut BTreeMap<String, String>) {
-    let original_default = JavaLocale::get_default();
-    JavaLocale::set_default(locale("fr-CA", "CA"));
+    let original_default = Locale::get_default();
+    Locale::set_default(locale("fr-CA", "CA"));
     let default_context = Context::new();
     let null_locale_context = Context::with_locale(None);
-    JavaLocale::set_default(locale("ja-JP", "JP"));
+    Locale::set_default(locale("ja-JP", "JP"));
     emit(
         output,
         "context.default.locale.snapshot",
@@ -122,7 +122,7 @@ fn export_constructors_and_variables(output: &mut BTreeMap<String, String>) {
         "context.new.default.locale",
         Context::new().get_locale(),
     );
-    JavaLocale::set_default(original_default);
+    Locale::set_default(original_default);
 
     let marker = string_value("Marker(shared)");
     let variables = vec![
@@ -514,8 +514,8 @@ fn js(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn locale(language_tag: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(js(language_tag), js(country))
+fn locale(language_tag: &str, country: &str) -> Locale {
+    Locale::new(js(language_tag), js(country))
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {

@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    DateUtils, DateUtilsError, JavaDate, JavaLocale, JavaNumber, Utf16String, template_integer,
+    DateUtils, DateUtilsError, JavaDate, JavaNumber, Locale, Utf16String, template_integer,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -13,13 +13,13 @@ use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 ///
 /// 对应 Java: `org.thymeleaf.expression.Calendars`。
 pub struct Calendars {
-    locale: JavaLocale,
+    locale: Locale,
 }
 
 impl Calendars {
     /// 使用表达式上下文 Locale 创建 `#calendars`。
     #[must_use]
-    pub const fn new(locale: JavaLocale) -> Self {
+    pub const fn new(locale: Locale) -> Self {
         Self { locale }
     }
 

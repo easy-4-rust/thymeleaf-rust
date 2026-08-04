@@ -498,7 +498,7 @@ mod tests {
     use crate::model::{AttributeValueQuotes, IModel, IProcessableElementTag};
     use crate::templatemode::TemplateMode;
     use crate::templateresource::StringTemplateResource;
-    use crate::util::{JavaLocale, Utf16String};
+    use crate::util::{Locale, Utf16String};
     use crate::{ITemplateEngine, TemplateEngine};
 
     fn java(value: &str) -> Utf16String {
@@ -706,7 +706,7 @@ mod tests {
             configuration,
             template_data("root"),
             None,
-            JavaLocale::new(java("en"), java("US")),
+            Locale::new(java("en"), java("US")),
             Some(&initial),
         );
         let selection = Arc::new(TemplateValue::string(java("selection")));

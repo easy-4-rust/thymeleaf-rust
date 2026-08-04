@@ -9,7 +9,7 @@ use indexmap::IndexMap;
 
 use crate::model::{AttributeValueQuotes, IAttribute};
 use crate::templatemode::TemplateMode;
-use crate::util::{FastStringWriter, JavaWriter, Utf16String};
+use crate::util::{FastStringWriter, TemplateWriter, Utf16String};
 
 use super::{
     Attribute, AttributeDefinitionValue, AttributeDefinitions, AttributeDefinitionsError,
@@ -495,7 +495,7 @@ impl Attributes {
     /// 按原始空白与引号形态写出全部属性。
     ///
     /// 对应 Java: `Attributes#write(Writer)`。
-    pub fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    pub fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         let Some(attributes) = self.attributes.as_ref() else {
             if let Some(spaces) = self.inner_white_spaces.as_ref() {
                 writer.write_utf16(spaces[0].as_utf16())?;

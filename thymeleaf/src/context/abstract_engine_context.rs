@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
 use crate::model::IModelFactory;
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 use crate::{IEngineConfiguration, TemplateResolutionAttributes};
 
 use super::{IExpressionContext, ITemplateContext, IdentifierSequences};
@@ -20,7 +20,7 @@ use super::{IExpressionContext, ITemplateContext, IdentifierSequences};
 pub struct AbstractEngineContext {
     configuration: Arc<dyn IEngineConfiguration>,
     template_resolution_attributes: Option<TemplateResolutionAttributes>,
-    locale: JavaLocale,
+    locale: Locale,
     expression_context: Weak<dyn IExpressionContext>,
     expression_objects: OnceLock<ExpressionObjects>,
     identifier_sequences: OnceLock<IdentifierSequences>,
@@ -40,7 +40,7 @@ impl AbstractEngineContext {
     pub fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-        locale: JavaLocale,
+        locale: Locale,
         context: Weak<dyn IExpressionContext>,
     ) -> Result<Self, ValidateError> {
         Ok(Self {
@@ -82,7 +82,7 @@ impl AbstractEngineContext {
     ///
     /// 对应 Java: `AbstractEngineContext#getLocale()`。
     #[must_use]
-    pub fn get_locale(&self) -> JavaLocale {
+    pub fn get_locale(&self) -> Locale {
         self.locale.clone()
     }
 

@@ -1,6 +1,6 @@
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::JavaWriter;
+use crate::util::TemplateWriter;
 
 /// Standard Dialect 的 JavaScript 值序列化合同。
 ///
@@ -24,6 +24,6 @@ pub trait IStandardJavaScriptSerializer: Send + Sync {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> Result<(), TemplateProcessingException>;
 }

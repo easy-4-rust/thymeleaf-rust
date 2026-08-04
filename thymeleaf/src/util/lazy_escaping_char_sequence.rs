@@ -7,8 +7,8 @@ use crate::serializer::StandardSerializers;
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{
-    AbstractLazyCharSequence, IWritableCharSequence, JavaCharSequence, JavaWriter,
-    LazyCharSequenceResolver, TextUtilsError, Utf16String, ValidateError,
+    AbstractLazyCharSequence, IWritableCharSequence, JavaCharSequence, LazyCharSequenceResolver,
+    TemplateWriter, TextUtilsError, Utf16String, ValidateError,
 };
 
 /// 在真正写出时执行模板模式转义的延迟字符序列。
@@ -99,13 +99,13 @@ impl JavaCharSequence for LazyEscapingCharSequence {
         self.sequence.java_sub_sequence(start, end)
     }
 
-    fn write_direct(&self, writer: &mut dyn JavaWriter) -> Option<io::Result<()>> {
+    fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {
         Some(self.write(writer))
     }
 }
 
 impl IWritableCharSequence for LazyEscapingCharSequence {
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         self.sequence.write(writer)
     }
 }
@@ -119,7 +119,7 @@ struct LazyEscapingResolver {
 impl LazyEscapingResolver {
     fn produce_escaped_output(
         &self,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> Result<(), crate::exceptions::TemplateProcessingException> {
         match self.template_mode {
             TemplateMode::TEXT | TemplateMode::HTML => {
@@ -185,7 +185,7 @@ impl LazyCharSequenceResolver for LazyEscapingResolver {
         ))
     }
 
-    fn write_unresolved(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write_unresolved(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         self.produce_escaped_output(writer)
             .map_err(|error| io::Error::other(error.to_string()))
     }
@@ -195,7 +195,7 @@ struct SharedWriter {
     output: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for SharedWriter {
+impl TemplateWriter for SharedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.output
             .lock()
@@ -207,7 +207,7 @@ impl JavaWriter for SharedWriter {
 
 fn write_html4_xml(
     input: &Utf16String,
-    writer: &mut dyn JavaWriter,
+    writer: &mut dyn TemplateWriter,
 ) -> Result<(), crate::exceptions::TemplateProcessingException> {
     for unit in input.as_utf16() {
         match *unit {
@@ -225,7 +225,7 @@ fn write_html4_xml(
 
 fn write_xml10(
     input: &Utf16String,
-    writer: &mut dyn JavaWriter,
+    writer: &mut dyn TemplateWriter,
 ) -> Result<(), crate::exceptions::TemplateProcessingException> {
     let units = input.as_utf16();
     let mut index = 0;

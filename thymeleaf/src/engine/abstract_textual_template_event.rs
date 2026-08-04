@@ -1,7 +1,7 @@
 use std::io;
 use std::sync::{Arc, RwLock};
 
-use crate::util::{JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
+use crate::util::{JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTemplateEvent, engine_event_utils::compute_inlineable};
 
@@ -164,7 +164,7 @@ impl AbstractTextualTemplateEvent {
 
     /// 将内容写出，并在序列适配器声明 `IWritableCharSequence` 能力时避免整串分配。
     /// 对应 Java: `AbstractTextualTemplateEvent#writeContent()`。
-    pub fn write_content(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    pub fn write_content(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         if let Some(content) = self.content_string.as_ref() {
             return writer.write_utf16(content.as_utf16());
         }

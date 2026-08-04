@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 use super::gtvg_web_application::GtvgWebApplication;
@@ -24,13 +24,13 @@ pub struct GtvgWebExchange {
     session: Arc<GtvgWebSession>,
     application: Arc<GtvgWebApplication>,
     attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
-    locale: JavaLocale,
+    locale: Locale,
 }
 
 impl GtvgWebExchange {
     /// 创建 exchange：请求参数、会话（含固定 user）与 Locale。
     #[must_use]
-    pub fn new(request: GtvgWebRequest, locale: JavaLocale) -> Self {
+    pub fn new(request: GtvgWebRequest, locale: Locale) -> Self {
         Self {
             request,
             session: Arc::new(GtvgWebSession::with_user()),
@@ -54,7 +54,7 @@ impl IWebExchange for GtvgWebExchange {
     fn get_principal(&self) -> Option<Arc<TemplateValue>> {
         None
     }
-    fn get_locale(&self) -> Option<JavaLocale> {
+    fn get_locale(&self) -> Option<Locale> {
         Some(self.locale.clone())
     }
     fn get_content_type(&self) -> Option<Utf16String> {

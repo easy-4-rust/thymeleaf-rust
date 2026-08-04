@@ -3,7 +3,7 @@ use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use indexmap::IndexMap;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 
 use super::{ContextVariableEntries, IContext, IContextVariableNames};
 
@@ -20,7 +20,7 @@ type Variables = IndexMap<Option<Utf16String>, Arc<TemplateValue>>;
 pub struct AbstractContext {
     variables: Arc<RwLock<Variables>>,
     variable_names: Arc<VariableNamesView>,
-    locale: RwLock<JavaLocale>,
+    locale: RwLock<Locale>,
 }
 
 impl AbstractContext {
@@ -38,7 +38,7 @@ impl AbstractContext {
     /// # 返回值
     ///
     /// 返回与输入 Map 独立、但保留各变量值共享身份的基础状态。
-    pub(super) fn new(locale: Option<JavaLocale>, variables: ContextVariableEntries<'_>) -> Self {
+    pub(super) fn new(locale: Option<Locale>, variables: ContextVariableEntries<'_>) -> Self {
         let variables = variables.map_or_else(
             || IndexMap::with_capacity(10),
             |entries| {
@@ -62,7 +62,7 @@ impl AbstractContext {
         Self {
             variables,
             variable_names,
-            locale: RwLock::new(locale.unwrap_or_else(JavaLocale::get_default)),
+            locale: RwLock::new(locale.unwrap_or_else(Locale::get_default)),
         }
     }
 
@@ -77,7 +77,7 @@ impl AbstractContext {
     /// # 错误
     ///
     /// `locale=None` 时返回 Java `IllegalArgumentException` 对应校验错误。
-    pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
+    pub fn set_locale(&self, locale: Option<Locale>) -> Result<(), ValidateError> {
         let locale = locale.ok_or_else(|| ValidateError::IllegalArgument {
             message: Some("Locale cannot be null".to_owned()),
         })?;
@@ -145,7 +145,7 @@ impl IContext for AbstractContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         read_recovering_poison(&self.locale).clone()
     }
 

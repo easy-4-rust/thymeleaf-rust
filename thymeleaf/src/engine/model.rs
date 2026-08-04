@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateEngineException;
 use crate::model::{IModel, IModelError, IModelVisitor, ITemplateEvent};
-use crate::util::{FastStringWriter, JavaWriter};
+use crate::util::{FastStringWriter, TemplateWriter};
 use crate::{IEngineConfiguration, TemplateMode};
 
 use super::{ITemplateHandler, template_flow_controller::TemplateFlowController};
@@ -242,7 +242,7 @@ impl IModel for Model {
         }
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         for event in &self.queue {
             event.write(writer)?;
         }

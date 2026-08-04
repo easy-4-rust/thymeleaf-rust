@@ -14,7 +14,7 @@ use thymeleaf::expression::{IExpressionObjects, StandardExpressionResult, Templa
 use thymeleaf::inline::{IInliner, NoOpInliner};
 use thymeleaf::messageresolver::MessageResolutionResult;
 use thymeleaf::model::{ICDATASection, IComment, IModelFactory, IProcessableElementTag, IText};
-use thymeleaf::util::{JavaCharSequence, JavaLocale, Utf16String};
+use thymeleaf::util::{JavaCharSequence, Locale, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, TemplateMode, TemplateProcessingException, TemplateResolutionAttributes,
 };
@@ -219,7 +219,7 @@ impl IContext for PanicTemplateContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         panic!("NoOp/Probe must not read the context locale")
     }
 

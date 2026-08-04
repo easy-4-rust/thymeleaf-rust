@@ -2,7 +2,7 @@ use chrono::{LocalResult, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Timelik
 use chrono_tz::Tz;
 use thiserror::Error;
 
-use super::JavaTemporal;
+use super::TemporalValue;
 
 /// Java 8 Time 对象创建工具。
 ///
@@ -18,14 +18,14 @@ impl TemporalCreationUtils {
 
     /// 按 Java `LocalDate.of` / `LocalDateTime.of` 规则创建 temporal。
     /// 对应 Java: `TemporalCreationUtils#create()`。
-    pub fn create(&self, fields: &[i32]) -> Result<JavaTemporal, TemporalCreationError> {
+    pub fn create(&self, fields: &[i32]) -> Result<TemporalValue, TemporalCreationError> {
         if !matches!(fields.len(), 3 | 5 | 6 | 7) {
             return Err(invalid("Temporal create requires 3, 5, 6 or 7 fields"));
         }
         let date = NaiveDate::from_ymd_opt(fields[0], to_u32(fields[1])?, to_u32(fields[2])?)
             .ok_or_else(|| invalid("Invalid value for Year/MonthOfYear/DayOfMonth"))?;
         if fields.len() == 3 {
-            return Ok(JavaTemporal::LocalDate(date));
+            return Ok(TemporalValue::LocalDate(date));
         }
         let time = NaiveTime::from_hms_nano_opt(
             to_u32(fields[3])?,
@@ -34,7 +34,7 @@ impl TemporalCreationUtils {
             fields.get(6).copied().map_or(Ok(0), to_u32)?,
         )
         .ok_or_else(|| invalid("Invalid value for Hour/Minute/Second/NanoOfSecond"))?;
-        Ok(JavaTemporal::LocalDateTime(NaiveDateTime::new(date, time)))
+        Ok(TemporalValue::LocalDateTime(NaiveDateTime::new(date, time)))
     }
 
     /// 解析 ISO 或自定义 Java pattern 的 `LocalDate`。
@@ -43,10 +43,10 @@ impl TemporalCreationUtils {
         &self,
         text: &str,
         pattern: Option<&str>,
-    ) -> Result<JavaTemporal, TemporalCreationError> {
+    ) -> Result<TemporalValue, TemporalCreationError> {
         let pattern = pattern.map_or("%Y-%m-%d".to_owned(), java_pattern);
         NaiveDate::parse_from_str(text, &pattern)
-            .map(JavaTemporal::LocalDate)
+            .map(TemporalValue::LocalDate)
             .map_err(|error| invalid(error.to_string()))
     }
 
@@ -56,18 +56,18 @@ impl TemporalCreationUtils {
         &self,
         text: &str,
         pattern: Option<&str>,
-    ) -> Result<JavaTemporal, TemporalCreationError> {
+    ) -> Result<TemporalValue, TemporalCreationError> {
         let pattern = pattern.map_or("%Y-%m-%dT%H:%M:%S".to_owned(), java_pattern);
         NaiveDateTime::parse_from_str(text, &pattern)
-            .map(JavaTemporal::LocalDateTime)
+            .map(TemporalValue::LocalDateTime)
             .map_err(|error| invalid(error.to_string()))
     }
 
     /// 返回系统默认时区当前 `LocalDateTime`。
     #[must_use]
     /// 对应 Java: `TemporalCreationUtils#createNow()`。
-    pub fn create_now(&self) -> JavaTemporal {
-        JavaTemporal::LocalDateTime(Utc::now().with_timezone(&default_zone()).naive_local())
+    pub fn create_now(&self) -> TemporalValue {
+        TemporalValue::LocalDateTime(Utc::now().with_timezone(&default_zone()).naive_local())
     }
 
     /// 返回指定 ZoneId 当前 `ZonedDateTime`。
@@ -75,16 +75,18 @@ impl TemporalCreationUtils {
     pub fn create_now_for_time_zone(
         &self,
         zone_id: &str,
-    ) -> Result<JavaTemporal, TemporalCreationError> {
+    ) -> Result<TemporalValue, TemporalCreationError> {
         let zone = parse_zone(zone_id)?;
-        Ok(JavaTemporal::ZonedDateTime(Utc::now().with_timezone(&zone)))
+        Ok(TemporalValue::ZonedDateTime(
+            Utc::now().with_timezone(&zone),
+        ))
     }
 
     /// 返回系统默认时区当前 `LocalDate`。
     #[must_use]
     /// 对应 Java: `TemporalCreationUtils#createToday()`。
-    pub fn create_today(&self) -> JavaTemporal {
-        JavaTemporal::LocalDate(Utc::now().with_timezone(&default_zone()).date_naive())
+    pub fn create_today(&self) -> TemporalValue {
+        TemporalValue::LocalDate(Utc::now().with_timezone(&default_zone()).date_naive())
     }
 
     /// 返回指定 ZoneId 当天零点 `ZonedDateTime`。
@@ -92,7 +94,7 @@ impl TemporalCreationUtils {
     pub fn create_today_for_time_zone(
         &self,
         zone_id: &str,
-    ) -> Result<JavaTemporal, TemporalCreationError> {
+    ) -> Result<TemporalValue, TemporalCreationError> {
         let zone = parse_zone(zone_id)?;
         let now = Utc::now().with_timezone(&zone);
         let midnight = now
@@ -106,7 +108,7 @@ impl TemporalCreationUtils {
                 .earliest()
                 .ok_or_else(|| invalid("Cannot resolve local midnight in ZoneId"))?,
         };
-        Ok(JavaTemporal::ZonedDateTime(
+        Ok(TemporalValue::ZonedDateTime(
             value
                 .with_hour(0)
                 .and_then(|value| value.with_minute(0))

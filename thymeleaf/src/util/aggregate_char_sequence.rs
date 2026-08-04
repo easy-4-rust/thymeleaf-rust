@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::io;
 use std::sync::{Arc, Mutex};
 
-use super::{IWritableCharSequence, JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
+use super::{IWritableCharSequence, JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
 
 /// 可被线程安全聚合字符序列持有的组件。
 pub type AggregateComponent = Arc<dyn JavaCharSequence + Send + Sync>;
@@ -390,7 +390,7 @@ impl JavaCharSequence for AggregateCharSequence {
         self.sub_sequence(start, end)
     }
 
-    fn write_direct(&self, writer: &mut dyn JavaWriter) -> Option<io::Result<()>> {
+    fn write_direct(&self, writer: &mut dyn TemplateWriter) -> Option<io::Result<()>> {
         Some(IWritableCharSequence::write(self, writer))
     }
 
@@ -414,7 +414,7 @@ impl JavaCharSequence for AggregateCharSequence {
 }
 
 impl IWritableCharSequence for AggregateCharSequence {
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         for component in &self.values {
             let value = component
                 .java_to_string()

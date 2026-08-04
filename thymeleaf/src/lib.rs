@@ -135,6 +135,6 @@ pub use templateresource::{
 pub use thymeleaf::Thymeleaf;
 pub use util::{
     AbstractLazyCharSequence, AggregateCharSequence, AggregateCharSequenceError,
-    AggregateComponent, IWritableCharSequence, JavaLocale, JavaWriter, LazyCharSequenceResolver,
-    LazyProcessingCharSequence,
+    AggregateComponent, IWritableCharSequence, LazyCharSequenceResolver,
+    LazyProcessingCharSequence, Locale, TemplateWriter,
 };

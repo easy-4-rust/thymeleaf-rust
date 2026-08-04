@@ -1,7 +1,7 @@
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::temporal::JavaTemporal;
-use crate::util::{JavaDate, JavaWriter, ResourceLoaderUtils, Utf16String};
+use crate::temporal::TemporalValue;
+use crate::util::{JavaDate, ResourceLoaderUtils, TemplateWriter, Utf16String};
 
 use super::IStandardJavaScriptSerializer;
 
@@ -47,7 +47,7 @@ impl IStandardJavaScriptSerializer for StandardJavaScriptSerializer {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> Result<(), TemplateProcessingException> {
         self.delegate.serialize_value(object, writer).map_err(|error| {
             TemplateProcessingException::with_cause(
@@ -72,7 +72,7 @@ impl JavaScriptSerializerDelegate {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> std::io::Result<()> {
         match self {
             Self::Jackson2(serializer) => serializer.serialize_value(object, writer),
@@ -93,7 +93,7 @@ impl JacksonStandardJavaScriptSerializer {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> std::io::Result<()> {
         write_value(object, writer, true)
     }
@@ -110,7 +110,7 @@ impl Jackson3StandardJavaScriptSerializer {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> std::io::Result<()> {
         write_value(object, writer, true)
     }
@@ -197,7 +197,7 @@ impl DefaultStandardJavaScriptSerializer {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> std::io::Result<()> {
         write_value(object, writer, false)
     }
@@ -205,7 +205,7 @@ impl DefaultStandardJavaScriptSerializer {
 
 fn write_value(
     object: Option<&TemplateValue>,
-    writer: &mut dyn JavaWriter,
+    writer: &mut dyn TemplateWriter,
     escape_all_slashes: bool,
 ) -> std::io::Result<()> {
     let Some(object) = object else {
@@ -268,7 +268,7 @@ fn write_value(
             if let Some(date) = value.as_any().downcast_ref::<JavaDate>() {
                 let formatted = JacksonThymeleafISO8601DateFormat::format(date);
                 write_json_string(writer, formatted.as_utf16(), escape_all_slashes)
-            } else if let Some(temporal) = value.as_any().downcast_ref::<JavaTemporal>() {
+            } else if let Some(temporal) = value.as_any().downcast_ref::<TemporalValue>() {
                 let formatted = temporal.to_javascript_iso_string();
                 write_json_string(writer, formatted.as_utf16(), escape_all_slashes)
             } else if let Some(serializable) = value.java_serializable_value() {
@@ -296,7 +296,7 @@ fn write_value(
 }
 
 fn write_json_string(
-    writer: &mut dyn JavaWriter,
+    writer: &mut dyn TemplateWriter,
     input: &[u16],
     escape_all_slashes: bool,
 ) -> std::io::Result<()> {
@@ -332,10 +332,10 @@ fn write_json_string(
     writer.write_utf16(&[u16::from(b'"')])
 }
 
-fn write_ascii(writer: &mut dyn JavaWriter, input: &str) -> std::io::Result<()> {
+fn write_ascii(writer: &mut dyn TemplateWriter, input: &str) -> std::io::Result<()> {
     writer.write_utf16(&input.encode_utf16().collect::<Vec<_>>())
 }
 
-fn write_utf16_string(writer: &mut dyn JavaWriter, input: &Utf16String) -> std::io::Result<()> {
+fn write_utf16_string(writer: &mut dyn TemplateWriter, input: &Utf16String) -> std::io::Result<()> {
     writer.write_utf16(input.as_utf16())
 }

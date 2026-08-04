@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::{TemplateObject, TemplateValue};
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use vernal_web::{RequestContext, SecurityPrincipal};
 
@@ -115,7 +115,7 @@ impl IWebExchange for VernalWebExchange {
         })
     }
 
-    fn get_locale(&self) -> Option<JavaLocale> {
+    fn get_locale(&self) -> Option<Locale> {
         // Vernal 不携带请求 Locale；保留 None（宿主可覆盖）。
         None
     }

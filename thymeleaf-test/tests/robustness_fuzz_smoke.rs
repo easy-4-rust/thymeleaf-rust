@@ -46,7 +46,7 @@ fn engine_configuration() -> Arc<dyn IEngineConfiguration> {
 /// 消除原 CapturedWriter（无界 Vec<u16>）在病态输入下的内存放大。
 struct DiscardingWriter;
 
-impl thymeleaf::util::JavaWriter for DiscardingWriter {
+impl thymeleaf::util::TemplateWriter for DiscardingWriter {
     fn write_utf16(&mut self, _characters: &[u16]) -> std::io::Result<()> {
         Ok(())
     }

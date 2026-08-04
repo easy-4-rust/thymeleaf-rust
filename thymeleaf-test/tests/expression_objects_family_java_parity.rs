@@ -12,15 +12,15 @@ use std::sync::Arc;
 use thymeleaf::context::Context;
 use thymeleaf::expression::{Numbers, Strings, TemplateValue, Uris};
 use thymeleaf::templateresolver::{ITemplateResolver, StringTemplateResolver};
-use thymeleaf::util::{JavaLocale, JavaNumber, Utf16String};
+use thymeleaf::util::{JavaNumber, Locale, Utf16String};
 use thymeleaf::{TemplateEngine, TemplateMode};
 
 fn js(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn us() -> JavaLocale {
-    JavaLocale::new(js("en"), js("US"))
+fn us() -> Locale {
+    Locale::new(js("en"), js("US"))
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {

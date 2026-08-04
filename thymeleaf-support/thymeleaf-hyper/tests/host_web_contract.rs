@@ -4,7 +4,7 @@ use std::io::Read;
 use std::sync::Arc;
 
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 use thymeleaf_hyper::{HostWebApplication, HostWebExchange, HostWebRequest, HostWebSession};
 
@@ -275,7 +275,7 @@ fn exchange_preserves_scope_identity_metadata_attributes_and_url_transform() {
     let session = Arc::new(HostWebSession::existing());
     let application = Arc::new(HostWebApplication::new(Vec::new()));
     let principal = template_text("alice");
-    let locale = JavaLocale::new(text("zh-CN"), text("CN"));
+    let locale = Locale::new(text("zh-CN"), text("CN"));
     let exchange = HostWebExchange::new(
         Arc::clone(&request),
         Some(Arc::clone(&session)),

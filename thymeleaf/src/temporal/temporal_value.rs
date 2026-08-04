@@ -9,7 +9,7 @@ use crate::util::Utf16String;
 /// Java Time API 中具体 `Temporal` 类型的判别值。
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 /// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
-pub enum JavaTemporalKind {
+pub enum TemporalKind {
     /// `Instant`。
     Instant,
     /// `LocalDate`。
@@ -35,7 +35,7 @@ pub enum JavaTemporalKind {
 /// 这是迁移层对象，用于承载 `Temporals` 所接受的九种 Java Time 类型。
 #[derive(Clone, Debug)]
 /// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
-pub enum JavaTemporal {
+pub enum TemporalValue {
     /// `java.time.Instant`。
     Instant(DateTime<Utc>),
     /// `java.time.LocalDate`。
@@ -56,20 +56,20 @@ pub enum JavaTemporal {
     ZonedDateTime(DateTime<Tz>),
 }
 
-impl JavaTemporal {
+impl TemporalValue {
     /// 返回 Java 具体 temporal 类型。
     #[must_use]
-    pub const fn kind(&self) -> JavaTemporalKind {
+    pub const fn kind(&self) -> TemporalKind {
         match self {
-            Self::Instant(_) => JavaTemporalKind::Instant,
-            Self::LocalDate(_) => JavaTemporalKind::LocalDate,
-            Self::LocalDateTime(_) => JavaTemporalKind::LocalDateTime,
-            Self::LocalTime(_) => JavaTemporalKind::LocalTime,
-            Self::OffsetDateTime(_) => JavaTemporalKind::OffsetDateTime,
-            Self::OffsetTime(_, _) => JavaTemporalKind::OffsetTime,
-            Self::Year(_) => JavaTemporalKind::Year,
-            Self::YearMonth(_, _) => JavaTemporalKind::YearMonth,
-            Self::ZonedDateTime(_) => JavaTemporalKind::ZonedDateTime,
+            Self::Instant(_) => TemporalKind::Instant,
+            Self::LocalDate(_) => TemporalKind::LocalDate,
+            Self::LocalDateTime(_) => TemporalKind::LocalDateTime,
+            Self::LocalTime(_) => TemporalKind::LocalTime,
+            Self::OffsetDateTime(_) => TemporalKind::OffsetDateTime,
+            Self::OffsetTime(_, _) => TemporalKind::OffsetTime,
+            Self::Year(_) => TemporalKind::Year,
+            Self::YearMonth(_, _) => TemporalKind::YearMonth,
+            Self::ZonedDateTime(_) => TemporalKind::ZonedDateTime,
         }
     }
 
@@ -87,7 +87,7 @@ impl JavaTemporal {
     }
 }
 
-impl TemplateObject for JavaTemporal {
+impl TemplateObject for TemporalValue {
     fn java_class_name(&self) -> &str {
         match self {
             Self::Instant(_) => "java.time.Instant",

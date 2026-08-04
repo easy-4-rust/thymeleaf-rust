@@ -2,7 +2,7 @@ use std::sync::{Arc, OnceLock, Weak};
 
 use crate::IEngineConfiguration;
 use crate::expression::{ExpressionObjects, IExpressionObjects, TemplateValue};
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 use crate::web::IWebExchange;
 
 use super::ContextVariableEntries;
@@ -66,7 +66,7 @@ impl WebExpressionContext {
     pub fn with_locale(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
         web_exchange: Option<Arc<dyn IWebExchange>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
     ) -> Result<Arc<Self>, ValidateError> {
         Self::with_locale_and_variables(configuration, web_exchange, locale, None)
     }
@@ -97,7 +97,7 @@ impl WebExpressionContext {
     pub fn with_locale_and_variables(
         configuration: Option<Arc<dyn IEngineConfiguration>>,
         web_exchange: Option<Arc<dyn IWebExchange>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
         variables: ContextVariableEntries<'_>,
     ) -> Result<Arc<Self>, ValidateError> {
         let base =
@@ -123,7 +123,7 @@ impl WebExpressionContext {
     ///
     /// Locale 为空时返回 `Locale cannot be null`。
     /// 对应 Java 语义：Java 接口/超类方法 `setLocale()` 的 Rust 移植（`WebExpressionContext` 继承路径）。
-    pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
+    pub fn set_locale(&self, locale: Option<Locale>) -> Result<(), ValidateError> {
         self.base.set_locale(locale)
     }
     /// 新增或替换单个变量。
@@ -170,7 +170,7 @@ impl IContext for WebExpressionContext {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.base.get_locale()
     }
     fn contains_variable(&self, name: Option<&Utf16String>) -> bool {

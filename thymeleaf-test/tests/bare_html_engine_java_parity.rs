@@ -14,7 +14,7 @@ use thymeleaf::engine::ITemplateHandler;
 use thymeleaf::markup::HTMLTemplateParser;
 use thymeleaf::templateparser::ITemplateParser;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaWriter, Utf16String};
+use thymeleaf::util::{TemplateWriter, Utf16String};
 
 /// 捕获 UTF-16 输出的 Writer（对应 Java `StringWriter`）。
 #[derive(Default)]
@@ -22,7 +22,7 @@ struct CapturedWriter {
     buffer: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for CapturedWriter {
+impl TemplateWriter for CapturedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.buffer
             .lock()

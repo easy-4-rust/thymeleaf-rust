@@ -1,7 +1,7 @@
 use std::io;
 
 use crate::engine::AttributeDefinition;
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::AttributeValueQuotes;
 
@@ -37,5 +37,5 @@ pub trait IAttribute {
     fn get_col(&self) -> i32;
 
     /// 将属性完整写入输出。
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()>;
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()>;
 }

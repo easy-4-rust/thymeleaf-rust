@@ -1,6 +1,6 @@
 use crate::context::{IContext, ITemplateContext};
 use crate::model::IModel;
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 use crate::{IThrottledTemplateProcessor, TemplateMode, TemplateSpec};
 
 use super::TemplateData;
@@ -38,14 +38,14 @@ pub trait ITemplateManager {
         &self,
         template: &dyn IModel,
         context: &dyn ITemplateContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), crate::exceptions::TemplateProcessingException>;
     /// 解析并同步处理 TemplateSpec。
     fn parse_and_process(
         &self,
         template_spec: &TemplateSpec,
         context: &dyn IContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), crate::exceptions::TemplateProcessingException>;
     /// 解析并创建节流处理器。
     fn parse_and_process_throttled(

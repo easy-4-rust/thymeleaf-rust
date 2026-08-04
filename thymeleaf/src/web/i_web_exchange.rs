@@ -3,7 +3,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 
 use super::{IWebApplication, IWebRequest, IWebSession};
 
@@ -38,7 +38,7 @@ pub trait IWebExchange: Send + Sync {
     /// 返回宿主 Principal 等价动态对象。
     fn get_principal(&self) -> Option<Arc<TemplateValue>>;
     /// 返回请求 Locale。
-    fn get_locale(&self) -> Option<JavaLocale>;
+    fn get_locale(&self) -> Option<Locale>;
     /// 返回响应内容类型。
     fn get_content_type(&self) -> Option<Utf16String>;
     /// 返回字符编码。

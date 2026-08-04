@@ -16,7 +16,7 @@ use thymeleaf::context::{
 use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, JavaNumber, Utf16String};
+use thymeleaf::util::{JavaNumber, Locale, Utf16String};
 use thymeleaf::{
     ITemplateEngine, TemplateEngine, TemplateMode, TemplateResolutionAttributeValue,
     TemplateResolutionAttributes,
@@ -36,8 +36,8 @@ fn utf16_string(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn locale(language_tag: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(utf16_string(language_tag), utf16_string(country))
+fn locale(language_tag: &str, country: &str) -> Locale {
+    Locale::new(utf16_string(language_tag), utf16_string(country))
 }
 
 fn string_value(value: &str) -> Option<Arc<TemplateValue>> {
@@ -316,14 +316,14 @@ fn stateless_standard_factory_is_thread_safe_and_creates_fresh_contexts() {
 }
 
 struct TraceContext {
-    locale: JavaLocale,
+    locale: Locale,
     variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     trace: Mutex<Vec<String>>,
 }
 
 impl TraceContext {
     fn new(
-        locale: JavaLocale,
+        locale: Locale,
         variables: IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>,
     ) -> Self {
         Self {
@@ -346,7 +346,7 @@ impl IContext for TraceContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.trace
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)

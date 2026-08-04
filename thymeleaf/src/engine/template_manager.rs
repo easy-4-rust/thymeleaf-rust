@@ -20,7 +20,7 @@ use crate::raw::RawTemplateParser;
 use crate::templateparser::{ITemplateParser, TemplateParserError};
 use crate::templateresolver::TemplateResolution;
 use crate::text::{CSSTemplateParser, JavaScriptTemplateParser, TextTemplateParser};
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 use crate::{
     IEngineConfiguration, IThrottledTemplateProcessor, TemplateMode, TemplateResolutionAttributes,
     TemplateSelectorSet, TemplateSpec,
@@ -283,7 +283,7 @@ impl TemplateManager {
         set_pre_processors: bool,
         set_post_processors: bool,
         central_handler: Box<dyn ITemplateHandler>,
-        writer: Option<Box<dyn JavaWriter>>,
+        writer: Option<Box<dyn TemplateWriter>>,
     ) -> Result<Box<dyn ITemplateHandler>, TemplateProcessingException> {
         let mode = context.get_template_mode();
         let template_context: Arc<dyn ITemplateContext> = context;
@@ -335,7 +335,7 @@ impl TemplateManager {
         template_data: TemplateData,
         attributes: Option<&TemplateResolutionAttributes>,
         context: &dyn IContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
         pre_processors: bool,
         post_processors: bool,
     ) -> Result<(), TemplateProcessingException> {
@@ -554,7 +554,7 @@ impl ITemplateManager for TemplateManager {
         &self,
         template: &dyn IModel,
         context: &dyn ITemplateContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), TemplateProcessingException> {
         let configuration = self.configuration();
         if !std::ptr::eq(configuration.as_ref(), template.get_configuration()) {
@@ -582,7 +582,7 @@ impl ITemplateManager for TemplateManager {
         &self,
         template_spec: &TemplateSpec,
         context: &dyn IContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), TemplateProcessingException> {
         let template = Utf16String::from_rust_str(template_spec.get_template());
         let selectors = template_spec.get_template_selectors().map(|selectors| {

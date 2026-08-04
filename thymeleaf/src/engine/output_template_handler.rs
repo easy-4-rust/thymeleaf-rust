@@ -6,7 +6,7 @@ use crate::model::{
     ICDATASection, ICloseElementTag, IComment, IDocType, IOpenElementTag, IProcessingInstruction,
     IStandaloneElementTag, ITemplateEnd, ITemplateEvent, ITemplateStart, IText, IXMLDeclaration,
 };
-use crate::util::JavaWriter;
+use crate::util::TemplateWriter;
 
 use super::{AbstractTemplateHandler, ITemplateHandler, TemplateHandlerHandle};
 
@@ -19,13 +19,13 @@ const OUTPUT_ERROR_MESSAGE: &str = "An error happened during template rendering"
 /// 对应 Java: `org.thymeleaf.engine.OutputTemplateHandler`。
 pub struct OutputTemplateHandler {
     base: AbstractTemplateHandler,
-    writer: Box<dyn JavaWriter>,
+    writer: Box<dyn TemplateWriter>,
 }
 
 impl OutputTemplateHandler {
     /// 创建拥有指定输出 Writer 的处理器。
     /// 对应 Java 语义：`OutputTemplateHandler` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(writer: Box<dyn JavaWriter>) -> Self {
+    pub fn new(writer: Box<dyn TemplateWriter>) -> Self {
         Self {
             base: AbstractTemplateHandler::new(),
             writer,

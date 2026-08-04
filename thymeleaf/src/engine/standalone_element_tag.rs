@@ -10,7 +10,7 @@ use crate::model::{
     IStandaloneElementTag, ITemplateEvent,
 };
 use crate::templatemode::TemplateMode;
-use crate::util::{FastStringWriter, JavaWriter, Utf16String};
+use crate::util::{FastStringWriter, TemplateWriter, Utf16String};
 
 use super::{
     AbstractProcessableElementTag, AttributeDefinitionValue, AttributeDefinitions, AttributeName,
@@ -539,7 +539,7 @@ impl ITemplateEvent for StandaloneElementTag {
         Some(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         if self.is_synthetic() {
             return Ok(());
         }

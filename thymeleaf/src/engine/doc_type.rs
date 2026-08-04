@@ -4,7 +4,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IDocType, IModelVisitor, ITemplateEvent};
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -204,7 +204,7 @@ impl ITemplateEvent for DocType {
         handler.handle_doc_type(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         writer.write_utf16(self.doc_type.as_utf16())
     }
 }

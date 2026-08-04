@@ -4,7 +4,7 @@ use std::io;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::model::{AttributeValueQuotes, IAttribute};
-use crate::util::{FastStringWriter, JavaWriter, Utf16String};
+use crate::util::{FastStringWriter, TemplateWriter, Utf16String};
 
 use super::{AttributeDefinition, AttributeDefinitionValue};
 
@@ -162,7 +162,7 @@ impl IAttribute for Attribute {
         self.col
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         writer.write_utf16(self.complete_name.as_utf16())?;
         let Some(value) = self.value.as_ref() else {
             return Ok(());

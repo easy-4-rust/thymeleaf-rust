@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 use crate::{HostWebRequest, HostWebSession};
@@ -17,7 +17,7 @@ pub struct HostWebExchange {
     application: Arc<dyn IWebApplication>,
     attributes: RwLock<IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     principal: Option<Arc<TemplateValue>>,
-    locale: Option<JavaLocale>,
+    locale: Option<Locale>,
     content_type: RwLock<Option<Utf16String>>,
     character_encoding: RwLock<Option<Utf16String>>,
 }
@@ -41,7 +41,7 @@ impl HostWebExchange {
         session: Option<Arc<HostWebSession>>,
         application: Arc<dyn IWebApplication>,
         principal: Option<Arc<TemplateValue>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
     ) -> Self {
         Self {
             request,
@@ -93,7 +93,7 @@ impl IWebExchange for HostWebExchange {
         self.principal.clone()
     }
 
-    fn get_locale(&self) -> Option<JavaLocale> {
+    fn get_locale(&self) -> Option<Locale> {
         self.locale.clone()
     }
 

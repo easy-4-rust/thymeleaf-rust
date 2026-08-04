@@ -2,7 +2,7 @@ use std::any::Any;
 use std::sync::Arc;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 use crate::web::IWebExchange;
 
 /// `IContext#getVariableNames()` 返回的可变 Set 视图合同。
@@ -116,7 +116,7 @@ pub trait IContext: Any + Send + Sync {
     /// # 返回值
     ///
     /// 返回当前 Context Locale；调用方获得独立值，不得借此修改 Context。
-    fn get_locale(&self) -> JavaLocale;
+    fn get_locale(&self) -> Locale;
 
     /// 判断指定可空变量名是否已存在。
     ///

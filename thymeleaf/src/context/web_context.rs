@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 use crate::web::IWebExchange;
 
 use super::ContextVariableEntries;
@@ -52,7 +52,7 @@ impl WebContext {
     /// 返回保留同一 exchange 身份的 Web Context。
     pub fn with_locale(
         web_exchange: Option<Arc<dyn IWebExchange>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
     ) -> Result<Self, ValidateError> {
         Self::with_locale_and_variables(web_exchange, locale, None)
     }
@@ -79,7 +79,7 @@ impl WebContext {
     /// exchange 为空时返回 Java `IllegalArgumentException` 等价错误。
     pub fn with_locale_and_variables(
         web_exchange: Option<Arc<dyn IWebExchange>>,
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
         variables: ContextVariableEntries<'_>,
     ) -> Result<Self, ValidateError> {
         let base = AbstractContext::new(locale, variables);
@@ -99,7 +99,7 @@ impl WebContext {
     ///
     /// Locale 为空时返回 `Locale cannot be null`。
     /// 对应 Java 语义：Java 接口/超类方法 `setLocale()` 的 Rust 移植（`WebContext` 继承路径）。
-    pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
+    pub fn set_locale(&self, locale: Option<Locale>) -> Result<(), ValidateError> {
         self.base.set_locale(locale)
     }
     /// 新增或替换单个变量。
@@ -146,7 +146,7 @@ impl IContext for WebContext {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.base.get_locale()
     }
     fn contains_variable(&self, name: Option<&Utf16String>) -> bool {

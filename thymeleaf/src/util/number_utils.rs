@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use num_bigint::BigInt;
 
-use super::{JavaBigDecimal, JavaLocale, JavaNumber, NumberPointType, Utf16String};
+use super::{JavaBigDecimal, JavaNumber, Locale, NumberPointType, Utf16String};
 
 /// 数字格式化与序列生成错误。
 /// 对应 Java 语义：`NumberUtils` 的 Rust 侧类型 `NumberUtilsError`。
@@ -30,7 +30,7 @@ impl NumberUtils {
         thousands_point_type: Option<NumberPointType>,
         fraction_digits: Option<i32>,
         decimal_point_type: Option<NumberPointType>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let Some(target) = target else {
             return Ok(None);
@@ -145,7 +145,7 @@ impl NumberUtils {
     /// 对应 Java: `NumberUtils#formatCurrency()`。
     pub fn format_currency(
         target: Option<&JavaNumber>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let locale = locale.ok_or_else(|| invalid("Locale cannot be null"))?;
         let Some(target) = target else {
@@ -175,7 +175,7 @@ impl NumberUtils {
         target: Option<&JavaNumber>,
         min_integer_digits: Option<i32>,
         fraction_digits: Option<i32>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Option<Utf16String>, NumberUtilsError> {
         let fraction_digits = required(fraction_digits, "Fraction digits cannot be null")?;
         let locale = locale.ok_or_else(|| invalid("Locale cannot be null"))?;
@@ -267,7 +267,7 @@ fn group_integer(integer: &str, separator: char) -> String {
     result
 }
 
-fn point_character(point_type: NumberPointType, locale: &JavaLocale, decimal: bool) -> char {
+fn point_character(point_type: NumberPointType, locale: &Locale, decimal: bool) -> char {
     match point_type {
         NumberPointType::Point => '.',
         NumberPointType::Comma => ',',
@@ -285,7 +285,7 @@ fn point_character(point_type: NumberPointType, locale: &JavaLocale, decimal: bo
     }
 }
 
-fn locale_uses_decimal_comma(locale: &JavaLocale) -> bool {
+fn locale_uses_decimal_comma(locale: &Locale) -> bool {
     matches!(
         locale.get_language().to_string_lossy().as_str(),
         "ar" | "bg"
@@ -314,7 +314,7 @@ fn locale_uses_decimal_comma(locale: &JavaLocale) -> bool {
     )
 }
 
-fn currency_symbol(locale: &JavaLocale) -> &'static str {
+fn currency_symbol(locale: &Locale) -> &'static str {
     match locale.get_country().to_string_lossy().as_str() {
         "US" => "$",
         "GB" => "£",
@@ -330,7 +330,7 @@ fn currency_symbol(locale: &JavaLocale) -> &'static str {
     }
 }
 
-fn currency_fraction_digits(locale: &JavaLocale) -> i32 {
+fn currency_fraction_digits(locale: &Locale) -> i32 {
     if matches!(locale.get_country().to_string_lossy().as_str(), "JP" | "KR") {
         0
     } else {
@@ -338,11 +338,11 @@ fn currency_fraction_digits(locale: &JavaLocale) -> i32 {
     }
 }
 
-fn currency_symbol_after(locale: &JavaLocale) -> bool {
+fn currency_symbol_after(locale: &Locale) -> bool {
     locale_uses_decimal_comma(locale)
 }
 
-fn locale_uses_space_before_percent(locale: &JavaLocale) -> bool {
+fn locale_uses_space_before_percent(locale: &Locale) -> bool {
     matches!(
         locale.get_language().to_string_lossy().as_str(),
         "fr" | "ru" | "uk" | "pl" | "cs" | "sk"

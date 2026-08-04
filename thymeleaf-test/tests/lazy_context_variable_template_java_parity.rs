@@ -25,7 +25,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode};
 
@@ -156,7 +156,7 @@ fn web_context_with(doit: &str, exchange: Arc<dyn IWebExchange>) -> Arc<WebEngin
         web_template_data("test09"),
         None,
         exchange,
-        JavaLocale::new(js("en"), js("US")),
+        Locale::new(js("en"), js("US")),
         None,
     );
     context.set_variable(

@@ -82,7 +82,7 @@ mod tests {
     use crate::context::{Context, EngineContext, IContext, IEngineContext, IEngineContextFactory};
     use crate::expression::TemplateValue;
     use crate::templateresource::StringTemplateResource;
-    use crate::util::{JavaLocale, Utf16String};
+    use crate::util::{Locale, Utf16String};
     use crate::{
         IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateMode,
         TemplateResolutionAttributeValue, TemplateResolutionAttributes,
@@ -102,8 +102,8 @@ mod tests {
         Utf16String::from_rust_str(value)
     }
 
-    fn locale(language_tag: &str, country: &str) -> JavaLocale {
-        JavaLocale::new(utf16_string(language_tag), utf16_string(country))
+    fn locale(language_tag: &str, country: &str) -> Locale {
+        Locale::new(utf16_string(language_tag), utf16_string(country))
     }
 
     fn template_data(name: &str) -> TemplateData {

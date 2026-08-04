@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::model::{ICloseElementTag, IElementTag, IModelVisitor, ITemplateEvent};
 use crate::templatemode::TemplateMode;
-use crate::util::{FastStringWriter, JavaWriter, Utf16String};
+use crate::util::{FastStringWriter, TemplateWriter, Utf16String};
 
 use super::{
     AbstractElementTag, ElementDefinition, ElementDefinitionValue, IEngineTemplateEvent,
@@ -145,7 +145,7 @@ impl ITemplateEvent for CloseElementTag {
         Some(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         if self.element_tag.is_synthetic() {
             return Ok(());
         }

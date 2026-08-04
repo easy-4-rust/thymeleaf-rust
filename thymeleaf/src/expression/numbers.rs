@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
 use crate::util::{
-    JavaLocale, JavaNumber, NumberPointType, NumberUtils, NumberUtilsError, Utf16String,
+    JavaNumber, Locale, NumberPointType, NumberUtils, NumberUtilsError, Utf16String,
 };
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
@@ -13,13 +13,13 @@ use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 ///
 /// 对应 Java: `org.thymeleaf.expression.Numbers`。
 pub struct Numbers {
-    locale: JavaLocale,
+    locale: Locale,
 }
 
 impl Numbers {
     /// 使用表达式上下文 Locale 创建 `#numbers`。
     #[must_use]
-    pub const fn new(locale: JavaLocale) -> Self {
+    pub const fn new(locale: Locale) -> Self {
         Self { locale }
     }
 

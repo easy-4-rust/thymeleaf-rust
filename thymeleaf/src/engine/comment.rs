@@ -3,7 +3,7 @@ use std::io;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::model::{IComment, IModelVisitor, ITemplateEvent};
-use crate::util::{JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
+use crate::util::{JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTextualTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -210,7 +210,7 @@ impl ITemplateEvent for Comment {
         handler.handle_comment(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         writer.write_utf16(self.prefix.as_utf16())?;
         self.textual_event.write_content(writer)?;
         writer.write_utf16(self.suffix.as_utf16())

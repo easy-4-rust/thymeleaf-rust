@@ -25,7 +25,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
@@ -37,8 +37,8 @@ fn value(value: &str) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::string(js(value)))
 }
 
-fn locale_en() -> JavaLocale {
-    JavaLocale::new(js("en"), js("US"))
+fn locale_en() -> Locale {
+    Locale::new(js("en"), js("US"))
 }
 
 fn template_data(name: &str, mode: TemplateMode) -> TemplateData {

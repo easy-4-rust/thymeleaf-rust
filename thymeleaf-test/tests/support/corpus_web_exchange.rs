@@ -2,7 +2,7 @@ use std::sync::{Arc, RwLock};
 
 use indexmap::IndexMap;
 use thymeleaf::expression::TemplateValue;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::web::{IWebApplication, IWebExchange, IWebRequest, IWebSession};
 
 use super::{CorpusWebApplication, CorpusWebRequest, CorpusWebSession};
@@ -50,8 +50,8 @@ impl IWebExchange for CorpusWebExchange {
     fn get_principal(&self) -> Option<Arc<TemplateValue>> {
         None
     }
-    fn get_locale(&self) -> Option<JavaLocale> {
-        Some(JavaLocale::new(
+    fn get_locale(&self) -> Option<Locale> {
+        Some(Locale::new(
             Utf16String::from_rust_str("en"),
             Utf16String::from_rust_str(""),
         ))

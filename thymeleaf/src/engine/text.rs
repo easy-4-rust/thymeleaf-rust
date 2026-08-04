@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, ITemplateEvent, IText};
-use crate::util::{JavaCharSequence, JavaWriter, TextUtilsError, Utf16String};
+use crate::util::{JavaCharSequence, TemplateWriter, TextUtilsError, Utf16String};
 
 use super::{AbstractTextualTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -128,7 +128,7 @@ impl ITemplateEvent for Text {
         Some(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         self.textual_event.write_content(writer)
     }
 }

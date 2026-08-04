@@ -1,9 +1,9 @@
 use chrono_tz::Tz;
 
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 
 use super::temporal_formatting_utils::TemporalFormattingError;
-use super::{JavaTemporal, TemporalArrayUtils};
+use super::{TemporalArrayUtils, TemporalValue};
 
 /// Java temporal `Set` 批量格式化工具。
 ///
@@ -15,7 +15,7 @@ pub struct TemporalSetUtils {
 impl TemporalSetUtils {
     /// 使用 Locale 与默认 ZoneId 创建 Set 工具。
     /// 对应 Java 语义：`TemporalSetUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(locale: JavaLocale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
+    pub fn new(locale: Locale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             array_utils: TemporalArrayUtils::new(locale, default_zone_id)?,
         })
@@ -25,9 +25,9 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setFormat()`。
     pub fn set_format(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
         pattern: Option<&str>,
-        locale: Option<&JavaLocale>,
+        locale: Option<&Locale>,
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(
             self.array_utils.array_format(target, pattern, locale)?,
@@ -38,7 +38,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setDay()`。
     pub fn set_day(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_day(target)?))
     }
@@ -46,7 +46,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setMonth()`。
     pub fn set_month(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_month(target)?))
     }
@@ -54,7 +54,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setYear()`。
     pub fn set_year(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_year(target)?))
     }
@@ -62,7 +62,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setDayOfWeek()`。
     pub fn set_day_of_week(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_day_of_week(target)?))
     }
@@ -70,7 +70,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setHour()`。
     pub fn set_hour(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_hour(target)?))
     }
@@ -78,7 +78,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setMinute()`。
     pub fn set_minute(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_minute(target)?))
     }
@@ -86,7 +86,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setSecond()`。
     pub fn set_second(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_second(target)?))
     }
@@ -94,7 +94,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setNanosecond()`。
     pub fn set_nanosecond(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<i32>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_nanosecond(target)?))
     }
@@ -102,7 +102,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setMonthName()`。
     pub fn set_month_name(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_month_name(target)?))
     }
@@ -110,7 +110,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setMonthNameShort()`。
     pub fn set_month_name_short(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_month_name_short(target)?))
     }
@@ -118,7 +118,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setDayOfWeekName()`。
     pub fn set_day_of_week_name(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_day_of_week_name(target)?))
     }
@@ -126,7 +126,7 @@ impl TemporalSetUtils {
     /// 对应 Java: `TemporalSetUtils#setDayOfWeekNameShort()`。
     pub fn set_day_of_week_name_short(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(
             self.array_utils.array_day_of_week_name_short(target)?,
@@ -136,7 +136,7 @@ impl TemporalSetUtils {
     /// 对应 Java 语义：`TemporalSetUtils` 的 `set_format_iso` 行为（Rust 侧辅助/私有路径）。
     pub fn set_format_iso(
         &self,
-        target: &[Option<JavaTemporal>],
+        target: &[Option<TemporalValue>],
     ) -> Result<Vec<Option<Utf16String>>, TemporalFormattingError> {
         Ok(dedupe(self.array_utils.array_format_iso(target)?))
     }

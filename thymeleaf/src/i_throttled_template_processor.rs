@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use crate::TemplateSpec;
 use crate::engine::IThrottledTemplateWriterControl;
 use crate::exceptions::TemplateEngineException;
-use crate::util::{Charset, JavaWriter, Utf16String};
+use crate::util::{Charset, TemplateWriter, Utf16String};
 
 /// 节流模板处理调用的统一错误结果。
 ///
@@ -90,7 +90,10 @@ pub trait IThrottledTemplateProcessor {
     ///
     /// `writer` 接收输出并在本次调用结束时刷新；输出或模板处理失败时返回保留具体
     /// 子类型的引擎错误。对应 Java: `IThrottledTemplateProcessor#processAll(Writer)`。
-    fn process_all_writer(&mut self, writer: Box<dyn JavaWriter>) -> ThrottledTemplateResult<i32>;
+    fn process_all_writer(
+        &mut self,
+        writer: Box<dyn TemplateWriter>,
+    ) -> ThrottledTemplateResult<i32>;
 
     /// 不限制字节数，按指定字符集处理全部剩余模板并返回写出字节数。
     ///
@@ -111,7 +114,7 @@ pub trait IThrottledTemplateProcessor {
     fn process_writer(
         &mut self,
         max_output_in_chars: i32,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> ThrottledTemplateResult<i32>;
 
     /// 最多按指定字符集写出 `max_output_in_bytes` 个字节。

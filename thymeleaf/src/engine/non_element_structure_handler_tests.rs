@@ -16,7 +16,7 @@ use crate::processinginstruction::IProcessingInstructionStructureHandler;
 use crate::processor::AbstractProcessorAdapter;
 use crate::templateboundaries::ITemplateBoundariesStructureHandler;
 use crate::text::ITextStructureHandler;
-use crate::util::{JavaCharSequence, JavaWriter, Utf16String, ValidateError};
+use crate::util::{JavaCharSequence, TemplateWriter, Utf16String, ValidateError};
 use crate::xmldeclaration::IXMLDeclarationStructureHandler;
 
 use super::Text;
@@ -640,7 +640,7 @@ impl IModel for StoredOnlyModel {
         panic!("stored-only model must not be visited")
     }
 
-    fn write(&self, _writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, _writer: &mut dyn TemplateWriter) -> io::Result<()> {
         panic!("stored-only model must not be written")
     }
 }

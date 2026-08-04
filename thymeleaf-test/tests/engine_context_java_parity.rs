@@ -16,7 +16,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::inline::StandardTextInliner;
 use thymeleaf::templateresource::StringTemplateResource;
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateMode};
 
 fn golden() -> BTreeMap<String, String> {
@@ -37,8 +37,8 @@ fn value(value: &str) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::string(utf16_string(value)))
 }
 
-fn locale(language: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(utf16_string(language), utf16_string(country))
+fn locale(language: &str, country: &str) -> Locale {
+    Locale::new(utf16_string(language), utf16_string(country))
 }
 
 fn template_data(name: &str) -> TemplateData {

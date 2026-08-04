@@ -3,7 +3,7 @@ use std::{fmt::Display, fmt::Formatter};
 
 use super::Utf16String;
 
-static DEFAULT_LOCALE: OnceLock<RwLock<JavaLocale>> = OnceLock::new();
+static DEFAULT_LOCALE: OnceLock<RwLock<Locale>> = OnceLock::new();
 
 /// Thymeleaf 所需的 Java `Locale` 适配值。
 ///
@@ -12,12 +12,12 @@ static DEFAULT_LOCALE: OnceLock<RwLock<JavaLocale>> = OnceLock::new();
 /// 保存 BCP-47 语言标签及 country；默认值可在进程内更新，复现
 /// `Locale.getDefault()` / `Locale.setDefault()` 对后续 Context 构造的影响。
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct JavaLocale {
+pub struct Locale {
     language_tag: Utf16String,
     country: Utf16String,
 }
 
-impl JavaLocale {
+impl Locale {
     /// 从语言标签与 country 创建 Locale 适配。
     ///
     /// # 参数
@@ -95,7 +95,7 @@ impl JavaLocale {
     }
 }
 
-impl Display for JavaLocale {
+impl Display for Locale {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         let language = self.get_language().to_string_lossy();
         let country = self.country.to_string_lossy();
@@ -111,11 +111,11 @@ impl Display for JavaLocale {
     }
 }
 
-fn default_locale_lock() -> &'static RwLock<JavaLocale> {
+fn default_locale_lock() -> &'static RwLock<Locale> {
     DEFAULT_LOCALE.get_or_init(|| RwLock::new(locale_from_environment()))
 }
 
-fn locale_from_environment() -> JavaLocale {
+fn locale_from_environment() -> Locale {
     let raw = ["LC_ALL", "LC_MESSAGES", "LANG"]
         .into_iter()
         .find_map(|name| std::env::var(name).ok().filter(|value| !value.is_empty()))
@@ -128,7 +128,7 @@ fn locale_from_environment() -> JavaLocale {
         .filter(|part| part.len() == 2 || part.len() == 3)
         .unwrap_or("")
         .to_ascii_uppercase();
-    JavaLocale::new(
+    Locale::new(
         Utf16String::from_rust_str(&normalized),
         Utf16String::from_rust_str(&country),
     )

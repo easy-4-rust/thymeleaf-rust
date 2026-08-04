@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, ITemplateEvent, IXMLDeclaration};
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -151,7 +151,7 @@ impl ITemplateEvent for XMLDeclaration {
         handler.handle_xml_declaration(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         writer.write_utf16(self.xml_declaration.as_utf16())
     }
 }

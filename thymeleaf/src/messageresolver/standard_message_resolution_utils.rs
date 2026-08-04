@@ -8,15 +8,13 @@ use num_traits::Signed;
 
 use crate::expression::TemplateValue;
 use crate::templateresource::ITemplateResource;
-use crate::util::{
-    JavaBigDecimal, JavaLocale, JavaNumber, NumberPointType, NumberUtils, Utf16String,
-};
+use crate::util::{JavaBigDecimal, JavaNumber, Locale, NumberPointType, NumberUtils, Utf16String};
 use crate::{TemplateInputException, TemplateProcessingException};
 
 use super::MessageResolutionResult;
 
 type Messages = HashMap<Utf16String, Utf16String>;
-type OriginMessages = HashMap<(TypeId, JavaLocale), Messages>;
+type OriginMessages = HashMap<(TypeId, Locale), Messages>;
 type OriginParents = HashMap<TypeId, TypeId>;
 
 static ORIGIN_MESSAGES: OnceLock<RwLock<OriginMessages>> = OnceLock::new();
@@ -32,7 +30,7 @@ impl StandardMessageResolutionUtils {
     /// 对应 Java: `StandardMessageResolutionUtils#resolveMessagesForTemplate()`。
     pub(crate) fn resolve_messages_for_template(
         template_resource: &dyn ITemplateResource,
-        locale: &JavaLocale,
+        locale: &Locale,
     ) -> MessageResolutionResult<Messages> {
         let Some(resource_base_name) = template_resource
             .get_base_name()
@@ -59,7 +57,7 @@ impl StandardMessageResolutionUtils {
 
     /// 返回宿主为 Rust 类型注册的 classpath 等价消息。
     /// 对应 Java: `StandardMessageResolutionUtils#resolveMessagesForOrigin()`。
-    pub(crate) fn resolve_messages_for_origin(origin: TypeId, locale: &JavaLocale) -> Messages {
+    pub(crate) fn resolve_messages_for_origin(origin: TypeId, locale: &Locale) -> Messages {
         let messages = read_lock(origin_messages());
         let parents = read_lock(origin_parents());
         let mut combined = Messages::new();
@@ -86,7 +84,7 @@ impl StandardMessageResolutionUtils {
     /// Rust 没有 JVM `ClassLoader#getResourceAsStream`；宿主集成层在加载等价
     /// classpath 资源后通过此入口登记，解析器仍按 origin 与 Locale 缓存。
     /// 对应 Java 语义：`StandardMessageResolutionUtils` 的 `register_origin_messages` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn register_origin_messages(origin: TypeId, locale: JavaLocale, messages: Messages) {
+    pub(crate) fn register_origin_messages(origin: TypeId, locale: Locale, messages: Messages) {
         write_lock(origin_messages()).insert((origin, locale), messages);
     }
 
@@ -121,7 +119,7 @@ impl StandardMessageResolutionUtils {
     /// 使用 Java `MessageFormat` 的索引占位符和引号规则格式化消息。
     /// 对应 Java: `StandardMessageResolutionUtils#formatMessage()`。
     pub(crate) fn format_message(
-        locale: &JavaLocale,
+        locale: &Locale,
         message: &Utf16String,
         message_parameters: Option<&[Option<std::sync::Arc<TemplateValue>>]>,
     ) -> MessageResolutionResult<Utf16String> {
@@ -166,7 +164,7 @@ impl StandardMessageResolutionUtils {
 
     fn compute_message_resource_names_from_base(
         resource_base_name: &str,
-        locale: &JavaLocale,
+        locale: &Locale,
     ) -> Result<Vec<String>, TemplateProcessingException> {
         let language = locale.get_language().to_string_lossy();
         if is_java_empty_or_whitespace(&language) {
@@ -250,7 +248,7 @@ enum OriginRegistrationError {
 fn format_message_element(
     element: &Utf16String,
     parameters: &[Option<std::sync::Arc<TemplateValue>>],
-    locale: &JavaLocale,
+    locale: &Locale,
 ) -> MessageResolutionResult<Utf16String> {
     let element_text = element.to_string_lossy();
     let mut sections = element_text.splitn(3, ',');
@@ -285,7 +283,7 @@ fn format_message_element(
 
 fn format_default_parameter(
     value: Option<&TemplateValue>,
-    locale: &JavaLocale,
+    locale: &Locale,
 ) -> MessageResolutionResult<Utf16String> {
     match value {
         Some(TemplateValue::Number(number)) => format_number(number, locale, NumberStyle::Default),
@@ -309,7 +307,7 @@ enum NumberStyle {
 
 fn format_number_parameter(
     value: Option<&TemplateValue>,
-    locale: &JavaLocale,
+    locale: &Locale,
     style: &str,
 ) -> MessageResolutionResult<Utf16String> {
     let Some(TemplateValue::Number(number)) = value else {
@@ -327,7 +325,7 @@ fn format_number_parameter(
 
 fn format_decimal_pattern(
     number: &JavaNumber,
-    locale: &JavaLocale,
+    locale: &Locale,
     pattern: &str,
 ) -> MessageResolutionResult<Utf16String> {
     let subpatterns = split_unquoted(pattern, ';');
@@ -471,7 +469,7 @@ fn numeric_pattern_bounds(pattern: &str) -> Option<(usize, usize)> {
 
 fn format_fixed_decimal_number(
     number: &JavaNumber,
-    locale: &JavaLocale,
+    locale: &Locale,
     pattern: &DecimalSubpattern<'_>,
 ) -> MessageResolutionResult<String> {
     let mut formatted = match number {
@@ -551,7 +549,7 @@ fn trim_optional_fraction(
     formatted: &mut String,
     min_fraction_digits: usize,
     max_fraction_digits: usize,
-    locale: &JavaLocale,
+    locale: &Locale,
 ) {
     if max_fraction_digits <= min_fraction_digits {
         return;
@@ -573,7 +571,7 @@ fn trim_optional_fraction(
     }
 }
 
-fn decimal_affix(affix: &str, locale: &JavaLocale) -> String {
+fn decimal_affix(affix: &str, locale: &Locale) -> String {
     let currency = NumberUtils::format_currency(Some(&JavaNumber::Integer(0)), Some(locale))
         .ok()
         .flatten()
@@ -746,7 +744,7 @@ fn malformed_decimal_pattern<T>(pattern: &str) -> MessageResolutionResult<T> {
     Err(decimal_pattern_error(pattern))
 }
 
-fn locale_uses_decimal_comma(locale: &JavaLocale) -> bool {
+fn locale_uses_decimal_comma(locale: &Locale) -> bool {
     matches!(
         locale.get_language().to_string_lossy().as_str(),
         "ar" | "bg"
@@ -777,7 +775,7 @@ fn locale_uses_decimal_comma(locale: &JavaLocale) -> bool {
 
 fn format_number(
     number: &JavaNumber,
-    locale: &JavaLocale,
+    locale: &Locale,
     style: NumberStyle,
 ) -> MessageResolutionResult<Utf16String> {
     if let Some(non_finite) = non_finite_number_text(number) {
@@ -849,7 +847,7 @@ fn non_finite_number_text(number: &JavaNumber) -> Option<&'static str> {
     }
 }
 
-fn currency_symbol(locale: &JavaLocale) -> &'static str {
+fn currency_symbol(locale: &Locale) -> &'static str {
     match locale.get_country().to_string_lossy().as_str() {
         "US" => "$",
         "GB" => "£",
@@ -865,7 +863,7 @@ fn currency_symbol(locale: &JavaLocale) -> &'static str {
     }
 }
 
-fn currency_symbol_after(locale: &JavaLocale) -> bool {
+fn currency_symbol_after(locale: &Locale) -> bool {
     locale_uses_decimal_comma(locale)
 }
 
@@ -896,7 +894,7 @@ fn number_as_f64(number: &JavaNumber) -> f64 {
 
 fn format_choice_parameter(
     value: Option<&TemplateValue>,
-    locale: &JavaLocale,
+    locale: &Locale,
     pattern: &str,
     parameters: &[Option<std::sync::Arc<TemplateValue>>],
 ) -> MessageResolutionResult<Utf16String> {
@@ -975,7 +973,7 @@ fn parse_choice_alternative(alternative: &str) -> Option<(f64, char, &str)> {
 
 fn format_temporal_parameter(
     value: Option<&TemplateValue>,
-    locale: &JavaLocale,
+    locale: &Locale,
     format_type: &str,
     style: &str,
 ) -> MessageResolutionResult<Utf16String> {
@@ -1000,7 +998,7 @@ fn format_temporal_parameter(
 }
 
 fn temporal_pattern(
-    locale: &JavaLocale,
+    locale: &Locale,
     format_type: &str,
     style: &str,
 ) -> MessageResolutionResult<String> {
@@ -1103,7 +1101,7 @@ mod tests {
     use std::any::TypeId;
     use std::collections::HashMap;
 
-    use crate::util::{JavaLocale, Utf16String};
+    use crate::util::{Locale, Utf16String};
 
     use super::StandardMessageResolutionUtils;
 
@@ -1115,7 +1113,7 @@ mod tests {
 
     #[test]
     fn origin_messages_use_specific_class_before_registered_parent() {
-        let locale = JavaLocale::new(
+        let locale = Locale::new(
             Utf16String::from_rust_str("en-US"),
             Utf16String::from_rust_str("US"),
         );

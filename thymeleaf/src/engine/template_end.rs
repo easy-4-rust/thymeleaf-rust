@@ -3,7 +3,7 @@ use std::io;
 use std::sync::{Arc, OnceLock};
 
 use crate::model::{IModelVisitor, ITemplateEnd, ITemplateEvent};
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -64,7 +64,7 @@ impl ITemplateEvent for TemplateEnd {
         true
     }
 
-    fn write(&self, _writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, _writer: &mut dyn TemplateWriter) -> io::Result<()> {
         Ok(())
     }
 }

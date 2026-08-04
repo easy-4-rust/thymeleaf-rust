@@ -3,7 +3,7 @@ use std::io;
 use std::sync::Arc;
 
 use crate::model::{IModelVisitor, IProcessingInstruction, ITemplateEvent};
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::{AbstractTemplateEvent, IEngineTemplateEvent, ITemplateHandler};
 
@@ -100,7 +100,7 @@ impl ITemplateEvent for ProcessingInstruction {
         handler.handle_processing_instruction(self)
     }
 
-    fn write(&self, writer: &mut dyn JavaWriter) -> io::Result<()> {
+    fn write(&self, writer: &mut dyn TemplateWriter) -> io::Result<()> {
         writer.write_utf16(self.processing_instruction.as_utf16())
     }
 }

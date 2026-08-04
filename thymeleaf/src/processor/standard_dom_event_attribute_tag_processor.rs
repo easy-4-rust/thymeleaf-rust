@@ -11,7 +11,7 @@ use crate::exceptions::{TemplateEngineException, TemplateProcessingException};
 use crate::expression::{StandardExpressionExecutionContext, TemplateValue};
 use crate::model::IProcessableElementTag;
 use crate::processor::IProcessor;
-use crate::util::{EscapedAttributeUtils, JavaWriter, Utf16String};
+use crate::util::{EscapedAttributeUtils, TemplateWriter, Utf16String};
 
 use super::{StandardAttributeCallback, expression_processing_error};
 
@@ -278,7 +278,7 @@ struct SharedWriter {
     output: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for SharedWriter {
+impl TemplateWriter for SharedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.output
             .lock()

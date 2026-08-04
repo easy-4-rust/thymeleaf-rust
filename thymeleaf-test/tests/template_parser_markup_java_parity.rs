@@ -28,7 +28,7 @@ use thymeleaf::templateparser::ITemplateParser;
 use thymeleaf::templateresource::{
     ITemplateResource, StringTemplateResource, TemplateResourceError,
 };
-use thymeleaf::util::{JavaWriter, Utf16String};
+use thymeleaf::util::{TemplateWriter, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode,
 };
@@ -144,7 +144,7 @@ fn lock(buffer: &Arc<Mutex<Vec<u16>>>) -> MutexGuard<'_, Vec<u16>> {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-impl JavaWriter for CapturedWriter {
+impl TemplateWriter for CapturedWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         lock(&self.buffer).extend_from_slice(characters);
         Ok(())

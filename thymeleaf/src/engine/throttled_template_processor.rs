@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use crate::context::IEngineContext;
 use crate::exceptions::{TemplateEngineException, TemplateOutputException};
 use crate::model::IModel;
-use crate::util::{Charset, JavaWriter, Utf16String};
+use crate::util::{Charset, TemplateWriter, Utf16String};
 use crate::{
     IThrottledTemplateProcessor, TemplateSpec, ThrottledTemplateResult, ThrottledTemplateStatus,
 };
@@ -85,7 +85,7 @@ impl ThrottledTemplateProcessor {
 
     /// 创建交给 OutputTemplateHandler 的共享 Writer 代理。
     /// 对应 Java 语义：`ThrottledTemplateProcessor` 的 `writer_proxy` 行为（Rust 侧辅助/私有路径）。
-    pub(crate) fn writer_proxy(writer: Arc<Mutex<ThrottledWriter>>) -> Box<dyn JavaWriter> {
+    pub(crate) fn writer_proxy(writer: Arc<Mutex<ThrottledWriter>>) -> Box<dyn TemplateWriter> {
         Box::new(SharedThrottledWriter { writer })
     }
 
@@ -222,7 +222,10 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
         ThrottledTemplateStatus::new(Arc::clone(&self.all_processing_finished))
     }
 
-    fn process_all_writer(&mut self, writer: Box<dyn JavaWriter>) -> ThrottledTemplateResult<i32> {
+    fn process_all_writer(
+        &mut self,
+        writer: Box<dyn TemplateWriter>,
+    ) -> ThrottledTemplateResult<i32> {
         lock(&self.writer)
             .set_output_writer(writer)
             .map_err(box_engine_error)?;
@@ -243,7 +246,7 @@ impl IThrottledTemplateProcessor for ThrottledTemplateProcessor {
     fn process_writer(
         &mut self,
         max_output_in_chars: i32,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> ThrottledTemplateResult<i32> {
         lock(&self.writer)
             .set_output_writer(writer)
@@ -273,7 +276,7 @@ pub(crate) enum ThrottledWriter {
 impl ThrottledWriter {
     fn set_output_writer(
         &mut self,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), TemplateOutputException> {
         match self {
             Self::Standard(value) => value.set_output_writer(writer),
@@ -312,7 +315,7 @@ impl ThrottledWriter {
     }
 }
 
-impl JavaWriter for ThrottledWriter {
+impl TemplateWriter for ThrottledWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         match self {
             Self::Standard(value) => value.write_utf16(characters),
@@ -419,7 +422,7 @@ impl ISSEThrottledTemplateWriterControl for SharedThrottledWriterControl {
     }
 }
 
-impl JavaWriter for SharedThrottledWriter {
+impl TemplateWriter for SharedThrottledWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         lock(&self.writer).write_utf16(characters)
     }

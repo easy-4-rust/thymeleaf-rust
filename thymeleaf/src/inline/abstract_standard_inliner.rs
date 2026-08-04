@@ -10,7 +10,8 @@ use crate::expression::{
 use crate::model::{ICDATASection, IComment, IModel, IText};
 use crate::serializer::{IStandardCSSSerializer, IStandardJavaScriptSerializer};
 use crate::util::{
-    EscapedAttributeUtils, JavaCharSequence, JavaWriter, LazyProcessingCharSequence, Utf16String,
+    EscapedAttributeUtils, JavaCharSequence, LazyProcessingCharSequence, TemplateWriter,
+    Utf16String,
 };
 use crate::{IEngineConfiguration, TemplateMode};
 
@@ -469,7 +470,7 @@ fn escape_xml10(input: &Utf16String) -> Utf16String {
 
 fn serialize_value(
     input: Option<&TemplateValue>,
-    operation: impl FnOnce(&mut dyn JavaWriter) -> Result<(), TemplateProcessingException>,
+    operation: impl FnOnce(&mut dyn TemplateWriter) -> Result<(), TemplateProcessingException>,
 ) -> StandardExpressionResult<Utf16String> {
     let output = Arc::new(Mutex::new(Vec::new()));
     let mut writer = SharedUtf16Writer {
@@ -489,7 +490,7 @@ struct SharedUtf16Writer {
     output: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for SharedUtf16Writer {
+impl TemplateWriter for SharedUtf16Writer {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         self.output
             .lock()

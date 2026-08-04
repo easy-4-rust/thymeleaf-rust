@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use super::{CharArrayWrapperSequence, JavaHashCode, JavaWriter, Utf16String};
+use super::{CharArrayWrapperSequence, JavaHashCode, TemplateWriter, Utf16String};
 
 const CASE_MAP: &[u8] = include_bytes!("text_utils_case_map.bin");
 
@@ -142,7 +142,7 @@ pub trait JavaCharSequence: Send + Sync {
     /// 在对象同时对应 Java `IWritableCharSequence` 时直接写出。
     ///
     /// `None` 表示不具备该接口；`Some` 中的结果对应其 `write(Writer)` 调用。
-    fn write_direct(&self, _writer: &mut dyn JavaWriter) -> Option<std::io::Result<()>> {
+    fn write_direct(&self, _writer: &mut dyn TemplateWriter) -> Option<std::io::Result<()>> {
         None
     }
 

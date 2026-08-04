@@ -15,7 +15,7 @@ use thymeleaf::engine::TemplateData;
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::messageresolver::{IMessageResolver, StandardMessageResolver};
 use thymeleaf::templateresource::TemplateResourceError;
-use thymeleaf::util::{JavaBigDecimal, JavaDate, JavaLocale, JavaNumber, Utf16String};
+use thymeleaf::util::{JavaBigDecimal, JavaDate, JavaNumber, Locale, Utf16String};
 use thymeleaf::{ITemplateEngine, ITemplateResource, TemplateEngine};
 
 const JAVA_BASELINE: &str = "10f9dd2eb8cbd98515ce14b149d115e0287d0add";
@@ -409,7 +409,7 @@ fn template_properties_merge_order_unicode_and_errors_match_java_golden() {
         .resolve_messages_for_template(
             &java("template"),
             &resource,
-            &JavaLocale::new(java("en-US-posix"), java("US")),
+            &Locale::new(java("en-US-posix"), java("US")),
         )
         .expect("template messages");
 
@@ -444,7 +444,7 @@ fn template_properties_merge_order_unicode_and_errors_match_java_golden() {
             .resolve_messages_for_template(
                 &java("template"),
                 &no_base,
-                &JavaLocale::new(java(""), java("US")),
+                &Locale::new(java(""), java("US")),
             )
             .expect("base name short-circuits locale validation");
         assert_eq!(messages.len().to_string(), golden[record]);
@@ -454,7 +454,7 @@ fn template_properties_merge_order_unicode_and_errors_match_java_golden() {
         .resolve_messages_for_template(
             &java("template"),
             &resource,
-            &JavaLocale::new(java(""), java("US")),
+            &Locale::new(java(""), java("US")),
         )
         .expect_err("locale without language");
     assert_eq!(
@@ -475,7 +475,7 @@ fn template_properties_merge_order_unicode_and_errors_match_java_golden() {
         .resolve_messages_for_template(
             &java("template"),
             &variant_resource,
-            &JavaLocale::new(java("en-posix"), java("")),
+            &Locale::new(java("en-posix"), java("")),
         )
         .expect("variant without country");
     assert_eq!(
@@ -847,7 +847,7 @@ fn assert_format(
     resolver: &StandardMessageResolver,
     golden: &HashMap<&str, &str>,
     key: &str,
-    locale: &JavaLocale,
+    locale: &Locale,
     pattern: &str,
     parameters: &[Option<Arc<TemplateValue>>],
 ) {
@@ -862,7 +862,7 @@ fn assert_format_without_parameters(
     resolver: &StandardMessageResolver,
     golden: &HashMap<&str, &str>,
     key: &str,
-    locale: &JavaLocale,
+    locale: &Locale,
     pattern: &str,
 ) {
     let actual = resolver
@@ -879,8 +879,8 @@ fn golden_records() -> HashMap<&'static str, &'static str> {
         .collect()
 }
 
-fn locale(tag: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(java(tag), java(country))
+fn locale(tag: &str, country: &str) -> Locale {
+    Locale::new(java(tag), java(country))
 }
 
 fn java(value: &str) -> Utf16String {

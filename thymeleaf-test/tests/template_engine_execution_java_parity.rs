@@ -8,7 +8,7 @@ use thymeleaf::expression::TemplateValue;
 use thymeleaf::linkbuilder::StandardLinkBuilder;
 use thymeleaf::messageresolver::StandardMessageResolver;
 use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::util::{Charset, JavaWriter, Utf16String};
+use thymeleaf::util::{Charset, TemplateWriter, Utf16String};
 use thymeleaf::{ITemplateEngine, TemplateEngine, TemplateSelectorSet, TemplateSpec};
 
 const JAVA_GOLDEN: &str =
@@ -489,7 +489,7 @@ impl TrackingWriter {
     }
 }
 
-impl JavaWriter for TrackingWriter {
+impl TemplateWriter for TrackingWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         lock(&self.state).utf16.extend_from_slice(characters);
         Ok(())
@@ -503,7 +503,7 @@ impl JavaWriter for TrackingWriter {
 
 struct FlushFailingWriter;
 
-impl JavaWriter for FlushFailingWriter {
+impl TemplateWriter for FlushFailingWriter {
     fn write_utf16(&mut self, _characters: &[u16]) -> io::Result<()> {
         Ok(())
     }

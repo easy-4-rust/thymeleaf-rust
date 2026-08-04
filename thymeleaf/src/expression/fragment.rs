@@ -89,7 +89,7 @@ impl Fragment {
 
     /// 将 Fragment 模型写入 Java Writer；EMPTY_FRAGMENT 不写任何内容。
     /// 对应 Java: `Fragment#write()`。
-    pub fn write(&self, writer: &mut dyn crate::util::JavaWriter) -> io::Result<()> {
+    pub fn write(&self, writer: &mut dyn crate::util::TemplateWriter) -> io::Result<()> {
         if let Some(template_model) = &self.template_model {
             template_model.write(writer)?;
         }

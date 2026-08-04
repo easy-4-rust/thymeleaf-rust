@@ -7,7 +7,7 @@ use std::sync::{Arc, RwLock};
 use crate::context::ITemplateContext;
 use crate::expression::TemplateValue;
 use crate::templateresource::ITemplateResource;
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 
 use super::{
     AbstractMessageResolver, IMessageResolver, MessageResolutionError, MessageResolutionResult,
@@ -15,13 +15,13 @@ use super::{
 };
 
 type Messages = HashMap<Utf16String, Utf16String>;
-type LocalizedMessages = HashMap<JavaLocale, Arc<Messages>>;
-type TemplateMessagesHook = dyn Fn(&Utf16String, &dyn ITemplateResource, &JavaLocale) -> MessageResolutionResult<Messages>
+type LocalizedMessages = HashMap<Locale, Arc<Messages>>;
+type TemplateMessagesHook = dyn Fn(&Utf16String, &dyn ITemplateResource, &Locale) -> MessageResolutionResult<Messages>
     + Send
     + Sync;
-type OriginMessagesHook = dyn Fn(TypeId, &JavaLocale) -> Messages + Send + Sync;
+type OriginMessagesHook = dyn Fn(TypeId, &Locale) -> Messages + Send + Sync;
 type MessageFormatterHook = dyn Fn(
-        &JavaLocale,
+        &Locale,
         &Utf16String,
         Option<&[Option<Arc<TemplateValue>>]>,
     ) -> MessageResolutionResult<Option<Utf16String>>
@@ -97,11 +97,7 @@ impl StandardMessageResolver {
     /// 对应 Java 语义：`StandardMessageResolver` 的 `with_template_messages_hook` 行为（Rust 侧辅助/私有路径）。
     pub fn with_template_messages_hook<F>(mut self, hook: F) -> Self
     where
-        F: Fn(
-                &Utf16String,
-                &dyn ITemplateResource,
-                &JavaLocale,
-            ) -> MessageResolutionResult<Messages>
+        F: Fn(&Utf16String, &dyn ITemplateResource, &Locale) -> MessageResolutionResult<Messages>
             + Send
             + Sync
             + 'static,
@@ -125,7 +121,7 @@ impl StandardMessageResolver {
     /// 对应 Java 语义：`StandardMessageResolver` 的 `with_origin_messages_hook` 行为（Rust 侧辅助/私有路径）。
     pub fn with_origin_messages_hook<F>(mut self, hook: F) -> Self
     where
-        F: Fn(TypeId, &JavaLocale) -> Messages + Send + Sync + 'static,
+        F: Fn(TypeId, &Locale) -> Messages + Send + Sync + 'static,
     {
         self.origin_messages_hook = Some(Arc::new(hook));
         self
@@ -146,7 +142,7 @@ impl StandardMessageResolver {
     pub fn with_message_formatter_hook<F>(mut self, hook: F) -> Self
     where
         F: Fn(
-                &JavaLocale,
+                &Locale,
                 &Utf16String,
                 Option<&[Option<Arc<TemplateValue>>]>,
             ) -> MessageResolutionResult<Option<Utf16String>>
@@ -257,7 +253,7 @@ impl StandardMessageResolver {
     /// 对应 Java 语义：`StandardMessageResolver` 的 `register_origin_messages` 行为（Rust 侧辅助/私有路径）。
     pub fn register_origin_messages(
         origin: TypeId,
-        locale: JavaLocale,
+        locale: Locale,
         messages: HashMap<Utf16String, Utf16String>,
     ) {
         StandardMessageResolutionUtils::register_origin_messages(origin, locale, messages);
@@ -289,7 +285,7 @@ impl StandardMessageResolver {
     /// 格式化文本、钩子显式返回的 `None`，或非法 pattern 等格式化错误。
     pub fn format_message(
         &self,
-        locale: &JavaLocale,
+        locale: &Locale,
         message: &Utf16String,
         message_parameters: Option<&[Option<Arc<TemplateValue>>]>,
     ) -> MessageResolutionResult<Option<Utf16String>> {
@@ -313,7 +309,7 @@ impl StandardMessageResolver {
         &self,
         template: &Utf16String,
         template_resource: &dyn ITemplateResource,
-        locale: &JavaLocale,
+        locale: &Locale,
     ) -> MessageResolutionResult<HashMap<Utf16String, Utf16String>> {
         if let Some(hook) = &self.template_messages_hook {
             return hook(template, template_resource, locale);
@@ -331,7 +327,7 @@ impl StandardMessageResolver {
     pub fn resolve_messages_for_origin(
         &self,
         origin: TypeId,
-        locale: &JavaLocale,
+        locale: &Locale,
     ) -> HashMap<Utf16String, Utf16String> {
         if let Some(hook) = &self.origin_messages_hook {
             return hook(origin, locale);
@@ -410,7 +406,7 @@ impl StandardMessageResolver {
     fn cached_template_messages(
         &self,
         template: &Utf16String,
-        locale: &JavaLocale,
+        locale: &Locale,
         load: impl FnOnce() -> MessageResolutionResult<Messages>,
     ) -> MessageResolutionResult<Arc<Messages>> {
         if let Some(messages) = read_lock(&self.messages_by_locale_by_template)
@@ -430,7 +426,7 @@ impl StandardMessageResolver {
         ))
     }
 
-    fn cached_origin_messages(&self, origin: TypeId, locale: &JavaLocale) -> Arc<Messages> {
+    fn cached_origin_messages(&self, origin: TypeId, locale: &Locale) -> Arc<Messages> {
         if let Some(messages) = read_lock(&self.messages_by_locale_by_origin)
             .get(&origin)
             .and_then(|localized| localized.get(locale))

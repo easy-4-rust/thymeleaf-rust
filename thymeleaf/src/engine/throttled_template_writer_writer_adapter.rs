@@ -2,7 +2,7 @@ use std::io;
 use std::sync::{Arc, Mutex};
 
 use crate::exceptions::TemplateOutputException;
-use crate::util::JavaWriter;
+use crate::util::TemplateWriter;
 
 use super::template_flow_controller::TemplateFlowController;
 
@@ -19,7 +19,7 @@ const OVERFLOW_BUFFER_INCREMENT: usize = 256;
 pub(crate) struct ThrottledTemplateWriterWriterAdapter {
     template_name: String,
     flow_controller: Arc<Mutex<TemplateFlowController>>,
-    writer: Option<Box<dyn JavaWriter>>,
+    writer: Option<Box<dyn TemplateWriter>>,
     overflow: Vec<u16>,
     overflow_size: usize,
     max_overflow_size: usize,
@@ -56,7 +56,7 @@ impl ThrottledTemplateWriterWriterAdapter {
 
     /// 绑定下一轮输出 Writer，并按 Java 语义仅重置本轮写出计数。
     /// 对应 Java: `ThrottledTemplateWriterWriterAdapter#setWriter()`。
-    pub(crate) fn set_writer(&mut self, writer: Box<dyn JavaWriter>) {
+    pub(crate) fn set_writer(&mut self, writer: Box<dyn TemplateWriter>) {
         self.writer = Some(writer);
         self.written_count = 0;
     }
@@ -208,7 +208,7 @@ impl ThrottledTemplateWriterWriterAdapter {
         }
     }
 
-    fn writer_mut(&mut self) -> io::Result<&mut (dyn JavaWriter + 'static)> {
+    fn writer_mut(&mut self) -> io::Result<&mut (dyn TemplateWriter + 'static)> {
         self.writer
             .as_deref_mut()
             .ok_or_else(|| io::Error::other("Throttled writer output has not been initialized"))
@@ -220,7 +220,7 @@ mod tests {
     use std::io;
     use std::sync::{Arc, Mutex};
 
-    use crate::util::JavaWriter;
+    use crate::util::TemplateWriter;
 
     use super::super::template_flow_controller::TemplateFlowController;
     use super::ThrottledTemplateWriterWriterAdapter;
@@ -230,7 +230,7 @@ mod tests {
         output: Arc<Mutex<Vec<u16>>>,
     }
 
-    impl JavaWriter for RecordingWriter {
+    impl TemplateWriter for RecordingWriter {
         fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
             self.output
                 .lock()
@@ -326,7 +326,7 @@ mod tests {
         writes: usize,
     }
 
-    impl JavaWriter for FailOnSecondWriteWriter {
+    impl TemplateWriter for FailOnSecondWriteWriter {
         fn write_utf16(&mut self, _characters: &[u16]) -> io::Result<()> {
             self.writes += 1;
             if self.writes > 1 {

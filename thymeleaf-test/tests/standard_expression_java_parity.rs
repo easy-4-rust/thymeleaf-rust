@@ -27,7 +27,7 @@ use thymeleaf::expression::{
 use thymeleaf::messageresolver::{IMessageResolver, MessageResolutionResult};
 use thymeleaf::templateresolver::{ITemplateResolver, TemplateResolution, TemplateResolverError};
 use thymeleaf::templateresource::{ITemplateResource, StringTemplateResource};
-use thymeleaf::util::{JavaDate, JavaLocale, JavaNumber, Utf16String};
+use thymeleaf::util::{JavaDate, JavaNumber, Locale, Utf16String};
 use thymeleaf::{TemplateEngine, TemplateMode};
 
 const TEMPLATE: &str =
@@ -255,7 +255,7 @@ fn format_message_like_java(
                             thymeleaf::util::DateUtils::format(
                                 Some(&date),
                                 Some(&js(pattern.trim())),
-                                Some(&JavaLocale::new(js("en"), js("US"))),
+                                Some(&Locale::new(js("en"), js("US"))),
                             )
                             .expect("date format")
                             .expect("formatted date")
@@ -412,7 +412,7 @@ fn to_date(year: i32, month: i32, day: i32) -> Arc<JavaDate> {
     )
 }
 
-fn build_context(locale: JavaLocale) -> Context {
+fn build_context(locale: Locale) -> Context {
     let ctx = Context::new();
     ctx.set_locale(Some(locale)).expect("locale");
 
@@ -523,11 +523,11 @@ fn build_context(locale: JavaLocale) -> Context {
 }
 
 fn context_en() -> Context {
-    build_context(JavaLocale::new(js("en"), js("US")))
+    build_context(Locale::new(js("en"), js("US")))
 }
 
 fn context_es() -> Context {
-    build_context(JavaLocale::new(js("es"), js("ES")))
+    build_context(Locale::new(js("es"), js("ES")))
 }
 
 /// 与 Java `test(expression, result)` 完全一致：处理模板名即表达式，

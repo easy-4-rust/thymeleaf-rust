@@ -15,7 +15,7 @@ use crate::linkbuilder::{ILinkBuilder, StandardLinkBuilder};
 use crate::messageresolver::{IMessageResolver, StandardMessageResolver};
 use crate::standard::StandardDialect;
 use crate::templateresolver::{ITemplateResolver, StringTemplateResolver};
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 use crate::{
     ConfigurationPrinterHelper, DialectConfiguration, EngineConfiguration, IEngineConfiguration,
     ITemplateEngine, IThrottledTemplateProcessor, TemplateEngineResult, TemplateSpec,
@@ -547,7 +547,7 @@ impl TemplateEngine {
         &self,
         template: &str,
         context: &dyn IContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> TemplateEngineResult<()> {
         let template_spec = template_spec(template, None)?;
         self.process_to_writer(&template_spec, context, writer)
@@ -561,7 +561,7 @@ impl TemplateEngine {
         template: &str,
         template_selectors: &crate::TemplateSelectorSet,
         context: &dyn IContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> TemplateEngineResult<()> {
         let template_spec = template_spec(template, Some(template_selectors))?;
         self.process_to_writer(&template_spec, context, writer)
@@ -712,10 +712,10 @@ impl ITemplateEngine for TemplateEngine {
         &self,
         template_spec: &TemplateSpec,
         context: &dyn IContext,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> TemplateEngineResult<()> {
         let configuration = self.initialize()?;
-        let mut shared_writer = SharedJavaWriter::new(writer);
+        let mut shared_writer = SharedTemplateWriter::new(writer);
         configuration
             .get_template_manager()
             .parse_and_process(template_spec, context, Box::new(shared_writer.clone()))
@@ -793,7 +793,7 @@ struct SharedStringWriter {
     buffer: Arc<Mutex<Vec<u16>>>,
 }
 
-impl JavaWriter for SharedStringWriter {
+impl TemplateWriter for SharedStringWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> std::io::Result<()> {
         lock(&self.buffer).extend_from_slice(characters);
         Ok(())
@@ -801,19 +801,19 @@ impl JavaWriter for SharedStringWriter {
 }
 
 #[derive(Clone)]
-struct SharedJavaWriter {
-    writer: Arc<Mutex<Box<dyn JavaWriter>>>,
+struct SharedTemplateWriter {
+    writer: Arc<Mutex<Box<dyn TemplateWriter>>>,
 }
 
-impl SharedJavaWriter {
-    fn new(writer: Box<dyn JavaWriter>) -> Self {
+impl SharedTemplateWriter {
+    fn new(writer: Box<dyn TemplateWriter>) -> Self {
         Self {
             writer: Arc::new(Mutex::new(writer)),
         }
     }
 }
 
-impl JavaWriter for SharedJavaWriter {
+impl TemplateWriter for SharedTemplateWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> std::io::Result<()> {
         lock(&self.writer).write_utf16(characters)
     }

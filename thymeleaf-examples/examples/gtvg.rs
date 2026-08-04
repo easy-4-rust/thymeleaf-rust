@@ -10,7 +10,7 @@
 use std::sync::Arc;
 
 use thymeleaf::TemplateEngine;
-use thymeleaf::util::{JavaDate, JavaLocale, Utf16String};
+use thymeleaf::util::{JavaDate, Locale, Utf16String};
 use thymeleaf::web::IWebExchange;
 use thymeleaf_examples::controllers::controller_mappings::ControllerMapping;
 use thymeleaf_examples::web::gtvg_web_exchange::GtvgWebExchange;
@@ -45,7 +45,7 @@ fn process_url(engine: &TemplateEngine, path: &str, parameters: &[(&str, &str)])
     let request = GtvgWebRequest::new(path, parameters);
     // Java: new WebContext(webExchange, webExchange.getLocale())，默认 Locale
     // 与 Java Locale.getDefault() 等价。
-    let exchange = GtvgWebExchange::new(request, JavaLocale::get_default());
+    let exchange = GtvgWebExchange::new(request, Locale::get_default());
     let mapping = ControllerMapping::resolve_for_request(exchange.get_request())
         .expect("URL 必须命中控制器映射");
     let output = mapping

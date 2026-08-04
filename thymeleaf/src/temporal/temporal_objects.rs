@@ -5,9 +5,9 @@ use chrono_tz::Tz;
 use thiserror::Error;
 
 use crate::expression::TemplateValue;
-use crate::util::JavaLocale;
+use crate::util::Locale;
 
-use super::{JavaTemporal, JavaTemporalKind};
+use super::{TemporalKind, TemporalValue};
 
 /// Java Time 对象规范化与默认格式选择工具。
 ///
@@ -17,11 +17,11 @@ pub struct TemporalObjects;
 /// Java `z` pattern 的通用时区名：带偏移类型保留偏移（UTC → "Z"、否则
 /// "+HH:MM"）；其余在默认 ZoneId 下取 UTC → "Z"、命名时区取缩写。
 /// 对应 Java 语义：`TemporalObjects` 的 `java_short_zone` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_short_zone(target: &JavaTemporal, default_zone: &Tz) -> String {
+pub(crate) fn java_short_zone(target: &TemporalValue, default_zone: &Tz) -> String {
     match target {
-        JavaTemporal::OffsetDateTime(value) => fixed_offset_zone(value.offset()),
-        JavaTemporal::OffsetTime(_, offset) => fixed_offset_zone(offset),
-        JavaTemporal::ZonedDateTime(value) => tz_zone(value.timezone()),
+        TemporalValue::OffsetDateTime(value) => fixed_offset_zone(value.offset()),
+        TemporalValue::OffsetTime(_, offset) => fixed_offset_zone(offset),
+        TemporalValue::ZonedDateTime(value) => tz_zone(value.timezone()),
         _ => tz_zone(*default_zone),
     }
 }
@@ -54,12 +54,14 @@ pub(crate) fn tz_zone(zone: Tz) -> String {
 impl TemporalObjects {
     /// 从模板动态值读取 Java `Temporal`。
     /// 对应 Java: `TemporalObjects#temporal()`。
-    pub fn temporal(value: Option<&TemplateValue>) -> Result<Option<&JavaTemporal>, TemporalError> {
+    pub fn temporal(
+        value: Option<&TemplateValue>,
+    ) -> Result<Option<&TemporalValue>, TemporalError> {
         match value {
             None | Some(TemplateValue::Null) => Ok(None),
             Some(TemplateValue::Object(object)) => object
                 .as_any()
-                .downcast_ref::<JavaTemporal>()
+                .downcast_ref::<TemporalValue>()
                 .map(Some)
                 .ok_or_else(|| {
                     invalid(format!(
@@ -82,18 +84,15 @@ impl TemporalObjects {
     /// `appendLocalizedOffset(FULL)`（"GMT"/"GMT+HH:MM"，在 format 时追加）；
     /// OffsetTime → `HH:mm:ss` + 同样的偏移段。
     /// 对应 Java: `TemporalObjects#formatterFor()`。
-    pub fn formatter_for(
-        target: &JavaTemporal,
-        locale: &JavaLocale,
-    ) -> Result<String, TemporalError> {
+    pub fn formatter_for(target: &TemporalValue, locale: &Locale) -> Result<String, TemporalError> {
         let language = locale.get_language().to_string_lossy();
         Ok(match target.kind() {
-            JavaTemporalKind::Instant => "%Y-%m-%dT%H:%M:%S%.fZ".to_owned(),
-            JavaTemporalKind::LocalDate => localized_date_pattern(&language),
-            JavaTemporalKind::LocalDateTime => localized_datetime_pattern(&language),
-            JavaTemporalKind::ZonedDateTime => {
+            TemporalKind::Instant => "%Y-%m-%dT%H:%M:%S%.fZ".to_owned(),
+            TemporalKind::LocalDate => localized_date_pattern(&language),
+            TemporalKind::LocalDateTime => localized_datetime_pattern(&language),
+            TemporalKind::ZonedDateTime => {
                 let zone = match target {
-                    JavaTemporal::ZonedDateTime(value) => tz_zone(value.timezone()),
+                    TemporalValue::ZonedDateTime(value) => tz_zone(value.timezone()),
                     _ => unreachable!("ZonedDateTime kind implies ZonedDateTime value"),
                 };
                 if language == "zh" {
@@ -107,7 +106,7 @@ impl TemporalObjects {
                     format!("%B %-d, %Y, %-I:%M:%S %p {zone}")
                 }
             }
-            JavaTemporalKind::LocalTime => {
+            TemporalKind::LocalTime => {
                 if language == "zh" || language == "de" {
                     "%H:%M:%S".to_owned()
                 } else {
@@ -115,10 +114,10 @@ impl TemporalObjects {
                 }
             }
             // 偏移段（"GMT"/"GMT+HH:MM"）由 TemporalFormattingUtils::format 追加。
-            JavaTemporalKind::OffsetDateTime => localized_datetime_pattern(&language),
-            JavaTemporalKind::OffsetTime => "%H:%M:%S".to_owned(),
-            JavaTemporalKind::Year => "%Y".to_owned(),
-            JavaTemporalKind::YearMonth => {
+            TemporalKind::OffsetDateTime => localized_datetime_pattern(&language),
+            TemporalKind::OffsetTime => "%H:%M:%S".to_owned(),
+            TemporalKind::Year => "%Y".to_owned(),
+            TemporalKind::YearMonth => {
                 if Self::should_display_year_before_month(locale) {
                     "%Y %B".to_owned()
                 } else {
@@ -131,19 +130,19 @@ impl TemporalObjects {
     /// 将缺失字段按 Java `zonedTime` 规则补齐并换算到可格式化时间。
     /// 对应 Java: `TemporalObjects#zonedTime()`。
     pub fn zoned_time(
-        target: &JavaTemporal,
+        target: &TemporalValue,
         default_zone_id: Tz,
     ) -> Result<DateTime<Tz>, TemporalError> {
         let today = Utc::now().with_timezone(&default_zone_id).date_naive();
         let local = match target {
-            JavaTemporal::Instant(value) => return Ok(value.with_timezone(&default_zone_id)),
-            JavaTemporal::LocalDate(value) => value.and_hms_opt(0, 0, 0).expect("midnight"),
-            JavaTemporal::LocalDateTime(value) => *value,
-            JavaTemporal::LocalTime(value) => NaiveDateTime::new(today, *value),
-            JavaTemporal::OffsetDateTime(value) => {
+            TemporalValue::Instant(value) => return Ok(value.with_timezone(&default_zone_id)),
+            TemporalValue::LocalDate(value) => value.and_hms_opt(0, 0, 0).expect("midnight"),
+            TemporalValue::LocalDateTime(value) => *value,
+            TemporalValue::LocalTime(value) => NaiveDateTime::new(today, *value),
+            TemporalValue::OffsetDateTime(value) => {
                 return Ok(value.with_timezone(&Utc).with_timezone(&default_zone_id));
             }
-            JavaTemporal::OffsetTime(value, offset) => {
+            TemporalValue::OffsetTime(value, offset) => {
                 let fixed = today
                     .and_time(*value)
                     .and_local_timezone(*offset)
@@ -151,15 +150,15 @@ impl TemporalObjects {
                     .ok_or_else(|| invalid("Cannot resolve OffsetTime"))?;
                 return Ok(fixed.with_timezone(&Utc).with_timezone(&default_zone_id));
             }
-            JavaTemporal::Year(year) => NaiveDate::from_ymd_opt(*year, 1, 1)
+            TemporalValue::Year(year) => NaiveDate::from_ymd_opt(*year, 1, 1)
                 .ok_or_else(|| invalid("Invalid Year"))?
                 .and_hms_opt(0, 0, 0)
                 .expect("midnight"),
-            JavaTemporal::YearMonth(year, month) => NaiveDate::from_ymd_opt(*year, *month, 1)
+            TemporalValue::YearMonth(year, month) => NaiveDate::from_ymd_opt(*year, *month, 1)
                 .ok_or_else(|| invalid("Invalid YearMonth"))?
                 .and_hms_opt(0, 0, 0)
                 .expect("midnight"),
-            JavaTemporal::ZonedDateTime(value) => return Ok(*value),
+            TemporalValue::ZonedDateTime(value) => return Ok(*value),
         };
         match default_zone_id.from_local_datetime(&local) {
             LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => Ok(value),
@@ -169,14 +168,14 @@ impl TemporalObjects {
 
     /// 读取日期字段；目标不支持该字段时返回 Java 式错误。
     /// 对应 Java 语义：`TemporalObjects` 的 `date_fields` 行为（Rust 侧辅助/私有路径）。
-    pub fn date_fields(target: &JavaTemporal) -> Result<(i32, u32, u32, u32), TemporalError> {
+    pub fn date_fields(target: &TemporalValue) -> Result<(i32, u32, u32, u32), TemporalError> {
         let date = match target {
-            JavaTemporal::LocalDate(value) => *value,
-            JavaTemporal::LocalDateTime(value) => value.date(),
-            JavaTemporal::OffsetDateTime(value) => value.date_naive(),
-            JavaTemporal::ZonedDateTime(value) => value.date_naive(),
-            JavaTemporal::Year(year) => NaiveDate::from_ymd_opt(*year, 1, 1).expect("valid year"),
-            JavaTemporal::YearMonth(year, month) => {
+            TemporalValue::LocalDate(value) => *value,
+            TemporalValue::LocalDateTime(value) => value.date(),
+            TemporalValue::OffsetDateTime(value) => value.date_naive(),
+            TemporalValue::ZonedDateTime(value) => value.date_naive(),
+            TemporalValue::Year(year) => NaiveDate::from_ymd_opt(*year, 1, 1).expect("valid year"),
+            TemporalValue::YearMonth(year, month) => {
                 NaiveDate::from_ymd_opt(*year, *month, 1).expect("valid year-month")
             }
             _ => return Err(invalid("Unsupported field: DayOfMonth")),
@@ -191,12 +190,12 @@ impl TemporalObjects {
 
     /// 读取时间字段；目标不支持该字段时返回 Java 式错误。
     /// 对应 Java 语义：`TemporalObjects` 的 `time_fields` 行为（Rust 侧辅助/私有路径）。
-    pub fn time_fields(target: &JavaTemporal) -> Result<(u32, u32, u32, u32), TemporalError> {
+    pub fn time_fields(target: &TemporalValue) -> Result<(u32, u32, u32, u32), TemporalError> {
         let time = match target {
-            JavaTemporal::LocalTime(value) | JavaTemporal::OffsetTime(value, _) => *value,
-            JavaTemporal::LocalDateTime(value) => value.time(),
-            JavaTemporal::OffsetDateTime(value) => value.time(),
-            JavaTemporal::ZonedDateTime(value) => value.time(),
+            TemporalValue::LocalTime(value) | TemporalValue::OffsetTime(value, _) => *value,
+            TemporalValue::LocalDateTime(value) => value.time(),
+            TemporalValue::OffsetDateTime(value) => value.time(),
+            TemporalValue::ZonedDateTime(value) => value.time(),
             _ => return Err(invalid("Unsupported field: HourOfDay")),
         };
         Ok((time.hour(), time.minute(), time.second(), time.nanosecond()))
@@ -205,11 +204,11 @@ impl TemporalObjects {
     /// 返回 temporal 自身固定偏移秒数；无偏移类型返回默认时区当前偏移。
     #[must_use]
     /// 对应 Java 语义：`TemporalObjects` 的 `offset_seconds` 行为（Rust 侧辅助/私有路径）。
-    pub fn offset_seconds(target: &JavaTemporal, default_zone_id: Tz) -> i32 {
+    pub fn offset_seconds(target: &TemporalValue, default_zone_id: Tz) -> i32 {
         match target {
-            JavaTemporal::OffsetDateTime(value) => value.offset().local_minus_utc(),
-            JavaTemporal::OffsetTime(_, offset) => offset.local_minus_utc(),
-            JavaTemporal::ZonedDateTime(value) => value.offset().fix().local_minus_utc(),
+            TemporalValue::OffsetDateTime(value) => value.offset().local_minus_utc(),
+            TemporalValue::OffsetTime(_, offset) => offset.local_minus_utc(),
+            TemporalValue::ZonedDateTime(value) => value.offset().fix().local_minus_utc(),
             _ => Utc::now()
                 .with_timezone(&default_zone_id)
                 .offset()
@@ -218,7 +217,7 @@ impl TemporalObjects {
         }
     }
 
-    fn should_display_year_before_month(locale: &JavaLocale) -> bool {
+    fn should_display_year_before_month(locale: &Locale) -> bool {
         matches!(
             locale.get_country().to_string_lossy().as_str(),
             "BT" | "CA" | "CN" | "KP" | "KR" | "TW" | "HU" | "IR" | "JP" | "LT" | "MN"

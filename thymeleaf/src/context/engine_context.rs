@@ -9,7 +9,7 @@ use crate::exceptions::TemplateProcessingException;
 use crate::expression::{IExpressionObjects, TemplateValue};
 use crate::inline::IInliner;
 use crate::model::{IModelFactory, IProcessableElementTag};
-use crate::util::{JavaLocale, Utf16String};
+use crate::util::{Locale, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode, TemplateResolutionAttributes};
 
 use super::{
@@ -75,7 +75,7 @@ impl EngineContext {
         configuration: Arc<dyn IEngineConfiguration>,
         template_data: TemplateData,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-        locale: JavaLocale,
+        locale: Locale,
         variables: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
     ) -> Arc<Self> {
         Arc::new_cyclic(|weak: &Weak<Self>| {
@@ -100,7 +100,7 @@ impl EngineContext {
         configuration: Arc<dyn IEngineConfiguration>,
         template_data: TemplateData,
         template_resolution_attributes: Option<&TemplateResolutionAttributes>,
-        locale: JavaLocale,
+        locale: Locale,
         variables: Option<&IndexMap<Option<Utf16String>, Option<Arc<TemplateValue>>>>,
         expression_context: Weak<dyn IExpressionContext>,
         self_reference: Option<Weak<EngineContext>>,
@@ -218,7 +218,7 @@ impl IContext for EngineContext {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.base.get_locale()
     }
 

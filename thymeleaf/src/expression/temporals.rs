@@ -6,10 +6,10 @@ use std::sync::Arc;
 use chrono_tz::Tz;
 
 use crate::temporal::{
-    JavaTemporal, TemporalCreationUtils, TemporalFormattingError, TemporalFormattingUtils,
-    TemporalObjects,
+    TemporalCreationUtils, TemporalFormattingError, TemporalFormattingUtils, TemporalObjects,
+    TemporalValue,
 };
-use crate::util::{JavaLocale, JavaNumber, Utf16String, template_integer};
+use crate::util::{JavaNumber, Locale, Utf16String, template_integer};
 
 use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 
@@ -24,14 +24,14 @@ pub struct Temporals {
 impl Temporals {
     /// 使用 Locale 与系统默认 ZoneId 创建 `#temporals`。
     /// 对应 Java 语义：`Temporals` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(locale: JavaLocale) -> Result<Self, TemporalsError> {
+    pub fn new(locale: Locale) -> Result<Self, TemporalsError> {
         Self::with_default_zone_id(locale, default_zone())
     }
 
     /// 使用 Locale 与显式默认 ZoneId 创建 `#temporals`。
     /// 对应 Java 语义：`Temporals` 的 `with_default_zone_id` 行为（Rust 侧辅助/私有路径）。
     pub fn with_default_zone_id(
-        locale: JavaLocale,
+        locale: Locale,
         default_zone_id: Tz,
     ) -> Result<Self, TemporalsError> {
         Ok(Self {
@@ -118,14 +118,14 @@ impl Temporals {
         let mut locale = None;
         let mut zone = None;
         if let Some(second) = arguments.get(1) {
-            if let Some(value) = java_locale(second) {
+            if let Some(value) = locale_argument(second) {
                 locale = Some(value);
             } else {
                 pattern = Some(required_string(second, "Pattern cannot be null")?);
             }
         }
         if let Some(third) = arguments.get(2) {
-            if let Some(value) = java_locale(third) {
+            if let Some(value) = locale_argument(third) {
                 locale = Some(value);
             } else {
                 let zone_id = required_string(third, "ZoneId cannot be null")?;
@@ -146,7 +146,7 @@ impl Temporals {
         arguments: &[Option<Arc<TemplateValue>>],
         method: impl Fn(
             &TemporalFormattingUtils,
-            Option<&JavaTemporal>,
+            Option<&TemporalValue>,
         ) -> Result<Option<i32>, TemporalFormattingError>,
     ) -> Result<Option<Arc<TemplateValue>>, TemporalsError> {
         Ok(method(&self.formatting, temporal_argument(arguments)?)
@@ -168,7 +168,7 @@ impl Temporals {
 
     fn created(
         &self,
-        result: Result<JavaTemporal, impl Display>,
+        result: Result<TemporalValue, impl Display>,
     ) -> Result<Option<Arc<TemplateValue>>, TemporalsError> {
         result
             .map(|value| Some(temporal_value(value)))
@@ -261,13 +261,13 @@ fn error(cause: impl Display) -> TemporalsError {
     TemporalsError::new(cause.to_string())
 }
 
-fn temporal(value: &Option<Arc<TemplateValue>>) -> Result<Option<&JavaTemporal>, TemporalsError> {
+fn temporal(value: &Option<Arc<TemplateValue>>) -> Result<Option<&TemporalValue>, TemporalsError> {
     TemporalObjects::temporal(value.as_deref()).map_err(error)
 }
 
 fn temporal_argument(
     arguments: &[Option<Arc<TemplateValue>>],
-) -> Result<Option<&JavaTemporal>, TemporalsError> {
+) -> Result<Option<&TemporalValue>, TemporalsError> {
     match arguments {
         [target] => temporal(target),
         _ => Err(TemporalsError::new(
@@ -276,7 +276,7 @@ fn temporal_argument(
     }
 }
 
-fn temporal_value(value: JavaTemporal) -> Arc<TemplateValue> {
+fn temporal_value(value: TemporalValue) -> Arc<TemplateValue> {
     Arc::new(TemplateValue::Object(Arc::new(value)))
 }
 
@@ -303,7 +303,7 @@ fn optional_pattern(
         .transpose()
 }
 
-fn java_locale(value: &Option<Arc<TemplateValue>>) -> Option<&JavaLocale> {
+fn locale_argument(value: &Option<Arc<TemplateValue>>) -> Option<&Locale> {
     match value.as_deref() {
         Some(TemplateValue::Object(object)) => object.as_any().downcast_ref(),
         _ => None,

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::expression::TemplateValue;
-use crate::util::{JavaLocale, Utf16String, ValidateError};
+use crate::util::{Locale, Utf16String, ValidateError};
 
 use super::ContextVariableEntries;
 use super::{AbstractContext, IContext, IContextVariableNames};
@@ -47,7 +47,7 @@ impl Context {
     ///
     /// 返回空变量 Context。
     #[must_use]
-    pub fn with_locale(locale: Option<JavaLocale>) -> Self {
+    pub fn with_locale(locale: Option<Locale>) -> Self {
         Self {
             base: AbstractContext::new(locale, None),
         }
@@ -67,7 +67,7 @@ impl Context {
     /// 返回与输入条目容器独立的浅复制 Context。
     #[must_use]
     pub fn with_locale_and_variables(
-        locale: Option<JavaLocale>,
+        locale: Option<Locale>,
         variables: ContextVariableEntries<'_>,
     ) -> Self {
         Self {
@@ -86,7 +86,7 @@ impl Context {
     /// # 错误
     ///
     /// null Locale 返回 Java `IllegalArgumentException` 对应错误。
-    pub fn set_locale(&self, locale: Option<JavaLocale>) -> Result<(), ValidateError> {
+    pub fn set_locale(&self, locale: Option<Locale>) -> Result<(), ValidateError> {
         self.base.set_locale(locale)
     }
 
@@ -144,7 +144,7 @@ impl IContext for Context {
         self
     }
 
-    fn get_locale(&self) -> JavaLocale {
+    fn get_locale(&self) -> Locale {
         self.base.get_locale()
     }
 

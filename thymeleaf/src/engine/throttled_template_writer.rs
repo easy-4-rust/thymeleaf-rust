@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use encoding_rs::{CoderResult, Encoder, Encoding};
 
 use crate::exceptions::TemplateOutputException;
-use crate::util::{Charset, JavaWriter};
+use crate::util::{Charset, TemplateWriter};
 
 use super::i_throttled_template_writer_control::IThrottledTemplateWriterControl;
 use super::template_flow_controller::TemplateFlowController;
@@ -118,7 +118,7 @@ impl ThrottledTemplateWriter {
     /// 对应 Java 语义：`ThrottledTemplateWriter` 的 `set_output_writer` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn set_output_writer(
         &mut self,
-        writer: Box<dyn JavaWriter>,
+        writer: Box<dyn TemplateWriter>,
     ) -> Result<(), TemplateOutputException> {
         if matches!(
             self.adapter,
@@ -306,7 +306,7 @@ impl ThrottledTemplateWriter {
     }
 }
 
-impl JavaWriter for ThrottledTemplateWriter {
+impl TemplateWriter for ThrottledTemplateWriter {
     fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
         Self::write_utf16(self, characters)
     }
@@ -407,7 +407,7 @@ mod tests {
     use super::super::i_throttled_template_writer_control::IThrottledTemplateWriterControl;
     use super::super::template_flow_controller::TemplateFlowController;
     use super::ThrottledTemplateWriter;
-    use crate::util::{Charset, JavaWriter};
+    use crate::util::{Charset, TemplateWriter};
 
     #[test]
     fn character_throttling_state_machine_matches_java_golden() {
@@ -615,7 +615,7 @@ mod tests {
 
     struct RecordingWriter(Arc<Mutex<Vec<u16>>>);
 
-    impl JavaWriter for RecordingWriter {
+    impl TemplateWriter for RecordingWriter {
         fn write_utf16(&mut self, characters: &[u16]) -> io::Result<()> {
             self.0
                 .lock()
@@ -629,7 +629,7 @@ mod tests {
         writes: usize,
     }
 
-    impl JavaWriter for FailOnSecondWriteWriter {
+    impl TemplateWriter for FailOnSecondWriteWriter {
         fn write_utf16(&mut self, _characters: &[u16]) -> io::Result<()> {
             self.writes += 1;
             if self.writes > 1 {
@@ -641,7 +641,7 @@ mod tests {
 
     struct FlushCloseFailingWriter;
 
-    impl JavaWriter for FlushCloseFailingWriter {
+    impl TemplateWriter for FlushCloseFailingWriter {
         fn write_utf16(&mut self, _characters: &[u16]) -> io::Result<()> {
             Ok(())
         }

@@ -4,7 +4,7 @@
 //! `org.thymeleaf.standard.expression` 包 TemporalsArrayTest /
 //! TemporalsListTest / TemporalsSetTest / TemporalsCreationTest /
 //! TemporalsFormattingTest（Locale.US / ZoneOffset.UTC 基准）：
-//! - `TemporalCreationUtils`（471）：create 字段组合与 JavaTemporal 判别；
+//! - `TemporalCreationUtils`（471）：create 字段组合与 TemporalValue 判别；
 //! - `TemporalFormattingUtils`（472）：默认/SHORT/MEDIUM/LONG/FULL 本地化
 //!   格式、自定义 pattern、时区换算、null 语义与字段读取；
 //! - `TemporalArrayUtils`（470）/ `TemporalListUtils`（473）/
@@ -19,29 +19,36 @@ use chrono::{NaiveDate, NaiveDateTime};
 use chrono_tz::Tz;
 
 use thymeleaf::temporal::{
-    JavaTemporal, JavaTemporalKind, TemporalArrayUtils, TemporalCreationUtils,
-    TemporalFormattingUtils, TemporalListUtils, TemporalObjects, TemporalSetUtils,
+    TemporalArrayUtils, TemporalCreationUtils, TemporalFormattingUtils, TemporalKind,
+    TemporalListUtils, TemporalObjects, TemporalSetUtils, TemporalValue,
 };
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 
 fn js(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn us() -> JavaLocale {
-    JavaLocale::new(js("en"), js("US"))
+fn us() -> Locale {
+    Locale::new(js("en"), js("US"))
 }
 
-fn germany() -> JavaLocale {
-    JavaLocale::new(js("de"), js("DE"))
+fn germany() -> Locale {
+    Locale::new(js("de"), js("DE"))
 }
 
-fn date(year: i32, month: u32, day: u32) -> JavaTemporal {
-    JavaTemporal::LocalDate(NaiveDate::from_ymd_opt(year, month, day).expect("valid date"))
+fn date(year: i32, month: u32, day: u32) -> TemporalValue {
+    TemporalValue::LocalDate(NaiveDate::from_ymd_opt(year, month, day).expect("valid date"))
 }
 
-fn date_time(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> JavaTemporal {
-    JavaTemporal::LocalDateTime(
+fn date_time(
+    year: i32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+) -> TemporalValue {
+    TemporalValue::LocalDateTime(
         NaiveDate::from_ymd_opt(year, month, day)
             .expect("valid date")
             .and_hms_opt(hour, minute, second)
@@ -63,7 +70,7 @@ fn temporal_creation_utils_matches_java() {
 
     // create(y,mo,d) -> LocalDate（Java: LocalDate.of）
     let created = creation.create(&[2024, 5, 17]).expect("create date");
-    assert_eq!(created.kind(), JavaTemporalKind::LocalDate);
+    assert_eq!(created.kind(), TemporalKind::LocalDate);
     // Java ChronoField.DAY_OF_WEEK（ISO 1=Mon..7=Sun）：2024-05-17 是周五
     assert_eq!(
         TemporalObjects::date_fields(&created).expect("date fields"),
@@ -74,7 +81,7 @@ fn temporal_creation_utils_matches_java() {
     let created = creation
         .create(&[2024, 5, 17, 12, 30])
         .expect("create date time");
-    assert_eq!(created.kind(), JavaTemporalKind::LocalDateTime);
+    assert_eq!(created.kind(), TemporalKind::LocalDateTime);
     assert_eq!(
         TemporalObjects::time_fields(&created).expect("time fields"),
         (12, 30, 0, 0)
@@ -101,7 +108,7 @@ fn temporal_creation_utils_matches_java() {
     let created = creation
         .create_date("2015-01-01", None)
         .expect("create date");
-    assert_eq!(created.kind(), JavaTemporalKind::LocalDate);
+    assert_eq!(created.kind(), TemporalKind::LocalDate);
     // 2015-01-01 是周四（ISO dayOfWeek 4）
     assert_eq!(
         TemporalObjects::date_fields(&created).expect("date fields"),
@@ -125,11 +132,11 @@ fn temporal_creation_utils_matches_java() {
 
     // createNow（Java: LocalDateTime.now() 语义，仅断言类型与字段形状）
     let now = creation.create_now();
-    assert_eq!(now.kind(), JavaTemporalKind::LocalDateTime);
+    assert_eq!(now.kind(), TemporalKind::LocalDateTime);
 
     // createToday（Java: LocalDate.now()）
     let today = creation.create_today();
-    assert_eq!(today.kind(), JavaTemporalKind::LocalDate);
+    assert_eq!(today.kind(), TemporalKind::LocalDate);
 
     // 非法字段组合 -> 错误（Java 抛出 DateTimeException 族）
     assert!(creation.create(&[2024]).is_err(), "too few fields rejected");
@@ -542,10 +549,10 @@ fn temporal_objects_dispatch_matches_java() {
     );
 
     // 类型判别（Java Temporal 具体类型）
-    assert_eq!(day.kind(), JavaTemporalKind::LocalDate);
-    assert_eq!(moment.kind(), JavaTemporalKind::LocalDateTime);
+    assert_eq!(day.kind(), TemporalKind::LocalDate);
+    assert_eq!(moment.kind(), TemporalKind::LocalDateTime);
     assert_eq!(
-        JavaTemporal::LocalTime(
+        TemporalValue::LocalTime(
             NaiveDateTime::new(
                 NaiveDate::from_ymd_opt(2015, 1, 1).expect("date"),
                 chrono::NaiveTime::from_hms_opt(23, 59, 45).expect("time"),
@@ -553,7 +560,7 @@ fn temporal_objects_dispatch_matches_java() {
             .time(),
         )
         .kind(),
-        JavaTemporalKind::LocalTime
+        TemporalKind::LocalTime
     );
 
     // 偏移秒（Java ZoneOffset.getTotalSeconds；UTC = 0）

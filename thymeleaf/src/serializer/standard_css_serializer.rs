@@ -1,6 +1,6 @@
 use crate::exceptions::TemplateProcessingException;
 use crate::expression::TemplateValue;
-use crate::util::{JavaWriter, Utf16String};
+use crate::util::{TemplateWriter, Utf16String};
 
 use super::IStandardCSSSerializer;
 
@@ -22,7 +22,7 @@ impl IStandardCSSSerializer for StandardCSSSerializer {
     fn serialize_value(
         &self,
         object: Option<&TemplateValue>,
-        writer: &mut dyn JavaWriter,
+        writer: &mut dyn TemplateWriter,
     ) -> Result<(), TemplateProcessingException> {
         let Some(object) = object else {
             return Ok(());

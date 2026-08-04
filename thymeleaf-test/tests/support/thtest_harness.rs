@@ -16,7 +16,7 @@ use thymeleaf::expression::{IStandardExpression, TemplateValue, VariableExpressi
 use thymeleaf::templateresolver::{
     StringTemplateResolver, TemplateResolution, TemplateResolverError,
 };
-use thymeleaf::util::{JavaLocale, Utf16String};
+use thymeleaf::util::{Locale, Utf16String};
 use thymeleaf::{
     IEngineConfiguration, ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode,
     TemplateResolutionAttributes,
@@ -192,7 +192,7 @@ fn is_escaped_character(input: &[char], position: usize) -> bool {
 }
 
 /// 解析 Java 语言环境说明（`en`、`en_US`、`en_US_variant`）。
-pub fn parse_java_locale(value: &str) -> Result<JavaLocale, String> {
+pub fn parse_locale(value: &str) -> Result<Locale, String> {
     let parts = value.split('_').collect::<Vec<_>>();
     if parts.is_empty() || parts.len() > 3 || parts[0].is_empty() {
         return Err(format!("Invalid locale specification: {value}"));
@@ -207,7 +207,7 @@ pub fn parse_java_locale(value: &str) -> Result<JavaLocale, String> {
         tag.push('-');
         tag.push_str(variant);
     }
-    Ok(JavaLocale::new(
+    Ok(Locale::new(
         Utf16String::from_rust_str(&tag),
         Utf16String::from_rust_str(&country),
     ))
@@ -216,7 +216,7 @@ pub fn parse_java_locale(value: &str) -> Result<JavaLocale, String> {
 /// 把 CONTEXT 赋值写入普通 Context 与 ExpressionContext（对应 Java 测试框架
 /// `DefaultContextStandardTestFieldEvaluator` 的两种写入口）。
 pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Context, String> {
-    let default_locale = JavaLocale::new(
+    let default_locale = Locale::new(
         Utf16String::from_rust_str("en"),
         Utf16String::from_rust_str(""),
     );
@@ -256,7 +256,7 @@ pub fn build_context(engine: &TemplateEngine, source: Option<&str>) -> Result<Co
             if let Some(locale) = value
                 .as_deref()
                 .and_then(TemplateValue::to_utf16_string)
-                .map(|locale| parse_java_locale(&locale.to_string_lossy()))
+                .map(|locale| parse_locale(&locale.to_string_lossy()))
                 .transpose()?
             {
                 context

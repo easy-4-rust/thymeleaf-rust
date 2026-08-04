@@ -19,7 +19,7 @@ use thymeleaf::expression::{
     ExpressionObjectNames, IExpressionObjectFactory, IExpressionObjects, StandardExpressionResult,
     TemplateValue,
 };
-use thymeleaf::util::{JavaLocale, Utf16String, ValidateError};
+use thymeleaf::util::{Locale, Utf16String, ValidateError};
 use thymeleaf::web::IWebExchange;
 use thymeleaf::{IEngineConfiguration, ITemplateEngine, TemplateEngine};
 
@@ -411,8 +411,8 @@ fn js(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
 }
 
-fn locale(language_tag: &str, country: &str) -> JavaLocale {
-    JavaLocale::new(js(language_tag), js(country))
+fn locale(language_tag: &str, country: &str) -> Locale {
+    Locale::new(js(language_tag), js(country))
 }
 
 fn string_value(value: &str) -> Arc<TemplateValue> {
