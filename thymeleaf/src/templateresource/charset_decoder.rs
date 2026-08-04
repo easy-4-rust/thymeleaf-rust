@@ -8,14 +8,14 @@ use super::template_resource_reader::is_java_empty_or_whitespace;
 ///
 /// 对应 Java: `java.nio.charset.CharsetDecoder`，由 Thymeleaf 文件、URL、ClassLoader
 /// 和 Web 应用资源通过 `InputStreamReader` 间接使用。
-pub(crate) enum JavaCharsetDecoder {
+pub(crate) enum CharsetDecoder {
     EncodingRs(Decoder),
     Iso88591,
     UsAscii,
     Windows1252,
 }
 
-impl JavaCharsetDecoder {
+impl CharsetDecoder {
     /// 按 Java `Charset.forName` 的名称、别名和空白规则创建解码器。
     ///
     /// 对应 Java: `java.nio.charset.Charset#forName(String)`。

@@ -1,5 +1,5 @@
 use crate::util::JavaString;
-use crate::util::java_string_case_utils::to_lower_case_default;
+use crate::util::string_case_utils::to_lower_case_default;
 
 use super::{AttributeName, AttributeNameError, AttributeNameKind};
 

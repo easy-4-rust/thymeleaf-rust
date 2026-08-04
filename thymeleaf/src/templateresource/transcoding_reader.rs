@@ -1,6 +1,6 @@
 use std::io::{self, Read};
 
-use super::java_charset_decoder::JavaCharsetDecoder;
+use super::charset_decoder::CharsetDecoder;
 
 const INPUT_BUFFER_SIZE: usize = 8 * 1024;
 
@@ -9,7 +9,7 @@ const INPUT_BUFFER_SIZE: usize = 8 * 1024;
 /// 对应 Java: `java.io.InputStreamReader`，由 Thymeleaf 资源对象持有而不对外发布。
 pub(crate) struct TranscodingReader {
     input: Box<dyn Read>,
-    decoder: JavaCharsetDecoder,
+    decoder: CharsetDecoder,
     decoded: Vec<u8>,
     decoded_position: usize,
     finished: bool,
@@ -26,7 +26,7 @@ impl TranscodingReader {
     ///
     /// # 返回值
     /// 返回从输入流当前位置开始读取的新适配器。
-    pub(crate) fn new(input: Box<dyn Read>, decoder: JavaCharsetDecoder) -> Self {
+    pub(crate) fn new(input: Box<dyn Read>, decoder: CharsetDecoder) -> Self {
         Self {
             input,
             decoder,

@@ -2,7 +2,7 @@
 
 use std::io::{self, Read};
 
-use super::java_charset_decoder::JavaCharsetDecoder;
+use super::charset_decoder::CharsetDecoder;
 use super::transcoding_reader::TranscodingReader;
 
 /// 按 Java `InputStreamReader` 规则把输入字节流包装为 UTF-8 字节读取器。
@@ -24,7 +24,7 @@ pub(crate) fn transcoding_reader(
     input: Box<dyn Read>,
     character_encoding: Option<&str>,
 ) -> io::Result<Box<dyn Read>> {
-    let decoder = JavaCharsetDecoder::for_name(character_encoding)?;
+    let decoder = CharsetDecoder::for_name(character_encoding)?;
     Ok(Box::new(TranscodingReader::new(input, decoder)))
 }
 

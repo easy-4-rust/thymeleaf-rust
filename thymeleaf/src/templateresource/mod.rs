@@ -1,9 +1,9 @@
 //! 模板解析器使用的资源抽象与具体资源实现。
 
+mod charset_decoder;
 mod class_loader_template_resource;
 mod file_template_resource;
 mod i_template_resource;
-mod java_charset_decoder;
 mod string_template_resource;
 mod template_resource_error;
 mod template_resource_reader;

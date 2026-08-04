@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fmt::{Debug, Formatter};
 use std::sync::Arc;
 
-use crate::util::{JavaEvaluationValue, JavaNumber, JavaString, java_double_string};
+use crate::util::{JavaEvaluationValue, JavaNumber, JavaString, double_string};
 
 use super::LiteralValue;
 
@@ -195,7 +195,7 @@ impl TemplateValue {
             Self::Number(JavaNumber::Integer(value)) => value.to_string(),
             Self::Number(JavaNumber::Long(value)) => value.to_string(),
             Self::Number(JavaNumber::Float(value)) => value.to_string(),
-            Self::Number(JavaNumber::Double(value)) => java_double_string(*value),
+            Self::Number(JavaNumber::Double(value)) => double_string(*value),
             Self::Number(JavaNumber::Other { double_value, .. }) => double_value.to_string(),
             Self::Character(value) => {
                 return Some(JavaString::from_utf16(vec![*value]));

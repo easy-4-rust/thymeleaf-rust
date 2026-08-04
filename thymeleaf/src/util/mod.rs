@@ -15,7 +15,6 @@ mod i_writable_char_sequence;
 mod identity_counter;
 mod java_locale;
 mod java_string;
-pub(crate) mod java_string_case_utils;
 mod java_writer;
 mod lazy_escaping_char_sequence;
 mod lazy_processing_char_sequence;
@@ -34,6 +33,7 @@ mod set_utils;
 mod standard_conditional_comment_utils;
 mod standard_expression_utils;
 mod standard_processor_utils;
+pub(crate) mod string_case_utils;
 mod string_utils;
 mod text_utils;
 mod validate;
@@ -43,7 +43,7 @@ pub use abstract_lazy_char_sequence::{AbstractLazyCharSequence, LazyCharSequence
 pub use aggregate_char_sequence::{
     AggregateCharSequence, AggregateCharSequenceError, AggregateComponent,
 };
-pub(crate) use aggregate_utils::java_double_string;
+pub(crate) use aggregate_utils::double_string;
 pub use aggregate_utils::{
     AggregateError, AggregateUtils, JavaAggregateObject, JavaBigDecimal, JavaNumber,
     JavaNumberIterable, JavaNumberList,

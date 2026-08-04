@@ -9,12 +9,12 @@ use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 /// OGNL 可见的只读 Java Stream 快照。
 ///
 /// 对应 Java: `java.util.stream.Stream`。读取或 `count()` 后按 Java 单次消费语义关闭。
-pub(crate) struct JavaStream {
+pub(crate) struct StreamValue {
     values: Arc<Vec<Arc<TemplateValue>>>,
     consumed: AtomicBool,
 }
 
-impl JavaStream {
+impl StreamValue {
     /// 从 List 当前顺序创建单次消费流。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(values: Arc<Vec<Arc<TemplateValue>>>) -> Self {
@@ -29,7 +29,7 @@ impl JavaStream {
     }
 }
 
-impl TemplateObject for JavaStream {
+impl TemplateObject for StreamValue {
     fn java_class_name(&self) -> &str {
         "java.util.stream.Stream"
     }

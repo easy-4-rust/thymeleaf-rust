@@ -23,9 +23,9 @@ use super::{
     StandardExpressionResult, StandardExpressions, SubtractionExpression, TemplateObject,
     TemplateValue,
     binary_operation_expression::{evaluate_as_boolean, evaluate_as_number},
-    java_iterator::JavaIterator,
-    java_map_entry::JavaMapEntry,
-    java_stream::JavaStream,
+    iterator_value::IteratorValue,
+    map_entry_value::MapEntryValue,
+    stream_value::StreamValue,
 };
 
 /// Thymeleaf Standard Dialect 的 OGNL 变量表达式求值器。
@@ -2550,11 +2550,11 @@ fn number_result(value: f64) -> StandardExpressionResult<Option<Arc<TemplateValu
     )))))
 }
 
-struct JavaClassObject {
+struct ClassObjectValue {
     type_name: JavaString,
 }
 
-impl super::TemplateObject for JavaClassObject {
+impl super::TemplateObject for ClassObjectValue {
     fn java_class_name(&self) -> &str {
         "java.lang.Class"
     }
@@ -2606,7 +2606,7 @@ impl super::TemplateObject for JavaClassObject {
 }
 
 fn java_class_value(type_name: &str) -> Arc<TemplateValue> {
-    Arc::new(TemplateValue::Object(Arc::new(JavaClassObject {
+    Arc::new(TemplateValue::Object(Arc::new(ClassObjectValue {
         type_name: JavaString::from_rust_str(type_name),
     })))
 }
@@ -2716,7 +2716,7 @@ fn invoke_java_map_method(
             entries
                 .iter()
                 .map(|(key, value)| {
-                    Arc::new(TemplateValue::Object(Arc::new(JavaMapEntry::new(
+                    Arc::new(TemplateValue::Object(Arc::new(MapEntryValue::new(
                         Arc::clone(key),
                         Arc::clone(value),
                     ))))
@@ -2893,10 +2893,10 @@ fn invoke_java_list_method(
         ))))),
         ("isEmpty", []) => Ok(Some(Arc::new(TemplateValue::Boolean(values.is_empty())))),
         ("iterator", []) => Ok(Some(Arc::new(TemplateValue::Object(Arc::new(
-            JavaIterator::new(Arc::new(values.to_vec())),
+            IteratorValue::new(Arc::new(values.to_vec())),
         ))))),
         ("stream", []) => Ok(Some(Arc::new(TemplateValue::Object(Arc::new(
-            JavaStream::new(Arc::new(values.to_vec())),
+            StreamValue::new(Arc::new(values.to_vec())),
         ))))),
         ("get", [Some(index)]) => {
             let index = match index.as_ref() {

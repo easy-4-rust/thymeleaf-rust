@@ -8,12 +8,12 @@ use super::{TemplateObject, TemplateObjectMethodError, TemplateValue};
 /// OGNL 可见的 Java Iterator 顺序快照。
 ///
 /// 对应 Java: `java.util.Iterator`。
-pub(crate) struct JavaIterator {
+pub(crate) struct IteratorValue {
     values: Arc<Vec<Arc<TemplateValue>>>,
     position: Mutex<usize>,
 }
 
-impl JavaIterator {
+impl IteratorValue {
     /// 从集合当前顺序创建迭代器。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(values: Arc<Vec<Arc<TemplateValue>>>) -> Self {
@@ -24,7 +24,7 @@ impl JavaIterator {
     }
 }
 
-impl TemplateObject for JavaIterator {
+impl TemplateObject for IteratorValue {
     fn java_class_name(&self) -> &str {
         "java.util.Iterator"
     }

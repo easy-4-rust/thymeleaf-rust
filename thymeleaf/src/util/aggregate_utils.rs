@@ -133,10 +133,10 @@ impl JavaBigDecimal {
     fn from_f64(value: f64) -> Result<Self, AggregateError> {
         if !value.is_finite() {
             return Err(AggregateError::NumberFormat {
-                value: java_double_string(value),
+                value: double_string(value),
             });
         }
-        parse_decimal(&java_double_string(value))
+        parse_decimal(&double_string(value))
     }
 
     /// 对应 Java 语义：`AggregateUtils` 的 `from_f64_exact` 行为（Rust 侧辅助/私有路径）。
@@ -928,8 +928,8 @@ fn parse_decimal(value: &str) -> Result<JavaBigDecimal, AggregateError> {
     Ok(JavaBigDecimal::from_unscaled(unscaled, scale))
 }
 
-/// 对应 Java 语义：`AggregateUtils` 的 `java_double_string` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_double_string(value: f64) -> String {
+/// 对应 Java 语义：`AggregateUtils` 的 `double_string` 行为（Rust 侧辅助/私有路径）。
+pub(crate) fn double_string(value: f64) -> String {
     if value.is_nan() {
         return "NaN".to_owned();
     }
@@ -1049,7 +1049,7 @@ mod tests {
 
     use super::{
         AggregateError, AggregateUtils, JavaAggregateObject, JavaBigDecimal, JavaNumber,
-        JavaNumberIterable, JavaNumberList, java_double_string,
+        JavaNumberIterable, JavaNumberList, double_string,
     };
 
     #[test]
@@ -1076,15 +1076,15 @@ mod tests {
 
     #[test]
     fn formats_java_double_thresholds_special_values_and_signed_zero() {
-        assert_eq!(java_double_string(1.0), "1.0");
-        assert_eq!(java_double_string(9_999_999.0), "9999999.0");
-        assert_eq!(java_double_string(10_000_000.0), "1.0E7");
-        assert_eq!(java_double_string(0.001), "0.001");
-        assert_eq!(java_double_string(0.0001), "1.0E-4");
-        assert_eq!(java_double_string(-0.0), "-0.0");
-        assert_eq!(java_double_string(f64::NAN), "NaN");
-        assert_eq!(java_double_string(f64::INFINITY), "Infinity");
-        assert_eq!(java_double_string(f64::NEG_INFINITY), "-Infinity");
+        assert_eq!(double_string(1.0), "1.0");
+        assert_eq!(double_string(9_999_999.0), "9999999.0");
+        assert_eq!(double_string(10_000_000.0), "1.0E7");
+        assert_eq!(double_string(0.001), "0.001");
+        assert_eq!(double_string(0.0001), "1.0E-4");
+        assert_eq!(double_string(-0.0), "-0.0");
+        assert_eq!(double_string(f64::NAN), "NaN");
+        assert_eq!(double_string(f64::INFINITY), "Infinity");
+        assert_eq!(double_string(f64::NEG_INFINITY), "-Infinity");
     }
 
     #[test]

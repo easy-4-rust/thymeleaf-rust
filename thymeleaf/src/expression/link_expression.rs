@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 
 use crate::context::IExpressionContext;
 use crate::exceptions::TemplateProcessingException;
-use crate::util::java_string_case_utils::to_lower_case_default;
+use crate::util::string_case_utils::to_lower_case_default;
 use crate::util::{JavaNumber, JavaString, ValidateError};
 
 use super::{

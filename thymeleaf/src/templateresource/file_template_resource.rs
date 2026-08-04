@@ -210,7 +210,7 @@ mod tests {
         FileTemplateResource, ITemplateResource, compute_absolute_file_path,
         normalize_java_file_path,
     };
-    use crate::templateresource::java_charset_decoder::JavaCharsetDecoder;
+    use crate::templateresource::charset_decoder::CharsetDecoder;
     use crate::templateresource::template_resource_reader::is_java_empty_or_whitespace;
     use crate::templateresource::transcoding_reader::TranscodingReader;
 
@@ -397,8 +397,7 @@ mod tests {
         ];
 
         for (charset, input, expected) in cases {
-            let decoder =
-                JavaCharsetDecoder::for_name(Some(charset)).expect("supported Java charset");
+            let decoder = CharsetDecoder::for_name(Some(charset)).expect("supported Java charset");
             let mut reader = TranscodingReader::new(Box::new(Cursor::new(input)), decoder);
             let mut actual = String::new();
             reader.read_to_string(&mut actual).expect("decoded UTF-8");
@@ -409,7 +408,7 @@ mod tests {
     #[test]
     fn streams_multibyte_input_through_small_caller_buffers() {
         let input = "甲😀乙".repeat(INPUT_BUFFER_BOUNDARY_REPETITIONS);
-        let decoder = JavaCharsetDecoder::for_name(Some("UTF-8")).expect("UTF-8");
+        let decoder = CharsetDecoder::for_name(Some("UTF-8")).expect("UTF-8");
         let mut reader =
             TranscodingReader::new(Box::new(Cursor::new(input.as_bytes().to_vec())), decoder);
         let mut output = Vec::new();
@@ -426,7 +425,7 @@ mod tests {
 
     #[test]
     fn handles_zero_length_reads_and_blank_default_encoding() {
-        let decoder = JavaCharsetDecoder::for_name(Some("\t \u{3000}")).expect("default charset");
+        let decoder = CharsetDecoder::for_name(Some("\t \u{3000}")).expect("default charset");
         let mut reader = TranscodingReader::new(Box::new(Cursor::new("默认".as_bytes())), decoder);
         assert_eq!(reader.read(&mut []).expect("zero length read"), 0);
         let mut content = String::new();
@@ -444,7 +443,7 @@ mod tests {
             }
         }
 
-        let decoder = JavaCharsetDecoder::for_name(Some("UTF-8")).expect("UTF-8");
+        let decoder = CharsetDecoder::for_name(Some("UTF-8")).expect("UTF-8");
         let mut reader = TranscodingReader::new(Box::new(FailingReader), decoder);
         let mut output = [0_u8; 4];
         let error = reader.read(&mut output).expect_err("read must fail");
@@ -454,7 +453,7 @@ mod tests {
     #[test]
     fn maps_every_windows_1252_byte_with_java_undefined_byte_replacement() {
         let bytes = (0_u8..=u8::MAX).collect::<Vec<_>>();
-        let decoder = JavaCharsetDecoder::for_name(Some("cp1252")).expect("Windows-1252");
+        let decoder = CharsetDecoder::for_name(Some("cp1252")).expect("Windows-1252");
         let mut reader = TranscodingReader::new(Box::new(Cursor::new(bytes)), decoder);
         let mut content = String::new();
         reader

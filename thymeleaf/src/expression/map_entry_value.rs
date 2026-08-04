@@ -8,12 +8,12 @@ use super::{TemplateObject, TemplateObjectPropertyError, TemplateValue};
 /// OGNL 可见的 Java Map.Entry 快照。
 ///
 /// 对应 Java: `java.util.Map.Entry`。
-pub(crate) struct JavaMapEntry {
+pub(crate) struct MapEntryValue {
     key: Arc<TemplateValue>,
     value: Arc<TemplateValue>,
 }
 
-impl JavaMapEntry {
+impl MapEntryValue {
     /// 创建键值条目快照。
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub(crate) fn new(key: Arc<TemplateValue>, value: Arc<TemplateValue>) -> Self {
@@ -21,7 +21,7 @@ impl JavaMapEntry {
     }
 }
 
-impl TemplateObject for JavaMapEntry {
+impl TemplateObject for MapEntryValue {
     fn java_class_name(&self) -> &str {
         "java.util.Map$Entry"
     }
