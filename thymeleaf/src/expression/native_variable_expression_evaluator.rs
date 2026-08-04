@@ -1,5 +1,5 @@
 use std::any::Any;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -527,11 +527,50 @@ enum SelectionKind {
     Last,
 }
 
+/// 单个 OGNL 表达式允许的最大 UTF-16 代码单元数。
+const MAX_EXPRESSION_LENGTH: usize = 4096;
+
+/// OGNL 递归下降允许的最大嵌套深度。
+const MAX_PARSE_DEPTH: usize = 256;
+
+thread_local! {
+    static PARSE_DEPTH: Cell<usize> = const { Cell::new(0) };
+}
+
+/// 递归深度计数守卫：进入 `parse_ognl_range` 时占用一格，超限返回 `None`，
+/// 离开时自动归还。Java 的 OGNL 解析是迭代实现，Rust 递归下降需要结构防御。
+struct ParseDepthGuard;
+
+impl ParseDepthGuard {
+    fn try_enter() -> Option<Self> {
+        let entered = PARSE_DEPTH.with(|depth| {
+            if depth.get() >= MAX_PARSE_DEPTH {
+                false
+            } else {
+                depth.set(depth.get() + 1);
+                true
+            }
+        });
+        entered.then_some(Self)
+    }
+}
+
+impl Drop for ParseDepthGuard {
+    fn drop(&mut self) {
+        PARSE_DEPTH.with(|depth| depth.set(depth.get() - 1));
+    }
+}
+
 fn parse_expression(
     source: &Utf16String,
     apply_shortcuts: bool,
     use_selection_as_root: bool,
 ) -> ComputedOGNLExpression {
+    if source.len() > MAX_EXPRESSION_LENGTH {
+        return ComputedOGNLExpression {
+            expression: ComputedExpression::Unsupported,
+        };
+    }
     let trimmed = trim(source);
     let expression = parse_ognl_range(trimmed.as_utf16(), apply_shortcuts, use_selection_as_root)
         .unwrap_or(ComputedExpression::Unsupported);
@@ -543,6 +582,7 @@ fn parse_ognl_range(
     apply_shortcuts: bool,
     use_selection_as_root: bool,
 ) -> Option<ComputedExpression> {
+    let _guard = ParseDepthGuard::try_enter()?;
     let input = trim_units(input);
     if input.is_empty() {
         return None;

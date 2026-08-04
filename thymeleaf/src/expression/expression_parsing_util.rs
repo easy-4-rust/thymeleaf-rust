@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::sync::{Arc, RwLock};
 
 use crate::exceptions::TemplateProcessingException;
@@ -22,7 +23,46 @@ use super::{
 /// Java 实现先构建占位符节点再按优先级组合；Rust 在同一 UTF-16 输入上直接执行
 /// 等价的递归组合，仍保持右侧最后操作符切分、左结合、括号、字面量和 simple
 /// expression 隔离语义。
+///
+/// 结构防御（文档化偏离）：Java 的解析循环是迭代实现，对输入长度与嵌套深度没有
+/// 上限；Rust 递归下降在超长输入（> `MAX_EXPRESSION_LENGTH`）或超深嵌套
+/// （> `MAX_PARSE_DEPTH`）下没有等价的自然终止条件，超限一律按解析失败处理，
+/// 不改变合法输入的语义。
 pub(crate) struct ExpressionParsingUtil;
+
+/// 单个表达式允许的最大 UTF-16 代码单元数。
+const MAX_EXPRESSION_LENGTH: usize = 4096;
+
+/// 递归下降允许的最大嵌套深度。
+const MAX_PARSE_DEPTH: usize = 256;
+
+thread_local! {
+    static PARSE_DEPTH: Cell<usize> = const { Cell::new(0) };
+}
+
+/// 递归深度计数守卫：进入 `parse_range` 时占用一格，超限返回 `None`，
+/// 离开时自动归还。
+struct ParseDepthGuard;
+
+impl ParseDepthGuard {
+    fn try_enter() -> Option<Self> {
+        let entered = PARSE_DEPTH.with(|depth| {
+            if depth.get() >= MAX_PARSE_DEPTH {
+                false
+            } else {
+                depth.set(depth.get() + 1);
+                true
+            }
+        });
+        entered.then_some(Self)
+    }
+}
+
+impl Drop for ParseDepthGuard {
+    fn drop(&mut self) {
+        PARSE_DEPTH.with(|depth| depth.set(depth.get() - 1));
+    }
+}
 
 impl ExpressionParsingUtil {
     /// 解析单个完整 Standard Expression。
@@ -36,13 +76,11 @@ impl ExpressionParsingUtil {
     pub(crate) fn parse_expression(
         input: &Utf16String,
     ) -> StandardExpressionResult<Arc<dyn IStandardExpression>> {
+        if input.len() > MAX_EXPRESSION_LENGTH {
+            return Err(parse_error(input));
+        }
         let trimmed = trim(input.as_utf16());
-        parse_range(trimmed).ok_or_else(|| {
-            Box::new(TemplateProcessingException::new(Some(format!(
-                "Could not parse as expression: \"{}\"",
-                input.to_string_lossy()
-            )))) as crate::expression::StandardExpressionError
-        })
+        parse_range(trimmed).ok_or_else(|| parse_error(input))
     }
 
     /// 解析赋值序列，供 `AssignationUtils` 与 Fragment/Link 表达式共享。
@@ -109,7 +147,15 @@ impl ExpressionParsingUtil {
     }
 }
 
+fn parse_error(input: &Utf16String) -> crate::expression::StandardExpressionError {
+    Box::new(TemplateProcessingException::new(Some(format!(
+        "Could not parse as expression: \"{}\"",
+        input.to_string_lossy()
+    )))) as crate::expression::StandardExpressionError
+}
+
 fn parse_range(input: &[u16]) -> Option<Arc<dyn IStandardExpression>> {
+    let _guard = ParseDepthGuard::try_enter()?;
     let input = trim(input);
     if input.is_empty() {
         return None;
@@ -686,3 +732,48 @@ const OP_DIV: &[u16] = &[b'd' as u16, b'i' as u16, b'v' as u16];
 const OP_DIVIDE: &[u16] = &[b'/' as u16];
 const OP_MOD: &[u16] = &[b'm' as u16, b'o' as u16, b'd' as u16];
 const OP_REMAINDER: &[u16] = &[b'%' as u16];
+
+#[cfg(test)]
+mod tests {
+    use super::{ExpressionParsingUtil, MAX_EXPRESSION_LENGTH};
+    use crate::util::Utf16String;
+
+    #[test]
+    fn deep_parenthesis_nesting_fails_cleanly_instead_of_overflowing() {
+        // 回归：300 层括号嵌套曾消耗调用栈；深度守卫应在栈溢出前按解析失败返回。
+        let mut input = String::new();
+        for _ in 0..300 {
+            input.push('(');
+        }
+        input.push('x');
+        for _ in 0..300 {
+            input.push(')');
+        }
+        let value = Utf16String::from_rust_str(&input);
+        assert!(
+            ExpressionParsingUtil::parse_expression(&value).is_err(),
+            "超过深度上限的嵌套应解析失败而不是递归溢出"
+        );
+    }
+
+    #[test]
+    fn oversized_expression_rejected_with_parse_error() {
+        // 回归：`1 + 1 + ...` 超长输入曾直接进入递归组合；入口长度守卫应
+        // 返回与语法错误相同的 "Could not parse as expression" 错误形态。
+        let long = format!("{}1{}", "+ ".repeat(MAX_EXPRESSION_LENGTH / 2), "+ 1");
+        let value = Utf16String::from_rust_str(&long);
+        let error = ExpressionParsingUtil::parse_expression(&value)
+            .err()
+            .expect("超长输入应按解析失败处理");
+        assert!(
+            error.to_string().contains("Could not parse as expression"),
+            "超长输入应按解析失败处理，实际错误：{error}"
+        );
+    }
+
+    #[test]
+    fn legal_expression_unaffected_by_guards() {
+        let value = Utf16String::from_rust_str("1 + 2");
+        assert!(ExpressionParsingUtil::parse_expression(&value).is_ok());
+    }
+}
