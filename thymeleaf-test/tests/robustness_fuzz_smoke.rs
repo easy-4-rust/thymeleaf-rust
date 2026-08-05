@@ -16,17 +16,24 @@
 //!    "病态输入 → 巨大 token → 无界输出缓冲"的放大面。
 //! 2. **proptest shrink 钳制**：`max_shrink_iters: 256` + `max_shrink_time: 10s`
 //!    （默认 u32::MAX / 0=禁用 → 失败 case 被无界重跑导致 OOM）。
+//! 3. **proptest timeout**：`timeout: 60_000`——单个 case 超 60s 判定失败并中止
+//!    （防回归：`${${||}}` 的无限递归曾让 render case 挂起 >60s）。
 
 use std::sync::Arc;
 
 use proptest::prelude::*;
 use serial_test::serial;
 
+use thymeleaf::context::Context;
+use thymeleaf::expression::TemplateValue;
 use thymeleaf::markup::HTMLTemplateParser;
 use thymeleaf::templateparser::ITemplateParser;
+use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf::templateresource::StringTemplateResource;
 use thymeleaf::util::Utf16String;
-use thymeleaf::{IEngineConfiguration, ITemplateEngine, TemplateEngine, TemplateMode};
+use thymeleaf::{
+    IEngineConfiguration, ITemplateEngine, ITemplateResolver, TemplateEngine, TemplateMode,
+};
 
 fn js(value: &str) -> Utf16String {
     Utf16String::from_rust_str(value)
@@ -83,6 +90,43 @@ fn parse_template_no_panic(template: &str, mode: TemplateMode) {
     );
 }
 
+/// 表达式丰富的模板：任意前缀文本 + `th:text`/`th:if` 属性 + 任意后缀。
+fn expression_rich_template(prefix: &str, middle: &str, suffix: &str) -> String {
+    format!(
+        "<html><body><p th:text=\"${{{middle}}}\" th:if=\"${{{middle}}}\">{prefix}</p>\
+         <span th:if=\"${{{middle}}} == 'x'\">{suffix}</span></body></html>"
+    )
+}
+
+/// 独立 HTML 引擎（每次调用新建，避免 proptest 用例间共享缓存状态）。
+fn html_engine() -> TemplateEngine {
+    let mut resolver = StringTemplateResolver::new();
+    resolver.set_template_mode(TemplateMode::HTML);
+    let engine = TemplateEngine::new();
+    engine
+        .set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
+        .expect("resolver");
+    engine
+}
+
+/// 回归：`th:text="${${||}}"` 必须快速返回 Err（Java parity），绝不挂起/panic。
+///
+/// Java 3.1.5 实测 ground truth：模板解析期抛 `TemplateInputException`
+/// （嵌套 `${||}` 的 OGNL 语法错误：Malformed OGNL expression: ${||}），
+/// `process()` 直接失败。Rust 侧曾因 literal substitution 无限递归在此挂起
+/// （render smoke fuzz 超时根因，已由 progress 守卫 + 深度上限修复）。
+#[test]
+#[serial(fuzz)]
+fn nested_empty_literal_render_failure_matches_java() {
+    let engine = html_engine();
+    let context = Context::new();
+    let result = engine.process_template("<p th:text=\"${${||}}\">x</p>", &context);
+    assert!(
+        result.is_err(),
+        "Java 在解析期失败，Rust 应同样返回 Err（而不是挂起或输出文本）"
+    );
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
         cases: 16,
@@ -90,6 +134,8 @@ proptest! {
         // 失败 case 会被无界重跑导致 OOM/超时。限制到 128 轮 / 5 秒。
         max_shrink_iters: 128,
         max_shrink_time: 5_000,
+        // 单 case 超时守卫：`${${||}}` 类回归会让 case 无限挂起，超 60s 即失败。
+        timeout: 60_000,
         ..ProptestConfig::default()
     })]
 
@@ -114,10 +160,23 @@ proptest! {
         parse_template_no_panic(&template, TemplateMode::TEXT);
     }
 
-    // template_render_smoke 暂时排除：random 表达式注入（middle 含 ' / } / ${ 等）
-    // 让 TemplateEngine.process_template 某些 case 超时（>60s）。render 的"不 panic"
-    // 已由 2608 语料 + workspace 测试覆盖；proptest render 的额外价值有限但超时
-    // 风险高，待引擎侧加超时守卫后恢复。
-    // #[test]
-    // fn template_render_smoke_never_panics(...) { ... }
+    // render smoke：随机三注入（前缀/表达式/后缀）。曾因 `${${||}}` 类输入触发
+    // literal substitution 无限递归挂起（>60s）；根因已在引擎侧修复
+    // （progress 守卫 + 深度上限），此处以 proptest timeout 60s 兜底防回归。
+    #[test]
+    #[serial(fuzz)]
+    fn template_render_smoke_never_panics(
+        prefix in "\\PC{0,32}",
+        middle in "\\PC{0,32}",
+        suffix in "\\PC{0,32}",
+    ) {
+        let template = expression_rich_template(&prefix, &middle, &suffix);
+        let engine = html_engine();
+        let context = Context::new();
+        context.set_variable(
+            Some(js("value")),
+            Some(Arc::new(TemplateValue::string(js("v")))),
+        );
+        let _ = engine.process_template(&template, &context);
+    }
 }
