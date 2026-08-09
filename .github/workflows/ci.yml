@@ -41,6 +41,14 @@ jobs:
         with:
           components: clippy, llvm-tools-preview, rustfmt
 
+      # cargo-public-api 需要 nightly rustdoc（--output-format json）；
+      # 固定 nightly 与 api-baseline.txt 生成版本一致，public-api 步骤因此
+      # 成为硬门禁（不再 continue-on-error）。
+      - name: Install pinned nightly (public-api)
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2026-07-28
+
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
@@ -151,10 +159,8 @@ jobs:
       - name: Install cargo-public-api
         run: cargo install cargo-public-api --locked
 
-      - name: Check core crate public API baseline (informational, alpha)
-        # cargo-public-api 需要 nightly toolchain（rustdoc --output-format json）；
-        # CI 当前只有 stable，此步骤在 alpha 阶段不阻塞（continue-on-error），
-        # beta/1.0 前补 nightly toolchain 步骤使其成为硬门禁。
-        continue-on-error: true
+      - name: Check core crate public API baseline (hard gate)
+        # 使用与 baseline 生成版本一致的固定 nightly；任何 API 漂移都会使
+        # 本步骤失败（alpha 阶段 API 变更必须显式更新 docs/release/api-baseline.txt）。
         run: |
-          cargo public-api -p thymeleaf 2>/dev/null | diff - docs/release/api-baseline.txt
+          cargo +nightly-2026-07-28 public-api -p thymeleaf 2>/dev/null | diff - docs/release/api-baseline.txt
