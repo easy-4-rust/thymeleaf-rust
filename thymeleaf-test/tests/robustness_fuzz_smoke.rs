@@ -68,6 +68,19 @@ impl thymeleaf::util::TemplateWriter for DiscardingWriter {
 }
 
 fn parse_template_no_panic(template: &str, mode: TemplateMode) {
+    parse_template(template, mode, false);
+}
+
+/// 同 `parse_template_no_panic`，但启用 decoupled logic 路径。
+///
+/// decoupled 路径有独立的属性扫描器（`decoupled_template_logic_builder`），
+/// 与主 parse 路径分离；fuzz 必须单独覆盖，否则该路径的零前进类 bug 会潜伏
+/// （`a6de619` 即此路径的同源 bug，靠人眼审计才发现）。
+fn parse_template_decoupled_no_panic(template: &str, mode: TemplateMode) {
+    parse_template(template, mode, true);
+}
+
+fn parse_template(template: &str, mode: TemplateMode, use_decoupled_logic: bool) {
     let configuration = engine_configuration();
     let parser: Box<dyn ITemplateParser> = match mode {
         TemplateMode::HTML | TemplateMode::XML => Box::new(HTMLTemplateParser::new(2, 4096)),
@@ -85,7 +98,7 @@ fn parse_template_no_panic(template: &str, mode: TemplateMode) {
         None,
         resource,
         mode,
-        false,
+        use_decoupled_logic,
         handler,
     );
 }
@@ -147,6 +160,23 @@ fn selector_attribute_scan_never_stalls_on_bare_delimiter() {
     }
 }
 
+/// 回归：`decoupled_template_logic_builder` 的属性扫描同源零前进 bug。
+///
+/// 与 `markup_selector::parse_attributes` 同款（见 `a6de619`），但 fuzz 走
+/// render 主路径不覆盖 decoupled 路径，靠人眼审计才发现。这里启用 decoupled
+/// logic（`parse_template_decoupled_no_panic`）触发该路径的属性扫描器。
+#[test]
+#[serial(fuzz)]
+fn decoupled_attribute_scan_never_stalls_on_bare_delimiter() {
+    for template in [
+        "<html><body><div><L/\u{a7d3}></div></body></html>",
+        "<html><body><div><L=x></div></body></html>",
+    ] {
+        // 必须立即完成：Err 是合法解析失败路径，挂起/panic 均为回归。
+        parse_template_decoupled_no_panic(template, TemplateMode::HTML);
+    }
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
         cases: 16,
@@ -179,6 +209,15 @@ proptest! {
     #[serial(fuzz)]
     fn text_parser_never_panics(template in "\\PC{0,128}") {
         parse_template_no_panic(&template, TemplateMode::TEXT);
+    }
+
+    // decoupled 路径覆盖：主 parse fuzz（html/xml/text）走 use_decoupled_logic=false，
+    // 不会进入 decoupled 属性扫描器。该路径有独立的属性扫描实现，必须单独 fuzz
+    // （`a6de619` 同源零前进 bug 即潜伏于此路径，靠审计才发现）。
+    #[test]
+    #[serial(fuzz)]
+    fn html_decoupled_parser_never_panics(template in "\\PC{0,128}") {
+        parse_template_decoupled_no_panic(&template, TemplateMode::HTML);
     }
 
     // render smoke：随机三注入（前缀/表达式/后缀）。曾因 `${${||}}` 类输入触发
