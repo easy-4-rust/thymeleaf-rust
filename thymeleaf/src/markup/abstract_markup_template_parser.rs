@@ -25,6 +25,18 @@ use super::markup_selector::{
 };
 use super::{InlinedOutputExpressionMarkupHandler, TemplateFragmentMarkupReferenceResolver};
 
+/// 单个模板允许的最大字节数（结构防御，文档化偏离：Java 无上限）。
+///
+/// 64MB 覆盖全部合法模板场景；超限输入按解析失败返回，避免病态输入把整个
+/// 模板一次性读入内存后进入 tokenizer。
+const MAX_TEMPLATE_SIZE: usize = 64 * 1024 * 1024;
+
+/// tokenizer 连续产出同一结束位置的 token 数上限（进度守卫阈值）。
+///
+/// 合法 HTML 输入下 token 结束位置严格前进；连续 32 个不前进的 token 说明
+/// tokenizer 卡死（第三方库状态机缺陷），按解析失败中止而不是无限循环。
+const MAX_STALLED_TOKENS: u32 = 32;
+
 /// HTML/XML 高层模板 parser 的公共实现。
 ///
 /// HTML 使用 WHATWG tokenizer 识别容错标记边界，再由本对象执行 Thymeleaf/AttoParser
@@ -105,6 +117,14 @@ impl AbstractMarkupTemplateParser {
         } else {
             template.to_string_lossy()
         };
+        if input.len() > MAX_TEMPLATE_SIZE {
+            return Err(TemplateInputException::new(Some(format!(
+                "Template exceeds the maximum allowed size of {} bytes ({} bytes found)",
+                MAX_TEMPLATE_SIZE,
+                input.len()
+            )))
+            .into());
+        }
         let input = preprocess_markup(input, &description)?;
 
         let needs_reference_resolver = decoupled_logic
@@ -300,10 +320,44 @@ fn parse_html(
     let mut tokenizer = Tokenizer::new_with_emitter(source, emitter);
     let mut stack: Vec<MarkupFrame> = Vec::new();
     let mut document_siblings = Vec::new();
+    // 进度守卫：token 结束位置必须前进；连续不前进说明 tokenizer 卡死。
+    let mut last_token_end = 0usize;
+    let mut stalled_tokens = 0_u32;
 
     while let Some(token) = tokenizer.next() {
         let token =
             token.map_err(|error| parse_error(description, source, 0, error.to_string()))?;
+        let token_end = match &token {
+            Token::StartTag(tag) => tag.span.end,
+            Token::EndTag(tag) => tag.span.end,
+            Token::String(text) => text.span.end,
+            Token::Comment(comment) => comment.span.end,
+            Token::Doctype(doc_type) => doc_type.span.end,
+            // 可恢复错误没有 span，按"未前进"计数——卡死时同样会被中止。
+            Token::Error(_) => last_token_end,
+        };
+        if token_end < last_token_end {
+            return Err(parse_error(
+                description,
+                source,
+                token_end,
+                "Tokenizer produced tokens in non-increasing source order",
+            ));
+        }
+        if token_end == last_token_end {
+            stalled_tokens += 1;
+            if stalled_tokens > MAX_STALLED_TOKENS {
+                return Err(parse_error(
+                    description,
+                    source,
+                    token_end,
+                    "Tokenizer failed to make progress",
+                ));
+            }
+        } else {
+            stalled_tokens = 0;
+        }
+        last_token_end = token_end;
         match token {
             Token::StartTag(tag) => {
                 let start = tag.span.start;

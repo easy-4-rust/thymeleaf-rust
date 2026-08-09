@@ -127,6 +127,26 @@ fn nested_empty_literal_render_failure_matches_java() {
     );
 }
 
+/// 回归：自闭合斜杠后跟属性名（`<L/ꟓ>`、`<L=x>`）不得让选择器属性扫描
+/// 零前进无限循环。
+///
+/// render smoke fuzz 实测根因：`tag_content_end` 只剥末尾 `/`，非末尾 `/`
+/// 或 `=` 出现在属性名位置时 `markup_selector::parse_attributes` 空名
+/// push 后永不前进（无限 `Vec::push` → 14GB 内存膨胀 + 100% CPU 挂起）。
+/// 修复后在跳过非法字符保证前进，属性合法性仍由 adapter 侧校验。
+#[test]
+#[serial(fuzz)]
+fn selector_attribute_scan_never_stalls_on_bare_delimiter() {
+    for template in [
+        "<html><body><span><L/\u{a7d3}></span></body></html>",
+        "<html><body><span><L=x></span></body></html>",
+        "<html><body><span><L/\u{a7d3}>x</span></body></html>",
+    ] {
+        // 必须立即完成：Err 是合法解析失败路径，挂起/panic 均为回归。
+        parse_template_no_panic(template, TemplateMode::HTML);
+    }
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
         cases: 16,
@@ -139,14 +159,15 @@ proptest! {
         ..ProptestConfig::default()
     })]
 
-    // html_parser proptest 暂时排除：html5gum tokenizer 对某些 Unicode 输入
-    // 有内部内存膨胀（DiscardingWriter 已消除输出侧，但 tokenizer 自身的
-    // state machine 对病态输入如大量孤立代理对/特殊 Unicode 序列仍会膨胀
-    // 到 SIGKILL）。HTML parser 鲁棒性由 2608 语料覆盖。待 html5gum 上游
-    // 修复或替换 tokenizer 后恢复。
-    // #[test]
-    // #[serial(fuzz)]
-    // fn html_parser_never_panics(template in "\\PC{0,128}") { ... }
+    // html_parser proptest 已恢复：历史 SIGKILL 根因是输出侧无界缓冲
+    // （CapturedWriter，已由 DiscardingWriter 消除）；tokenizer 0.8.4 内部缓冲
+    // O(n) 有界；解析器侧新增 64MB 模板输入上限 + token 进度守卫（span.end
+    // 连续不前进即中止），配合 shrink 钳制 + proptest timeout 兜底。
+    #[test]
+    #[serial(fuzz)]
+    fn html_parser_never_panics(template in "\\PC{0,128}") {
+        parse_template_no_panic(&template, TemplateMode::HTML);
+    }
 
     #[test]
     #[serial(fuzz)]
@@ -170,6 +191,9 @@ proptest! {
         middle in "\\PC{0,32}",
         suffix in "\\PC{0,32}",
     ) {
+        eprintln!(
+            "CASE prefix={prefix:?} middle={middle:?} suffix={suffix:?}"
+        );
         let template = expression_rich_template(&prefix, &middle, &suffix);
         let engine = html_engine();
         let context = Context::new();

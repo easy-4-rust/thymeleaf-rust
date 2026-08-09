@@ -881,6 +881,13 @@ fn parse_attributes(
             }
             position += source[position..].chars().next().map_or(1, char::len_utf8);
         }
+        if position == start {
+            // 属性名位置出现自闭合斜杠 `/` 或 `=`（如 `<L/ꟓ>`、`<L=x>`）：
+            // 扫描器不做合法性校验（由 adapter 侧负责），但必须前进，否则
+            // 外层循环以空名无限 push 导致挂起 + 内存膨胀。
+            position += source[position..].chars().next().map_or(1, char::len_utf8);
+            continue;
+        }
         let name = normalize_name(html, &source[start..position]);
         while position < content_end && source.as_bytes()[position].is_ascii_whitespace() {
             position += 1;
