@@ -67,15 +67,29 @@
   `LazyContextVariableTest` 10/10 全部方法 1:1 锁定（含 setVariable null 语义、
   表示串活 exchange 感知、别名 assertSame 系列）。
 
-### Known Limitations
+### Known Limitations（已修复）
 
-- **html5gum tokenizer**：对病态 Unicode 输入（大量孤立代理对 / 特殊 Unicode
-  序列）有内部内存膨胀风险。HTML parser fuzz proptest 暂时排除；HTML 解析
-  鲁棒性由 2608 语料覆盖。待 html5gum 上游修复或替换 tokenizer。
-- **TemplateEngine.render smoke**：random 表达式注入（`middle` 含 `'`/`}`/`${`
-  等）让 `process_template` 某些 case 超时（>60s）。render smoke proptest
-  暂时排除；render 不 panic 由 2608 语料 + workspace 测试覆盖。待引擎侧加
-  超时守卫后恢复。
-- **API baseline CI**：`cargo public-api` 需要 nightly toolchain，CI 当前
-  stable 导致该步骤为 `continue-on-error`（alpha 阶段不阻塞）。beta/1.0 前
-  补 nightly 步骤使其成为硬门禁。
+- **TemplateEngine.render smoke 超时（真实 bug，已修复）**：根因有两个
+  Rust 侧真实缺陷——
+  1. `LiteralSubstitutionUtil` 对 `${${||}}` 以完全相同输入无限递归
+     （Java 上游是单遍迭代状态机、零递归）。修复：步骤 2 递归加
+     `substituted != selector` 进度守卫（相等时落到主状态机），递归入口
+     加深度上限 16。Java 3.1.5 实测 ground truth：`th:text="${${||}}"` 在
+     模板解析期抛 `TemplateInputException`（嵌套 `${||}` OGNL 语法错误），
+     Rust 现在同样快速返回 Err（parity 锁定）。
+  2. `markup_selector::parse_attributes` 对 `<L/ꟓ>`、`<L=x>` 类输入
+     （自闭合斜杠/`=` 落在属性名位置）空名 push 后永不前进——无限
+     `Vec::push` 内存膨胀（14GB） + 100% CPU 挂起。修复：空名时跳过该
+     字符保证前进，属性合法性仍由 adapter 侧校验。
+  附加结构防御：`ExpressionParsingUtil`/native OGNL 解析入口长度上限
+  4096 UTF-16 units + 递归深度上限 256；`parse_internal` 模板字节上限
+  64MB；`parse_html` token 进度守卫（span.end 连续不前进即中止）。
+  render smoke proptest 与 html parser fuzz 均已恢复（DiscardingWriter +
+  shrink 钳制 + proptest timeout 60s 兜底）。
+- **html5gum tokenizer**：历史 SIGKILL 根因是输出侧无界缓冲（CapturedWriter，
+  已由 DiscardingWriter 消除）；tokenizer 0.8.4 内部缓冲 O(n) 有界，隔离
+  驱动验证 `<L/ꟓ>` 等输入 token 流正常。HTML parser fuzz 已恢复。
+- **API baseline CI**：`cargo public-api` 需要 nightly toolchain——CI 新增
+  固定 `nightly-2026-07-28`（与 `docs/release/api-baseline.txt` 生成版本
+  一致，本地已验证 diff 完全匹配），public-api 步骤移除 `continue-on-error`
+  改为硬门禁；alpha 阶段 API 漂移必须显式更新 baseline。

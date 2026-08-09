@@ -54,7 +54,10 @@ impl ParseDepthGuard {
                 true
             }
         });
-        entered.then_some(Self)
+        // 注意：必须惰性构造——`then_some(Self)` 会先求值 `Self`，即使
+        // entered=false 也会构造并丢弃一个带 Drop 的守卫值（多一次无 enter
+        // 的 drop，深度计数下溢）。
+        entered.then(|| Self)
     }
 }
 
