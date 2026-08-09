@@ -41,14 +41,6 @@ jobs:
         with:
           components: clippy, llvm-tools-preview, rustfmt
 
-      # cargo-public-api 需要 nightly rustdoc（--output-format json）；
-      # 固定 nightly 与 api-baseline.txt 生成版本一致，public-api 步骤因此
-      # 成为硬门禁（不再 continue-on-error）。
-      - name: Install pinned nightly (public-api)
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          toolchain: nightly-2026-07-28
-
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
 
@@ -158,6 +150,15 @@ jobs:
 
       - name: Install cargo-public-api
         run: cargo install cargo-public-api --locked
+
+      # cargo-public-api 需要 nightly rustdoc（--output-format json）。
+      # 放在本 job 最后：dtolnay/rust-toolchain 会切换默认 toolchain，
+      # 前面 fmt/clippy/test 步骤必须保持 stable；固定 nightly 与
+      # api-baseline.txt 生成版本一致，public-api 步骤因此成为硬门禁。
+      - name: Install pinned nightly (public-api)
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2026-07-28
 
       - name: Check core crate public API baseline (hard gate)
         # 使用与 baseline 生成版本一致的固定 nightly；任何 API 漂移都会使
