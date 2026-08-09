@@ -378,6 +378,12 @@ impl ParsedTag {
                     }
                     position += source[position..].chars().next()?.len_utf8();
                 }
+                if position == attr_start {
+                    // 属性名位置出现 `/`/`=`/`>`（如 `<L/ꟓ>`）：必须前进，否则
+                    // 外层 while 以空名无限循环（与 markup_selector 同源 bug）。
+                    position += source[position..].chars().next()?.len_utf8();
+                    continue;
+                }
                 let name_range = attr_start..position;
                 position = consume_space(source, position, content_end);
                 let mut operator = None;
