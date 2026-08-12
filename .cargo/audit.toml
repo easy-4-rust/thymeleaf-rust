@@ -9,6 +9,7 @@ ignore = [
     "RUSTSEC-2025-0052",  # async-std 未维护，tide 链传递依赖
     "RUSTSEC-2024-0384",  # instant 未维护，async-std 链传递依赖
     "RUSTSEC-2026-0174",  # http-types notice，tide 链传递依赖
+    "RUSTSEC-2026-0249",  # smartstring 未维护，tide 链传递依赖（routefinder→smartcow→smartstring）
 
     # --- sa-token-core 外部依赖链（jsonwebtoken -> rsa -> 旧 AES 系列）---
     # sa-token-core 为已发布外部 crate，传递依赖不可由本仓库修复；均为 notice/unmaintained。
