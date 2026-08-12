@@ -1,0 +1,937 @@
+# 对象级对照表
+
+- **日期**：2026-07-28
+- **作者**：thymeleaf-rust 团队
+- **状态**：已实施
+- **上游基线**：Thymeleaf 3.1.5.RELEASE（commit `10f9dd2eb8cbd98515ce14b149d115e0287d0add`)
+- **相关计划**：`docs/superpowers/plans/2026-07-28-s0-s10-batch-migration.md`
+
+---
+
+# Thymeleaf → thymeleaf-rust 对象级对照表
+
+> **文档说明**：定义 Thymeleaf Core Java 对象到 `thymeleaf` Rust 核心 crate 的逐对象迁移目标，是文件拆分、类型命名和迁移完成度的权威清单。
+>
+> **文档版本**：v1.0.0
+> **最后更新**：2026-08-01
+> **上游基线**：Thymeleaf `3.1.5.RELEASE`，提交 `10f9dd2eb8cbd98515ce14b149d115e0287d0add`
+> **状态**：491 个主对象与 69 个内部对象均有生产落点；479 个主对象达到 `BEHAVIOR_VERIFIED`，0 个核心对象缺对象级双语差分证据，12 个 Servlet 运行时对象采用批准的宿主等价映射
+
+## 1. 范围与证据
+
+- **当前证据：CodeGraph**：Java 与 Rust 仓库当前均存在 `.codegraph/`；本轮用当前索引复核 `IWebContext`、`WebContext`、`WebExpressionContext` 的构造顺序、exchange 身份、表达式对象工厂动态调用路径与测试入口，并继续以固定提交源码和机器清单约束基线。
+- **已确认：上游源码**：迁移基线包含 491 个 Java 主对象文件和 69 个内部/伴随对象，共 560 个类型。
+- **范围内**：`lib/thymeleaf` 的引擎、解析器、事件模型、Standard Dialect、表达式外层语法、缓存、上下文、资源和中立 Web 合同。
+- **范围外但需吸收语义**：`thymeleaf-spring5/6`、Spring Security extras、examples。它们作为整合行为和测试设计证据，不做 Java 类型逐类移植。
+- **当前 Rust 事实**：`thymeleaf` Cargo workspace 已建立；479 个主对象达到 `BEHAVIOR_VERIFIED`，0 个主对象待对象级行为验证，12 个 Servlet 运行时对象以 `JAVA_ONLY_EXEMPT` 记录宿主等价映射。
+- **方法级证据**：完整机器清单见 [`baseline/java_api_inventory.json`](baseline/java_api_inventory.json)，当前实现签名见[方法级对照表](方法级对照表.md)。
+
+## 2. 统计汇总
+
+| 指标 | 基线结果 |
+|:---|---:|
+| Java 主对象/文件 | 491 |
+| 内部/伴随对象 | 69 |
+| Java 类型合计 | 560 |
+| 主对象 class/interface/enum | 390 / 96 / 5 |
+| 目标 Rust 路径碰撞 | 0 |
+| 2026-07-31 `BEHAVIOR_VERIFIED` 主对象 | 188 |
+| 2026-07-31 `IMPLEMENTED_UNVERIFIED` 主对象 | 294 |
+| 2026-07-31 `NOT_STARTED` 主对象 | 0 |
+| 当前源码实时存在的 Java 主对象映射 | 491 / 491 |
+| 当前源码实时存在的内部/伴随对象映射 | 69 / 69 |
+| 当前实时缺失/类型错配 | 0 / 0 |
+| 当前待对象级行为验证的核心主对象 | 294 |
+| 当前 Servlet 宿主等价映射 | 12 |
+
+> **重要口径**：下方 491 行按对象级证据结算为 479 个 `BEHAVIOR_VERIFIED`、0 个
+> `IMPLEMENTED_UNVERIFIED` 和 12 个 Servlet `JAVA_ONLY_EXEMPT`。全局 `.thtest`、Java
+> Oracle 或 Rust 测试总数只能证明对应测试分母，不能替代 301 个对象逐项可追溯的双语行为
+> 证据。2026-07-30 实时生产树审计已确认 491 个主对象与 69 个内部对象全部
+> 有落点，4,291 个 Java 声明方法均有显式方法、动态分派、Rust 构造/惯用映射、流程合并
+> 或私有逻辑合并处置，且无 STUB。生产语义继续按域整批闭合；全部闭合后才统一执行行为
+> 验证并批量更新状态列。
+
+## 3. 映射规则
+
+1. 一个 Java 主对象对应一个真实 `.rs` 文件；69 个内部/伴随对象与主对象同文件。
+2. Rust 类型默认保持 Java 简单名称完全一致；文件名转为 snake_case，方法与参数转为 snake_case。
+3. 去除 `org.thymeleaf` 根包；多层包按最后一级目录落位。经本次基线计算，491 个目标路径无碰撞。
+4. `mod.rs` 和未来 `lib.rs` 只做模块声明与重导出，不承载对象实现。
+5. OGNL、Java ClassLoader 和 Servlet 属于运行时形态差异，必须迁移功能语义，但使用表中批准的 Rust 等价名称或宿主整合类型。
+6. 状态只能由代码、测试和差异证据更新；创建空文件、`todo!()` 或 `unimplemented!()` 不计为已迁移。
+
+### 3.1 状态图例
+
+| 状态 | 含义 |
+|:---|:---|
+| `BEHAVIOR_VERIFIED` | 对象和语义已迁移，Java/Rust 差分与对应语义分母门禁通过 |
+| `IMPLEMENTED_UNVERIFIED` | 已有真实逻辑，但尚无足够差分证据 |
+| `SKELETON` | 只有形态或签名；不计入完成 |
+| `NOT_STARTED` | 仅表示冻结基线时尚未进入验证流程；不得用作当前源码缺失计数 |
+| `JAVA_ONLY_EXEMPT` | Java 运行时形态已用批准的 Rust 等价机制迁移 |
+| `PLANNED_BLOCKED` | 有明确外部依赖阻断 |
+| `RUST_EXTENSION` | Rust 特有能力，不计入 Java 迁移分子 |
+
+## 4. 包级迁移清单
+
+| Java 包 | 主对象数 | 阶段 | 目标模块（最后一级） |
+|:---|---:|:---:|:---|
+| `org.thymeleaf` | 10 | S1 | crate root |
+| `org.thymeleaf.cache` | 13 | S2 | `src/cache/` |
+| `org.thymeleaf.context` | 20 | S3 | `src/context/` |
+| `org.thymeleaf.dialect` | 8 | S5 | `src/dialect/` |
+| `org.thymeleaf.engine` | 88 | S3 | `src/engine/` |
+| `org.thymeleaf.exceptions` | 9 | S1 | `src/exceptions/` |
+| `org.thymeleaf.expression` | 20 | S6 | `src/expression/` |
+| `org.thymeleaf.inline` | 2 | S5 | `src/inline/` |
+| `org.thymeleaf.linkbuilder` | 3 | S6 | `src/linkbuilder/` |
+| `org.thymeleaf.messageresolver` | 4 | S6 | `src/messageresolver/` |
+| `org.thymeleaf.model` | 20 | S3 | `src/model/` |
+| `org.thymeleaf.postprocessor` | 2 | S5 | `src/postprocessor/` |
+| `org.thymeleaf.preprocessor` | 2 | S5 | `src/preprocessor/` |
+| `org.thymeleaf.processor` | 2 | S5 | `src/processor/` |
+| `org.thymeleaf.processor.cdatasection` | 3 | S5 | `src/cdatasection/` |
+| `org.thymeleaf.processor.comment` | 3 | S5 | `src/comment/` |
+| `org.thymeleaf.processor.doctype` | 3 | S5 | `src/doctype/` |
+| `org.thymeleaf.processor.element` | 11 | S5 | `src/element/` |
+| `org.thymeleaf.processor.processinginstruction` | 3 | S5 | `src/processinginstruction/` |
+| `org.thymeleaf.processor.templateboundaries` | 3 | S5 | `src/templateboundaries/` |
+| `org.thymeleaf.processor.text` | 3 | S5 | `src/text/` |
+| `org.thymeleaf.processor.xmldeclaration` | 3 | S5 | `src/xmldeclaration/` |
+| `org.thymeleaf.standard` | 1 | S7 | `src/standard/` |
+| `org.thymeleaf.standard.expression` | 70 | S7 | `src/expression/` |
+| `org.thymeleaf.standard.inline` | 9 | S7 | `src/inline/` |
+| `org.thymeleaf.standard.processor` | 56 | S8 | `src/processor/` |
+| `org.thymeleaf.standard.serializer` | 5 | S7 | `src/serializer/` |
+| `org.thymeleaf.standard.util` | 3 | S7 | `src/util/` |
+| `org.thymeleaf.templatemode` | 1 | S1 | `src/templatemode/` |
+| `org.thymeleaf.templateparser` | 1 | S4 | `src/templateparser/` |
+| `org.thymeleaf.templateparser.markup` | 5 | S4 | `src/markup/` |
+| `org.thymeleaf.templateparser.markup.decoupled` | 7 | S4 | `src/decoupled/` |
+| `org.thymeleaf.templateparser.raw` | 4 | S4 | `src/raw/` |
+| `org.thymeleaf.templateparser.reader` | 5 | S4 | `src/reader/` |
+| `org.thymeleaf.templateparser.text` | 19 | S4 | `src/text/` |
+| `org.thymeleaf.templateresolver` | 10 | S2 | `src/templateresolver/` |
+| `org.thymeleaf.templateresource` | 7 | S2 | `src/templateresource/` |
+| `org.thymeleaf.util` | 31 | S6 | `src/util/` |
+| `org.thymeleaf.util.temporal` | 6 | S6 | `src/temporal/` |
+| `org.thymeleaf.web` | 4 | S9 | `src/web/` |
+| `org.thymeleaf.web.servlet` | 12 | S9 | `src/servlet/` |
+
+### 4.1 阶段对象数校验
+
+| 阶段 | 对象数 |
+|:---:|---:|
+| S1 | 20 |
+| S2 | 30 |
+| S3 | 128 |
+| S4 | 41 |
+| S5 | 48 |
+| S6 | 64 |
+| S7 | 88 |
+| S8 | 56 |
+| S9 | 16 |
+| **合计** | **491** |
+
+## 5. 完整对象级对照表
+
+### 5.1 `org.thymeleaf`（10）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 1 | `ConfigurationPrinterHelper` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/ConfigurationPrinterHelper.java` |`thymeleaf/src/configuration_printer_helper.rs`| `ConfigurationPrinterHelper` | `ConfigLogBuilder` | 1:1 | BEHAVIOR_VERIFIED |
+| 2 | `DialectConfiguration` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/DialectConfiguration.java` |`thymeleaf/src/dialect_configuration.rs`| `DialectConfiguration` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 3 | `DialectSetConfiguration` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/DialectSetConfiguration.java` |`thymeleaf/src/dialect_set_configuration.rs`| `DialectSetConfiguration` | `AggregateExpressionObjectFactory` | 1:1 | BEHAVIOR_VERIFIED |
+| 4 | `EngineConfiguration` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/EngineConfiguration.java` |`thymeleaf/src/engine_configuration.rs`| `EngineConfiguration` | `TemplateResolverComparator`<br>`MessageResolverComparator`<br>`LinkBuilderComparator` | 1:1 | BEHAVIOR_VERIFIED |
+| 5 | `IEngineConfiguration` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/IEngineConfiguration.java` |`thymeleaf/src/i_engine_configuration.rs`| `IEngineConfiguration` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 6 | `ITemplateEngine` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/ITemplateEngine.java` |`thymeleaf/src/i_template_engine.rs`| `ITemplateEngine` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 7 | `IThrottledTemplateProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/IThrottledTemplateProcessor.java` |`thymeleaf/src/i_throttled_template_processor.rs`| `IThrottledTemplateProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 8 | `TemplateEngine` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/TemplateEngine.java` |`thymeleaf/src/template_engine.rs`| `TemplateEngine` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 9 | `TemplateSpec` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/TemplateSpec.java` |`thymeleaf/src/template_spec.rs`| `TemplateSpec` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 10 | `Thymeleaf` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/Thymeleaf.java` |`thymeleaf/src/thymeleaf.rs`| `Thymeleaf` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.2 `org.thymeleaf.cache`（13）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 11 | `AbstractCacheManager` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/AbstractCacheManager.java` |`thymeleaf/src/cache/abstract_cache_manager.rs`| `AbstractCacheManager` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 12 | `AlwaysValidCacheEntryValidity` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/AlwaysValidCacheEntryValidity.java` |`thymeleaf/src/cache/always_valid_cache_entry_validity.rs`| `AlwaysValidCacheEntryValidity` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 13 | `ExpressionCacheKey` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/ExpressionCacheKey.java` |`thymeleaf/src/cache/expression_cache_key.rs`| `ExpressionCacheKey` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 14 | `ICache` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/ICache.java` |`thymeleaf/src/cache/i_cache.rs`| `ICache` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 15 | `ICacheEntryValidity` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/ICacheEntryValidity.java` |`thymeleaf/src/cache/i_cache_entry_validity.rs`| `ICacheEntryValidity` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 16 | `ICacheEntryValidityChecker` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/ICacheEntryValidityChecker.java` |`thymeleaf/src/cache/i_cache_entry_validity_checker.rs`| `ICacheEntryValidityChecker` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 17 | `ICacheManager` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/ICacheManager.java` |`thymeleaf/src/cache/i_cache_manager.rs`| `ICacheManager` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 18 | `NonCacheableCacheEntryValidity` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/NonCacheableCacheEntryValidity.java` |`thymeleaf/src/cache/non_cacheable_cache_entry_validity.rs`| `NonCacheableCacheEntryValidity` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 19 | `StandardCache` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/StandardCache.java` |`thymeleaf/src/cache/standard_cache.rs`| `StandardCache` | `CacheDataContainer`<br>`CacheEntry` | 1:1 | BEHAVIOR_VERIFIED |
+| 20 | `StandardCacheManager` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/StandardCacheManager.java` |`thymeleaf/src/cache/standard_cache_manager.rs`| `StandardCacheManager` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 21 | `StandardParsedTemplateEntryValidator` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/StandardParsedTemplateEntryValidator.java` |`thymeleaf/src/cache/standard_parsed_template_entry_validator.rs`| `StandardParsedTemplateEntryValidator` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 22 | `TTLCacheEntryValidity` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/TTLCacheEntryValidity.java` |`thymeleaf/src/cache/ttl_cache_entry_validity.rs`| `TTLCacheEntryValidity` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 23 | `TemplateCacheKey` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/cache/TemplateCacheKey.java` |`thymeleaf/src/cache/template_cache_key.rs`| `TemplateCacheKey` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.3 `org.thymeleaf.context`（20）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 24 | `AbstractContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/AbstractContext.java` |`thymeleaf/src/context/abstract_context.rs`| `AbstractContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 25 | `AbstractEngineContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/AbstractEngineContext.java` |`thymeleaf/src/context/abstract_engine_context.rs`| `AbstractEngineContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 26 | `AbstractExpressionContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/AbstractExpressionContext.java` |`thymeleaf/src/context/abstract_expression_context.rs`| `AbstractExpressionContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 27 | `Context` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/Context.java` |`thymeleaf/src/context/context.rs`| `Context` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 28 | `Contexts` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/Contexts.java` |`thymeleaf/src/context/contexts.rs`| `Contexts` | `ContextsError` | 1:1 + Rust runtime error | BEHAVIOR_VERIFIED |
+| 29 | `EngineContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/EngineContext.java` |`thymeleaf/src/context/engine_context.rs`| `EngineContext` | `SelectionTarget` | 1:1 | BEHAVIOR_VERIFIED |
+| 30 | `ExpressionContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/ExpressionContext.java` |`thymeleaf/src/context/expression_context.rs`| `ExpressionContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 31 | `IContext` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/IContext.java` |`thymeleaf/src/context/i_context.rs`| `IContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 32 | `IEngineContext` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/IEngineContext.java` |`thymeleaf/src/context/i_engine_context.rs`| `IEngineContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 33 | `IEngineContextFactory` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/IEngineContextFactory.java` |`thymeleaf/src/context/i_engine_context_factory.rs`| `IEngineContextFactory` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 34 | `IExpressionContext` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/IExpressionContext.java` |`thymeleaf/src/context/i_expression_context.rs`| `IExpressionContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 35 | `ILazyContextVariable` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/ILazyContextVariable.java` |`thymeleaf/src/context/i_lazy_context_variable.rs`| `ILazyContextVariable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 36 | `ITemplateContext` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/ITemplateContext.java` |`thymeleaf/src/context/i_template_context.rs`| `ITemplateContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 37 | `IWebContext` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/context/IWebContext.java` |`thymeleaf/src/context/i_web_context.rs`| `IWebContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 38 | `IdentifierSequences` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/IdentifierSequences.java` |`thymeleaf/src/context/identifier_sequences.rs`| `IdentifierSequences` | `IdentifierSequencesError` | 1:1 + Rust error | BEHAVIOR_VERIFIED |
+| 39 | `LazyContextVariable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/LazyContextVariable.java` |`thymeleaf/src/context/lazy_context_variable.rs`| `LazyContextVariable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 40 | `StandardEngineContextFactory` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/StandardEngineContextFactory.java` |`thymeleaf/src/context/standard_engine_context_factory.rs`| `StandardEngineContextFactory` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 41 | `WebContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/WebContext.java` |`thymeleaf/src/context/web_context.rs`| `WebContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 42 | `WebEngineContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/WebEngineContext.java` |`thymeleaf/src/context/web_engine_context.rs`| `WebEngineContext` | `SessionAttributeMap`<br>`ApplicationAttributeMap`<br>`RequestParameterMap`<br>`ExchangeAttributeMap`<br>`SelectionTarget`<br>`NoOpMapImpl`<br>`RequestParameterValues` | 1:1 | BEHAVIOR_VERIFIED |
+| 43 | `WebExpressionContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/context/WebExpressionContext.java` |`thymeleaf/src/context/web_expression_context.rs`| `WebExpressionContext` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.4 `org.thymeleaf.dialect`（8）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 44 | `AbstractDialect` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/AbstractDialect.java` |`thymeleaf/src/dialect/abstract_dialect.rs`| `AbstractDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 45 | `AbstractProcessorDialect` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/AbstractProcessorDialect.java` |`thymeleaf/src/dialect/abstract_processor_dialect.rs`| `AbstractProcessorDialect` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 46 | `IDialect` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/IDialect.java` |`thymeleaf/src/dialect/i_dialect.rs`| `IDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 47 | `IExecutionAttributeDialect` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/IExecutionAttributeDialect.java` |`thymeleaf/src/dialect/i_execution_attribute_dialect.rs`| `IExecutionAttributeDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 48 | `IExpressionObjectDialect` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/IExpressionObjectDialect.java` |`thymeleaf/src/dialect/i_expression_object_dialect.rs`| `IExpressionObjectDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 49 | `IPostProcessorDialect` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/IPostProcessorDialect.java` |`thymeleaf/src/dialect/i_post_processor_dialect.rs`| `IPostProcessorDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 50 | `IPreProcessorDialect` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/IPreProcessorDialect.java` |`thymeleaf/src/dialect/i_pre_processor_dialect.rs`| `IPreProcessorDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 51 | `IProcessorDialect` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/dialect/IProcessorDialect.java` |`thymeleaf/src/dialect/i_processor_dialect.rs`| `IProcessorDialect` | `ProcessorSet`（Rust `Set<IProcessor>` 等价适配） | 1:1 | `BEHAVIOR_VERIFIED` |
+
+### 5.5 `org.thymeleaf.engine`（88）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 52 | `AbstractElementTag` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AbstractElementTag.java` |`thymeleaf/src/engine/abstract_element_tag.rs`| `AbstractElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 53 | `AbstractGatheringModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AbstractGatheringModelProcessable.java` |`thymeleaf/src/engine/abstract_gathering_model_processable.rs`| `AbstractGatheringModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 54 | `AbstractProcessableElementTag` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AbstractProcessableElementTag.java` |`thymeleaf/src/engine/abstract_processable_element_tag.rs`| `AbstractProcessableElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 55 | `AbstractTemplateEvent` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AbstractTemplateEvent.java` |`thymeleaf/src/engine/abstract_template_event.rs`| `AbstractTemplateEvent` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 56 | `AbstractTemplateHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AbstractTemplateHandler.java` |`thymeleaf/src/engine/abstract_template_handler.rs`| `AbstractTemplateHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 57 | `AbstractTextualTemplateEvent` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AbstractTextualTemplateEvent.java` |`thymeleaf/src/engine/abstract_textual_template_event.rs`| `AbstractTextualTemplateEvent` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 58 | `Attribute` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/Attribute.java` |`thymeleaf/src/engine/attribute.rs`| `Attribute` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 59 | `AttributeDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AttributeDefinition.java` |`thymeleaf/src/engine/attribute_definition.rs`| `AttributeDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 60 | `AttributeDefinitions` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AttributeDefinitions.java` |`thymeleaf/src/engine/attribute_definitions.rs`| `AttributeDefinitions` | `AttributeDefinitionRepository` | 1:1 | BEHAVIOR_VERIFIED |
+| 61 | `AttributeName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AttributeName.java` |`thymeleaf/src/engine/attribute_name.rs`| `AttributeName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 62 | `AttributeNames` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/AttributeNames.java` |`thymeleaf/src/engine/attribute_names.rs`| `AttributeNames` | `AttributeNamesRepository` | 1:1 | BEHAVIOR_VERIFIED |
+| 63 | `Attributes` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/Attributes.java` |`thymeleaf/src/engine/attributes.rs`| `Attributes` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 64 | `CDATASection` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/CDATASection.java` |`thymeleaf/src/engine/cdata_section.rs`| `CDATASection` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 65 | `CDATASectionStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/CDATASectionStructureHandler.java` |`thymeleaf/src/engine/cdata_section_structure_handler.rs`| `CDATASectionStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 66 | `CloseElementTag` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/CloseElementTag.java` |`thymeleaf/src/engine/close_element_tag.rs`| `CloseElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 67 | `Comment` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/Comment.java` |`thymeleaf/src/engine/comment.rs`| `Comment` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 68 | `CommentStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/CommentStructureHandler.java` |`thymeleaf/src/engine/comment_structure_handler.rs`| `CommentStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 69 | `DataDrivenTemplateIterator` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/DataDrivenTemplateIterator.java` |`thymeleaf/src/engine/data_driven_template_iterator.rs`| `DataDrivenTemplateIterator` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 70 | `DecreaseContextLevelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/DecreaseContextLevelProcessable.java` |`thymeleaf/src/engine/decrease_context_level_processable.rs`| `DecreaseContextLevelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 71 | `DocType` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/DocType.java` |`thymeleaf/src/engine/doc_type.rs`| `DocType` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 72 | `DocTypeStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/DocTypeStructureHandler.java` |`thymeleaf/src/engine/doc_type_structure_handler.rs`| `DocTypeStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 73 | `ElementDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementDefinition.java` |`thymeleaf/src/engine/element_definition.rs`| `ElementDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 74 | `ElementDefinitions` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementDefinitions.java` |`thymeleaf/src/engine/element_definitions.rs`| `ElementDefinitions` | `ElementDefinitionRepository`<br>`HTMLElementDefinitionSpec` | 1:1 | BEHAVIOR_VERIFIED |
+| 75 | `ElementModelStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementModelStructureHandler.java` |`thymeleaf/src/engine/element_model_structure_handler.rs`| `ElementModelStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 76 | `ElementName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementName.java` |`thymeleaf/src/engine/element_name.rs`| `ElementName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 77 | `ElementNames` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementNames.java` |`thymeleaf/src/engine/element_names.rs`| `ElementNames` | `ElementNamesRepository` | 1:1 | BEHAVIOR_VERIFIED |
+| 78 | `ElementProcessorIterator` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementProcessorIterator.java` |`thymeleaf/src/engine/element_processor_iterator.rs`| `ElementProcessorIterator` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 79 | `ElementTagStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ElementTagStructureHandler.java` |`thymeleaf/src/engine/element_tag_structure_handler.rs`| `ElementTagStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 80 | `EngineContextManager` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/EngineContextManager.java` |`thymeleaf/src/engine/engine_context_manager.rs`| `EngineContextManager` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 81 | `EngineEventUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/EngineEventUtils.java` |`thymeleaf/src/engine/engine_event_utils.rs`| `EngineEventUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 82 | `GatheringModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/GatheringModelProcessable.java` |`thymeleaf/src/engine/gathering_model_processable.rs`| `GatheringModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 83 | `HTMLAttributeDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/HTMLAttributeDefinition.java` |`thymeleaf/src/engine/html_attribute_definition.rs`| `HTMLAttributeDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 84 | `HTMLAttributeName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/HTMLAttributeName.java` |`thymeleaf/src/engine/html_attribute_name.rs`| `HTMLAttributeName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 85 | `HTMLElementDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/HTMLElementDefinition.java` |`thymeleaf/src/engine/html_element_definition.rs`| `HTMLElementDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 86 | `HTMLElementName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/HTMLElementName.java` |`thymeleaf/src/engine/html_element_name.rs`| `HTMLElementName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 87 | `HTMLElementType` | enum | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/HTMLElementType.java` |`thymeleaf/src/engine/html_element_type.rs`| `HTMLElementType` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 88 | `IAttributeDefinitionsAware` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IAttributeDefinitionsAware.java` |`thymeleaf/src/engine/i_attribute_definitions_aware.rs`| `IAttributeDefinitionsAware` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 89 | `IElementDefinitionsAware` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IElementDefinitionsAware.java` |`thymeleaf/src/engine/i_element_definitions_aware.rs`| `IElementDefinitionsAware` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 90 | `IEngineProcessable` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IEngineProcessable.java` |`thymeleaf/src/engine/i_engine_processable.rs`| `IEngineProcessable` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 91 | `IEngineTemplateEvent` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IEngineTemplateEvent.java` |`thymeleaf/src/engine/i_engine_template_event.rs`| `IEngineTemplateEvent` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 92 | `IGatheringModelProcessable` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IGatheringModelProcessable.java` |`thymeleaf/src/engine/i_gathering_model_processable.rs`| `IGatheringModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 93 | `ISSEThrottledTemplateWriterControl` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ISSEThrottledTemplateWriterControl.java` |`thymeleaf/src/engine/isse_throttled_template_writer_control.rs`| `ISSEThrottledTemplateWriterControl` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 94 | `ITemplateHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ITemplateHandler.java` |`thymeleaf/src/engine/i_template_handler.rs`| `ITemplateHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 95 | `IThrottledTemplateWriterControl` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IThrottledTemplateWriterControl.java` |`thymeleaf/src/engine/i_throttled_template_writer_control.rs`| `IThrottledTemplateWriterControl` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 96 | `IteratedGatheringModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IteratedGatheringModelProcessable.java` |`thymeleaf/src/engine/iterated_gathering_model_processable.rs`| `IteratedGatheringModelProcessable` | `IterationWhiteSpaceHandling`<br>`<Iterator$anon@449>`<br>`<Iterator$anon@476>`<br>`IterationModels` | 1:1 | BEHAVIOR_VERIFIED |
+| 97 | `IterationStatusVar` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/IterationStatusVar.java` |`thymeleaf/src/engine/iteration_status_var.rs`| `IterationStatusVar` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 98 | `Model` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/Model.java` |`thymeleaf/src/engine/model.rs`| `Model` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 99 | `ModelBuilderTemplateHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ModelBuilderTemplateHandler.java` |`thymeleaf/src/engine/model_builder_template_handler.rs`| `ModelBuilderTemplateHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 100 | `OpenElementTag` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/OpenElementTag.java` |`thymeleaf/src/engine/open_element_tag.rs`| `OpenElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 101 | `OpenElementTagModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/OpenElementTagModelProcessable.java` |`thymeleaf/src/engine/open_element_tag_model_processable.rs`| `OpenElementTagModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 102 | `OutputTemplateHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/OutputTemplateHandler.java` |`thymeleaf/src/engine/output_template_handler.rs`| `OutputTemplateHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 103 | `ProcessingInstruction` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ProcessingInstruction.java` |`thymeleaf/src/engine/processing_instruction.rs`| `ProcessingInstruction` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 104 | `ProcessingInstructionStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ProcessingInstructionStructureHandler.java` |`thymeleaf/src/engine/processing_instruction_structure_handler.rs`| `ProcessingInstructionStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 105 | `ProcessorExecutionVars` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ProcessorExecutionVars.java` |`thymeleaf/src/engine/processor_execution_vars.rs`| `ProcessorExecutionVars` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 106 | `ProcessorTemplateHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ProcessorTemplateHandler.java` |`thymeleaf/src/engine/processor_template_handler.rs`| `ProcessorTemplateHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 107 | `SSEThrottledTemplateWriter` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/SSEThrottledTemplateWriter.java` |`thymeleaf/src/engine/sse_throttled_template_writer.rs`| `SSEThrottledTemplateWriter` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 108 | `SimpleModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/SimpleModelProcessable.java` |`thymeleaf/src/engine/simple_model_processable.rs`| `SimpleModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 109 | `StandaloneElementTag` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/StandaloneElementTag.java` |`thymeleaf/src/engine/standalone_element_tag.rs`| `StandaloneElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 110 | `StandaloneElementTagModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/StandaloneElementTagModelProcessable.java` |`thymeleaf/src/engine/standalone_element_tag_model_processable.rs`| `StandaloneElementTagModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 111 | `StandardModelFactory` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/StandardModelFactory.java` |`thymeleaf/src/engine/standard_model_factory.rs`| `StandardModelFactory` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 112 | `TemplateBoundariesStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateBoundariesStructureHandler.java` |`thymeleaf/src/engine/template_boundaries_structure_handler.rs`| `TemplateBoundariesStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 113 | `TemplateData` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateData.java` |`thymeleaf/src/engine/template_data.rs`| `TemplateData` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 114 | `TemplateEnd` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateEnd.java` |`thymeleaf/src/engine/template_end.rs`| `TemplateEnd` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 115 | `TemplateEndModelProcessable` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateEndModelProcessable.java` |`thymeleaf/src/engine/template_end_model_processable.rs`| `TemplateEndModelProcessable` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 116 | `TemplateFlowController` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateFlowController.java` |`thymeleaf/src/engine/template_flow_controller.rs`| `TemplateFlowController` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 117 | `TemplateHandlerAdapterMarkupHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateHandlerAdapterMarkupHandler.java` |`thymeleaf/src/engine/template_handler_adapter_markup_handler.rs`| `TemplateHandlerAdapterMarkupHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 118 | `TemplateHandlerAdapterRawHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateHandlerAdapterRawHandler.java` |`thymeleaf/src/engine/template_handler_adapter_raw_handler.rs`| `TemplateHandlerAdapterRawHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 119 | `TemplateHandlerAdapterTextHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateHandlerAdapterTextHandler.java` |`thymeleaf/src/engine/template_handler_adapter_text_handler.rs`| `TemplateHandlerAdapterTextHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 120 | `TemplateManager` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateManager.java` |`thymeleaf/src/engine/template_manager.rs`| `TemplateManager` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 121 | `TemplateModel` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateModel.java` |`thymeleaf/src/engine/template_model.rs`| `TemplateModel` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 122 | `TemplateModelController` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateModelController.java` |`thymeleaf/src/engine/template_model_controller.rs`| `TemplateModelController` | `SkipBody` | 1:1 | BEHAVIOR_VERIFIED |
+| 123 | `TemplateStart` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TemplateStart.java` |`thymeleaf/src/engine/template_start.rs`| `TemplateStart` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 124 | `Text` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/Text.java` |`thymeleaf/src/engine/text.rs`| `Text` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 125 | `TextAttributeDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TextAttributeDefinition.java` |`thymeleaf/src/engine/text_attribute_definition.rs`| `TextAttributeDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 126 | `TextAttributeName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TextAttributeName.java` |`thymeleaf/src/engine/text_attribute_name.rs`| `TextAttributeName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 127 | `TextElementDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TextElementDefinition.java` |`thymeleaf/src/engine/text_element_definition.rs`| `TextElementDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 128 | `TextElementName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TextElementName.java` |`thymeleaf/src/engine/text_element_name.rs`| `TextElementName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 129 | `TextStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/TextStructureHandler.java` |`thymeleaf/src/engine/text_structure_handler.rs`| `TextStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 130 | `ThrottledTemplateProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ThrottledTemplateProcessor.java` |`thymeleaf/src/engine/throttled_template_processor.rs`| `ThrottledTemplateProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 131 | `ThrottledTemplateWriter` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ThrottledTemplateWriter.java` |`thymeleaf/src/engine/throttled_template_writer.rs`| `ThrottledTemplateWriter` | `IThrottledTemplateWriterAdapter` | 1:1 | BEHAVIOR_VERIFIED |
+| 132 | `ThrottledTemplateWriterOutputStreamAdapter` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ThrottledTemplateWriterOutputStreamAdapter.java` |`thymeleaf/src/engine/throttled_template_writer_output_stream_adapter.rs`| `ThrottledTemplateWriterOutputStreamAdapter` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 133 | `ThrottledTemplateWriterWriterAdapter` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/ThrottledTemplateWriterWriterAdapter.java` |`thymeleaf/src/engine/throttled_template_writer_writer_adapter.rs`| `ThrottledTemplateWriterWriterAdapter` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 134 | `XMLAttributeDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/XMLAttributeDefinition.java` |`thymeleaf/src/engine/xml_attribute_definition.rs`| `XMLAttributeDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 135 | `XMLAttributeName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/XMLAttributeName.java` |`thymeleaf/src/engine/xml_attribute_name.rs`| `XMLAttributeName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 136 | `XMLDeclaration` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/XMLDeclaration.java` |`thymeleaf/src/engine/xml_declaration.rs`| `XMLDeclaration` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 137 | `XMLDeclarationStructureHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/XMLDeclarationStructureHandler.java` |`thymeleaf/src/engine/xml_declaration_structure_handler.rs`| `XMLDeclarationStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 138 | `XMLElementDefinition` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/XMLElementDefinition.java` |`thymeleaf/src/engine/xml_element_definition.rs`| `XMLElementDefinition` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 139 | `XMLElementName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/engine/XMLElementName.java` |`thymeleaf/src/engine/xml_element_name.rs`| `XMLElementName` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.6 `org.thymeleaf.exceptions`（9）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 140 | `AlreadyInitializedException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/AlreadyInitializedException.java` |`thymeleaf/src/exceptions/already_initialized_exception.rs`| `AlreadyInitializedException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 141 | `CacheConfigurationException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/CacheConfigurationException.java` |`thymeleaf/src/exceptions/cache_configuration_exception.rs`| `CacheConfigurationException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 142 | `ConfigurationException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/ConfigurationException.java` |`thymeleaf/src/exceptions/configuration_exception.rs`| `ConfigurationException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 143 | `ParserInitializationException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/ParserInitializationException.java` |`thymeleaf/src/exceptions/parser_initialization_exception.rs`| `ParserInitializationException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 144 | `TemplateAssertionException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/TemplateAssertionException.java` |`thymeleaf/src/exceptions/template_assertion_exception.rs`| `TemplateAssertionException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 145 | `TemplateEngineException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/TemplateEngineException.java` |`thymeleaf/src/exceptions/template_engine_exception.rs`| `TemplateEngineException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 146 | `TemplateInputException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/TemplateInputException.java` |`thymeleaf/src/exceptions/template_input_exception.rs`| `TemplateInputException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 147 | `TemplateOutputException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/TemplateOutputException.java` |`thymeleaf/src/exceptions/template_output_exception.rs`| `TemplateOutputException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 148 | `TemplateProcessingException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/exceptions/TemplateProcessingException.java` |`thymeleaf/src/exceptions/template_processing_exception.rs`| `TemplateProcessingException` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.7 `org.thymeleaf.expression`（20）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 149 | `Aggregates` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Aggregates.java` |`thymeleaf/src/expression/aggregates.rs`| `Aggregates` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 150 | `Arrays` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Arrays.java` |`thymeleaf/src/expression/arrays.rs`| `Arrays` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 151 | `Bools` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Bools.java` |`thymeleaf/src/expression/bools.rs`| `Bools` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 152 | `Calendars` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Calendars.java` |`thymeleaf/src/expression/calendars.rs`| `Calendars` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 153 | `Conversions` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Conversions.java` |`thymeleaf/src/expression/conversions.rs`| `Conversions` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 154 | `Dates` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Dates.java` |`thymeleaf/src/expression/dates.rs`| `Dates` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 155 | `ExecutionInfo` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/ExecutionInfo.java` |`thymeleaf/src/expression/execution_info.rs`| `ExecutionInfo` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 156 | `ExpressionObjects` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/ExpressionObjects.java` |`thymeleaf/src/expression/expression_objects.rs`| `ExpressionObjects` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 157 | `IExpressionObjectFactory` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/IExpressionObjectFactory.java` |`thymeleaf/src/expression/i_expression_object_factory.rs`| `IExpressionObjectFactory` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 158 | `IExpressionObjects` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/IExpressionObjects.java` |`thymeleaf/src/expression/i_expression_objects.rs`| `IExpressionObjects` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 159 | `Ids` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Ids.java` |`thymeleaf/src/expression/ids.rs`| `Ids` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 160 | `Lists` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Lists.java` |`thymeleaf/src/expression/lists.rs`| `Lists` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 161 | `Maps` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Maps.java` |`thymeleaf/src/expression/maps.rs`| `Maps` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 162 | `Messages` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Messages.java` |`thymeleaf/src/expression/messages.rs`| `Messages` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 163 | `Numbers` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Numbers.java` |`thymeleaf/src/expression/numbers.rs`| `Numbers` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 164 | `Objects` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Objects.java` |`thymeleaf/src/expression/objects.rs`| `Objects` | `ObjectArrayValue`、`ObjectsError`（Rust 运行时数组适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 165 | `Sets` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Sets.java` |`thymeleaf/src/expression/sets.rs`| `Sets` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 166 | `Strings` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Strings.java` |`thymeleaf/src/expression/strings.rs`| `Strings` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 167 | `Temporals` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Temporals.java` |`thymeleaf/src/expression/temporals.rs`| `Temporals` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 168 | `Uris` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/expression/Uris.java` |`thymeleaf/src/expression/uris.rs`| `Uris` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.8 `org.thymeleaf.inline`（2）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 169 | `IInliner` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/inline/IInliner.java` |`thymeleaf/src/inline/i_inliner.rs`| `IInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 170 | `NoOpInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/inline/NoOpInliner.java` |`thymeleaf/src/inline/no_op_inliner.rs`| `NoOpInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.9 `org.thymeleaf.linkbuilder`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 171 | `AbstractLinkBuilder` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/linkbuilder/AbstractLinkBuilder.java` |`thymeleaf/src/linkbuilder/abstract_link_builder.rs`| `AbstractLinkBuilder` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 172 | `ILinkBuilder` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/linkbuilder/ILinkBuilder.java` |`thymeleaf/src/linkbuilder/i_link_builder.rs`| `ILinkBuilder` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 173 | `StandardLinkBuilder` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/linkbuilder/StandardLinkBuilder.java` |`thymeleaf/src/linkbuilder/standard_link_builder.rs`| `StandardLinkBuilder` | `LinkType` | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.10 `org.thymeleaf.messageresolver`（4）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 174 | `AbstractMessageResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/messageresolver/AbstractMessageResolver.java` |`thymeleaf/src/messageresolver/abstract_message_resolver.rs`| `AbstractMessageResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 175 | `IMessageResolver` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/messageresolver/IMessageResolver.java` |`thymeleaf/src/messageresolver/i_message_resolver.rs`| `IMessageResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 176 | `StandardMessageResolutionUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/messageresolver/StandardMessageResolutionUtils.java` |`thymeleaf/src/messageresolver/standard_message_resolution_utils.rs`| `StandardMessageResolutionUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 177 | `StandardMessageResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/messageresolver/StandardMessageResolver.java` |`thymeleaf/src/messageresolver/standard_message_resolver.rs`| `StandardMessageResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+> 2026-07-31 复核：四对象共 28 个 Java 方法/构造器均已登记。固定 Java
+> `MessageResolverGolden` 的 109 条记录覆盖 nullable SPI、默认/absent、
+> TemplateEngine 调用链、UTF-16、Properties、Locale 资源序列、精确数值及
+> number/choice/date/time 功能族；Rust 组合钩子、模板缓存策略、origin 父类覆盖、
+> 冲突和循环保护另有真实主链义务测试。Rust 以显式 `TypeId` 消息及父类型登记替代
+> JVM `ClassLoader` 自动发现，这是运行时机制映射，不改变消息查找、覆盖和缓存语义。
+> 验收按功能族和可观察边界结算，不要求穷举 JDK provider 的无限输入空间。
+
+### 5.11 `org.thymeleaf.model`（20）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 178 | `AbstractModelVisitor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/model/AbstractModelVisitor.java` |`thymeleaf/src/model/abstract_model_visitor.rs`| `AbstractModelVisitor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 179 | `AttributeValueQuotes` | enum | `lib/thymeleaf/src/main/java/org/thymeleaf/model/AttributeValueQuotes.java` |`thymeleaf/src/model/attribute_value_quotes.rs`| `AttributeValueQuotes` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 180 | `IAttribute` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IAttribute.java` |`thymeleaf/src/model/i_attribute.rs`| `IAttribute` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 181 | `ICDATASection` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/ICDATASection.java` |`thymeleaf/src/model/icdata_section.rs`| `ICDATASection` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 182 | `ICloseElementTag` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/ICloseElementTag.java` |`thymeleaf/src/model/i_close_element_tag.rs`| `ICloseElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 183 | `IComment` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IComment.java` |`thymeleaf/src/model/i_comment.rs`| `IComment` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 184 | `IDocType` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IDocType.java` |`thymeleaf/src/model/i_doc_type.rs`| `IDocType` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 185 | `IElementTag` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IElementTag.java` |`thymeleaf/src/model/i_element_tag.rs`| `IElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 186 | `IModel` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IModel.java` |`thymeleaf/src/model/i_model.rs`| `IModel` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 187 | `IModelFactory` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IModelFactory.java` |`thymeleaf/src/model/i_model_factory.rs`| `IModelFactory` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 188 | `IModelVisitor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IModelVisitor.java` |`thymeleaf/src/model/i_model_visitor.rs`| `IModelVisitor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 189 | `IOpenElementTag` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IOpenElementTag.java` |`thymeleaf/src/model/i_open_element_tag.rs`| `IOpenElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 190 | `IProcessableElementTag` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IProcessableElementTag.java` |`thymeleaf/src/model/i_processable_element_tag.rs`| `IProcessableElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 191 | `IProcessingInstruction` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IProcessingInstruction.java` |`thymeleaf/src/model/i_processing_instruction.rs`| `IProcessingInstruction` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 192 | `IStandaloneElementTag` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IStandaloneElementTag.java` |`thymeleaf/src/model/i_standalone_element_tag.rs`| `IStandaloneElementTag` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 193 | `ITemplateEnd` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/ITemplateEnd.java` |`thymeleaf/src/model/i_template_end.rs`| `ITemplateEnd` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 194 | `ITemplateEvent` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/ITemplateEvent.java` |`thymeleaf/src/model/i_template_event.rs`| `ITemplateEvent` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 195 | `ITemplateStart` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/ITemplateStart.java` |`thymeleaf/src/model/i_template_start.rs`| `ITemplateStart` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 196 | `IText` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IText.java` |`thymeleaf/src/model/i_text.rs`| `IText` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 197 | `IXMLDeclaration` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/model/IXMLDeclaration.java` |`thymeleaf/src/model/ixml_declaration.rs`| `IXMLDeclaration` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.12 `org.thymeleaf.postprocessor`（2）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 198 | `IPostProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/postprocessor/IPostProcessor.java` |`thymeleaf/src/postprocessor/i_post_processor.rs`| `IPostProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 199 | `PostProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/postprocessor/PostProcessor.java` |`thymeleaf/src/postprocessor/post_processor.rs`| `PostProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.13 `org.thymeleaf.preprocessor`（2）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 200 | `IPreProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/preprocessor/IPreProcessor.java` |`thymeleaf/src/preprocessor/i_pre_processor.rs`| `IPreProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 201 | `PreProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/preprocessor/PreProcessor.java` |`thymeleaf/src/preprocessor/pre_processor.rs`| `PreProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.14 `org.thymeleaf.processor`（2）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 202 | `AbstractProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/AbstractProcessor.java` |`thymeleaf/src/processor/abstract_processor.rs`| `AbstractProcessor` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 203 | `IProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/IProcessor.java` |`thymeleaf/src/processor/i_processor.rs`| `IProcessor` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+
+### 5.15 `org.thymeleaf.processor.cdatasection`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 204 | `AbstractCDATASectionProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/cdatasection/AbstractCDATASectionProcessor.java` |`thymeleaf/src/cdatasection/abstract_cdata_section_processor.rs`| `AbstractCDATASectionProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 205 | `ICDATASectionProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/cdatasection/ICDATASectionProcessor.java` |`thymeleaf/src/cdatasection/icdata_section_processor.rs`| `ICDATASectionProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 206 | `ICDATASectionStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/cdatasection/ICDATASectionStructureHandler.java` |`thymeleaf/src/cdatasection/icdata_section_structure_handler.rs`| `ICDATASectionStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.16 `org.thymeleaf.processor.comment`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 207 | `AbstractCommentProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/comment/AbstractCommentProcessor.java` |`thymeleaf/src/comment/abstract_comment_processor.rs`| `AbstractCommentProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 208 | `ICommentProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/comment/ICommentProcessor.java` |`thymeleaf/src/comment/i_comment_processor.rs`| `ICommentProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 209 | `ICommentStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/comment/ICommentStructureHandler.java` |`thymeleaf/src/comment/i_comment_structure_handler.rs`| `ICommentStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.17 `org.thymeleaf.processor.doctype`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 210 | `AbstractDocTypeProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/doctype/AbstractDocTypeProcessor.java` |`thymeleaf/src/doctype/abstract_doc_type_processor.rs`| `AbstractDocTypeProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 211 | `IDocTypeProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/doctype/IDocTypeProcessor.java` |`thymeleaf/src/doctype/i_doc_type_processor.rs`| `IDocTypeProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 212 | `IDocTypeStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/doctype/IDocTypeStructureHandler.java` |`thymeleaf/src/doctype/i_doc_type_structure_handler.rs`| `IDocTypeStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.18 `org.thymeleaf.processor.element`（11）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 213 | `AbstractAttributeModelProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/AbstractAttributeModelProcessor.java` |`thymeleaf/src/element/abstract_attribute_model_processor.rs`| `AbstractAttributeModelProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 214 | `AbstractAttributeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/AbstractAttributeTagProcessor.java` |`thymeleaf/src/element/abstract_attribute_tag_processor.rs`| `AbstractAttributeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 215 | `AbstractElementModelProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/AbstractElementModelProcessor.java` |`thymeleaf/src/element/abstract_element_model_processor.rs`| `AbstractElementModelProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 216 | `AbstractElementTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/AbstractElementTagProcessor.java` |`thymeleaf/src/element/abstract_element_tag_processor.rs`| `AbstractElementTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 217 | `IElementModelProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/IElementModelProcessor.java` |`thymeleaf/src/element/i_element_model_processor.rs`| `IElementModelProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 218 | `IElementModelStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/IElementModelStructureHandler.java` |`thymeleaf/src/element/i_element_model_structure_handler.rs`| `IElementModelStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 219 | `IElementProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/IElementProcessor.java` |`thymeleaf/src/element/i_element_processor.rs`| `IElementProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 220 | `IElementTagProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/IElementTagProcessor.java` |`thymeleaf/src/element/i_element_tag_processor.rs`| `IElementTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 221 | `IElementTagStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/IElementTagStructureHandler.java` |`thymeleaf/src/element/i_element_tag_structure_handler.rs`| `IElementTagStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 222 | `MatchingAttributeName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/MatchingAttributeName.java` |`thymeleaf/src/element/matching_attribute_name.rs`| `MatchingAttributeName` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 223 | `MatchingElementName` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/element/MatchingElementName.java` |`thymeleaf/src/element/matching_element_name.rs`| `MatchingElementName` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.19 `org.thymeleaf.processor.processinginstruction`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 224 | `AbstractProcessingInstructionProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/processinginstruction/AbstractProcessingInstructionProcessor.java` |`thymeleaf/src/processinginstruction/abstract_processing_instruction_processor.rs`| `AbstractProcessingInstructionProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 225 | `IProcessingInstructionProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/processinginstruction/IProcessingInstructionProcessor.java` |`thymeleaf/src/processinginstruction/i_processing_instruction_processor.rs`| `IProcessingInstructionProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 226 | `IProcessingInstructionStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/processinginstruction/IProcessingInstructionStructureHandler.java` |`thymeleaf/src/processinginstruction/i_processing_instruction_structure_handler.rs`| `IProcessingInstructionStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.20 `org.thymeleaf.processor.templateboundaries`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 227 | `AbstractTemplateBoundariesProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/templateboundaries/AbstractTemplateBoundariesProcessor.java` |`thymeleaf/src/templateboundaries/abstract_template_boundaries_processor.rs`| `AbstractTemplateBoundariesProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 228 | `ITemplateBoundariesProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/templateboundaries/ITemplateBoundariesProcessor.java` |`thymeleaf/src/templateboundaries/i_template_boundaries_processor.rs`| `ITemplateBoundariesProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 229 | `ITemplateBoundariesStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/templateboundaries/ITemplateBoundariesStructureHandler.java` |`thymeleaf/src/templateboundaries/i_template_boundaries_structure_handler.rs`| `ITemplateBoundariesStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.21 `org.thymeleaf.processor.text`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 230 | `AbstractTextProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/text/AbstractTextProcessor.java` |`thymeleaf/src/text/abstract_text_processor.rs`| `AbstractTextProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 231 | `ITextProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/text/ITextProcessor.java` |`thymeleaf/src/text/i_text_processor.rs`| `ITextProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 232 | `ITextStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/text/ITextStructureHandler.java` |`thymeleaf/src/text/i_text_structure_handler.rs`| `ITextStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.22 `org.thymeleaf.processor.xmldeclaration`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 233 | `AbstractXMLDeclarationProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/xmldeclaration/AbstractXMLDeclarationProcessor.java` |`thymeleaf/src/xmldeclaration/abstract_xml_declaration_processor.rs`| `AbstractXMLDeclarationProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 234 | `IXMLDeclarationProcessor` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/xmldeclaration/IXMLDeclarationProcessor.java` |`thymeleaf/src/xmldeclaration/ixml_declaration_processor.rs`| `IXMLDeclarationProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 235 | `IXMLDeclarationStructureHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/processor/xmldeclaration/IXMLDeclarationStructureHandler.java` |`thymeleaf/src/xmldeclaration/ixml_declaration_structure_handler.rs`| `IXMLDeclarationStructureHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.23 `org.thymeleaf.standard`（1）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 236 | `StandardDialect` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/StandardDialect.java` |`thymeleaf/src/standard/standard_dialect.rs`| `StandardDialect` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.24 `org.thymeleaf.standard.expression`（70）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 237 | `AbstractStandardConversionService` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/AbstractStandardConversionService.java` |`thymeleaf/src/expression/abstract_standard_conversion_service.rs`| `AbstractStandardConversionService` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 238 | `AdditionExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/AdditionExpression.java` |`thymeleaf/src/expression/addition_expression.rs`| `AdditionExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 239 | `AdditionSubtractionExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/AdditionSubtractionExpression.java` |`thymeleaf/src/expression/addition_subtraction_expression.rs`| `AdditionSubtractionExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 240 | `AndExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/AndExpression.java` |`thymeleaf/src/expression/and_expression.rs`| `AndExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 241 | `Assignation` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/Assignation.java` |`thymeleaf/src/expression/assignation.rs`| `Assignation` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 242 | `AssignationSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/AssignationSequence.java` |`thymeleaf/src/expression/assignation_sequence.rs`| `AssignationSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 243 | `AssignationUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/AssignationUtils.java` |`thymeleaf/src/expression/assignation_utils.rs`| `AssignationUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 244 | `BinaryOperationExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/BinaryOperationExpression.java` |`thymeleaf/src/expression/binary_operation_expression.rs`| `BinaryOperationExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 245 | `BooleanTokenExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/BooleanTokenExpression.java` |`thymeleaf/src/expression/boolean_token_expression.rs`| `BooleanTokenExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 246 | `ComplexExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ComplexExpression.java` |`thymeleaf/src/expression/complex_expression.rs`| `ComplexExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 247 | `ConditionalExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ConditionalExpression.java` |`thymeleaf/src/expression/conditional_expression.rs`| `ConditionalExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 248 | `DefaultExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/DefaultExpression.java` |`thymeleaf/src/expression/default_expression.rs`| `DefaultExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 249 | `DivisionExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/DivisionExpression.java` |`thymeleaf/src/expression/division_expression.rs`| `DivisionExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 250 | `Each` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/Each.java` |`thymeleaf/src/expression/each.rs`| `Each` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 251 | `EachUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/EachUtils.java` |`thymeleaf/src/expression/each_utils.rs`| `EachUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 252 | `EqualsExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/EqualsExpression.java` |`thymeleaf/src/expression/equals_expression.rs`| `EqualsExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 253 | `EqualsNotEqualsExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/EqualsNotEqualsExpression.java` |`thymeleaf/src/expression/equals_not_equals_expression.rs`| `EqualsNotEqualsExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 254 | `Expression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/Expression.java` |`thymeleaf/src/expression/expression.rs`| `Expression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 255 | `ExpressionCache` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ExpressionCache.java` |`thymeleaf/src/expression/expression_cache.rs`| `ExpressionCache` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 256 | `ExpressionParsingNode` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ExpressionParsingNode.java` |`thymeleaf/src/expression/expression_parsing_node.rs`| `ExpressionParsingNode` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 257 | `ExpressionParsingState` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ExpressionParsingState.java` |`thymeleaf/src/expression/expression_parsing_state.rs`| `ExpressionParsingState` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 258 | `ExpressionParsingUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ExpressionParsingUtil.java` |`thymeleaf/src/expression/expression_parsing_util.rs`| `ExpressionParsingUtil` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 259 | `ExpressionSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ExpressionSequence.java` |`thymeleaf/src/expression/expression_sequence.rs`| `ExpressionSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 260 | `ExpressionSequenceUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/ExpressionSequenceUtils.java` |`thymeleaf/src/expression/expression_sequence_utils.rs`| `ExpressionSequenceUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 261 | `Fragment` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/Fragment.java` |`thymeleaf/src/expression/fragment.rs`| `Fragment` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 262 | `FragmentExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/FragmentExpression.java` |`thymeleaf/src/expression/fragment_expression.rs`| `FragmentExpression` | `ExecutedFragmentExpression` | 1:1 | BEHAVIOR_VERIFIED |
+| 263 | `FragmentSignature` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/FragmentSignature.java` |`thymeleaf/src/expression/fragment_signature.rs`| `FragmentSignature` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 264 | `FragmentSignatureUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/FragmentSignatureUtils.java` |`thymeleaf/src/expression/fragment_signature_utils.rs`| `FragmentSignatureUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 265 | `GenericTokenExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/GenericTokenExpression.java` |`thymeleaf/src/expression/generic_token_expression.rs`| `GenericTokenExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 266 | `GreaterLesserExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/GreaterLesserExpression.java` |`thymeleaf/src/expression/greater_lesser_expression.rs`| `GreaterLesserExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 267 | `GreaterOrEqualToExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/GreaterOrEqualToExpression.java` |`thymeleaf/src/expression/greater_or_equal_to_expression.rs`| `GreaterOrEqualToExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 268 | `GreaterThanExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/GreaterThanExpression.java` |`thymeleaf/src/expression/greater_than_expression.rs`| `GreaterThanExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 269 | `IStandardConversionService` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/IStandardConversionService.java` |`thymeleaf/src/expression/i_standard_conversion_service.rs`| `IStandardConversionService` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 270 | `IStandardExpression` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/IStandardExpression.java` |`thymeleaf/src/expression/i_standard_expression.rs`| `IStandardExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 271 | `IStandardExpressionParser` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/IStandardExpressionParser.java` |`thymeleaf/src/expression/i_standard_expression_parser.rs`| `IStandardExpressionParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 272 | `IStandardVariableExpression` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/IStandardVariableExpression.java` |`thymeleaf/src/expression/i_standard_variable_expression.rs`| `IStandardVariableExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 273 | `IStandardVariableExpressionEvaluator` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/IStandardVariableExpressionEvaluator.java` |`thymeleaf/src/expression/i_standard_variable_expression_evaluator.rs`| `IStandardVariableExpressionEvaluator` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 274 | `LessOrEqualToExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/LessOrEqualToExpression.java` |`thymeleaf/src/expression/less_or_equal_to_expression.rs`| `LessOrEqualToExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 275 | `LessThanExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/LessThanExpression.java` |`thymeleaf/src/expression/less_than_expression.rs`| `LessThanExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 276 | `LinkExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/LinkExpression.java` |`thymeleaf/src/expression/link_expression.rs`| `LinkExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 277 | `LiteralSubstitutionUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/LiteralSubstitutionUtil.java` |`thymeleaf/src/expression/literal_substitution_util.rs`| `LiteralSubstitutionUtil` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 278 | `LiteralValue` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/LiteralValue.java` |`thymeleaf/src/expression/literal_value.rs`| `LiteralValue` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 279 | `MessageExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/MessageExpression.java` |`thymeleaf/src/expression/message_expression.rs`| `MessageExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 280 | `MinusExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/MinusExpression.java` |`thymeleaf/src/expression/minus_expression.rs`| `MinusExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 281 | `MultiplicationDivisionRemainderExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/MultiplicationDivisionRemainderExpression.java` |`thymeleaf/src/expression/multiplication_division_remainder_expression.rs`| `MultiplicationDivisionRemainderExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 282 | `MultiplicationExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/MultiplicationExpression.java` |`thymeleaf/src/expression/multiplication_expression.rs`| `MultiplicationExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 283 | `NegationExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/NegationExpression.java` |`thymeleaf/src/expression/negation_expression.rs`| `NegationExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 284 | `NoOpToken` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/NoOpToken.java` |`thymeleaf/src/expression/no_op_token.rs`| `NoOpToken` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 285 | `NoOpTokenExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/NoOpTokenExpression.java` |`thymeleaf/src/expression/no_op_token_expression.rs`| `NoOpTokenExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 286 | `NotEqualsExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/NotEqualsExpression.java` |`thymeleaf/src/expression/not_equals_expression.rs`| `NotEqualsExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 287 | `NullTokenExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/NullTokenExpression.java` |`thymeleaf/src/expression/null_token_expression.rs`| `NullTokenExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 288 | `NumberTokenExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/NumberTokenExpression.java` |`thymeleaf/src/expression/number_token_expression.rs`| `NumberTokenExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 289 | `OGNLContextPropertyAccessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/OGNLContextPropertyAccessor.java` |`thymeleaf/src/expression/native_context_property_accessor.rs`| `NativeContextPropertyAccessor` | — | 🔶 原生值访问器 | BEHAVIOR_VERIFIED |
+| 290 | `OGNLExpressionObjectsWrapper` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/OGNLExpressionObjectsWrapper.java` |`thymeleaf/src/expression/native_expression_objects_wrapper.rs`| `NativeExpressionObjectsWrapper` | — | 🔶 原生表达式对象 | BEHAVIOR_VERIFIED |
+| 291 | `OGNLShortcutExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/OGNLShortcutExpression.java` |`thymeleaf/src/expression/native_shortcut_expression.rs`| `NativeShortcutExpression` | `OGNLShortcutExpressionNotApplicableException` | 🔶 原生快捷求值 | BEHAVIOR_VERIFIED |
+| 292 | `OGNLVariableExpressionEvaluator` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/OGNLVariableExpressionEvaluator.java` |`thymeleaf/src/expression/native_variable_expression_evaluator.rs`| `NativeVariableExpressionEvaluator` | `ComputedOGNLExpression`<br>`ThymeleafACLClassResolver`<br>`ThymeleafDefaultClassResolver`<br>`ThymeleafACLMemberAccess` | 🔶 原生求值器 | BEHAVIOR_VERIFIED |
+| 293 | `OrExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/OrExpression.java` |`thymeleaf/src/expression/or_expression.rs`| `OrExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 294 | `RemainderExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/RemainderExpression.java` |`thymeleaf/src/expression/remainder_expression.rs`| `RemainderExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 295 | `SelectionVariableExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/SelectionVariableExpression.java` |`thymeleaf/src/expression/selection_variable_expression.rs`| `SelectionVariableExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 296 | `SimpleExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/SimpleExpression.java` |`thymeleaf/src/expression/simple_expression.rs`| `SimpleExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 297 | `StandardConversionService` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/StandardConversionService.java` |`thymeleaf/src/expression/standard_conversion_service.rs`| `StandardConversionService` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 298 | `StandardExpressionExecutionContext` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/StandardExpressionExecutionContext.java` |`thymeleaf/src/expression/standard_expression_execution_context.rs`| `StandardExpressionExecutionContext` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 299 | `StandardExpressionObjectFactory` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/StandardExpressionObjectFactory.java` |`thymeleaf/src/expression/standard_expression_object_factory.rs`| `StandardExpressionObjectFactory` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 300 | `StandardExpressionParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/StandardExpressionParser.java` |`thymeleaf/src/expression/standard_expression_parser.rs`| `StandardExpressionParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 301 | `StandardExpressionPreprocessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/StandardExpressionPreprocessor.java` |`thymeleaf/src/expression/standard_expression_preprocessor.rs`| `StandardExpressionPreprocessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 302 | `StandardExpressions` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/StandardExpressions.java` |`thymeleaf/src/expression/standard_expressions.rs`| `StandardExpressions` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 303 | `SubtractionExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/SubtractionExpression.java` |`thymeleaf/src/expression/subtraction_expression.rs`| `SubtractionExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 304 | `TextLiteralExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/TextLiteralExpression.java` |`thymeleaf/src/expression/text_literal_expression.rs`| `TextLiteralExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 305 | `Token` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/Token.java` |`thymeleaf/src/expression/token.rs`| `Token` | `TokenParsingTracer` | 1:1 | `BEHAVIOR_VERIFIED` |
+| 306 | `VariableExpression` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/expression/VariableExpression.java` |`thymeleaf/src/expression/variable_expression.rs`| `VariableExpression` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.25 `org.thymeleaf.standard.inline`（9）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 307 | `AbstractStandardInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/AbstractStandardInliner.java` |`thymeleaf/src/inline/abstract_standard_inliner.rs`| `AbstractStandardInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 308 | `IInlinePreProcessorHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/IInlinePreProcessorHandler.java` |`thymeleaf/src/inline/i_inline_pre_processor_handler.rs`| `IInlinePreProcessorHandler` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 309 | `OutputExpressionInlinePreProcessorHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/OutputExpressionInlinePreProcessorHandler.java` |`thymeleaf/src/inline/output_expression_inline_pre_processor_handler.rs`| `OutputExpressionInlinePreProcessorHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 310 | `StandardCSSInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/StandardCSSInliner.java` |`thymeleaf/src/inline/standard_css_inliner.rs`| `StandardCSSInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 311 | `StandardHTMLInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/StandardHTMLInliner.java` |`thymeleaf/src/inline/standard_html_inliner.rs`| `StandardHTMLInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 312 | `StandardInlineMode` | enum | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/StandardInlineMode.java` |`thymeleaf/src/inline/standard_inline_mode.rs`| `StandardInlineMode` | — | 1:1 | `BEHAVIOR_VERIFIED` |
+| 313 | `StandardJavaScriptInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/StandardJavaScriptInliner.java` |`thymeleaf/src/inline/standard_java_script_inliner.rs`| `StandardJavaScriptInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 314 | `StandardTextInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/StandardTextInliner.java` |`thymeleaf/src/inline/standard_text_inliner.rs`| `StandardTextInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 315 | `StandardXMLInliner` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/inline/StandardXMLInliner.java` |`thymeleaf/src/inline/standard_xml_inliner.rs`| `StandardXMLInliner` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.26 `org.thymeleaf.standard.processor`（56）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 316 | `AbstractStandardAssertionTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardAssertionTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_assertion_tag_processor.rs`| `AbstractStandardAssertionTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 317 | `AbstractStandardAttributeModifierTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardAttributeModifierTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_attribute_modifier_tag_processor.rs`| `AbstractStandardAttributeModifierTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 318 | `AbstractStandardConditionalVisibilityTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardConditionalVisibilityTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_conditional_visibility_tag_processor.rs`| `AbstractStandardConditionalVisibilityTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 319 | `AbstractStandardDoubleAttributeModifierTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardDoubleAttributeModifierTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_double_attribute_modifier_tag_processor.rs`| `AbstractStandardDoubleAttributeModifierTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 320 | `AbstractStandardExpressionAttributeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardExpressionAttributeTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_expression_attribute_tag_processor.rs`| `AbstractStandardExpressionAttributeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 321 | `AbstractStandardFragmentInsertionTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardFragmentInsertionTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_fragment_insertion_tag_processor.rs`| `AbstractStandardFragmentInsertionTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 322 | `AbstractStandardMultipleAttributeModifierTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardMultipleAttributeModifierTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_multiple_attribute_modifier_tag_processor.rs`| `AbstractStandardMultipleAttributeModifierTagProcessor` | `ModificationType` | 1:1 | BEHAVIOR_VERIFIED |
+| 323 | `AbstractStandardTargetSelectionTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardTargetSelectionTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_target_selection_tag_processor.rs`| `AbstractStandardTargetSelectionTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 324 | `AbstractStandardTextInlineSettingTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/AbstractStandardTextInlineSettingTagProcessor.java` |`thymeleaf/src/processor/abstract_standard_text_inline_setting_tag_processor.rs`| `AbstractStandardTextInlineSettingTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 325 | `StandardActionTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardActionTagProcessor.java` |`thymeleaf/src/processor/standard_action_tag_processor.rs`| `StandardActionTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 326 | `StandardAltTitleTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardAltTitleTagProcessor.java` |`thymeleaf/src/processor/standard_alt_title_tag_processor.rs`| `StandardAltTitleTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 327 | `StandardAssertTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardAssertTagProcessor.java` |`thymeleaf/src/processor/standard_assert_tag_processor.rs`| `StandardAssertTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 328 | `StandardAttrTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardAttrTagProcessor.java` |`thymeleaf/src/processor/standard_attr_tag_processor.rs`| `StandardAttrTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 329 | `StandardAttrappendTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardAttrappendTagProcessor.java` |`thymeleaf/src/processor/standard_attrappend_tag_processor.rs`| `StandardAttrappendTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 330 | `StandardAttrprependTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardAttrprependTagProcessor.java` |`thymeleaf/src/processor/standard_attrprepend_tag_processor.rs`| `StandardAttrprependTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 331 | `StandardBlockTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardBlockTagProcessor.java` |`thymeleaf/src/processor/standard_block_tag_processor.rs`| `StandardBlockTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 332 | `StandardCaseTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardCaseTagProcessor.java` |`thymeleaf/src/processor/standard_case_tag_processor.rs`| `StandardCaseTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 333 | `StandardClassappendTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardClassappendTagProcessor.java` |`thymeleaf/src/processor/standard_classappend_tag_processor.rs`| `StandardClassappendTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 334 | `StandardConditionalCommentProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardConditionalCommentProcessor.java` |`thymeleaf/src/processor/standard_conditional_comment_processor.rs`| `StandardConditionalCommentProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 335 | `StandardConditionalFixedValueTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardConditionalFixedValueTagProcessor.java` |`thymeleaf/src/processor/standard_conditional_fixed_value_tag_processor.rs`| `StandardConditionalFixedValueTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 336 | `StandardDOMEventAttributeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardDOMEventAttributeTagProcessor.java` |`thymeleaf/src/processor/standard_dom_event_attribute_tag_processor.rs`| `StandardDOMEventAttributeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 337 | `StandardDefaultAttributesTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardDefaultAttributesTagProcessor.java` |`thymeleaf/src/processor/standard_default_attributes_tag_processor.rs`| `StandardDefaultAttributesTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 338 | `StandardEachTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardEachTagProcessor.java` |`thymeleaf/src/processor/standard_each_tag_processor.rs`| `StandardEachTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 339 | `StandardFragmentTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardFragmentTagProcessor.java` |`thymeleaf/src/processor/standard_fragment_tag_processor.rs`| `StandardFragmentTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 340 | `StandardHrefTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardHrefTagProcessor.java` |`thymeleaf/src/processor/standard_href_tag_processor.rs`| `StandardHrefTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 341 | `StandardIfTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardIfTagProcessor.java` |`thymeleaf/src/processor/standard_if_tag_processor.rs`| `StandardIfTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 342 | `StandardIncludeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardIncludeTagProcessor.java` |`thymeleaf/src/processor/standard_include_tag_processor.rs`| `StandardIncludeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 343 | `StandardInlineEnablementTemplateBoundariesProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInlineEnablementTemplateBoundariesProcessor.java` |`thymeleaf/src/processor/standard_inline_enablement_template_boundaries_processor.rs`| `StandardInlineEnablementTemplateBoundariesProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 344 | `StandardInlineHTMLTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInlineHTMLTagProcessor.java` |`thymeleaf/src/processor/standard_inline_html_tag_processor.rs`| `StandardInlineHTMLTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 345 | `StandardInlineTextualTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInlineTextualTagProcessor.java` |`thymeleaf/src/processor/standard_inline_textual_tag_processor.rs`| `StandardInlineTextualTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 346 | `StandardInlineXMLTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInlineXMLTagProcessor.java` |`thymeleaf/src/processor/standard_inline_xml_tag_processor.rs`| `StandardInlineXMLTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 347 | `StandardInliningCDATASectionProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInliningCDATASectionProcessor.java` |`thymeleaf/src/processor/standard_inlining_cdata_section_processor.rs`| `StandardInliningCDATASectionProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 348 | `StandardInliningCommentProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInliningCommentProcessor.java` |`thymeleaf/src/processor/standard_inlining_comment_processor.rs`| `StandardInliningCommentProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 349 | `StandardInliningTextProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInliningTextProcessor.java` |`thymeleaf/src/processor/standard_inlining_text_processor.rs`| `StandardInliningTextProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 350 | `StandardInsertTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardInsertTagProcessor.java` |`thymeleaf/src/processor/standard_insert_tag_processor.rs`| `StandardInsertTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 351 | `StandardLangXmlLangTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardLangXmlLangTagProcessor.java` |`thymeleaf/src/processor/standard_lang_xml_lang_tag_processor.rs`| `StandardLangXmlLangTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 352 | `StandardMethodTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardMethodTagProcessor.java` |`thymeleaf/src/processor/standard_method_tag_processor.rs`| `StandardMethodTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 353 | `StandardNonRemovableAttributeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardNonRemovableAttributeTagProcessor.java` |`thymeleaf/src/processor/standard_non_removable_attribute_tag_processor.rs`| `StandardNonRemovableAttributeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 354 | `StandardObjectTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardObjectTagProcessor.java` |`thymeleaf/src/processor/standard_object_tag_processor.rs`| `StandardObjectTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 355 | `StandardRefAttributeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardRefAttributeTagProcessor.java` |`thymeleaf/src/processor/standard_ref_attribute_tag_processor.rs`| `StandardRefAttributeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 356 | `StandardRemovableAttributeTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardRemovableAttributeTagProcessor.java` |`thymeleaf/src/processor/standard_removable_attribute_tag_processor.rs`| `StandardRemovableAttributeTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 357 | `StandardRemoveTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardRemoveTagProcessor.java` |`thymeleaf/src/processor/standard_remove_tag_processor.rs`| `StandardRemoveTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 358 | `StandardReplaceTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardReplaceTagProcessor.java` |`thymeleaf/src/processor/standard_replace_tag_processor.rs`| `StandardReplaceTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 359 | `StandardSrcTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardSrcTagProcessor.java` |`thymeleaf/src/processor/standard_src_tag_processor.rs`| `StandardSrcTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 360 | `StandardStyleappendTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardStyleappendTagProcessor.java` |`thymeleaf/src/processor/standard_styleappend_tag_processor.rs`| `StandardStyleappendTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 361 | `StandardSwitchTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardSwitchTagProcessor.java` |`thymeleaf/src/processor/standard_switch_tag_processor.rs`| `StandardSwitchTagProcessor` | `SwitchStructure` | 1:1 | BEHAVIOR_VERIFIED |
+| 362 | `StandardTextTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardTextTagProcessor.java` |`thymeleaf/src/processor/standard_text_tag_processor.rs`| `StandardTextTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 363 | `StandardTranslationDocTypeProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardTranslationDocTypeProcessor.java` |`thymeleaf/src/processor/standard_translation_doc_type_processor.rs`| `StandardTranslationDocTypeProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 364 | `StandardUnlessTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardUnlessTagProcessor.java` |`thymeleaf/src/processor/standard_unless_tag_processor.rs`| `StandardUnlessTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 365 | `StandardUtextTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardUtextTagProcessor.java` |`thymeleaf/src/processor/standard_utext_tag_processor.rs`| `StandardUtextTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 366 | `StandardValueTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardValueTagProcessor.java` |`thymeleaf/src/processor/standard_value_tag_processor.rs`| `StandardValueTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 367 | `StandardWithTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardWithTagProcessor.java` |`thymeleaf/src/processor/standard_with_tag_processor.rs`| `StandardWithTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 368 | `StandardXmlBaseTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardXmlBaseTagProcessor.java` |`thymeleaf/src/processor/standard_xml_base_tag_processor.rs`| `StandardXmlBaseTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 369 | `StandardXmlLangTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardXmlLangTagProcessor.java` |`thymeleaf/src/processor/standard_xml_lang_tag_processor.rs`| `StandardXmlLangTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 370 | `StandardXmlNsTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardXmlNsTagProcessor.java` |`thymeleaf/src/processor/standard_xml_ns_tag_processor.rs`| `StandardXmlNsTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 371 | `StandardXmlSpaceTagProcessor` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/processor/StandardXmlSpaceTagProcessor.java` |`thymeleaf/src/processor/standard_xml_space_tag_processor.rs`| `StandardXmlSpaceTagProcessor` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.27 `org.thymeleaf.standard.serializer`（5）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 372 | `IStandardCSSSerializer` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/serializer/IStandardCSSSerializer.java` |`thymeleaf/src/serializer/i_standard_css_serializer.rs`| `IStandardCSSSerializer` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 373 | `IStandardJavaScriptSerializer` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/serializer/IStandardJavaScriptSerializer.java` |`thymeleaf/src/serializer/i_standard_java_script_serializer.rs`| `IStandardJavaScriptSerializer` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 374 | `StandardCSSSerializer` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/serializer/StandardCSSSerializer.java` |`thymeleaf/src/serializer/standard_css_serializer.rs`| `StandardCSSSerializer` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 375 | `StandardJavaScriptSerializer` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/serializer/StandardJavaScriptSerializer.java` |`thymeleaf/src/serializer/standard_java_script_serializer.rs`| `StandardJavaScriptSerializer` | `JacksonStandardJavaScriptSerializer`<br>`Jackson3StandardJavaScriptSerializer`<br>`JacksonThymeleafISO8601DateFormat`<br>`JacksonThymeleafCharacterEscapes`<br>`DefaultStandardJavaScriptSerializer` | 1:1 | BEHAVIOR_VERIFIED |
+| 376 | `StandardSerializers` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/serializer/StandardSerializers.java` |`thymeleaf/src/serializer/standard_serializers.rs`| `StandardSerializers` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.28 `org.thymeleaf.standard.util`（3）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 377 | `StandardConditionalCommentUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/util/StandardConditionalCommentUtils.java` |`thymeleaf/src/util/standard_conditional_comment_utils.rs`| `StandardConditionalCommentUtils` | `ConditionalCommentParsingResult` | 1:1 | BEHAVIOR_VERIFIED |
+| 378 | `StandardExpressionUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/util/StandardExpressionUtils.java` |`thymeleaf/src/util/standard_expression_utils.rs`| `StandardExpressionUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 379 | `StandardProcessorUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/standard/util/StandardProcessorUtils.java` |`thymeleaf/src/util/standard_processor_utils.rs`| `StandardProcessorUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.29 `org.thymeleaf.templatemode`（1）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 380 | `TemplateMode` | enum | `lib/thymeleaf/src/main/java/org/thymeleaf/templatemode/TemplateMode.java` |`thymeleaf/src/templatemode/template_mode.rs`| `TemplateMode` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.30 `org.thymeleaf.templateparser`（1）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 381 | `ITemplateParser` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/ITemplateParser.java` |`thymeleaf/src/templateparser/i_template_parser.rs`| `ITemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.31 `org.thymeleaf.templateparser.markup`（5）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 382 | `AbstractMarkupTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/AbstractMarkupTemplateParser.java` |`thymeleaf/src/markup/abstract_markup_template_parser.rs`| `AbstractMarkupTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 383 | `HTMLTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/HTMLTemplateParser.java` |`thymeleaf/src/markup/html_template_parser.rs`| `HTMLTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 384 | `InlinedOutputExpressionMarkupHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/InlinedOutputExpressionMarkupHandler.java` |`thymeleaf/src/markup/inlined_output_expression_markup_handler.rs`| `InlinedOutputExpressionMarkupHandler` | `InlineMarkupAdapterPreProcessorHandler` | 1:1 | BEHAVIOR_VERIFIED |
+| 385 | `TemplateFragmentMarkupReferenceResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/TemplateFragmentMarkupReferenceResolver.java` |`thymeleaf/src/markup/template_fragment_markup_reference_resolver.rs`| `TemplateFragmentMarkupReferenceResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 386 | `XMLTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/XMLTemplateParser.java` |`thymeleaf/src/markup/xml_template_parser.rs`| `XMLTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.32 `org.thymeleaf.templateparser.markup.decoupled`（7）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 387 | `DecoupledInjectedAttribute` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/DecoupledInjectedAttribute.java` |`thymeleaf/src/decoupled/decoupled_injected_attribute.rs`| `DecoupledInjectedAttribute` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 388 | `DecoupledTemplateLogic` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/DecoupledTemplateLogic.java` |`thymeleaf/src/decoupled/decoupled_template_logic.rs`| `DecoupledTemplateLogic` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 389 | `DecoupledTemplateLogicBuilderMarkupHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/DecoupledTemplateLogicBuilderMarkupHandler.java` |`thymeleaf/src/decoupled/decoupled_template_logic_builder_markup_handler.rs`| `DecoupledTemplateLogicBuilderMarkupHandler` | `Selector` | 1:1 | BEHAVIOR_VERIFIED |
+| 390 | `DecoupledTemplateLogicMarkupHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/DecoupledTemplateLogicMarkupHandler.java` |`thymeleaf/src/decoupled/decoupled_template_logic_markup_handler.rs`| `DecoupledTemplateLogicMarkupHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 391 | `DecoupledTemplateLogicUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/DecoupledTemplateLogicUtils.java` |`thymeleaf/src/decoupled/decoupled_template_logic_utils.rs`| `DecoupledTemplateLogicUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 392 | `IDecoupledTemplateLogicResolver` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/IDecoupledTemplateLogicResolver.java` |`thymeleaf/src/decoupled/i_decoupled_template_logic_resolver.rs`| `IDecoupledTemplateLogicResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 393 | `StandardDecoupledTemplateLogicResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/markup/decoupled/StandardDecoupledTemplateLogicResolver.java` |`thymeleaf/src/decoupled/standard_decoupled_template_logic_resolver.rs`| `StandardDecoupledTemplateLogicResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.33 `org.thymeleaf.templateparser.raw`（4）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 394 | `IRawHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/raw/IRawHandler.java` |`thymeleaf/src/raw/i_raw_handler.rs`| `IRawHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 395 | `RawParseException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/raw/RawParseException.java` |`thymeleaf/src/raw/raw_parse_exception.rs`| `RawParseException` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 396 | `RawParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/raw/RawParser.java` |`thymeleaf/src/raw/raw_parser.rs`| `RawParser` | `BufferPool` | 1:1 | BEHAVIOR_VERIFIED |
+| 397 | `RawTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/raw/RawTemplateParser.java` |`thymeleaf/src/raw/raw_template_parser.rs`| `RawTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.34 `org.thymeleaf.templateparser.reader`（5）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 398 | `BlockAwareReader` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/reader/BlockAwareReader.java` |`thymeleaf/src/reader/block_aware_reader.rs`| `BlockAwareReader` | `BlockAction` | 1:1 | BEHAVIOR_VERIFIED |
+| 399 | `ParserLevelCommentMarkupReader` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/reader/ParserLevelCommentMarkupReader.java` |`thymeleaf/src/reader/parser_level_comment_markup_reader.rs`| `ParserLevelCommentMarkupReader` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 400 | `ParserLevelCommentTextReader` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/reader/ParserLevelCommentTextReader.java` |`thymeleaf/src/reader/parser_level_comment_text_reader.rs`| `ParserLevelCommentTextReader` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 401 | `PrototypeOnlyCommentMarkupReader` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/reader/PrototypeOnlyCommentMarkupReader.java` |`thymeleaf/src/reader/prototype_only_comment_markup_reader.rs`| `PrototypeOnlyCommentMarkupReader` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 402 | `PrototypeOnlyCommentTextReader` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/reader/PrototypeOnlyCommentTextReader.java` |`thymeleaf/src/reader/prototype_only_comment_text_reader.rs`| `PrototypeOnlyCommentTextReader` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.35 `org.thymeleaf.templateparser.text`（19）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 403 | `AbstractChainedTextHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/AbstractChainedTextHandler.java` |`thymeleaf/src/text/abstract_chained_text_handler.rs`| `AbstractChainedTextHandler` | `ChainedTextHandlerRuntimeError`（Rust/JVM 增强 NPE 适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 404 | `AbstractTextHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/AbstractTextHandler.java` |`thymeleaf/src/text/abstract_text_handler.rs`| `AbstractTextHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 405 | `AbstractTextTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/AbstractTextTemplateParser.java` |`thymeleaf/src/text/abstract_text_template_parser.rs`| `AbstractTextTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 406 | `CSSTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/CSSTemplateParser.java` |`thymeleaf/src/text/css_template_parser.rs`| `CSSTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 407 | `CommentProcessorTextHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/CommentProcessorTextHandler.java` |`thymeleaf/src/text/comment_processor_text_handler.rs`| `CommentProcessorTextHandler` | `CommentProcessorTextHandlerRuntimeError`（Rust/JVM 未检查异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 408 | `EventProcessorTextHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/EventProcessorTextHandler.java` |`thymeleaf/src/text/event_processor_text_handler.rs`| `EventProcessorTextHandler` | `StructureNamesRepository`；`EventProcessorTextHandlerRuntimeError`（Rust/JVM 未检查异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 409 | `ITextHandler` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/ITextHandler.java` |`thymeleaf/src/text/i_text_handler.rs`| `ITextHandler` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 410 | `InlinedOutputExpressionTextHandler` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/InlinedOutputExpressionTextHandler.java` |`thymeleaf/src/text/inlined_output_expression_text_handler.rs`| `InlinedOutputExpressionTextHandler` | `InlineTextAdapterPreProcessorHandler` | 1:1 | BEHAVIOR_VERIFIED |
+| 411 | `JavaScriptTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/JavaScriptTemplateParser.java` |`thymeleaf/src/text/java_script_template_parser.rs`| `JavaScriptTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 412 | `ParsingLocatorUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/ParsingLocatorUtil.java` |`thymeleaf/src/text/parsing_locator_util.rs`| `ParsingLocatorUtil` | `ParsingLocatorError`（Rust Java 异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 413 | `TextParseException` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParseException.java` |`thymeleaf/src/text/text_parse_exception.rs`| `TextParseException` | `TextParseCause`（Rust Java Throwable 适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 414 | `TextParseStatus` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParseStatus.java` |`thymeleaf/src/text/text_parse_status.rs`| `TextParseStatus` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 415 | `TextParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParser.java` |`thymeleaf/src/text/text_parser.rs`| `TextParser` | `BufferPool` | 1:1 | BEHAVIOR_VERIFIED |
+| 416 | `TextParsingAttributeSequenceUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParsingAttributeSequenceUtil.java` |`thymeleaf/src/text/text_parsing_attribute_sequence_util.rs`| `TextParsingAttributeSequenceUtil` | `TextParsingAttributeSequenceError`（Rust/JVM 异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 417 | `TextParsingCommentUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParsingCommentUtil.java` |`thymeleaf/src/text/text_parsing_comment_util.rs`| `TextParsingCommentUtil` | `TextParsingCommentError`（Rust JVM 运行时异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 418 | `TextParsingElementUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParsingElementUtil.java` |`thymeleaf/src/text/text_parsing_element_util.rs`| `TextParsingElementUtil` | `TextParsingElementError`（Rust/JVM 异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 419 | `TextParsingLiteralUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParsingLiteralUtil.java` |`thymeleaf/src/text/text_parsing_literal_util.rs`| `TextParsingLiteralUtil` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 420 | `TextParsingUtil` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParsingUtil.java` |`thymeleaf/src/text/text_parsing_util.rs`| `TextParsingUtil` | `TextParsingUtilError`（Rust/JVM 运行时异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 421 | `TextTemplateParser` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextTemplateParser.java` |`thymeleaf/src/text/text_template_parser.rs`| `TextTemplateParser` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.36 `org.thymeleaf.templateresolver`（10）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 422 | `AbstractConfigurableTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/AbstractConfigurableTemplateResolver.java` |`thymeleaf/src/templateresolver/abstract_configurable_template_resolver.rs`| `AbstractConfigurableTemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 423 | `AbstractTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/AbstractTemplateResolver.java` |`thymeleaf/src/templateresolver/abstract_template_resolver.rs`| `AbstractTemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 424 | `ClassLoaderTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/ClassLoaderTemplateResolver.java` |`thymeleaf/src/templateresolver/class_loader_template_resolver.rs`| `ClassLoaderTemplateResolver` | — | 1:1（Rust 有序资源根） | BEHAVIOR_VERIFIED |
+| 425 | `DefaultTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/DefaultTemplateResolver.java` |`thymeleaf/src/templateresolver/default_template_resolver.rs`| `DefaultTemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 426 | `FileTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/FileTemplateResolver.java` |`thymeleaf/src/templateresolver/file_template_resolver.rs`| `FileTemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 427 | `ITemplateResolver` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/ITemplateResolver.java` |`thymeleaf/src/templateresolver/i_template_resolver.rs`| `ITemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 428 | `StringTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/StringTemplateResolver.java` |`thymeleaf/src/templateresolver/string_template_resolver.rs`| `StringTemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 429 | `TemplateResolution` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/TemplateResolution.java` |`thymeleaf/src/templateresolver/template_resolution.rs`| `TemplateResolution` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 430 | `UrlTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/UrlTemplateResolver.java` |`thymeleaf/src/templateresolver/url_template_resolver.rs`| `UrlTemplateResolver` | — | 1:1（显式协议处理器） | BEHAVIOR_VERIFIED |
+| 431 | `WebApplicationTemplateResolver` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresolver/WebApplicationTemplateResolver.java` |`thymeleaf/src/templateresolver/web_application_template_resolver.rs`| `WebApplicationTemplateResolver` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.37 `org.thymeleaf.templateresource`（7）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 432 | `ClassLoaderTemplateResource` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/ClassLoaderTemplateResource.java` |`thymeleaf/src/templateresource/class_loader_template_resource.rs`| `ClassLoaderTemplateResource` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 433 | `FileTemplateResource` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/FileTemplateResource.java` |`thymeleaf/src/templateresource/file_template_resource.rs`| `FileTemplateResource` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 434 | `ITemplateResource` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/ITemplateResource.java` |`thymeleaf/src/templateresource/i_template_resource.rs`| `ITemplateResource` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 435 | `StringTemplateResource` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/StringTemplateResource.java` |`thymeleaf/src/templateresource/string_template_resource.rs`| `StringTemplateResource` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 436 | `TemplateResourceUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/TemplateResourceUtils.java` |`thymeleaf/src/templateresource/template_resource_utils.rs`| `TemplateResourceUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 437 | `UrlTemplateResource` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/UrlTemplateResource.java` |`thymeleaf/src/templateresource/url_template_resource.rs`| `UrlTemplateResource` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 438 | `WebApplicationTemplateResource` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/templateresource/WebApplicationTemplateResource.java` |`thymeleaf/src/templateresource/web_application_template_resource.rs`| `WebApplicationTemplateResource` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.38 `org.thymeleaf.util`（31）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 439 | `AbstractLazyCharSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/AbstractLazyCharSequence.java` |`thymeleaf/src/util/abstract_lazy_char_sequence.rs`| `AbstractLazyCharSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 440 | `AggregateCharSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/AggregateCharSequence.java` |`thymeleaf/src/util/aggregate_char_sequence.rs`| `AggregateCharSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 441 | `AggregateUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/AggregateUtils.java` |`thymeleaf/src/util/aggregate_utils.rs`| `AggregateUtils` | `BigDecimalValue`、`NumberValue`、`AggregateObjectValue`、`NumberIterableValue`、`NumberListValue`、`AggregateError`（Rust 数值/动态对象适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 442 | `ArrayUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ArrayUtils.java` |`thymeleaf/src/util/array_utils.rs`| `ArrayUtils` | `ArrayTarget`、`ArrayValue`、`ArrayElementValue`、`ArrayTypeValue`、`ArrayUtilsError`（Rust JVM 数组适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 443 | `CharArrayWrapperSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/CharArrayWrapperSequence.java` |`thymeleaf/src/util/char_array_wrapper_sequence.rs`| `CharArrayWrapperSequence` | `SharedCharArray`、`CharArrayWrapperSequenceError`（Rust 共享数组/Java 异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 444 | `ClassLoaderUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ClassLoaderUtils.java` |`thymeleaf/src/util/resource_loader_utils.rs`| `ResourceLoaderUtils` | — | 🔶 Rust 资源装载 | BEHAVIOR_VERIFIED |
+| 445 | `ContentTypeUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ContentTypeUtils.java` |`thymeleaf/src/util/content_type_utils.rs`| `ContentTypeUtils` | `ContentType` | 1:1 | BEHAVIOR_VERIFIED |
+| 446 | `DateUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/DateUtils.java` |`thymeleaf/src/util/date_utils.rs`| `DateUtils` | `DateFormatKey` | 1:1 | BEHAVIOR_VERIFIED |
+| 447 | `EscapedAttributeUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/EscapedAttributeUtils.java` |`thymeleaf/src/util/escaped_attribute_utils.rs`| `EscapedAttributeUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 448 | `EvaluationUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/EvaluationUtils.java` |`thymeleaf/src/util/evaluation_utils.rs`| `EvaluationUtils` | `MapEntry`（对应 `MapEntry`）；`EvaluationValue`、`BigDecimalResult`、`EvaluationElement`、`EvaluationTarget`、`EvaluationList`、`EvaluationArray`、`EvaluationError` 等 Rust JVM 适配 | 1:1 | BEHAVIOR_VERIFIED |
+| 449 | `ExpressionUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ExpressionUtils.java` |`thymeleaf/src/util/expression_utils.rs`| `ExpressionUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 450 | `FastStringWriter` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/FastStringWriter.java` |`thymeleaf/src/util/fast_string_writer.rs`| `FastStringWriter` | `FastStringWriterError`（Rust Java 异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 451 | `IWritableCharSequence` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/util/IWritableCharSequence.java` |`thymeleaf/src/util/i_writable_char_sequence.rs`| `IWritableCharSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 452 | `IdentityCounter` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/IdentityCounter.java` |`thymeleaf/src/util/identity_counter.rs`| `IdentityCounter` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 453 | `LazyEscapingCharSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/LazyEscapingCharSequence.java` |`thymeleaf/src/util/lazy_escaping_char_sequence.rs`| `LazyEscapingCharSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 454 | `LazyProcessingCharSequence` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/LazyProcessingCharSequence.java` |`thymeleaf/src/util/lazy_processing_char_sequence.rs`| `LazyProcessingCharSequence` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 455 | `ListUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ListUtils.java` |`thymeleaf/src/util/list_utils.rs`| `ListUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 456 | `LoggingUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/LoggingUtils.java` |`thymeleaf/src/util/logging_utils.rs`| `LoggingUtils` | `Utf16String`、`Utf16StringResult`（Rust UTF-16/身份适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 457 | `MapUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/MapUtils.java` |`thymeleaf/src/util/map_utils.rs`| `MapUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 458 | `NumberPointType` | enum | `lib/thymeleaf/src/main/java/org/thymeleaf/util/NumberPointType.java` |`thymeleaf/src/util/number_point_type.rs`| `NumberPointType` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 459 | `NumberUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/NumberUtils.java` |`thymeleaf/src/util/number_utils.rs`| `NumberUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 460 | `ObjectUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ObjectUtils.java` |`thymeleaf/src/util/object_utils.rs`| `ObjectUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 461 | `PatternSpec` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/PatternSpec.java` |`thymeleaf/src/util/pattern_spec.rs`| `PatternSpec` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 462 | `PatternUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/PatternUtils.java` |`thymeleaf/src/util/pattern_utils.rs`| `PatternUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 463 | `ProcessorComparators` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ProcessorComparators.java` |`thymeleaf/src/util/processor_comparators.rs`| `ProcessorComparators` | `ProcessorPrecedenceComparator`<br>`PreProcessorPrecedenceComparator`<br>`PostProcessorPrecedenceComparator` | 1:1 | BEHAVIOR_VERIFIED |
+| 464 | `ProcessorConfigurationUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/ProcessorConfigurationUtils.java` |`thymeleaf/src/util/processor_configuration_utils.rs`| `ProcessorConfigurationUtils` | `AbstractProcessorWrapper`<br>`AbstractElementProcessorWrapper`<br>`ElementTagProcessorWrapper`<br>`ElementModelProcessorWrapper`<br>`CDATASectionProcessorWrapper`<br>`CommentProcessorWrapper`<br>`DocTypeProcessorWrapper`<br>`ProcessingInstructionProcessorWrapper`<br>`TemplateBoundariesProcessorWrapper`<br>`TextProcessorWrapper`<br>`XMLDeclarationProcessorWrapper`<br>`PreProcessorWrapper`<br>`PostProcessorWrapper` | 1:1 | BEHAVIOR_VERIFIED |
+| 465 | `SetUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/SetUtils.java` |`thymeleaf/src/util/set_utils.rs`| `SetUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 466 | `StringUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/StringUtils.java` |`thymeleaf/src/util/string_utils.rs`| `StringUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 467 | `TextUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/TextUtils.java` |`thymeleaf/src/util/text_utils.rs`| `TextUtils` | `CharSequenceValue`、`TextUtilsError`（Rust 动态 CharSequence/Java 异常适配） | 1:1 | BEHAVIOR_VERIFIED |
+| 468 | `Validate` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/Validate.java` |`thymeleaf/src/util/validate.rs`| `Validate` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 469 | `VersionUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/VersionUtils.java` |`thymeleaf/src/util/version_utils.rs`| `VersionUtils` | `VersionSpec` | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.39 `org.thymeleaf.util.temporal`（6）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 470 | `TemporalArrayUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/temporal/TemporalArrayUtils.java` |`thymeleaf/src/temporal/temporal_array_utils.rs`| `TemporalArrayUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 471 | `TemporalCreationUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/temporal/TemporalCreationUtils.java` |`thymeleaf/src/temporal/temporal_creation_utils.rs`| `TemporalCreationUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 472 | `TemporalFormattingUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/temporal/TemporalFormattingUtils.java` |`thymeleaf/src/temporal/temporal_formatting_utils.rs`| `TemporalFormattingUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 473 | `TemporalListUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/temporal/TemporalListUtils.java` |`thymeleaf/src/temporal/temporal_list_utils.rs`| `TemporalListUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 474 | `TemporalObjects` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/temporal/TemporalObjects.java` |`thymeleaf/src/temporal/temporal_objects.rs`| `TemporalObjects` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 475 | `TemporalSetUtils` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/util/temporal/TemporalSetUtils.java` |`thymeleaf/src/temporal/temporal_set_utils.rs`| `TemporalSetUtils` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.40 `org.thymeleaf.web`（4）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 476 | `IWebApplication` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/IWebApplication.java` |`thymeleaf/src/web/i_web_application.rs`| `IWebApplication` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 477 | `IWebExchange` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/IWebExchange.java` |`thymeleaf/src/web/i_web_exchange.rs`| `IWebExchange` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 478 | `IWebRequest` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/IWebRequest.java` |`thymeleaf/src/web/i_web_request.rs`| `IWebRequest` | — | 1:1 | BEHAVIOR_VERIFIED |
+| 479 | `IWebSession` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/IWebSession.java` |`thymeleaf/src/web/i_web_session.rs`| `IWebSession` | — | 1:1 | BEHAVIOR_VERIFIED |
+
+### 5.41 `org.thymeleaf.web.servlet`（12）
+
+| # | Java 主对象 | 类型 | 上游文件 | 目标 Rust 文件 | 目标 Rust 对象 | 内部/伴随对象 | 路径 | 状态 |
+|---:|:---|:---|:---|:---|:---|:---|:---:|:---:|
+| 480 | `IServletWebApplication` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/IServletWebApplication.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebApplication` + `HostWebApplication` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 481 | `IServletWebExchange` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/IServletWebExchange.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebExchange` + `HostWebExchange` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 482 | `IServletWebRequest` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/IServletWebRequest.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebRequest` + `HostWebRequest` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 483 | `IServletWebSession` | interface | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/IServletWebSession.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebSession` + `HostWebSession` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 484 | `JakartaServletWebApplication` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JakartaServletWebApplication.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebApplication` + `HostWebApplication` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 485 | `JakartaServletWebExchange` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JakartaServletWebExchange.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebExchange` + `HostWebExchange` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 486 | `JakartaServletWebRequest` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JakartaServletWebRequest.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebRequest` + `HostWebRequest` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 487 | `JakartaServletWebSession` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JakartaServletWebSession.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebSession` + `HostWebSession` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 488 | `JavaxServletWebApplication` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JavaxServletWebApplication.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebApplication` + `HostWebApplication` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 489 | `JavaxServletWebExchange` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JavaxServletWebExchange.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebExchange` + `HostWebExchange` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 490 | `JavaxServletWebRequest` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JavaxServletWebRequest.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebRequest` + `HostWebRequest` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+| 491 | `JavaxServletWebSession` | class | `lib/thymeleaf/src/main/java/org/thymeleaf/web/servlet/JavaxServletWebSession.java` | `thymeleaf-{framework}`（无核心文件） | `thymeleaf::web::IWebSession` + `HostWebSession` | — | 🔶 宿主整合 | JAVA_ONLY_EXEMPT |
+
+### 5.42 OGNL 集合运行时扩展
+
+这些对象承接 Java 集合接口在原生表达式求值器中的运行时形态，不对应新增 Java 主对象，
+不计入 491 个迁移分母。
+
+| Rust 对象 | 文件 | 承接语义 | 状态 |
+|:---|:---|:---|:---:|
+| `IteratorValue` | `src/expression/iterator_value.rs` | `Iterator#hasNext/next` 的有状态遍历 | `RUST_EXTENSION` |
+| `MapEntry`（expression） | `src/expression/map_entry_value.rs` | `Map.Entry#getKey/getValue` 与属性访问 | `RUST_EXTENSION` |
+| `StreamValue` | `src/expression/stream_value.rs` | `Collection#stream`、`Stream#count/iterator` 的单次消费快照 | `RUST_EXTENSION` |
+
+### 5.43 OGNL/JDK 异常身份扩展
+
+这些对象对应 OGNL 与 JDK 的外部异常类型，不是 Thymeleaf 源码中的新增主对象，不计入
+491 个迁移分母。独立类型用于保存可递归验证的 Java class、message 和 source 链。
+
+| Rust 对象 | Java 异常身份 | 文件 | 状态 |
+|:---|:---|:---|:---:|
+| `OgnlError` | `ognl.OgnlException` | `src/expression/ognl_error.rs` | `RUST_EXTENSION` |
+| `ClassNotFoundError` | `java.lang.ClassNotFoundException` | `src/expression/class_not_found_error.rs` | `RUST_EXTENSION` |
+| `NoSuchMethodError` | `java.lang.NoSuchMethodException` | `src/expression/no_such_method_error.rs` | `RUST_EXTENSION` |
+
+### 5.44 专用 Dialect SOURCE_PARITY 测试对象
+
+以下对象来自 Java 测试 fixture，不计入 491 个生产主对象分母。Rust 仍遵守“一对象一
+文件”和简单名称一致规则，测试对象通过生产 SPI 执行真实逻辑，不以 mock 或 runner
+分支替代：
+
+| Java 测试对象 | Rust 文件 / 对象 | 证据 |
+|:---|:---|:---|
+| `Dialect01` | `tests/support/dialect_01.rs` / `Dialect01` | `inlining/nostandard` 48 / 48 |
+| `Dialect01DivProcessor` | `tests/support/dialect_01_div_processor.rs` / `Dialect01DivProcessor` | `inlining/nostandard` 48 / 48 |
+| `Dialect01TextProcessor` | `tests/support/dialect_01_text_processor.rs` / `Dialect01TextProcessor` | `inlining/nostandard` 48 / 48 |
+| `ElementStackDialect` | `tests/support/element_stack_dialect.rs` / `ElementStackDialect` | `elementstack` 13 / 13 |
+| `ElementStackAttrProcessor` | `tests/support/element_stack_attr_processor.rs` / `ElementStackAttrProcessor` | `elementstack` 13 / 13 |
+| `ElementStackTextProcessor` | `tests/support/element_stack_text_processor.rs` / `ElementStackTextProcessor` | `elementstack` 13 / 13 |
+| `ElementStackModelProcessor` | `tests/support/element_stack_model_processor.rs` / `ElementStackModelProcessor` | `elementstack` 13 / 13 |
+
+该批次还覆盖 `AbstractMarkupTemplateParser` 的 HTML 片段平衡路径，但在全工作区覆盖率和
+SOURCE_PARITY 已按 875 / 875 源码入口和 2,156 / 2,156 运行时 case 闭合；对象是否从
+`IMPLEMENTED_UNVERIFIED` 晋级仍取决于其差分证据强度，不能仅凭台账存在批量晋级。
+
+### 5.45 Exception SOURCE_PARITY 测试对象
+
+以下测试宿主对象逐一承接 Java exception fixture 的可观察语义；每个对象均有独立文件，
+通过生产 Context、LinkBuilder 或 Processor SPI 执行，不在 runner 中按模板名伪造结果。
+
+| Java 测试对象/职责 | Rust 文件 / 对象 | 证据 |
+|:---|:---|:---|
+| exception throwing bean | `tests/support/exception_throwing_bean.rs` / `ExceptionThrowingBean` | `%EXCEPTION` cause 链 |
+| lazy context variable | `tests/support/exception_lazy_context_variable.rs` / `ExceptionLazyContextVariable` | lazy evaluation 异常 |
+| test link builder | `tests/support/test_link_builder.rs` / `TestLinkBuilder` | Java harness context + 危险协议拒绝 |
+| precedence dialect | `tests/support/precedence_dialect.rs` / `PrecedenceDialect` | Processor precedence |
+| precedence local-variable processor | `tests/support/precedence_modify_local_variable_model_processor.rs` / `PrecedenceModifyLocalVariableModelProcessor` | local variable model mutation |
+
+这些对象参与 `exception` 500 / 500 和 `validated` 1,757 / 1,757 适配镜像测试，不改变
+491 / 69 的生产对象分母。
+
+### 5.46 剩余语义域 SOURCE_PARITY 测试对象
+
+最后一批继续逐对象迁移 Java fixture。Dialect、Processor 与 Web 对象均落入独立
+snake_case 文件，不使用共享 `compat.rs` 充数：
+
+| 语义域 | Java/Rust 对象 | 证据 |
+|:---|:---|:---|
+| Aggregation | `Dialect02`、`Dialect02DivProcessor`、`Dialect02Div2Processor`、`Dialect02TextProcessor` | 3 / 3 |
+| Markup Model Processor | `MarkupDialect` 和 7 个独立 Model Processor 对象 | 11 / 11 |
+| Context variable lifecycle | `ContextVarTestDialect` 和 5 个独立 Tag/Model Processor 对象 | 38 / 38 |
+| Precedence | `PrecedenceDialect`、`PrecedenceModifyLocalVariableModelProcessor`、`PrecedenceModifyLocalVariableTagProcessor` | 6 / 6 |
+| Web context | `ContextDialect`、`AddContextVariableElementProcessor` 和 4 个独立 `CorpusWeb*` 宿主对象 | 5 / 5 |
+| Remove | `RemoveDialect` 和 6 个独立事件 Processor 对象 | 1 / 1 |
+| ReplaceWithNonProcessable | Dialect 和 6 个独立事件 Processor 对象 | 1 / 1 |
+| ReplaceWithProcessable | Dialect 和 6 个独立事件 Processor 对象 | 1 / 1 |
+| Surround | `SurroundDialect`、`SurroundProcessor` | 1 / 1 |
+
+这些对象属于 SOURCE_PARITY 测试资产，不改变 491 / 69 的生产对象分母。固定语料最终
+处置为 2,595 个行为通过、13 个具名安全/上游禁用处置、0 未解释。
+
+## 6. 对象级完成条件
+
+- 491 个主对象全部变为 `BEHAVIOR_VERIFIED` 或有证据的 `JAVA_ONLY_EXEMPT`，不得存在 `NOT_STARTED`、`SKELETON` 或 `IMPLEMENTED_UNVERIFIED`。
+- 69 个内部/伴随对象均在对应主对象文件中实现，不允许以空类型占位。
+- 540 个可直接迁移类型保持 Java 简单名称一致；20 个 Java 运行时相关类型使用批准的等价映射。
+- 每个公开对象有中文 `///` 文档注释，注明 Java 全限定名与关键语义。
+- 对象级清单、语义清单和测试证据必须引用同一上游基线提交。
+- 任何新增 Rust 公共对象必须登记来源：Java 对偶、Rust 等价适配或 Rust 特有整合。
+
+---
+
+**文档版本**：v1.0.0
+**创建日期**：2026-07-28
+**最后更新**：2026-08-01
+**文档状态**：479 / 491 个主对象达到 `BEHAVIOR_VERIFIED`，0 个核心主对象待验证
+`IMPLEMENTED_UNVERIFIED`，12 个 Servlet 运行时主对象为 `JAVA_ONLY_EXEMPT`；生产
+承接面完整，S11 统一行为验证进行中

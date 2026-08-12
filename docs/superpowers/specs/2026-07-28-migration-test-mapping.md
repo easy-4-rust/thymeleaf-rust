@@ -1,0 +1,1778 @@
+# 迁移测试对照表
+
+- **日期**：2026-07-28
+- **作者**：thymeleaf-rust 团队
+- **状态**：已实施
+- **上游基线**：Thymeleaf 3.1.5.RELEASE（commit `10f9dd2eb8cbd98515ce14b149d115e0287d0add`)
+- **相关计划**：`docs/superpowers/plans/2026-08-02-s11-parity-verification.md`
+
+---
+
+# Thymeleaf → thymeleaf-rust 迁移测试对照表
+
+> **用途**：把“上游测试是否迁移”“Rust 映射是否验证”和“是否增加高价值风险测试”
+> 分开记录，避免用 Rust 测试数量或覆盖率代替 Java 语义对齐。
+>
+> **固定上游**：`10f9dd2eb8cbd98515ce14b149d115e0287d0add`
+>
+> **最后更新**：2026-07-31
+
+## 1. 全局盘点
+
+测试技能的静态审计结果已保存为
+[`baseline/migration_test_static_inventory.json`](baseline/migration_test_static_inventory.json)：
+
+| 指标 | 当前值 | 判定 |
+|:---|---:|:---|
+| Java 测试方法/注解 | 875 | 原始源测试分母 |
+| 参数化/动态展开候选 | 147 | 已通过 Surefire XML 展开并绑定运行时 case |
+| Java 运行时 case | 2,156 | Core 1,154；Spring 5/6 各 499；Spring Security 5/6 各 2 |
+| `.thtest` | 2,609 | 独立模板兼容分母 |
+| SOURCE_PARITY 未处置 | 0 | 875 个入口均有运行时 case、Rust 证据或明确宿主策略处置 |
+| Rust 测试函数 | 685 | `cargo test --workspace --all-features -- --list` 的 683 个单元/集成测试与 2 个 doctest；不能与 Java 数量一一相减 |
+| Rust 人工复核候选 | 47 | 静态审计识别的名称/断言较弱项；不属于 SOURCE_PARITY 缺口 |
+
+根模板执行与节流批次新增固定 Java 导出器
+[`TemplateEngineExecutionGolden.java`](../../thymeleaf-test/tests/java/TemplateEngineExecutionGolden.java)、
+再生脚本
+[`regenerate_template_engine_execution_golden.sh`](../../scripts/regenerate_template_engine_execution_golden.sh)
+和 38 条行为记录
+[`template_engine_execution_golden.txt`](../../thymeleaf/tests/fixtures/template_engine_execution_golden.txt)。
+[`template_engine_execution_java_parity.rs`](../../thymeleaf-test/tests/template_engine_execution_java_parity.rs)
+逐行消费同一记录，覆盖初始化前后的 Resolver/Message/Link 顺序、配置冻结、String/
+selector/TemplateSpec/Writer/throttled 全部入口、Writer flush 与输出异常、字符和 UTF-8
+字节背压、零/有限/不限额处理、完成状态以及字符/字节模式切换失败；独立并发测试
+验证线程亲和处理器与可克隆完成状态句柄在处理/观察两线程间的 Acquire/Release
+可见性。原有
+`empty_template_spec_accepted` 的“成功或失败都可”弱断言也已改为精确空输出断言。
+`ITemplateEngine`、`IThrottledTemplateProcessor` 和 `TemplateEngine` 据此达到
+`BEHAVIOR_VERIFIED`。
+
+引擎配置冻结与诊断批次新增固定 Java 导出器
+[`EngineConfigurationGolden.java`](../../thymeleaf-test/tests/java/org/thymeleaf/EngineConfigurationGolden.java)、
+再生脚本
+[`regenerate_engine_configuration_golden.sh`](../../scripts/regenerate_engine_configuration_golden.sh)
+和 44 条行为记录
+[`engine_configuration_golden.txt`](../../thymeleaf/tests/fixtures/engine_configuration_golden.txt)。
+[`engine_configuration_java_parity.rs`](../../thymeleaf-test/tests/engine_configuration_java_parity.rs)
+逐项验证配置形状、稳定排序、只读快照、具体类型/接口能力 Dialect 查询、定义与
+TemplateManager 身份、六种 reshape 决策、全部 Processor bucket 以及 ModelFactory
+身份；独立 12 线程 Barrier 测试验证并发单次初始化。crate 内两个测试消费完整约
+91 KiB DEBUG 诊断、TRACE/DEBUG 路由、Pre/PostProcessor 类名和
+`ConfigLogBuilder` 行为。构建时间戳、执行属性值及 Java identityHashCode 最终排序
+采用文档化稳定规范化，不删减任何 Processor 明细。
+
+Engine Context 工厂与管理器生命周期批次新增固定 Java 导出器
+[`EngineContextFactoryGolden.java`](../../thymeleaf-test/tests/java/org/thymeleaf/engine/EngineContextFactoryGolden.java)、
+再生脚本
+[`regenerate_engine_context_factory_golden.sh`](../../scripts/regenerate_engine_context_factory_golden.sh)
+和 46 条行为记录
+[`engine_context_factory_golden.txt`](../../thymeleaf/tests/fixtures/engine_context_factory_golden.txt)。
+[`engine_context_factory_java_parity.rs`](../../thymeleaf-test/tests/engine_context_factory_java_parity.rs)
+逐项验证普通/Web Context 分流、空/非空变量快照与读取顺序、exchange/Locale/变量身份、
+`WebContext` 和 `WebExpressionContext` 的 capability 保留，以及无状态工厂在 12 线程
+Barrier 下创建相互独立的新上下文；crate 内生命周期测试验证根层创建、嵌套对象复用、
+level 增减、`TemplateData` 栈恢复与异常后清理。Java `HashSet` 返回的最终变量名集合
+只在比较集合时排序，变量复制读取轨迹和数值不做规范化。该批次发现并修复了
+`WebExpressionContext` 未向工厂暴露完整 `IWebContext` capability、从而错误创建普通
+`EngineContext` 的真实语义缺口。
+
+表达式对象生命周期批次新增固定 Java 导出器
+[`ExpressionObjectsGolden.java`](../../thymeleaf-test/tests/java/org/thymeleaf/standard/expression/ExpressionObjectsGolden.java)、
+再生脚本
+[`regenerate_expression_objects_golden.sh`](../../scripts/regenerate_expression_objects_golden.sh)
+和 114 条行为记录
+[`expression_objects_golden.txt`](../../thymeleaf/tests/fixtures/expression_objects_golden.txt)。
+[`expression_object_lifecycle_java_parity.rs`](../../thymeleaf-test/tests/expression_object_lifecycle_java_parity.rs)
+逐项验证五个对象的 36 个声明，包括共享名称集合身份、惰性构建、cacheable null、
+非缓存重建、标准对象的进程单例/逐次实例、Context/selection/template-only 能力、
+Servlet 对象移除异常及包装 Map 的完整操作。独立 12 线程和 `Weak` Context 测试验证
+缓存身份、并发读取和无所有权环。Golden 还固定了 JDK 21 `HashMap#putAll` 绕过覆盖
+`put` 的真实运行时行为，避免按源码注释误迁移。
+
+基础 Context 与表达式 Context 批次新增固定 Java 导出器
+[`BasicContextGolden.java`](../../thymeleaf-test/tests/java/org/thymeleaf/context/BasicContextGolden.java)、
+再生脚本
+[`regenerate_basic_context_golden.sh`](../../scripts/regenerate_basic_context_golden.sh)
+和 71 条行为记录
+[`basic_context_golden.txt`](../../thymeleaf/tests/fixtures/basic_context_golden.txt)。
+[`basic_context_java_parity.rs`](../../thymeleaf-test/tests/basic_context_java_parity.rs) 逐项验证六个对象的
+29 个声明、默认 Locale 快照、浅复制、null 键和值、有序修改、稳定实时 keySet 身份与
+反向修改、精确校验错误、配置身份、惰性表达式对象和具体 Context 工厂身份；独立
+12 线程 Barrier 测试验证 `OnceLock` 返回同一容器。Java `Set#add` 的运行时拒绝在
+Rust 由不暴露 add 能力的类型边界承接。
+
+Web Context 批次新增固定 Java 导出器
+[`WebContextGolden.java`](../../thymeleaf-test/tests/java/org/thymeleaf/context/WebContextGolden.java)、
+再生脚本
+[`regenerate_web_context_golden.sh`](../../scripts/regenerate_web_context_golden.sh)
+和 43 条行为记录
+[`web_context_golden.txt`](../../thymeleaf/tests/fixtures/web_context_golden.txt)。
+[`web_context_java_parity.rs`](../../thymeleaf-test/tests/web_context_java_parity.rs) 逐项验证三个对象的
+9 个声明、三组公开构造入口、父 Context/ExpressionContext 优先构造、配置与 exchange
+身份、Locale/变量浅复制、稳定实时变量名视图、精确 null 错误、表达式对象惰性单例，
+以及自定义 factory 收到具体 `WebExpressionContext` 并能观察同一 `IWebContext`
+capability；独立 12 线程 Barrier 测试验证容器与 exchange 身份稳定。
+
+`messageresolver` 批次已新增固定 Java 导出器
+[`MessageResolverGolden.java`](../../thymeleaf-test/tests/java/MessageResolverGolden.java)、再生脚本
+[`regenerate_message_resolver_golden.sh`](../../scripts/regenerate_message_resolver_golden.sh)
+和行为记录
+[`message_resolver_golden.txt`](../../thymeleaf/tests/fixtures/message_resolver_golden.txt)。该记录覆盖
+基类 name/order、默认 Properties 合并/清理/校验、默认解析、absent representation、
+上下文/key 空值、模板 properties locale 合并与非法 Unicode escape，以及
+`MessageFormat` 的 UTF-16、引号、缺失参数、locale 数字、integer、currency、
+percent/per-mille、正负 decimal、科学计数、非有限数、精确大数、choice、date/time
+和非法 pattern，并包含完整一组 Properties 代表性语法及四类 protected 扩展钩子。
+109 条记录均由 `message_resolver_java_parity.rs` 消费；新增 Rust 义务测试覆盖三阶段
+顺序、阶段开关以及 cacheable/non-cacheable 模板加载次数。验收分母按 28 个方法/
+构造器的功能族、边界和运行时映射结算，不要求穷举全部 JDK provider 输入；JVM
+ClassLoader 自动发现由显式 `TypeId` 消息及父类型登记承接，四个对象据此达到
+`BEHAVIOR_VERIFIED`。
+
+`linkbuilder` 批次新增固定 Java 导出器
+[`LinkBuilderGolden.java`](../../thymeleaf-test/tests/java/LinkBuilderGolden.java)、再生脚本
+[`regenerate_link_builder_golden.sh`](../../scripts/regenerate_link_builder_golden.sh) 和
+[`link_builder_golden.txt`](../../thymeleaf/tests/fixtures/link_builder_golden.txt)。63 条记录由
+`standard_link_builder_matches_java_golden` 完整消费；另两个 Rust 测试分别验证
+抽象类组合/nullable 合同和 8 线程共享安全，因此 3 个 LinkBuilder 对象可以升级为
+`BEHAVIOR_VERIFIED`。
+
+`inline` 基础 SPI 批次新增固定 Java 导出器
+[`InlineGolden.java`](../../thymeleaf-test/tests/java/InlineGolden.java)、再生脚本
+[`regenerate_inline_golden.sh`](../../scripts/regenerate_inline_golden.sh) 和
+[`inline_golden.txt`](../../thymeleaf/tests/fixtures/inline_golden.txt)。23 条记录由
+`inline_contract_and_no_op_singleton_match_java_golden` 完整消费；另一个 Rust 测试
+验证 `Arc<dyn IInliner>` 与具体单例共享同一分配，compile-fail doctest 验证私有构造
+边界，因此 `IInliner` 与 `NoOpInliner` 可以升级为 `BEHAVIOR_VERIFIED`。
+
+全项目 `SOURCE_PARITY` 台账已经闭合。结构化结果保存在
+[`source_parity_inventory.json`](baseline/source_parity_inventory.json)：875 个 Java
+源码测试入口全部登记为 `MAPPED`、`SPLIT`、`MERGED`、`NOT_APPLICABLE` 或
+`POLICY_DIFFERENCE`，`MISSING=0`；五个上游模块的 2,156 个 Surefire 运行时 case
+均反查到源码入口。`tests/source_parity_inventory.rs` 同时检查固定 SHA、源码分母、
+case 唯一性、证据路径和证据标记，防止用一条宽泛说明替代逐项清单。
+
+处置分布为：`MAPPED=47`、`MERGED=91`、`SPLIT=274`、
+`NOT_APPLICABLE=1`、`POLICY_DIFFERENCE=462`。462 项原来自
+`thymeleaf-spring5/6` 与 Spring Security 专用 API；它们逐项保留 Java 运行结果和
+Rust 中立替代边界，但不伪称 Spring MVC、SpEL、WebFlux 或 Spring Security 类型已
+进入中立核心。2026-08 起 4 个 Spring 集成资产目录（884 个 `.thtest`）已从
+`thymeleaf-test/assets/thymeleaf-tests/` 移除（`source-test-parity.json` test_asset
+分母 3,570 → 2,686），等价安全方言与 Web 上下文能力由
+`thymeleaf-support/thymeleaf-sa-token`（sec 方言 + `#authentication`/`#authorization`）
+与 `thymeleaf-support/thymeleaf-vernal`（VernalWebExchange）承接。274 项 `SPLIT` 中有
+143 项直接绑定对象级 Rust 文件与类型标记，其余 131 项属于跨对象序列或测试夹具，
+绑定全量对象合同和共享端到端语义门禁。
+
+### 1.1 `.thtest` 统一清单
+
+不再为模板用例逐一手写 Rust 测试函数。脚本
+[`generate_thtest_inventory.py`](../../scripts/generate_thtest_inventory.py) 一次扫描固定
+上游，输出 [`thtest_inventory.json`](baseline/thtest_inventory.json)，由统一运行器按
+清单消费：
+
+| 指标 | 数量 |
+|:---|---:|
+| `.thtest` 文件 | 2,609 |
+| 可执行用例 | 2,608 |
+| `.common.thtest` 支持文件 | 1 |
+| 被引用 `.common` 文件 | 20 |
+| `%EXTENDS` | 329 |
+| `%INPUT` / `%OUTPUT` / `%EXCEPTION` | 2,961 / 2,110 / 500 |
+| 清单结构或引用违规 | 0 |
+| 已通过 Rust 行为验证 | 2,595 |
+| 具名安全/上游禁用处置 | 13 |
+| 未解释用例 | 0 |
+
+每一项保存上游相对路径、SHA-256、字节数、行数、全部字段及限定名、解析后的继承目标和
+验证状态。`tests/thtest_inventory.rs` 在 Cargo 测试中锁定 2,609/2,608/1/20 分母、
+路径唯一性和摘要形态。`tests/thtest_upstream_plain_batch.rs` 统一执行三层语料：
+`parsing` 范围 69 / 69 通过；`plain` 范围在补齐测试 LinkBuilder、限定顶层字符串
+Resolver 并排除自定义 Dialect/Web 专用夹具后 200 / 200 通过。`plain` 已包含前述
+69 个 parsing 用例，因此当前已结算的不同 `.thtest` 数量是 200，不是 269。
+
+第三层 `context` 固定选择同时含 `%CONTEXT`、`%INPUT`、`%OUTPUT` 和
+`%TEMPLATE_MODE` 的 996 个标准引擎用例；另有 61 个 `elementstack` 和
+`inlining/nostandard` 用例明确转入专用 Dialect 批次。测试夹具不再把 `%CONTEXT` 伪装成
+`th:with`，而是像 Java 测试框架一样先创建真正的 `Context`；每个右值由生产
+`VariableExpression` 和 OGNL 兼容求值器顺序执行，再渲染原模板。2026-07-30 第三轮
+统一执行先观测到 730 / 1,055；纠正专用 Dialect 范围后固定分母为 996，随后一次性补齐
+测试宿主 runtime 与生产表达式、序列化、跨模式处理和 ACL 语义。最终统一重跑结果为
+**996 / 996 通过**。它与 `plain` 的 200 个用例没有重叠，因此当前已绿灯结算的不同
+`.thtest` 数量为 1,196。
+
+第四层 `dialect` 按上游 `FeaturesTest` 的真实配置执行：13 个 `elementstack` 用例使用
+`StandardDialect + ElementStackDialect`，48 个 `inlining/nostandard` 用例只注册
+`Dialect01`，不偷加 Standard Dialect。测试支持对象逐个对应 Java 测试 fixture，并通过
+生产 `AbstractProcessorDialect`、属性/文本/模型 Processor 和真实 Engine handler chain
+执行。首次批量运行中，48 个无 Standard Dialect 用例通过，13 个元素栈用例统一暴露
+Rust HTML parser 错误执行 auto-open、把合成 `<html>/<body>` 放进上下文元素栈的问题。
+对照 Java `HTMLTemplateParser` 和 AttoParser 2.0.7 后，Rust 已恢复
+`ElementBalancing.AUTO_CLOSE` 语义并删除错误 auto-open 路径；统一重跑为
+**61 / 61 通过**。
+
+`verified` 范围把 Plain 200、Standard Engine Context 996 和专用 Dialect 61 个互不重复
+用例一次性执行，2026-07-30 结果为 **1,257 / 1,257 通过**。
+
+第五层 `exception` 固定选择 500 个含 `%EXCEPTION` 的用例，并严格递归匹配 Java
+异常类、消息正则和 cause 链，不以“任意错误即通过”替代。该批次一次性补齐模板名与
+行列定位、Reader cause、片段嵌套、内联模式、命名模板模式、优先级 Dialect、lazy
+变量、链接协议安全以及 OGNL 的 `OgnlError`、`ClassNotFoundError`、
+`NoSuchMethodError` 和 ACL getter 映射，统一重跑为 **500 / 500 通过**。
+`exception` 与 `verified` 不重叠；`validated` 是两者并集，结果为
+**1,757 / 1,757 通过**。
+
+第六层 `directives` 不再按文件逐个迁移，而是一次性补齐 `%EXTENDS` 递归继承、
+`%MESSAGES`/Locale、命名 `%INPUT`、`%TEMPLATE_MODE[name]`、`%FRAGMENT`、
+`%EXACT_MATCH` 和 `%NAME` 的统一测试宿主语义，并由同一生产 Engine 执行。该批次同时
+暴露并修复 OGNL 一元运算、Elvis/null、数组初始化白名单、Locale/时区/日期、数字格式、
+URL、CSS 序列化、属性原位替换与无值 HTML 属性空白等生产差异。固定有效分母为
+**433 / 433 通过**，与 `validated` 无重叠。
+
+`features/execinfo` 中 12 个 TEXT 历史资源没有通过关闭安全检查来“修绿”：
+Java `FeaturesTest#testExecInfo` 已注释整个目录，同时
+`StandardTextTagProcessor` 使用 RESTRICTED 上下文，
+`OGNLVariableExpressionEvaluator#checkRestrictedVariables` 明确禁止访问
+`#execInfo`。Rust 因而保留相同拒绝语义，并把这 12 个上游未执行且与当前 Java 安全
+合同冲突的资源从成功分母中具名排除。
+
+第七层 `prepostprocessors` 按 Java `PrePostProcessorsTest` 的真实方言组合，整体注册
+五种模式的 `PreProcessor`/`PostProcessor` 与独立计数 handler，覆盖 XML declaration、
+DOCTYPE、CDATA、注释、文本、open/standalone、PI、Fragment 和运行时生成 markup。
+首次批量运行 9 / 10 通过，并定位出 HTML parser 把 `<?xml ...?>` 错分为普通 PI 的
+生产缺陷；恢复 Java/attoparser 的 XML declaration 事件分类后统一重跑为
+**10 / 10 通过**。
+
+随后又按完整语义域接入多输入模板 237 / 237、Link 35 / 35、内联交互 Processor
+18 / 18、自定义 Conversion Service 28 / 28、Block Processor 8 / 8 与 NoOp
+局部变量传播 4 / 4。继续整域接入 Aggregation 3 / 3、Markup 模型处理 11 / 11、
+Context vartest 38 / 38、Precedence 6 / 6、Web Context 5 / 5，以及
+remove/replace/surround 4 / 4。Precedence 中 2 个异常用例已包含在 `validated`，
+去重后当前通过 Rust 行为验证的不同 `.thtest` 是 **2,595 / 2,608**；其余 13 个均为
+具名处置：12 个上游已禁用且与 RESTRICTED `#execInfo` 冲突，1 个依赖任意 Java
+`Class` 反射链而不属于默认只读安全 OGNL 子集。新增批次在完整 1,757 基线上发现并修复了
+`@{'/someUrl'}` 被无引号 URL 兜底吞入引号、Java String 转换快路径、嵌套链接字面量
+替换、动态链接 base 与 `MessageFormat` 数字分组等核心差异；最终统一结果包括
+`validated` 1,757 / 1,757、`directives` 433 / 433、
+`prepostprocessors` 10 / 10、`multiinput` 237 / 237、`link` 35 / 35、
+`inlining_interaction` 18 / 18、`conversion` 28 / 28、`block` 8 / 8 和
+`noop` 4 / 4、`aggregation` 3 / 3、`markup` 11 / 11、
+`context_vartest` 38 / 38、`precedence` 6 / 6、`web_context` 5 / 5 和
+`processor_remaining` 4 / 4。
+
+该结论的证据级别是使用上游模板、期望输出或异常合同的适配镜像测试，不是 Java/Rust
+同进程差分测试。2,608 个可执行资源已经逐项落入“行为通过”或“具名安全/上游禁用处置”，
+但不能把 13 个处置项表述为 Rust 成功执行，也不能据此替代 Java JUnit、并发、背压和
+其他非功能语义证据。
+
+统一语义门禁命令一次执行全部 2,595 个可比较资源，并由同一测试文件的清单测试确认
+2,608 = 2,595 + 13、未解释为 0：
+
+```bash
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=semantic_all \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch
+```
+
+首批行为命令：
+
+```bash
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=parsing \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=plain \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=context \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=dialect \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=verified \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=validated \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=directives \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+
+THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
+THYMELEAF_SCOPE=prepostprocessors \
+cargo test -p thymeleaf-test --test thtest_upstream_plain_batch -- --nocapture
+```
+
+该批次对齐 thymeleaf-testing 的默认宽松 Markup 比较，并解码 `.thtest` 文本段的一层
+反斜杠转义。运行过程发现并修复 `script type="text/template"` 与裸
+`javascript`/`ecmascript` 状态、Processor
+重入借用、synthetic `tbody` 与 `all-but-first`、空 Fragment、带空白 Elvis，以及
+OGNL 一元负号错误提升为 BigDecimal、Java Double 文本、OGNL BigInteger 整数除法、
+Java null 的跨模式内联、尾随制表符 directive 等执行链问题。
+
+`instancestaticrestrictions29.thtest` 要求执行
+`''.getClass().getClass().getName()`。这依赖 Java 运行时反射，不属于
+`thymeleaf-rust` 默认只读安全 OGNL 子集，已从 `plain` 成功分母中明确排除；它是有意
+安全差异，不会通过开放任意 `Class`/反射访问来“修绿”。
+
+重复生成命令：
+
+```bash
+python3 scripts/generate_thtest_inventory.py \
+  --upstream /absolute/path/to/thymeleaf \
+  --baseline 10f9dd2eb8cbd98515ce14b149d115e0287d0add \
+  --output docs/migration/baseline/thtest_inventory.json
+```
+
+固定上游 Java Oracle 必须显式设置 JDK 与 Locale。2026-07-30 首轮 Core 在 JDK 26、
+`zh_CN_#Hans` 默认 Locale 下执行 1,154 个 JUnit case，1,153 个通过，唯一失败为
+`DecoupledGTVGTest#testGTVGHome` 的月份文本：上游夹具期望 `February`，JVM 实际输出
+`二月`；JDK 26 + `en_US` 又输出 `Feb`。JDK 21.0.12 + `en_US` 对该失败类的 2 个
+case 全部通过。这是 Oracle 环境差异，不是 Rust 差异，标准命令固定为：
+
+```bash
+JAVA_HOME=/path/to/jdk-21 \
+PATH=/path/to/jdk-21/bin:/opt/homebrew/bin:/usr/bin:/bin \
+mvn -pl \
+  tests/thymeleaf-tests-core,tests/thymeleaf-tests-spring5,tests/thymeleaf-tests-spring6,tests/thymeleaf-tests-springsecurity5,tests/thymeleaf-tests-springsecurity6 \
+  -am test -DskipITs \
+  '-DargLine=-Duser.language=en -Duser.country=US'
+```
+
+使用上述固定环境执行五个上游测试模块：Core **1,154 / 1,154**、Spring 5
+**499 / 499**、Spring 6 **499 / 499**、Spring Security 5/6 各 **2 / 2**，
+合计 **2,156 / 2,156 JUnit case 通过，0 failure、0 error、0 skipped**。该结果证明
+Java Oracle 基线有效；Rust 侧仍须按 SOURCE_PARITY 处置和共享语义结果比较，不能把
+Java 自测通过直接计作 Rust parity。
+
+SOURCE_PARITY 台账重复生成命令：
+
+```bash
+python3 scripts/generate_source_parity_inventory.py \
+  --surefire-root /absolute/path/to/thymeleaf/tests/thymeleaf-tests-core/target/surefire-reports \
+  --surefire-root /absolute/path/to/thymeleaf/tests/thymeleaf-tests-spring5/target/surefire-reports \
+  --surefire-root /absolute/path/to/thymeleaf/tests/thymeleaf-tests-spring6/target/surefire-reports \
+  --surefire-root /absolute/path/to/thymeleaf/tests/thymeleaf-tests-springsecurity5/target/surefire-reports \
+  --surefire-root /absolute/path/to/thymeleaf/tests/thymeleaf-tests-springsecurity6/target/surefire-reports
+```
+
+### 1.2 Java/Rust 双语言一致性口径
+
+“结果一致”按共享语义输入比较，不强行要求两种语言具有相同测试函数数量：
+
+| 层级 | Java 结果 | Rust 结果 | 一致性 |
+|:---|:---|:---|:---:|
+| 上游五模块 JUnit | JDK 21、`en_US`：2,156 / 2,156 | 875 / 875 源码入口逐项处置；Core 按共享资源和 Golden 消费，Spring 专用 API 按中立宿主边界登记 | PASS |
+| SOURCE_PARITY | 875 个源码入口、2,156 个运行时 case | 47 MAPPED、91 MERGED、274 SPLIT、1 N/A、462 POLICY_DIFFERENCE、0 MISSING | PASS |
+| `.thtest` 共享资源 | Java 测试框架定义输入、期望输出/异常 | `semantic_all`：2,595 / 2,595 与同一期望一致 | PASS |
+| 固定 Java Golden | 67 组、4,474 条 Java 记录 | Rust 逐记录读取并断言 | PASS |
+| 策略差异 | 12 个 `execinfo` 上游禁用；反射链由 JVM 支持 | 12 个禁用项同样不执行；1 个反射链按安全策略拒绝 | 13 / 13 具名，不伪装为相同行为 |
+
+因此“双语言一致”表示所有可比较共享语义结果一致，批准的安全差异全部显式登记，
+不存在静默跳过或未解释结果。
+
+## 2. 台账规则
+
+### 2.1 `SOURCE_PARITY`
+
+每一行必须能反查上游测试文件、方法和参数化 case。一个 Golden 测试可以
+`MERGED` 多个 case，但必须列出其覆盖集合或生成器。
+
+### 2.2 `RUST_OBLIGATION`
+
+记录 Java→Rust 映射引入而上游不会直接覆盖的风险，例如 UTF-16/UTF-8、
+`Option`、panic/Result、锁中毒、所有权、trait object 和 async 取消。
+
+### 2.3 `VALUE_ADD`
+
+记录额外的高价值测试。必须写明它能杀死的实现错误；只增加覆盖率而没有风险模型的
+用例不进入此台账。
+
+## 3. `TextParser` 切片
+
+### 3.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| TP-SP-001 | `TextParserTest#test`：上游目录模板集合与输出比较 | `java_golden_matches_streaming_parser_pool_and_failure_semantics`；Golden 的 document/config 矩阵；原始结构事件测试 | `SPLIT` | V3 |
+| TP-SP-002 | `TextParserTest` 隐含的 Reader 任意切分合同 | 5 类文档 × 两配置 × buffer 1–96，共 960 种切分；244 条汇总记录 | `MERGED` | V3 |
+| TP-SP-003 | open/standalone/close、块/行注释、literal 的终止事件 | `raw_parse_document_emits_each_terminal_structure_event` | `SPLIT` | V2+V3 |
+| TP-SP-004 | handler 抛出 `TextParseException` | `raw_structure_endpoints_propagate_checked_handler_errors` 与 Golden handler failure 记录 | `SPLIT` | V3 |
+| TP-SP-005 | `parse(String,handler)` / `parse(Reader,handler)` 参数校验和构造配置 | Golden validation/constructor 记录 | `MERGED` | V3 |
+
+上游 `TextParserTest` 本身覆盖面很窄；下列 Reader、池和 JVM 边界主要来自生产源码
+可观察合同，因此分别进入 `RUST_OBLIGATION` 或 `VALUE_ADD`，不伪称为原 JUnit case。
+
+### 3.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| TP-RO-001 | Java `char[]` → Rust `Vec<u16>` | Golden UTF-16 代理项、范围与事件 hex | 改成 UTF-8 byte/Unicode scalar offset |
+| TP-RO-002 | Java Reader 动态调用 → `TextParserReader` trait | 首次/中途失败、零读取、EOF、默认 `read_buffer`/`close` | 吞 checked error、错误 offset、提前 EOF |
+| TP-RO-003 | Java Throwable → `Result` + 类型化 panic | `runtime_adapters_preserve_distinct_jvm_failure_contracts`、`panic_taxonomy_preserves_every_java_runtime_category` | 合并异常类别、丢消息/cause |
+| TP-RO-004 | Java finally → `catch_unwind` 后清理 | `parse_document_normalizes_known_causes_and_cleans_up_unknown_panics` | panic 时不释放缓冲或不 close Reader |
+| TP-RO-005 | Java同步池 → `Mutex` 槽位 | pool identity/reuse Golden 与中毒恢复测试 | 克隆数组破坏身份、锁中毒永久失败 |
+| TP-RO-006 | Java `int` → Rust debug arithmetic | wrapping buffer size、arraycopy/index 合同 | debug overflow panic 或饱和运算 |
+| TP-RO-007 | Java checked handler 返回 | 末尾 text 和四类结构 endpoint 的直接错误测试 | 把 checked error 包为 panic 或继续发送事件 |
+
+### 3.3 `VALUE_ADD`
+
+| ID | 风险 | Rust 证据 | 价值 |
+|:---|:---|:---|:---|
+| TP-VA-001 | 扩容 `int` 回绕后 Java 局部 `catch(Exception)` | `buffer_growth_runtime_exception_is_ignored_after_java_int_wrap` | 防止把局部可恢复异常改成整个解析失败 |
+| TP-VA-002 | Java Error 等价的未知 Rust panic | `buffer_growth_resumes_unknown_panic_after_releasing_candidate` | 防止错误吞掉未知 panic，同时验证候选缓冲释放 |
+| TP-VA-003 | 内部辅助错误通道 | `parser_helpers_keep_checked_and_runtime_channels_separate` | 防止三类 parsing util error 被统一或误转 checked |
+| TP-VA-004 | Rust Mutex poison | `internal_defaults_null_formatting_and_poison_recovery_are_deterministic` | 防止 Rust 特有 poison 改变 Java 可用性 |
+| TP-VA-005 | 伪 `/` 候选与重复分类 | `raw_parse_document_emits_each_terminal_structure_event` 的 `a/`、`a/b/` | 防止把普通除号错误识别为正则/注释 |
+
+## 4. `TextParser` Golden 资产
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/TextParserGolden.java` |
+| 固定输出 | `tests/fixtures/text_parser_golden.txt` |
+| 生成脚本 | `scripts/regenerate_text_parser_golden.sh` |
+| 上游源码 | `lib/thymeleaf/src/main/java/org/thymeleaf/templateparser/text/TextParser.java` |
+| 上游测试 | `tests/thymeleaf-tests-core/src/test/java/org/thymeleaf/templateparser/text/TextParserTest.java` |
+
+重复生成命令：
+
+```bash
+./scripts/regenerate_text_parser_golden.sh \
+  /absolute/path/to/thymeleaf
+git diff --exit-code -- tests/fixtures/text_parser_golden.txt
+```
+
+验收结果：
+
+- Golden：244 条记录全部匹配；
+- Java 切分组合：960 种；
+- Rust 单元测试：226；
+- 固定 Java Oracle：41 组、3,444 条记录；
+- `cargo-llvm-cov`：20,027 行、1,888 函数、27,451 region，全部 100%。
+
+## 5. Text comment Reader 切片
+
+### 5.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| TCR-SP-001 | `ParserLevelCommentTextReaderTest#test01` 的全部定界符位置生成规则 | `generated_structure_positions_match_upstream_equivalence_algorithms`，所有生成消息 × 1–8 读取长度 × 合法 offset | `MERGED` | V2+V3 |
+| TCR-SP-002 | `ParserLevelCommentTextReaderTest#test02` 全部人工 case | `upstream_handwritten_examples_match_for_every_original_buffer_shape`，保留原三重 buffer/len/offset 循环 | `MAPPED` | V2+V3 |
+| TCR-SP-003 | `PrototypeOnlyCommentTextReaderTest#test01` 的全部定界符位置生成规则 | 同一生成测试的 prototype 分支 | `MERGED` | V2+V3 |
+| TCR-SP-004 | `PrototypeOnlyCommentTextReaderTest#test02` 全部人工 case | 同一人工测试的 prototype 分支，保留原三重循环 | `MAPPED` | V2+V3 |
+
+### 5.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| TCR-RO-001 | `RUST_OBLIGATION` | Java `char[]`/Reader → UTF-16 trait object | 代理项、默认 `read_buffer`、两层 Reader 嵌套 | UTF-8 字节索引或丢失动态链 |
+| TCR-RO-002 | `RUST_OBLIGATION` | overflow 的所有权与原位移动 | 已有 overflow 再遇候选、overflow 优先后委托 | 错误移动方向、丢字符或重复字符 |
+| TCR-VA-001 | `VALUE_ADD` | 上游 JUnit 未断言未闭合结构和委托异常 | Golden EOF、普通 read、补全定界符 read、close failure | 静默接受未闭合块或吞 IOException |
+
+### 5.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/TextCommentReaderGolden.java` |
+| 固定输出 | `tests/fixtures/text_comment_reader_golden.txt` |
+| 生成脚本 | `scripts/regenerate_text_comment_reader_golden.sh` |
+| 上游源码 | `templateparser/reader/BlockAwareReader.java` 及两个 Text Reader |
+| 上游测试 | `ParserLevelCommentTextReaderTest.java`、`PrototypeOnlyCommentTextReaderTest.java` |
+
+```bash
+./scripts/regenerate_text_comment_reader_golden.sh \
+  /absolute/path/to/thymeleaf
+git diff --exit-code -- tests/fixtures/text_comment_reader_golden.txt
+```
+
+验收结果：120 条固定 Java 记录全部匹配；两个上游测试文件 4 个测试方法全部登记；
+全项目 230 个 Rust 单元测试通过；`cargo-llvm-cov` 为 20,835 行、1,925 函数、
+28,544 区域，三项 100%。
+
+## 6. Markup comment Reader 切片
+
+### 6.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| MCR-SP-001 | `ParserLevelCommentMarkupReaderTest#test01` 完整生成规则 | `generated_structure_positions_match_upstream_equivalence_algorithm`，所有生成消息 × 1–8 读取长度 × offset | `MERGED` | V2+V3 |
+| MCR-SP-002 | `ParserLevelCommentMarkupReaderTest#test02` 全部人工 case | `handwritten_examples_match_every_original_buffer_shape`，原三重循环 | `MAPPED` | V2+V3 |
+| MCR-SP-003 | `PrototypeOnlyCommentMarkupReaderTest#test01` 完整生成规则 | prototype-only 同名生成测试 | `MERGED` | V2+V3 |
+| MCR-SP-004 | `PrototypeOnlyCommentMarkupReaderTest#test02` 全部人工 case | prototype-only 同名人工测试，原三重循环 | `MAPPED` | V2+V3 |
+
+### 6.2 Golden 资产与 Rust 风险
+
+| 资产/风险 | 证据 |
+|:---|:---|
+| Java harness | `tests/java/MarkupCommentReaderGolden.java` |
+| 固定输出 | `tests/fixtures/markup_comment_reader_golden.txt` |
+| 生成脚本 | `scripts/regenerate_markup_comment_reader_golden.sh` |
+| 双层动态 Reader | prototype-only 内层、parser-level 外层的组合 Golden |
+| UTF-16 与逐次返回 | 代理项、4 组 buffer/offset/len、每次 read 返回序列 |
+| 异常/生命周期 | 两类未闭合结构精确消息、close IOException 与调用次数 |
+
+```bash
+./scripts/regenerate_markup_comment_reader_golden.sh \
+  /absolute/path/to/thymeleaf
+git diff --exit-code -- tests/fixtures/markup_comment_reader_golden.txt
+```
+
+验收结果：61 条固定 Java 记录全部匹配；两个上游测试文件 4 个测试方法全部登记；
+全项目 234 个 Rust 单元测试通过；`cargo-llvm-cov` 为 21,223 行、1,947 函数、
+29,016 区域，三项 100%。
+
+## 7. `IInlinePreProcessorHandler` 切片
+
+### 7.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| IIPH-SP-001 | 固定上游中没有直接测试该纯接口的 JUnit/参数化 case；行为只由实现类和适配器间接触发 | 已核对 `lib/thymeleaf/src/test` 与全仓调用点；本行不冒充源测试迁移 | `NOT_APPLICABLE` | V0 |
+
+### 7.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| IIPH-RO-001 | `RUST_OBLIGATION` | Java 接口动态分派 → Rust trait object | Java `IInlinePreProcessorHandler` 与 Rust `dyn IInlinePreProcessorHandler` 分别调用全部 12 个回调 | 漏掉 auto open/close、合并不同事件或静态旁路分派 |
+| IIPH-RO-002 | `RUST_OBLIGATION` | Java 可空可变 `char[]` → `Option<&mut [u16]>` | 每个回调分别覆盖 null 与含孤立代理项数组，并观察首码元原位修改 | 用 UTF-8 索引、复制 buffer、拒绝 null 或丢失修改 |
+| IIPH-VA-001 | `VALUE_ADD` | 15 参数 attribute 与多个同形 element 回调易发生位置换序 | 25 条 Golden 逐事件固定名称、布尔值和全部整数参数 | 参数串位、普通/auto 事件接错或 value content/outer 混淆 |
+
+### 7.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/InlinePreProcessorHandlerGolden.java` |
+| 固定输出 | `tests/fixtures/inline_pre_processor_handler_golden.txt` |
+| 生成脚本 | `scripts/regenerate_inline_pre_processor_handler_golden.sh` |
+| 上游源码 | `standard/inline/IInlinePreProcessorHandler.java` |
+
+验收结果：25 条固定 Java 记录全部匹配；全项目 235 个 Rust 单元测试通过；
+静态测试清单重新生成后发现 270 个 Rust 测试函数；`cargo-llvm-cov` 为
+21,480 行、1,967 函数、29,232 区域，三项 100%。
+
+## 8. `TextUtils` 切片
+
+### 8.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| TU-SP-001 | `TextUtilsTest#testContains`：13 组 text/fragment/expected/caseSensitiveOnly | `TextUtilsGolden` 与 `emit_contains_corpus` 固定相同输入；Rust 对完整 corpus 计算同一摘要 | `MERGED` | V3 |
+| TU-SP-002 | 每组 `testContains(...)` 展开 26 条断言：3 类完整输入重载、4 类范围组合、大小写敏感/不敏感 | 13 × 26 = 338 条断言全部进入 360 组 contains corpus；范围 offset 和包装 `"..."` 输入原样保留 | `MERGED` | V3 |
+
+固定上游只有 `testContains` 直接测试该对象；其余 public 重载不能因缺少 JUnit 而
+省略，因此由以下 Rust obligation 和固定 Java Oracle 补齐。
+
+### 8.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| TU-RO-001 | `RUST_OBLIGATION` | Java 48 个 public 重载在 Rust 无重载语法 | `emit_all_overloads` 逐一输出；方法级对照表逐签名登记 | 漏重载、委托到错误方向或参数换序 |
+| TU-RO-002 | `RUST_OBLIGATION` | Java `char`/String 是 UTF-16，Rust `str` 是 UTF-8 | 65,536 个 BMP 码元的 equals/compare 摘要 `57a1a457bf3c2325`，含代理项 | 按 Unicode scalar/字节索引或使用 Rust 全字符串大小写折叠 |
+| TU-RO-003 | `RUST_OBLIGATION` | 任意 `CharSequence` 可有副作用并抛运行时异常 | Java/Rust 动态序列 trace 固定 `length/charAt` 次数与顺序；failure matrix 覆盖短路 | 预复制成 String、重复/省略调用或吞掉动态异常 |
+| TU-RO-004 | `RUST_OBLIGATION` | Java `int` 回绕、unsigned midpoint 与插入点编码 | 四类 binary search × low/high/exact/null/非法范围矩阵 | 用 `usize` 正常算术、改变探测顺序或返回错误插入点 |
+| TU-RO-005 | `RUST_OBLIGATION` | NPE/IllegalArgument/数组与 String 越界类别和求值顺序 | `emit_errors` 与 exhaustive failure test | 统一成一个 Rust 错误、提前校验或改变首个异常 |
+| TU-VA-001 | `VALUE_ADD` | JDK 单码元大小写表随运行时/Unicode 版本变化 | JDK 21 生成的完整 BMP case map 二进制及 SHA-256；生成器可复现 | 使用宿主 Rust Unicode 版本导致跨版本漂移 |
+| TU-VA-002 | `VALUE_ADD` | contains 朴素回退易被“优化”后改变动态访问 | 360 case corpus 摘要 `f6beabd68d7ce4f`，含 `aab/ab`、`ababac/abac` | 错误 restart、跳过重叠匹配或改变 `charAt` 顺序 |
+| TU-VA-003 | `VALUE_ADD` | 覆盖工具会合并普通库与 test 构建实例 | 两种构建的成功/失败矩阵；函数/行/区域及 instantiation 均 100% | 只在一个构建命中、留下不可验证分支 |
+
+### 8.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/TextUtilsGolden.java` |
+| 固定输出 | `tests/fixtures/text_utils_golden.txt`（74 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_text_utils_golden.sh` |
+| JDK case-map 生成器 | `tests/java/TextUtilsCaseMapGenerator.java` |
+| JDK case-map 生成脚本 | `scripts/regenerate_text_utils_case_map.sh` |
+| Rust 差分 | `tests/text_utils_java_parity.rs` |
+| 固定上游源码 | `lib/thymeleaf/src/main/java/org/thymeleaf/util/TextUtils.java` |
+| 固定上游测试 | `tests/thymeleaf-tests-core/src/test/java/org/thymeleaf/util/TextUtilsTest.java` |
+
+验收结果：74 条固定 Java 记录全部匹配；48 / 48 public 重载和 51 / 51
+机器清单方法均已处置；全项目 241 个 Rust 单元测试通过；静态测试清单识别
+278 个 Rust 测试函数；`cargo-llvm-cov` 为 23,419 行、2,071 函数、31,723 区域，
+三项 100%。
+
+## 9. `IProcessor` 切片
+
+### 9.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| IP-SP-001 | 固定上游中没有直接针对 `IProcessor` 纯接口的 JUnit；`DialectOrderingTest` 等仅通过具体实现间接使用 | 固定源码调用方清单 + 双侧接口对象 Golden；具体排序测试留给 `ProcessorComparators`/Dialect 切片 | `NOT_APPLICABLE`（接口无默认实现或独立算法，不能把具体处理器测试错误归属于本对象） | V3/V6 |
+
+### 9.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| IP-RO-001 | `RUST_OBLIGATION` | Java 接口可返回 `null`，而 `TemplateMode` Rust enum 天然非空 | Java 自定义实现返回 `null`；Rust `Option<TemplateMode>` 返回 `None` | 错误提前施加 `AbstractProcessor` 的非空约束 |
+| IP-RO-002 | `RUST_OBLIGATION` | Java interface 动态分派 → Rust trait object | Java `IProcessor` 与 Rust `dyn IProcessor` 分别读取可变实现 | 用静态泛型旁路接口分派或擅自增加 `Send`/`Sync` |
+| IP-RO-003 | `RUST_OBLIGATION` | Java `int` 必须映射完整有符号 32 位范围 | `MIN_VALUE`、0、`MAX_VALUE` 逐条差分 | 使用无符号优先级、截断或饱和 |
+| IP-VA-001 | `VALUE_ADD` | 六种 `TemplateMode` 在根 SPI 处可能漏接 | 同一接口对象依次返回 HTML/XML/TEXT/JAVASCRIPT/CSS/RAW | 只支持 HTML/XML 或把文本模式合并 |
+
+### 9.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/ProcessorContractGolden.java` |
+| 固定输出 | `tests/fixtures/processor_contract_golden.txt`（11 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_processor_contract_golden.sh` |
+| Rust 差分 | `tests/processor_contract_java_parity.rs` |
+| 固定上游源码 | `processor/IProcessor.java`、`templatemode/TemplateMode.java` |
+
+验收结果：11 条固定 Java 记录全部匹配；2 / 2 机器清单方法均已处置；
+全项目 242 个 Rust 单元测试通过；静态测试清单识别 280 个 Rust 测试函数；
+`cargo-llvm-cov` 为 23,448 行、2,074 函数、31,768 区域，三项 100%。
+
+## 10. `AbstractProcessor` 切片
+
+### 10.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| AP-SP-001 | 固定上游中没有直接针对 `AbstractProcessor` 的 JUnit；其 10 个直接子类由具体 Processor 测试间接覆盖 | 固定源码、直接子类清单及双侧最小具体子类 Golden；具体 Processor 行为留给各自切片 | `NOT_APPLICABLE`（本对象仅包含构造校验、两个 final 字段/getter 和根接口实现） | V3/V6 |
+
+### 10.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| AP-RO-001 | `RUST_OBLIGATION` | Java 抽象类继承 → Rust 组合，可能丢失共享状态合同 | 同名 `AbstractProcessor` 私有状态 + 具体/trait 两条读取路径 | 把类型改为空 trait、复制字段或出现两份不一致状态 |
+| AP-RO-002 | `RUST_OBLIGATION` | protected Java 构造器允许外部子类调用，Rust 可见性不能误收窄 | public `new` + 外部 integration test 使用公开 API | 仅允许 crate 内构造，破坏第三方 Processor 扩展 |
+| AP-RO-003 | `RUST_OBLIGATION` | `Validate.notNull` 的异常类别和消息必须复用已有映射 | `None` 精确差分为 `IllegalArgumentException:Template mode cannot be null` | panic、错误类型漂移或消息改写 |
+| AP-RO-004 | `RUST_OBLIGATION` | Java final 字段/getter → Rust 不可变私有字段与不可覆盖固有方法 | 无 setter；重复读取、具体/trait getter 一致 | 可变状态、getter 覆盖或 trait 委托返回不同值 |
+| AP-VA-001 | `VALUE_ADD` | 基础实现必须把非空模式提升到可空根 SPI，而不改变根合同 | 六种模式经具体 getter 与 `dyn IProcessor` 返回 `Some` | 返回 `None`、漏接文本模式或错误收窄整个 `IProcessor` |
+| AP-VA-002 | `VALUE_ADD` | precedence 边界容易因宿主整数选择而漂移 | `i32::MIN`、负数、零、正数、`i32::MAX` 差分 | 无符号映射、截断、饱和或默认值替换 |
+
+### 10.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/AbstractProcessorGolden.java` |
+| 固定输出 | `tests/fixtures/abstract_processor_golden.txt`（8 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_abstract_processor_golden.sh` |
+| Rust 差分 | `tests/abstract_processor_java_parity.rs` |
+| 固定上游源码 | `processor/AbstractProcessor.java`、`processor/IProcessor.java`、`templatemode/TemplateMode.java`、`util/Validate.java` |
+
+验收结果：8 条固定 Java 记录全部匹配；3 / 3 机器清单构造器/方法均已处置；
+全项目 244 个 Rust 单元测试通过；静态测试清单识别 283 个 Rust 测试函数；
+`cargo-llvm-cov` 为 23,502 行、2,081 函数、31,846 区域，三项 100%。
+
+## 11. `IProcessorDialect` 切片
+
+### 11.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| IPD-SP-001 | 固定上游没有只针对 `IProcessorDialect` 纯接口的 JUnit；`ElementProcessorIteratorTest`、`DialectSetConfigurationTest` 和 dialect ordering 测试经具体方言间接使用它 | 固定源码调用面 + 双侧动态接口 Golden；聚合、包装、排序断言留给各自生产对象切片 | `NOT_APPLICABLE`（接口自身没有默认算法；不能把下游对象行为提前归入本对象） | V3/V6 |
+
+### 11.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| IPD-RO-001 | `RUST_OBLIGATION` | Java 子接口 `extends IDialect` → Rust trait 继承和 trait object | `dyn IProcessorDialect` 同时调用名称与三个子接口方法 | 遗漏 `IDialect` 父合同或改成不可动态分派泛型 |
+| IPD-RO-002 | `RUST_OBLIGATION` | 默认前缀与实际调用前缀都允许 null，且空字符串含义不同 | null/空/Unicode 默认前缀及 null/空/Unicode 参数逐条差分 | 把 `None` 合并为空、擅自 trim/case-fold 或总是传默认前缀 |
+| IPD-RO-003 | `RUST_OBLIGATION` | Java 接口可返回 null Set 或含 null 元素；拒绝属于后续配置阶段 | Golden 分别返回 null 集合及 `[null, processor, processor]` | 在接口层 panic/过滤 null，改变错误发生对象和顺序 |
+| IPD-RO-004 | `RUST_OBLIGATION` | `Set<IProcessor>` → Rust trait-object 集合必须保留唯一性、实际迭代顺序和共享身份 | `ProcessorSet` 拒绝同一 Arc 二次插入、保留 null/HTML/null 顺序 | 用允许重复的 Vec、复制 Processor、排序或删除 null |
+| IPD-RO-005 | `RUST_OBLIGATION` | 第三方 Processor 可覆盖 Java `equals` | `insert_with` 用 precedence 等价关系拒绝不同 Arc 的逻辑重复 | 永远只按地址去重，第三方等价 Processor 重复注册 |
+| IPD-VA-001 | `VALUE_ADD` | 方言级 precedence 容易与 Processor precedence 混淆或选错整数类型 | `MIN_VALUE`、0、`MAX_VALUE` getter 差分 | 使用无符号值、截断、默认 1000 或提前叠加单 Processor 值 |
+| IPD-VA-002 | `VALUE_ADD` | 每次调用必须收到原始 override 并允许生成新集合 | 四次调用记录精确 lastPrefix/call count，前三次返回独立集合 | 缓存第一次前缀、忽略覆盖值或复用错误集合 |
+
+### 11.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/ProcessorDialectContractGolden.java` |
+| 固定输出 | `tests/fixtures/processor_dialect_contract_golden.txt`（8 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_processor_dialect_contract_golden.sh` |
+| Rust 差分 | `tests/processor_dialect_contract_java_parity.rs` |
+| 固定上游源码 | `dialect/IDialect.java`、`dialect/IProcessorDialect.java`、`processor/IProcessor.java`、`templatemode/TemplateMode.java` |
+
+验收结果：8 条固定 Java 记录全部匹配；3 / 3 机器清单方法均已处置；
+全项目 246 个 Rust 单元测试通过；静态测试清单识别 287 个 Rust 测试函数；
+`cargo-llvm-cov` 为 23,651 行、2,105 函数、32,081 区域，三项 100%。
+
+## 12. `AbstractProcessorDialect` 切片
+
+### 12.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| APD-SP-001 | 固定上游没有只针对 `AbstractProcessorDialect` 基础状态的 JUnit；测试源码中的 27 个子类是 `DialectOrderingTest`、`DialectProcessWrappingTest`、模板处理和 Spring 整合 fixture | 固定真实类源码 + 最小 Java 子类 Golden；下游排序、包装、聚合和模板行为保留给对应生产对象切片 | `NOT_APPLICABLE`（本对象只保存构造状态并提供 final getter，不能把下游对象行为提前归入本对象） | V3/V6 |
+
+### 12.2 `RUST_OBLIGATION` 与 `VALUE_ADD`
+
+| ID | 类别 | 映射风险 | Rust/Golden 证据 | 能杀死的错误 |
+|:---|:---:|:---|:---|:---|
+| APD-RO-001 | `RUST_OBLIGATION` | Java 抽象类继承 → Rust 组合状态 | `ProbeDialect` 组合 `AbstractProcessorDialect`，经 `dyn IDialect` 和 `dyn IProcessorDialect` 调用 | 把对象伪装成能独立给出 processors 的具体方言，或遗漏父名称合同 |
+| APD-RO-002 | `RUST_OBLIGATION` | `protected` 构造器必须允许库外具体方言扩展 | 集成测试从 crate 外调用 public `new` 并实现两个 trait | 将构造器限制为 crate 内，丢失 Java 外部子类能力 |
+| APD-RO-003 | `RUST_OBLIGATION` | 父构造器先验证非空 name，异常类与消息可观察 | null name Java/Rust Golden 精确比较 `IllegalArgumentException:Dialect name cannot be null` | 接受 null、改成 panic、错误类别/消息漂移或在错误前构造部分基础状态 |
+| APD-RO-004 | `RUST_OBLIGATION` | Java prefix 允许 null，且 null/空/Unicode 三态不同 | 三组构造与具体/接口 getter 差分 | 把 null 合并为空、trim、case-fold 或拒绝 Unicode |
+| APD-RO-005 | `RUST_OBLIGATION` | Java final 字段/getter → Rust 不可变私有状态 | 无 setter；每组重复读取 name/prefix/precedence 并验证稳定 | 暴露可变字段、返回临时默认值或允许扩展实现改写基础状态 |
+| APD-RO-006 | `RUST_OBLIGATION` | `getProcessors` 是具体子类扩展点，不是基础类默认算法 | 双侧 `ProbeDialect` 单独实现空集合并记录实际 prefix/call count | 基础对象硬编码空/null 集合，阻断或绕过具体方言实现 |
+| APD-VA-001 | `VALUE_ADD` | processor precedence 容易选错类型、截断或套用默认值 | `MIN_VALUE`、0、`MAX_VALUE` 逐条差分 | 使用无符号值、固定 1000、饱和或错误合并单 Processor precedence |
+
+### 12.3 Golden 资产与验收
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/AbstractProcessorDialectGolden.java` |
+| 固定输出 | `tests/fixtures/abstract_processor_dialect_golden.txt`（5 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_abstract_processor_dialect_golden.sh` |
+| Rust 差分 | `tests/abstract_processor_dialect_java_parity.rs` |
+| 固定上游源码 | `dialect/IDialect.java`、`dialect/AbstractDialect.java`、`dialect/IProcessorDialect.java`、`dialect/AbstractProcessorDialect.java`、`processor/IProcessor.java`、`templatemode/TemplateMode.java`、`util/Validate.java` |
+
+验收结果：5 条固定 Java 记录全部匹配；3 / 3 机器清单构造器/方法均已处置；
+全项目 248 个 Rust 单元测试通过；静态测试清单识别 290 个 Rust 测试函数；
+`cargo-llvm-cov` 为 23,734 行、2,116 函数、32,208 区域，三项 100%。
+
+### 12.4 LinkBuilder 完整对象批次
+
+| 台账 | 上游风险 | Rust/Golden 证据 | 处置 |
+|:---|:---|:---|:---:|
+| `SOURCE_PARITY` | `LinkBuilderTest#testLinkBuilder01`、`testLinkBuilderWithECFactory01` 原先只归入共享 `.thtest` | `standard_link_builder_matches_java_golden` 直接绑定两项源码入口；SOURCE_PARITY 从 45/93 调整为 47 `MAPPED` / 91 `MERGED`，`MISSING` 仍为 0 | `MAPPED` |
+| `RUST_OBLIGATION` | Java 抽象类继承 → Rust 组合，状态和子类逻辑可能分离 | `abstract_link_builder_preserves_subclass_state_and_nullable_contract` 同时验证 name/order、context 校验和闭包调用次数 | `VERIFIED` |
+| `RUST_OBLIGATION` | Java interface 明确要求线程安全 | `link_builder_is_safely_shared_by_concurrent_render_threads` 以 Barrier 同步 8 线程共享同一 builder | `VERIFIED` |
+| `RUST_OBLIGATION` | Java `CharSequence`/`StringBuilder` 以 UTF-16 code unit 工作 | Golden 覆盖有效 Unicode、孤立高/低代理项、模板变量替换游标和 `%3F` 编码 | `VERIFIED` |
+| `RUST_OBLIGATION` | defensive copy 与 protected hook 原始参数身份不可混淆 | Golden 同时验证内部副本不修改调用方 map，且 `computeContextPath` 收到原始 map | `VERIFIED` |
+| `VALUE_ADD` | `processLink` 的 Java protected 扩展点允许返回 null | Golden 的 hook-null 记录和 typed `Option` 结果阻止将 null 错误改成空字符串或错误 | `DONE` |
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/LinkBuilderGolden.java` |
+| 固定输出 | `tests/fixtures/link_builder_golden.txt`（63 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_link_builder_golden.sh` |
+| Rust 差分与义务 | `tests/link_builder_java_parity.rs`（3 个测试） |
+| 固定上游源码 | `linkbuilder/ILinkBuilder.java`、`AbstractLinkBuilder.java`、`StandardLinkBuilder.java`，以及 context/web 动态调用合同 |
+
+验收结果：固定 SHA 再生输出与入库 fixture 字节一致；63 条 Java 记录全部匹配；
+19 / 19 声明构造器/方法均已处置；`cargo test --workspace --all-features` 全通过；
+静态清单更新为 638 个 Rust 测试函数。
+
+### 12.5 Dialect 贡献聚合完整对象批次
+
+本批把 `DialectSetConfigurationTest` 的 8 个上游源码入口从错误的
+`dialect_configuration_java_parity.rs` 证据改为同对象聚合测试，并补充四个 Dialect
+贡献 SPI 的 nullable/invalid 实现矩阵。
+
+| ID | 上游测试/case | Rust/Golden 证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| DSC-SP-001..008 | `DialectSetConfigurationTest#testProcessorComputation01..08` | `upstream_processor_computations_01_through_08_cover_all_processor_buckets_and_ordering` | `MAPPED`；八个 SOURCE_PARITY 条目均指向同对象 Rust 测试 | V3/V4 |
+| DSC-G-001 | `DialectSetConfiguration#build`、全部 getter、内部 Aggregate factory 与四个贡献 SPI | `dialect_set_configuration_and_contribution_spis_match_java_golden` | 59 条 Java/Rust 逐记录差分 | V3 |
+| DSC-RO-001 | 定义注入、共享快照与并发读取 | `dialect_aggregation_runtime_obligations_are_thread_safe_and_inject_definitions_once` | Rust 映射义务 | V4/V6 |
+
+| 风险 | 固定证据 | 能杀死的错误 |
+|:---|:---|:---|
+| null 配置集合、Processor 集合/元素/mode、Pre/Post 集合/元素/mode/handler | 精确 Java 异常类、消息和 cause 记录 | 静默过滤、panic、错误顺序或类名漂移 |
+| 执行属性 null key/value 与重复 key | Map 内容、存在性和冲突消息 | 把 null 合并为缺失、后值覆盖或错误方言先后顺序 |
+| Aggregate factory 的 0/1/N 分支 | null names/build、单 factory 未知名称委托、多 factory 逆序覆盖 | 统一分支导致空集合替代 null、提前检查名称或前注册者胜出 |
+| Pre/Post Dialect precedence getter 实际未调用 | getter call count 为 0，排序仅依赖 Processor | 根据接口意图擅自包装/叠加方言 precedence |
+| Handler 类接口与公开无参构造器校验 | wrong-interface 与 missing-constructor 的消息/cause | 接受不可实例化 Handler 或丢失 `NoSuchMethodError` 原因链 |
+| Processor 定义注入与共享读取 | 初始化计数恰为 1，8 线程读取同一稳定快照 | 重复注入、可变发布或非线程安全缓存 |
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/org/thymeleaf/DialectSetConfigurationGolden.java` |
+| 固定输出 | `tests/fixtures/dialect_set_configuration_golden.txt`（59 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_dialect_set_configuration_golden.sh` |
+| Rust 差分与义务 | `tests/dialect_set_configuration_java_parity.rs`（3 个测试） |
+| SOURCE_PARITY 生成器 | `scripts/generate_source_parity_inventory.py` |
+| 固定上游源码 | `DialectSetConfiguration.java` 与 `dialect/I*Dialect.java` 四个贡献 SPI |
+
+验收结果：固定 SHA 再生输出与入库 fixture 字节一致；59 条记录全部匹配；上游 8 个
+JUnit 源码入口全部映射到真实同对象测试；37 / 37 声明均已处置；
+`cargo test --workspace --all-features` 与严格 Clippy 均通过。
+
+### 12.6 非元素 Processor SPI 与 StructureHandler 完整对象批次
+
+本批没有逐对象迁移/测试，而是一次冻结七类事件的 28 个对象、102 个声明和 157 个
+参数，再统一生成一个 Java Oracle 并由 Rust 真实生产状态机消费。
+
+| 风险 | 固定证据 | 能杀死的错误 |
+|:---|:---|:---|
+| `set*`/`replaceWith` 在校验前 reset | null 调用前先设置 remove，失败后全部互斥 flag 为 false | 先校验后 reset、失败残留旧动作 |
+| DocType/PI/XML 多参数校验顺序 | keyword/element、target/content 的独立错误记录 | 合并校验、消息或顺序漂移 |
+| `CharSequence` 与 `IModel` 只保存身份 | StringBuilder/Proxy 与 Rust `Arc<dyn ...>` 指针身份 | 过早 String 化、深拷贝模型 |
+| TemplateBoundaries 组合动作 | null name/value、Map 覆盖、Set 去重、selection/inliner null、插入失败后上下文状态保留 | 把 null 合并为缺失、错误清除组合动作、重复删除 |
+| 抽象 Processor 异常处理 | 无位置、有位置、已有位置和非处理异常四组记录 | 替换原异常、覆盖已有位置、丢失 cause 或错误类名 |
+| Engine 消费链 | 已有 replace/remove/processable `.thtest` 与全 workspace Engine 测试 | 只验证状态不验证真实消费 |
+
+| 资产 | 路径/命令 |
+|:---|:---|
+| Java harness | `tests/java/org/thymeleaf/engine/NonElementStructureHandlerGolden.java` |
+| 固定输出 | `tests/fixtures/non_element_structure_handler_golden.txt`（41 条记录） |
+| Golden 生成脚本 | `scripts/regenerate_non_element_structure_handler_golden.sh` |
+| Rust 差分 | `engine::non_element_structure_handler_tests::non_element_structure_handlers_match_java_golden` |
+| 固定上游源码 | 七个 engine StructureHandler 与七组 Processor 子包对象 |
+
+验收结果：41 / 41 Java/Rust 记录一致；102 / 102 声明均已处置；目标测试、全
+workspace 测试、严格 Clippy、2,608 个可执行 `.thtest` 语义批次、迁移工具门禁与
+`cargo-llvm-cov` 全部通过。28 个对象据此统一升级为 `BEHAVIOR_VERIFIED`。
+
+## 13. 统一门禁与后续治理
+
+### 13.1 2026-07-30 全工作区统一门禁实测
+
+本节是当前全工作区结果；前文各切片的 100% 是当时切片快照，不能外推到生产语义批量
+落位后的整个项目。
+
+| 门禁 | 当前结果 |
+|:---|:---|
+| 固定 Java Oracle（JDK 21.0.12、`en_US`） | Core 1,154 / 1,154 通过（Spring 5/6 与 Spring Security 5/6 共 1,002 case 已移除，POLICY_DIFFERENCE） |
+| SOURCE_PARITY 清单 | 875 / 875 源码入口完整处置；Core 1,154 运行时 case（Spring 1,002 已移除），`MISSING=0` |
+| `cargo fmt --all --check` | 通过 |
+| `cargo clippy --workspace --all-targets --all-features -- -D warnings` | 通过 |
+| `cargo test --workspace --all-features` | 通过；1,372 个测试全部通过（含现有 Golden、清单、Engine、中立 Web 与 15 个整合 crate 的合同测试） |
+| `THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream_plain_batch` | 通过；2,608 个可执行 `.thtest` 全部成功或具名策略处置 |
+| `cargo xtask migration-check` | 通过；491 主对象、69 内部对象、4,291 方法、0 missing、0 type mismatch、0 stub、0 review_required |
+| `migration-check` | PASS；491 个主对象、69 个嵌套对象，missing/stub/type mismatch/review required 均为 0 |
+| `.thtest` 清单校验 | 2,609 个文件、2,608 个可执行用例、20 个 common 引用，0 违规 |
+| `.thtest` 固定行为批次 | 15 个 scope 全部通过；去重后 2,595 个行为通过，12 个 `execinfo` 上游禁用处置，1 个任意 Java 反射链安全处置，0 未解释 |
+| 语义功能覆盖 | 对象 560 / 560、方法 4,291 / 4,291、`.thtest` 2,608 / 2,608 完整处置；2,595 / 2,595 可比较行为一致、13 / 13 具名策略处置、0 未解释 |
+| 当前全 workspace 源码覆盖率 | region 79.57%（83,664 / 105,151），function 75.32%（6,883 / 9,138），line 80.82%（63,274 / 78,292）；信息性指标 |
+| 核心 crate 累计携带全部 15 个语料 scope 的源码覆盖率 | region 84.13%（85,479 / 101,601），function 79.75%（6,870 / 8,614），line 85.44%（64,582 / 75,591）；信息性指标 |
+
+源码覆盖率不再作为迁移完成门禁。状态晋级依据是该对象关联的 Java/Rust 差分、
+SOURCE_PARITY、RUST_OBLIGATION 和真实调用链证据；不得仅凭较高源码覆盖率把
+`IMPLEMENTED_UNVERIFIED` 批量改为 `BEHAVIOR_VERIFIED`。
+
+通用迁移布局审计已 vendor 为 `scripts/audit_migration_layout.py`（复制自
+rust-java-migration 技能，标注来源），并扩展批准清单机制（`--approvals
+docs/migration/layout_approvals.json`，含 reason/owner/exit_criteria 八字段契约）。
+2026-08-02 实测（`--retain-segments 1`，核心 crate 范围）：
+
+| 通用审计发现 | 数量 | 处置说明 |
+|:---|---:|:---|
+| `missing_object_file` | 17 → 0 | 批准等价映射：5 个 OGNL→Native 命名等价 + ClassLoaderUtils→ResourceLoaderUtils + 12 个 Servlet 对象由 thymeleaf-support/thymeleaf-hyper 的 HostWeb* 承载（对象级对照表 🔶 同源） |
+| `multiple_public_objects` | 97 → 0 | 混合治理：`Utf16String`/`Utf16StringResult` 拆分为 `util/utf16_string.rs`（独立对象）；其余 96 项为 Java 内部类 1:1 镜像（如 `FragmentExpression$ExecutedFragmentExpression`）或 Rust 类型化 *Error/值类型族，经批准清单落档 |
+| `stub_logic` | 22 → 0 | 逐项核对 Java 上游后补 no-op 来源注释（`AbstractModelVisitor` 11 空 visit、`IAttributeDefinitionsAware`/`IElementDefinitionsAware` 可选标记接口 6、gathering 状态 1、inlining standalone 回调 2、`FastStringWriter` flush/close 2）；脚本识别"空函数体 + 紧邻 `对应 Java … no-op` 注释"为有来源证据 |
+| `missing_java_source_comment` | 1,280 → 0 | 阶段 1.4 已用 scripts/generate_java_source_comments.py 诚实生成器补全（可验证方法→`Class#method()`、接口/继承方法→`Java 接口/超类方法`、Rust 侧辅助→显式标注），CI 已启用 `--fail-on-warning` |
+
+**严格阻断与注释警告全部清零**：`strict_blockers=0`、`warnings=0`、`migration_completion_blocked=false`，CI 全量 `--fail-on-warning`。
+项目专用 `migration-check` 仍 PASS；两种门禁双轨并存（CI audit job）。
+
+| 范围 | 状态 | 下一动作 |
+|:---|:---:|:---|
+| Java JUnit 及参数化 case | `DISPOSED`（875 / 875 源码入口、2,156 / 2,156 运行时 case、0 MISSING） | CI 重跑五模块并重新生成结构化台账 |
+| 2,608 个可执行 `.thtest` | `DISPOSED`（2,595 个行为通过；13 个具名安全/上游禁用处置；0 未解释） | 保持固定 SHA 的 15-scope CI 回归 |
+| Rust 46 个人工复核候选 | `REVIEW_QUEUE`（不属于 SOURCE_PARITY 缺口） | 按测试价值量表继续确认断言、风险和所属台账 |
+| CodeGraph 动态调用证据 | `AVAILABLE`（结构证据，不替代行为门禁） | 持续审计接口/trait 分派、回调路径和高影响符号 |
+
+生产迁移不再逐对象更新本表；S11 统一运行结束后，依据批量证据更新相应对象状态。
+
+---
+
+## 14. `RUST_OBLIGATION`：Rust 特有义务台账
+
+> **创建日期**：2026-07-31
+> **依据**：`rust-java-migration-testing` 技能 §3
+
+本节记录 Java→Rust 映射引入而上游 JUnit 不会直接覆盖的风险。每项必须说明
+映射规则、必须保护的风险、已有测试和能杀死的错误。
+
+### 14.1 TemplateEngine 初始化状态机
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-TE-001 | Java `synchronized` → Rust `AtomicBool` + `Mutex` | 初始化并发竞态 | `engine_initializes_on_first_process`、`engine_rejects_config_after_initialization` | 并发初始化导致配置不一致 |
+| RO-TE-002 | Java 继承 `initializeSpecific()` → Rust 回调 hook | 扩展点在正确时机执行 | `set_initialization_hook` API 存在性 | hook 在初始化后仍被调用 |
+| RO-TE-003 | Java `Set<DialectConfiguration>` → Rust `Vec` + 指针去重 | 方言不重复注册 | `engine_set_dialects_deduplicates_by_identity` | 重复方言导致 Processor 排序错误 |
+| RO-TE-004 | Java `synchronized` 配置冻结 → Rust `AtomicBool` | 初始化后配置不可变 | `config_rejected_after_init` | 初始化后修改配置静默生效 |
+
+### 14.2 TemplateMode 解析
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-TM-001 | Java `TemplateMode.valueOf()` → Rust `parse()` + 默认回退 | 未知模式不 panic | `template_mode_parse_unknown_defaults_html`、`template_mode_parse_empty_errors` | 未知模式导致 panic 而非回退 |
+| RO-TM-002 | Java `isMarkup()`/`isText()` → Rust 同名方法 | 标志位语义一致 | `template_mode_markup_flags`、`template_mode_text_flags` | TEXT 被误判为 markup |
+
+### 14.3 TemplateSpec 构造
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-TS-001 | Java `null` template → Rust `Option<&str>` | null 拒绝而非 panic | `empty_template_spec_accepted` | null 模板导致 panic |
+| RO-TS-002 | Java `Set<String>` selectors → Rust `BTreeSet` | 选择器去重和排序 | `template_spec_with_selector` | 选择器重复或顺序错误 |
+
+### 14.4 Context 变量模型
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-CX-001 | Java `Object` → Rust `TemplateValue` enum | 类型区分不丢失 | `variable_string_value`、`variable_boolean_true`、`variable_number_integer` | 类型混淆导致表达式求值错误 |
+| RO-CX-002 | Java `null` → Rust `TemplateValue::Null` | null 与缺失变量区分 | `variable_null_renders_empty`、`th_if_with_null_removes` | null 被当作 false 或缺失 |
+
+### 14.5 表达式求值
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-EE-001 | Java `+` 字符串连接 → Rust 重载 | 字符串与数字不混淆 | `string_concat_two_literals`、`arithmetic_addition` | 字符串被误当数字运算 |
+| RO-EE-002 | Java `?:` Elvis → Rust `Option` 短路 | null 正确触发默认值 | `elvis_with_null_uses_default` | 非 null 值也被替换 |
+| RO-EE-003 | Java `? :` 三元 → Rust match | 分支选择正确 | `ternary_true_branch`、`ternary_false_branch` | 分支选择错误 |
+
+### 14.6 条件与迭代
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-IF-001 | Java `BooleanUtils.isTrue()` → Rust 真值表 | null/空/false 区分 | `th_if_with_null_removes`、`th_if_with_zero_number_is_false` | null 被当作 true |
+| RO-IT-001 | Java `Iterator` → Rust `Vec` 迭代 | 空集合不 panic | `th_each_empty_list` | 空集合导致 panic |
+
+### 14.7 StringUtils
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-SU-001 | Java `String.length()` UTF-16 → Rust `len()` UTF-8 | 长度语义一致 | `length_basic`、`length_empty` | 中文字符长度错误 |
+| RO-SU-002 | Java `null` → Rust `Option` | null 参数不 panic | `is_empty_none`、`trim_none`、`repeat_none` | null 参数导致 panic |
+| RO-SU-003 | Java `String.toLowerCase()` Locale → Rust `to_lower_case` | Locale 依赖正确传递 | API 签名存在性验证 | Locale 缺失导致错误小写 |
+
+### 14.8 模板处理链
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-PL-001 | Java `Writer` → Rust `Utf16String` 输出 | UTF-16 输出正确 | `th_text_with_variable_expression`、`unicode_in_variable_expression` | 中文输出乱码 |
+| RO-PL-002 | Java HTML escape → Rust 转义 | XSS 防护不丢失 | `th_text_escapes_html_entities`、`th_utext_does_not_escape` | `th:utext` 误转义或 `th:text` 不转义 |
+| RO-PL-003 | Java `th:block` 移除 → Rust 输出 | 容器标签不泄漏 | `th_block_is_removed_from_output` | `<th:block>` 出现在输出中 |
+| RO-PL-004 | Java `th:remove="all"` → Rust 移除 | 元素和子树完整移除 | `th_remove_all_removes_element_and_body` | 子元素未被移除 |
+
+### 14.9 TemplateResolutionAttributes
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-RA-001 | Java `Map<String,Object>` → Rust `HashMap<Option<String>, TemplateResolutionAttributeValue>` | null key/value 区分 | `template_resolution_attributes_equality`、`template_resolution_attributes_different_values` | null key 被忽略 |
+
+### 14.10 中立 Web 与宿主适配
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-WEB-001 | Java Writer/Servlet Response → `RenderedTemplateBody` | Full 只发一次；Stream 保持 Data/Trailer 顺序和背压 | `tests/rendered_template_contract.rs` | 重复 Body、错误长度、丢 Trailer |
+| RO-WEB-002 | Servlet Request → Hyper 只读快照 | Header 大小写、多值参数解码、同名 Cookie 顺序和 Cookie 实例计数 | `thymeleaf-hyper/tests/host_web_contract.rs` | 把 Cookie 名称数误当 Cookie 数量、打乱多值顺序 |
+| RO-WEB-003 | Servlet Session/Application/Exchange → Rust 作用域对象 | 会话惰性创建、属性/资源/身份/Locale/响应元数据、null 校验 | `thymeleaf-hyper/tests/host_web_contract.rs` | null 静默吞掉、Scope 身份改变、资源流错误 |
+| RO-WEB-004 | 中立响应 → 14 个整合 crate | 状态码、Header、Body、错误脱敏和渲染器身份 | `thymeleaf-support/*/tests/adapter_contract.rs` | 适配器重写状态或 Body、泄漏模板内部错误 |
+| RO-WEB-005 | 宿主公开 API 无法无损表达 Frame | 策略差异必须显式失败或具名丢弃，不能静默收集 | Warp 流式拒绝、Vernal Trailer、Tide Stream 合同 | 破坏背压、无提示丢 Trailer、无限流内存膨胀 |
+
+### 14.11 缓存管理器并发与生命周期
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-CM-001 | Java `volatile` + 双重检查锁 → Rust `OnceLock<Option<Arc<_>>>` | 并发首次读取只能初始化一次；`None` 必须永久记忆 | `initializes_once_under_concurrency_and_clears_once_per_request`、`remembers_disabled_cache_without_retrying_initializer` | 重复创建缓存、禁用后因配置变化意外启用 |
+| RO-CM-002 | Java `clearAllCaches()` → Rust trait 方法 | getter 的惰性初始化副作用保留，且每个缓存只清理一次 | `standard_cache_manager_matches_java_golden`；生产实现逐调用对照 | 缓存重复清理或漏清理 |
+| RO-CM-003 | Java 可变配置字段 → Rust `&mut self` setter + 已初始化 `OnceLock` | 初始化后的 setter 只改变 getter，不替换既有缓存身份 | `standard_cache_manager_matches_java_golden` | 配置变化偷偷替换缓存、丢失已缓存制品 |
+| RO-CM-004 | JVM invokeinterface NPE → Rust 类型化 panic | null validity 的异常类别与 JDK 21 增强消息保持；validity 自身 panic 不被包装 | `matches_java_delegation_ignored_arguments_and_failure_contracts` | 普通 `expect` 文本替代 Java NPE、吞掉或重写 validity 异常 |
+
+### 14.12 模板资源宿主与协议边界
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-TR-001 | Java `ClassLoader` → Rust 有序资源根 | 搜索顺序、去首 `/`、真实 I/O、relative 与 charset 不能因重命名丢失 | `host_template_resources_match_java_golden` | 错误根命中、路径未清理、缺失资源先报 charset 错误 |
+| RO-TR-002 | Java 可空 `IWebApplication` → `Option<Arc<dyn IWebApplication>>` | 构造器必须先拒绝 null 应用，再校验路径；exists/reader 必须传递精确根路径 | `host_template_resources_match_java_golden` | null 应用不可测试、校验顺序颠倒、宿主路径缺少 `/` |
+| RO-TR-003 | Java `URLStreamHandler` → 实例级 `UrlResourceConnectionHandler` | 自定义协议 handler 必须被调用，relative 必须继承，I/O 失败不能转成成功 | `custom_protocol_handler_is_used_and_inherited_by_relative_resources` | handler 未调用、相对资源丢 handler、NotFound 被吞掉 |
+
+### 14.13 Template Resolver 链与错误边界
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-RS-001 | Java `null`/exception/`null` resolution → Rust `Result<Option<_>>` | 参数错误、资源失败和 Resolver 不适用不能混成同一个 `None`；校验及短路顺序必须一致 | `template_resolver_batch_matches_java_golden` | 吞掉 File/ClassLoader/Web 构造错误、提前计算 mode/validity、颠倒 null 校验 |
+| RO-RS-002 | Java UTF-16 字符串拼接 → `Utf16String` code unit 拼接 | prefix/alias/suffix 中孤立代理项不能经 lossy UTF-8 被替换 | `template_resolver_batch_matches_java_golden` 的 `config.resource.utf16` | 资源名中的孤立代理项变成 U+FFFD |
+| RO-RS-003 | JVM `URLStreamHandler` → Resolver 实例级 handler | Resolver 创建的 URL Resource 必须收到自定义协议处理器 | `url_resolver_passes_custom_protocol_handler_to_resources` | handler 只存在于 Resource 直接构造入口，Resolver 链实际不可用 |
+
+### 14.14 LinkBuilder UTF-16、组合扩展与并发边界
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-LB-001 | Java 抽象类/protected override → Rust 组合钩子 | name/order 与构建闭包共享同一对象状态，context 校验先于子类逻辑 | `abstract_link_builder_preserves_subclass_state_and_nullable_contract` | 空壳基类、双份状态、null context 进入扩展逻辑 |
+| RO-LB-002 | Java interface 线程安全合同 → `Send + Sync` trait object | 同一 builder 可被多个渲染线程并发读取，结果不串扰 | `link_builder_is_safely_shared_by_concurrent_render_threads` | `Rc`/内部无保护可变状态、并发输出污染 |
+| RO-LB-003 | Java UTF-16 `CharSequence` → Rust 原始 code unit | fragment/template 游标和孤立代理项不能经 UTF-8 lossy 转换改变 | `standard_link_builder_matches_java_golden` | 字符偏移错误、代理项变 U+FFFD、路径参数替换跳位 |
+| RO-LB-004 | Java defensive copy + 原始参数 hook | 内部参数可消费但调用方 map 不变，context hook 仍看到原始有序 map | 同上 `identity`/`defensive-copy` Golden | 修改调用方参数或把已消费副本误传给扩展点 |
+| RO-LB-005 | Java nullable `processLink` → `Option<Utf16String>` | null 表示链式未处理，不能变为空字符串、panic 或普通错误 | 同上 `hook.process.null` Golden | builder 链提前终止或输出空 URL |
+
+### 14.15 Inline 单例、动态分派与线程共享边界
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-IN-001 | Java overload → 三个 Rust trait 方法 | Text、CDATA、Comment 不能误接到同一默认分支或丢失返回值 | `inline_contract_and_no_op_singleton_match_java_golden` 的 Probe 记录 | 重载映射颠倒、漏调或调用计数错误 |
+| RO-IN-002 | Java `private` 构造器 + `public static final INSTANCE` → `#[non_exhaustive]` + `OnceLock<Arc<_>>` | crate 外不能产生第二种构造路径，所有 `shared()` 必须保持同一分配身份 | compile-fail doctest、`no_op_shared_arc_preserves_the_java_singleton_identity` | 公开单位结构构造、每次新建 Arc、具体/trait 单例分裂 |
+| RO-IN-003 | Java 无校验 NoOp 重载 → Rust nullable wrapper | null/非 null上下文和事件都不得被读取或触发错误，必须返回 `None` | Golden 的六个 NoOp 返回记录 + `PanicTemplateContext` | 擅自增加非空校验、访问 Context 或回传原事件 |
+| RO-IN-004 | Engine Context 共享 inliner → `IInliner: Send + Sync` | 同一 NoOp 单例跨渲染线程安全共享且名称稳定 | Golden 的 8 线程 identity/name 记录 | 非线程安全共享、线程间身份或名称漂移 |
+
+### 14.16 Pre/PostProcessor 类型令牌、排序与构造失败边界
+
+`SOURCE_PARITY` 处置：固定上游没有直接针对这 4 个配置对象的独立 JUnit，登记为
+`NOT_APPLICABLE`；`PrePostProcessorsTest` 的 10 个五模式资源 case 已由
+`thtest_upstream_plain_batch` 的 `prepostprocessors` 真实方言组合 10 / 10 执行。
+对象自身的构造、getter、动态接口、排序、包装和 Engine 失败路径由 40 条固定 Java
+Golden 补齐，不能用该 10 个端到端 case 替代对象级证据。
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-PP-001 | Java `Class<? extends ITemplateHandler>` → Rust 构造能力 | Handler 类名与构造函数必须绑定为同一个类型令牌，每次执行创建新实例 | `pre_and_post_processor_contracts_match_java_golden` 的 class/fresh-instance 记录 | 名称与工厂错配、复用有状态 Handler |
+| RO-PP-002 | Java nullable 构造参数 → Rust `Option` + `Result` | mode 校验先于 Handler class，错误文本精确一致 | 同一 Golden 的四条 validation 记录 | 校验顺序颠倒、panic 或错误消息漂移 |
+| RO-PP-003 | Java comparator 读取配置对象类名 | 同 precedence 时必须按 Pre/PostProcessor 实现类名排序，不能按 Handler 类名排序 | 同一 Golden 的 implementation-class 与 wrapped-dialect 记录 | 所有配置共用 Handler 后比较为相等、排序不稳定 |
+| RO-PP-004 | `Class#newInstance()` checked/runtime failure → Rust factory `Result` | Pre/Post 外层消息不同，原始构造错误保留在 source 链 | 同一 Golden 的两条 handler failure 记录 | 吞错、错误阶段混淆、丢失原因链 |
+| RO-PP-005 | Engine 配置跨线程共享 | 类型令牌和配置对象均 `Send + Sync`，并发调用仍逐次构造 | `handler_type_token_and_processor_configs_are_send_sync_and_thread_shareable` | 非线程安全 factory、跨线程身份或计数丢失 |
+
+### 14.17 Dialect 聚合、nullable SPI 与不可变发布边界
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-DSC-001 | Java `Set`/`Map` 与 null → Rust `Vec`/`IndexMap`/`Option` | 输入顺序、身份去重、null key/value 和冲突点必须保持 | `dialect_set_configuration_and_contribution_spis_match_java_golden` | 过滤 null、无序 HashMap、后值覆盖、错误方言获胜 |
+| RO-DSC-002 | Java 多态 factory 链 → `Arc<dyn IExpressionObjectFactory>` | 0/1/N 三个分支、单 factory 无条件委托和多 factory 逆序覆盖不能合并 | 同一 59 条 Golden 的 expression 记录 | 空集合替代 null、未知名称不委托、前注册者覆盖 |
+| RO-DSC-003 | Java `Class` 反射校验 → `TemplateHandlerClass` 元数据 | 错误接口和缺少公开无参构造器必须在配置阶段失败并保留原因 | 同一 Golden 的 invalid handler 记录 | 错误延迟到模板执行、接受不可构造类型或丢 cause |
+| RO-DSC-004 | 接口 precedence 文档与 Java 实现不一致 | Pre/Post 方言 precedence getter 不得被调用，排序按配置对象自身 | getter call count=0 与排序记录 | “修正”上游实现、额外包装或排序漂移 |
+| RO-DSC-005 | Java 构造后只读配置 → Rust 跨线程共享快照 | 定义只注入一次，8 线程读取不改变 bucket、属性或 factory 结果 | `dialect_aggregation_runtime_obligations_are_thread_safe_and_inject_definitions_once` | 重复初始化、发布后变更或竞态 |
+
+### 14.18 表达式对象生命周期与安全包装
+
+| ID | 映射风险 | 必须保护的风险 | 测试 | 能杀死的错误 |
+|:---|:---|:---|:---|:---|
+| RO-EO-001 | Java `Set<String>` 身份 → Rust 共享切片 | 名称顺序、nullable 元素和工厂/容器返回的同一集合身份 | `expression_object_lifecycle_and_wrapper_match_java_golden` | 每次 clone 新集合、过滤 null、顺序漂移 |
+| RO-EO-002 | Java 惰性 HashMap 缓存 → `RwLock<IndexMap>` | cacheable null 也只构建一次，非缓存对象每次重建 | 同一 114 条 Golden + 并发义务测试 | 用 `get` 判断 null、错误缓存 fresh、并发身份漂移 |
+| RO-EO-003 | Java 静态工具单例 → Rust `LazyLock<Arc<_>>` | 8 个无状态对象跨工厂同一身份；Locale 对象逐次构建 | standard singleton/fresh 记录 | 全部每次 new 或全部全局缓存 |
+| RO-EO-004 | `ITemplateContext` 能力分派 | selection、messages、ids、execInfo 只在正确上下文出现 | ordinary/template 两组记录 | 普通 Context 构建模板对象、selection 回退错误 |
+| RO-EO-005 | `HashMap#putAll` 非虚分派 | 同名键可进入本地 Map，但惰性表达式对象仍优先读取 | `wrapper.putAll*` 记录 | 按源码注释逐项调用覆盖 `put`、错误回滚 |
+| RO-EO-006 | Java GC 回环 → Rust `Arc` 所有权 | Context 释放后容器不泄漏且不调用工厂 | `expression_object_cache_is_thread_safe_and_weak_context_breaks_arc_cycles` | Context↔ExpressionObjects 强引用环 |
+
+---
+
+## 15. `VALUE_ADD`：增量价值测试台账
+
+> **创建日期**：2026-07-31
+> **依据**：`rust-java-migration-testing` 技能 §4
+
+本节记录超出上游 JUnit 但能杀死高风险错误的测试。每项必须说明来源、
+风险/可捕获缺陷、新测试与已有测试的差异。
+
+| ID | 来源 | 风险/可捕获缺陷 | 新测试 | 与已有测试差异 | 状态 |
+|:---|:---|:---|:---|:---|:---:|
+| VA-001 | coverage gap | `TemplateEngine` 配置管理未测试 | `engine_add_dialect_with_prefix`、`engine_set_additional_dialects` | 上游无独立配置测试 | `DONE` |
+| VA-002 | coverage gap | 缓存管理器/消息解析器/链接构建器默认值未验证 | `default_message_resolver`、`default_link_builder`、`default_cache_manager` | 上游依赖 Spring 配置 | `DONE` |
+| VA-003 | coverage gap | 模板解析器去重逻辑未测试 | `set_template_resolvers_deduplicates`、`add_template_resolver` | 上游无独立测试 | `DONE` |
+| VA-004 | coverage gap | 大模板压力测试缺失 | `large_template_100_elements`、`large_template_with_many_elements` | 上游无压力测试 | `DONE` |
+| VA-005 | coverage gap | 混合静态/动态内容未覆盖 | `mixed_static_and_dynamic_content`、`mixed_static_dynamic` | 上游分拆为多个小测试 | `DONE` |
+| VA-006 | coverage gap | `StringUtils` 核心方法未覆盖 | 40 个 `string_utils_java_parity` 测试 | 上游依赖 JVM Locale | `DONE` |
+| VA-007 | coverage gap | `TemplateMode` 解析边界未覆盖 | `template_mode_parse_unknown_defaults_html`、`template_mode_parse_empty_errors` | 上游无边界测试 | `DONE` |
+| VA-008 | coverage gap | `th:inline=none` 未测试 | `th_inline_none_disables_expression_processing` | 上游无独立测试 | `DONE` |
+| VA-009 | coverage gap | `th:switch/case/default` 未覆盖 | `th_switch_matching_case`、`th_switch_default_case` | 上游分拆为多个测试 | `DONE` |
+| VA-010 | coverage gap | `th:attrappend/attrprepend` 未覆盖 | `th_attrappend`、`th_attrprepend` | 上游无独立测试 | `DONE` |
+| VA-011 | coverage gap | `TemplateResolutionAttributes` 相等性未测试 | `resolution_attributes_equality`、`resolution_attributes_inequality` | 上游依赖 Java `equals` | `DONE` |
+| VA-012 | coverage gap | `escape_xml` 转义未覆盖 | `escape_xml_basic`、`escape_xml_ampersand` | 上游无独立测试 | `DONE` |
+| VA-013 | coverage gap | `pack` 方法未覆盖 | `pack_removes_whitespace_and_lowercases` | 上游无独立测试 | `DONE` |
+| VA-014 | coverage gap | `capitalize`/`un_capitalize` 未覆盖 | `capitalize_basic`、`un_capitalize_basic` | 上游无独立测试 | `DONE` |
+| VA-015 | coverage gap | `random_alphanumeric` 未覆盖 | `random_alphanumeric_length`、`random_alphanumeric_zero` | 上游无独立测试 | `DONE` |
+| VA-016 | 上游无直接 JUnit | `NoOpInliner` 私有构造、单例身份和“绝不读取参数”合同可能在 Rust 映射中被弱化 | `inline_java_parity` 两个测试 + compile-fail doctest | Java Golden 固定源形态/返回；Rust 义务额外验证 Arc 分配身份和构造可见性 | `DONE` |
+| VA-017 | 上游无四对象直接 JUnit；调用链仅间接覆盖 | Pre/Post 配置实现类排序、Handler 类型令牌不可分离、构造失败原因链和并发构造容易在跨语言映射中丢失 | `pre_post_processor_java_parity` 两个测试、40 条 Golden | Java Golden 固定公开契约和 Engine 失败路径；Rust 义务额外验证 `Send + Sync` 与 8 线程逐次构造 | `DONE` |
+| VA-018 | 上游无五对象直接 JUnit；OGNL 包装器仅由 evaluator 间接调用 | cacheable null、集合身份、标准工具单例、`putAll` 非虚分派与 Rust 所有权环容易被普通渲染测试遗漏 | `expression_object_lifecycle_java_parity` 两个测试、114 条 Golden | Java 固定完整可观察 Map/生命周期合同；Rust 额外验证 12 线程缓存身份和 `Weak` 回收 | `DONE` |
+| VA-019 | 上游对六个基础 Context 对象主要由调用链间接覆盖 | keySet 实时身份、具体表达式 Context 传入工厂、默认 Locale 构造快照及惰性容器并发身份容易在组合映射中失真 | `basic_context_java_parity` 两个测试、71 条 Golden | Java 固定 29 个声明及完整可观察状态；Rust 额外验证 12 线程 `OnceLock` 单例，禁止 keySet add 由类型系统承接 | `DONE` |
+| VA-020 | 上游对三个 Web Context 对象主要由引擎调用链间接覆盖 | 父构造优先级、exchange 身份和具体 WebExpressionContext capability 容易在组合映射中丢失 | `web_context_java_parity` 两个测试、43 条 Golden | Java 固定 9 个声明与构造/身份/错误状态；Rust 额外验证 12 线程惰性容器与 exchange 身份 | `DONE` |
+| VA-021 | 上游没有四个 Context 工具对象的直接 JUnit 闭环 | lazy loader 的失败重试、`Integer.MAX_VALUE` 回绕，以及 Servlet capability 的运行时强转容易在移植时失真 | `context_utilities_java_parity` 两个测试、46 条 Golden + `identifier_sequences` 单元测试 | Java 固定 16 个声明及全部公开状态；Rust 以私有状态测试覆盖 Java 反射 seed 的回绕分支，以 12 线程验证单次加载 | `DONE` |
+| VA-022 | 上游对五个 Engine Context 对象主要由渲染调用链间接覆盖 | 显式 null selection、Web 变量回滚顺序、诊断文本和 expression factory 的构造时序容易在组合移植时失真 | `engine_context_java_parity` 两个测试、41 条 Golden | Java 固定 86 个声明及普通/Web 层级状态；Rust 逐项比较模板栈、变量、selection 与诊断串 | `DONE` |
+| VA-023 | 上游工具类的文本判定由多条 Parser/Processor 调用链分散触发 | Java Unicode whitespace 与双形态 inline marker 的反向扫描易被标准 Rust whitespace 简化 | `engine_event_utils_java_parity` 一个测试、14 条 Golden | Java 固定 11 个声明和三类事件边界；Rust 使用 UTF-16 逐 code unit 对齐 | `DONE` |
+| VA-024 | `ElementProcessorIteratorTest` 的核心语义依赖真实 parser/dialect/不可变标签替换链 | 动态添加或删除属性时，Processor 顺序、visited 身份与 Rust `Arc` 地址复用容易使重算失真 | `ElementProcessorIteratorGolden` 9 条记录 + `element_processor_iterator` 同模块测试 | Java 固定 8 个声明与 01/02/03/04/06/07/08/09 场景；Rust 经真实 definition/attribute/tag 链逐项比较，并覆盖内部实例身份避免地址复用 | `DONE` |
+
+---
+
+## 16. 新增测试覆盖率影响
+
+> **审计日期**：2026-07-31
+
+| 测试文件 | 测试数 | 覆盖目标 | 覆盖率变化 |
+|:---|---:|:---|:---|
+| `template_engine_java_parity.rs` | 78 | TemplateEngine 初始化、配置、处理链、TemplateMode、TemplateSpec | 44.71% → 53.65% line |
+| `template_engine_execution_java_parity.rs` | 2 | 3 个根模板执行/节流对象、38 条 Java Golden；排序冻结、全部便利重载、字符/字节背压、并发完成观察和输出错误 | 包含于最终统一结果 |
+| `expression_context_java_parity.rs` | 87 | 表达式求值、Context 变量、条件/迭代/逻辑运算 | 53.65% → 55.07% line |
+| `expression_objects_java_parity.rs` | 18 | 标准表达式对象经真实 Engine/Processor 调用 | 包含于最终统一结果 |
+| `processor_handler_java_parity.rs` | 46 | Standard Processor 组合与输出行为 | 包含于最终统一结果 |
+| `selector_processing_java_parity.rs` | 17 | remove/block/mode/cache/Unicode/大模板行为 | 包含于最终统一结果 |
+| `string_utils_java_parity.rs` | 40 | StringUtils 比较/查找/截取/替换/转义 | 包含于最终统一结果 |
+| `rendered_template_contract.rs` | 3 | Full/Stream/Trailer 与 HTTP 响应合同 | 包含于最终统一结果 |
+| `thymeleaf-support/*/tests/*.rs` | 28 | 14 个整合 crate、Hyper 宿主 SPI、错误/流式/拒绝策略 | 包含于最终统一结果 |
+| `standard_cache_manager_java_parity.rs` + `abstract_cache_manager.rs` | 3 | 缓存管理默认值、setter、惰性单例、sticky-null、并发与清理次数 | line 56.65% → 56.85% |
+| `standard_parsed_template_entry_validator.rs` | 1 | validity 委托、忽略参数、异常传播、null 增强 NPE | line 56.85% → 56.94% |
+| `host_template_resource_java_parity.rs` + `url_template_resource.rs` | 2 | ClassLoader/Web 宿主资源 Golden；自定义 URL 协议 Rust 义务 | line 56.94% → 57.21% |
+| `template_resolver_java_parity.rs` | 2 | 9 个 Resolver/SPI 对象、113 条 Java Golden；Resolver→自定义 URL 协议处理器义务 | line 57.21% → 57.99% |
+| `message_resolver_java_parity.rs` + `messageresolver` 单元测试 | 9 | 4 个消息解析对象、109 条 Java Golden；nullable SPI、Properties/locale、UTF-16 MessageFormat、精确大数、扩展钩子、模板缓存策略、origin 父类元数据冲突/循环义务 | 包含于最终统一结果 |
+| `link_builder_java_parity.rs` | 3 | 3 个 LinkBuilder 对象、63 条 Java Golden；UTF-16、组合扩展钩子、nullable 链与并发共享义务 | line 59.65% → 60.18% |
+| `inline_java_parity.rs` + compile-fail doctest | 2 + 1 doc | 2 个基础 Inline 对象、23 条 Java Golden；nullable 重载、动态分派、私有构造、单例与 8 线程共享义务 | line 60.18% → 60.27% |
+| `pre_post_processor_java_parity.rs` | 2 | 4 个 Pre/PostProcessor 对象、40 条 Java Golden；类型令牌、排序、构造失败和 8 线程共享义务 | line 60.27% → 60.65% |
+| `dialect_set_configuration_java_parity.rs` | 3 | 5 个 Dialect 聚合对象、59 条 Java Golden、上游 8 组 Processor computation、定义注入与并发义务 | line 60.65% → 60.91% |
+| `non_element_structure_handler_tests.rs` | 1 | 28 个非元素 Processor/StructureHandler 对象、41 条 Java Golden；状态机、失败清理、身份、nullable 组合动作和异常元数据 | 包含于最终统一结果 |
+| `engine_configuration_java_parity.rs` + `configuration_printer_helper.rs` | 4 | 3 个引擎配置对象、44 条 Java Golden；冻结快照、接口能力查询、12 线程单次发布及完整 DEBUG/TRACE 诊断 | 包含于最终统一结果 |
+| `engine_context_factory_java_parity.rs` + `engine_context_manager.rs` | 4 | 3 个 Context 工厂/管理器对象、46 条 Java Golden；普通/Web capability 分流、有序变量复制、12 线程共享以及嵌套层级/TemplateData 恢复 | 包含于最终统一结果 |
+| `expression_object_lifecycle_java_parity.rs` | 2 | 5 个表达式对象生命周期/包装对象、114 条 Java Golden；共享身份、惰性缓存、标准单例、完整 Map 和 12 线程/Weak 义务 | 包含于最终统一结果 |
+| `basic_context_java_parity.rs` | 2 | 6 个基础 Context 对象、29 个声明、71 条 Java Golden；实时 keySet、具体 Context 身份与 12 线程惰性单例义务 | 包含于最终统一结果 |
+| `web_context_java_parity.rs` | 2 | 3 个 Web Context 对象、9 个声明、43 条 Java Golden；构造顺序、exchange/capability 身份与 12 线程惰性单例义务 | 包含于最终统一结果 |
+| `context_utilities_java_parity.rs` + `identifier_sequences.rs` | 3 | 4 个 Context 工具对象、16 个声明、46 条 Java Golden；lazy null/重试/12 线程、ID 回绕和 Web/Servlet capability 强转 | 包含于最终统一结果 |
+| `engine_context_java_parity.rs` | 2 | 5 个 Engine Context 对象、86 个声明、41 条 Java Golden；延迟 factory、变量/selection 三态、模板栈、Web 回滚与诊断串 | 包含于最终统一结果 |
+| `element_processor_iterator.rs` | 1 | ElementProcessorIterator 的 8 个声明、9 条 Java Golden；真实定义/属性/标签替换链与动态重算 | 包含于最终统一结果 |
+| `element_tag_structure_handler.rs` | 4 | ElementTagStructureHandler 的 33 个声明、6 条 Java Golden；真实属性转换、Model 身份、结构互斥及 EngineContext 作用顺序 | 包含于最终统一结果 |
+| `element_model_structure_handler.rs` | 1 | ElementModelStructureHandler 与 IElementModelStructureHandler 的 8 个声明、4 条 Java Golden；可组合上下文动作、reset 与真实 EngineContext 作用顺序 | 包含于最终统一结果 |
+| `model.rs` | 3 | Model 的编辑顺序、事件身份、空事件短路、同/异配置及异模板模式；12 条 Java Golden；处理器分派、节流、Visitor、`resetAsCloneOf`、`sameAs` 与模板边界单例 | `Model`、`TemplateStart`、`TemplateEnd` 对象级行为已验证 |
+| `template_model.rs` | 1 | TemplateModel 与 IModel 的不可变模型合同；2 条 Java Golden；全部 7 个拒绝修改入口、完整异常文本和 `cloneModel()` 边界剥离 | `TemplateModel`、`IModel` 对象级行为已验证 |
+| `template_data.rs` | 1 | TemplateData 的可空与非空构造字段；2 条 Java Golden；选择器顺序、资源/有效性共享身份与模式，以及全部五个一级 JavaBean 属性和资源/有效性接口 getter 的嵌套读取 | `templateResource` / `validity` 的通用 trait-object 包装已可读；仍待保持自定义具体类型、对象身份与任意方法调用的完整表达式桥接 |
+| `iteration_status_var.rs` | 1 | IterationStatusVar 的状态机与 JavaBean 属性；5 条 Java Golden；未知 `size` 的 NPE、首尾/奇偶、当前对象文本和 `int` 环绕 | `IterationStatusVar` 对象级行为已验证 |
+| `xml_attribute_definition.rs` | 1 | XMLAttributeDefinition 的 XML 名称、空关联 Processor 只读视图、字符串形式、同类 equality/hash；9 条 Java Golden | `XMLAttributeDefinition` 对象级行为已验证 |
+| `xml_attribute_name.rs` | 1 | XMLAttributeName 的大小写敏感 prefix/本地名、完整名称、字符串形式及 equality/hash；4 条 Java Golden | `XMLAttributeName` 对象级行为已验证 |
+| `throttled_template_writer.rs` + `throttled_template_writer_writer_adapter.rs` + `throttled_template_writer_output_stream_adapter.rs` + `sse_throttled_template_writer.rs` | 4 | ThrottledTemplateWriter 字符/UTF-8 字节模式的额度、溢出、停止、流控标志、最大溢出和扩容计数及字符/字节模式锁定错误，溢出排空的 I/O 错误包装、600+200 单元扩容边界、`flush` / `close` 原样 I/O 失败、全部 Java `Writer` 写入重载的 UTF-16 等价路径，以及未初始化时五个控制器方法的精确 JDK NPE 诊断；WriterAdapter 的直接限额写出、溢出暂停、流控、无限额度排空和溢出排空 I/O 包装；OutputStreamAdapter 的直接字节额度、排空、增量缓冲扩容和溢出排空 I/O 包装；SSE 的字符及 UTF-8 输出、元数据、换行 `data:` 帧、结束边界、空正文事件及 event/id 两种非法 token；33 条 Java Golden | `ThrottledTemplateWriter`、`IThrottledTemplateWriterControl`、`SSEThrottledTemplateWriter`、`ThrottledTemplateWriterWriterAdapter` 已对象级验证；OutputStreamAdapter 仍独立结算 |
+| **当前 `cargo test --workspace --all-features -- --list` 清单** | **1297** | 1295 个单元/集成测试 + 2 个 doctest | **覆盖率见本节最终结果** |
+
+### 16.1 cargo-llvm-cov 最终结果
+
+```text
+TOTAL  101946  21347  79.06%  8738  2128  75.65%  75954  14789  80.53%
+```
+
+源码覆盖率作为诊断指标，不作为迁移完成门禁。状态晋级依据是对象关联的
+Java/Rust 差分、SOURCE_PARITY、RUST_OBLIGATION 和真实调用链证据。
+
+## 21. `org.thymeleaf.standard.expression` 解析族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 3 个对象：`FragmentSignatureUtils`（264）、`IStandardExpressionParser`
+> （271）、`LinkExpression`（276，表滞后结算：两个既有差分测试文件直接
+> 构造并断言）。
+
+### 21.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| EX-SP-001 | `LiteralSubstitutionUtilTest` 的 `|...|` 替换断言（可解析子集） | `literal_substitution_plain_matches_java`（12 断言）+ `literal_substitution_left_associative_bracketing_matches_java_ast`（6 断言，左结合括号化） | `SPLIT` | V3 |
+| EX-SP-002 | `FragmentSignatureTest#testFragmentSignature` 全部 5 断言 | `fragment_signature_matches_java`（`parseFragmentSignature` 公开入口） | `SPLIT` | V3 |
+| EX-SP-003 | `LinkExpression` Web/构造校验 | `link_expression_web_java_parity.rs` + `link_expression_charseq_java_parity.rs`（既有 Golden 差分） | `MERGED` | V3 |
+
+### 21.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| EX-RO-001 | `LiteralSubstitutionUtil` 为包内 API（Java public） | 公开解析入口代理差分；含转义反斜杠的两个工具级用例如实记录，不伪称 MATCH | 把代理路径差异当 MATCH |
+| EX-RO-002 | 多操作数连接的工具输出 vs AST 括号化 | 括号化用例断言 `(x + y) + z` 精确形式 | 用未括号化文本断言 AST 串表示 |
+
+## 20. `org.thymeleaf.util` 对象族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 9 个对象：`AggregateCharSequence`（440）、`ExpressionUtils`（449）、
+> `NumberUtils`（459）、`StandardExpressionUtils`（378）、以及表滞后结算的
+> `StandardCache`（19）、`StandardDialect`（236）、`DateUtils`（446）、
+> `EscapedAttributeUtils`（447）、`StringUtils`（466）。
+> 本批同时修复 `ExpressionUtils::allowed_super_member` 漏列
+> `java.util.Collection`/`java.util.Map` 接口名的成员白名单缺陷（Java 以
+> `Class#isAssignableFrom` 覆盖接口自身）。
+
+### 20.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| UT-SP-001 | `AggregateCharSequenceTest#testAggregateString` 全切分穷举 | `aggregate_char_sequence_exhaustive_matches_java_string_semantics`：全部长度 × 三组件切分的 toString/length/charAt/subSequence/hashCode/equals/contentEquals | `SPLIT` | V3 |
+| UT-SP-002 | `NumberUtilsTest#testSequence` 全部 20 断言 | `number_utils_sequence_matches_java` | `SPLIT` | V3 |
+| UT-SP-003 | `ExpressionUtilsTest#typeAllowedTest` 全部 25 断言 | `expression_utils_type_forbidden_matches_java`（`is_type_forbidden`） | `SPLIT` | V3 |
+| UT-SP-004 | `ExpressionUtilsTest#memberAllowedForTypeTest` 公开入口可复现断言 | `expression_utils_member_forbidden_matches_java`（对象级 `is_member_forbidden`） | `SPLIT` | V3 |
+| UT-SP-005 | `StandardExpressionUtilsTest#testcontainsExternalAccess` 全部 65 断言 | `standard_expression_utils_contains_external_access_matches_java` | `SPLIT` | V3 |
+| UT-SP-006 | 表滞后结算：`standard_cache_java_parity.rs` / `date_utils_java_parity.rs` / `escaped_attribute_utils_java_parity.rs` / `string_utils_java_parity.rs` / corpus 引擎级 `StandardDialect` | 既有差分测试直接构造并断言对应对象 | `MERGED` | V3 |
+
+### 20.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| UT-RO-001 | Java `Class#isAssignableFrom` 的接口成员白名单 | `allowed_super_member` 修复：Collection/Map 接口声明方法集；`memberAllowedForTypeTest` 复现 | 漏接口名导致 Collection.iterator 误禁 |
+| UT-RO-002 | Java `String.hashCode` 语义 | AggregateCharSequence 穷举中 `java_hash_code` 与 `TextUtils::hash_triple` 三方一致 | 用 Rust 默认哈希替代 Java 31 进制哈希 |
+| UT-RO-003 | 实例类型级成员检查（`isMemberForbiddenForInstanceOfType`）为包内 API | 公开入口 `is_member_forbidden`（对象级）转写可复现子集；其余用例记录 | 把包内 API 当公开面 |
+
+### 20.3 `VALUE_ADD`
+
+| ID | 风险 | Rust 证据 | 价值 |
+|:---|:---|:---|:---|
+| UT-VA-001 | 聚合序列的跨组件边界 | 穷举覆盖全部切分边界与 subSequence 全组合 | 防止组件偏移/长度计算错误 |
+
+## 19. Standard Inliner 族与 CSS Serializer 切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 6 个对象：`AbstractStandardInliner`（307）、`StandardCSSInliner`（310）、
+> `StandardHTMLInliner`（311）、`StandardTextInliner`（314）、
+> `IStandardCSSSerializer`（372）、`StandardCSSSerializer`（374）。
+> 用例逐字取自上游固定 `.thtest` 语料
+> （`templateengine/features/inlining/standard` 与
+> `templateengine/attrprocessors/inline`），fixture 字节级一致并校验 SHA-256；
+> 输出比较复用已验证 2,595 MATCH 的同一比较器
+> （markup 模式 canonical trace，文本模式精确）。
+
+### 19.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| IN-SP-001 | `inlining001/002/007/008`（TEXT 转义/不转义/前缀） | `standard_inliner_family_java_parity.rs`：引擎级输出精确比较 | `SPLIT` | V3 |
+| IN-SP-002 | `inlining005/006/011/012`（CSS 转义/不转义/前缀） | 同上：CSS 转义输出（空格/`&`/单引号）即 `StandardCSSSerializer` 序列化结果 | `SPLIT` | V3 |
+| IN-SP-003 | `inline31`（HTML `th:inline="none"` + `th:inline="html"`） | 同上：canonical trace 比较 | `SPLIT` | V3 |
+| IN-SP-004 | `inline29`（XML + `th:inline="TEXT"`）与 `inline32`（XML `th:inline="none"`） | 同上 | `SPLIT` | V3 |
+| IN-SP-005 | `inline01`/`inlining110`（HTML `th:inline="javascript"`） | 同上（StandardJavaScriptInliner 对照强化） | `SPLIT` | V3 |
+| IN-SP-006 | `inline34`（XML 使用 HTML inline 模式） | 异常链消息匹配 Java `Invalid inline mode selected` 模式 | `SPLIT` | V3 |
+
+### 19.2 `TEST_ASSET`
+
+| 资产 | 路径 | SHA-256（上游字节级一致） |
+|:---|:---|:---|
+| 14 个 inline 用例 | `tests/fixtures/inlining/*.thtest` | 逐文件固定（`inlining001`=`a2d0be59…0551` 等，测试内逐一断言） |
+
+### 19.3 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| IN-RO-001 | CONTEXT 是 OGNL 表达式而非字面量 | `VariableExpression` + `ExpressionContext` 求值（与 batch 同一机制） | 把字符串字面量引号当内容 |
+| IN-RO-002 | markup 输出比较的空白归一化 | canonical trace（html5gum tokenizer）与 batch `outputs_match` 一致 | 尾随空格/空白差异误报 |
+
+### 19.4 `VALUE_ADD`
+
+| ID | 风险 | Rust 证据 | 价值 |
+|:---|:---|:---|:---|
+| IN-VA-001 | CSS serializer 无独立上游 JUnit | CSS inline 用例的输出即 serializer 序列化结果，对象级证据与引擎级语料同源 | 防止 serializer 与 inliner 行为分叉 |
+
+## 18. JavaScript 序列化/内联与引擎过程对象切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 6 个对象：`StandardJavaScriptSerializer`、`IStandardJavaScriptSerializer`、
+> `OutputTemplateHandler`、`TemplateManager`、`TemplateModelController`（含
+> `SkipBody`）、`ThrottledTemplateProcessor`。本批同时修复了节流处理器链在
+> 处理器事件写出时的 `TemplateFlowController` Mutex 重入死锁（Java 对应对象为
+> 无锁普通共享对象；修复把 `Model::process_throttled` 统一为与 `TemplateModel`
+> 一致的逐事件短锁读取，并修正 6 个调用点不再锁内传引用）。
+
+### 18.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| JS-SP-001 | `StandardJavaScriptSerializerTest` 全部 10 个用例（enum/字符串/record × 默认/Jackson 构造） | `tests/standard_java_script_serializer_java_parity.rs`：`StandardJavaScriptSerializer::new(false|true)` + `serialize_value` 逐字节比较 | `SPLIT`（Java enum/record 以 `TemplateValue::String`/`Map` 呈现，可观察输出一致） | V3 |
+| JS-SP-002 | `ScriptInlineTest#testDateInline`（字符串两个断言） | `script_inline_date_string_variables`：引擎级 `th:inline="javascript"` + Java 同款 UTF-16 提取逻辑 | `SPLIT` | V3 |
+| JS-SP-003 | `ScriptInlineTest#testObjectInline`（SomeObjectA/B） | `script_inline_object_variables`：`java_serializable_properties` 可见性差异（getter-only ↔ 全字段） | `SPLIT` | V3 |
+| JS-SP-004 | `ScriptInlineTest#testArrayInline` / `testCollectionInline` | `script_inline_array_variable` / `script_inline_collection_variable` | `SPLIT` | V3 |
+| JS-SP-005 | `ScriptInlineTest#testDateInline` 的 calendar/date 两个断言 | 排除（依赖 JVM 默认时区；Rust `DateUtils` 无 TZ 时默认 UTC，显式时区已由 `date_utils_java_parity` 差分） | `POLICY_DIFFERENCE` | 记录 |
+
+### 18.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| JS-RO-001 | `TemplateFlowController` 锁内重入（Java 无锁普通对象） | `tests/engine_process_objects_java_parity.rs` 分块/全量/字节三路径一致性 + 死锁复现修复；`Model::process_throttled` 逐事件短锁 | 锁内调用事件链导致不可重入自锁 |
+| JS-RO-002 | 节流 `process_writer` 允许返回 0 的推进步 | 分块循环带安全上限，断言输出一致而非步数相等 | 把 0 返回步当作死循环/失败 |
+| JS-RO-003 | writer 未初始化时 `isOverflown`/`isStopped` 的 Java NPE | `throttled_processor_observers` 在 process 后查询 | 提前查询产生错误结果而非保留 Java 错误 |
+
+### 18.3 `VALUE_ADD`
+
+| ID | 风险 | Rust 证据 | 价值 |
+|:---|:---|:---|:---|
+| JS-VA-001 | 字节/字符输出模式等价 | `throttled_bytes_matches_chars_encoding`：`process_output_stream`(UTF-8) 与 `process_writer` 输出逐字节一致 | 防止双模式分叉 |
+| JS-VA-002 | 模板解析缓存路径 | `template_manager_reprocess_and_cache_paths`：重复 process/多模板交替 | 防止缓存破坏新变量计算 |
+
+## 17. 模板解析器族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 16 个解析器族对象：`ITemplateParser`、`AbstractMarkupTemplateParser`、
+> `HTMLTemplateParser`、`XMLTemplateParser`、`TemplateFragmentMarkupReferenceResolver`、
+> `DecoupledInjectedAttribute`、`DecoupledTemplateLogic`、
+> `DecoupledTemplateLogicBuilderMarkupHandler`、`DecoupledTemplateLogicUtils`、
+> `IDecoupledTemplateLogicResolver`、`StandardDecoupledTemplateLogicResolver`、
+> `RawTemplateParser`、`AbstractTextTemplateParser`、`CSSTemplateParser`、
+> `JavaScriptTemplateParser`、`TextTemplateParser`。
+
+### 17.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| PP-SP-001 | `TextParserTest#test` 全部 67 个 `testDoc` case + 1 个 `testDocError` case（68 个用例，输入/期望输出由提取脚本逐字还原） | `tests/text_parser_test_java_parity.rs`：逐 buffer size 1..=16384 × processComments × 普通/填充 Reader 双路径，追踪字符串逐字节比较 | `SPLIT`（与 TextParser Golden 共用上游入口） | V3 |
+| PP-SP-002 | `Parsing01Test`：HTML5 + UTF-8 引擎处理 `parsingtest01.bulk` | `parsing01_html5_utf8`：`ClassLoaderTemplateResolver` + 引擎 + `ResourceUtils.normalize` 逐字节比较 | `SPLIT` | V3 |
+| PP-SP-003 | `Parsing02Test`：HTML5 + UTF-16（BE+BOM） | `parsing02_html5_utf16`：真实 charset 解码路径（UTF-16 BOM 检测） | `SPLIT` | V3 |
+| PP-SP-004 | `Parsing03Test`：HTML5 + UTF-16（LE+BOM） | `parsing03_html5_utf16` | `SPLIT` | V3 |
+| PP-SP-005 | `HtmlBlockSelectorMarkupHandlerTest`：3 个 test/result 文件对 | `html_block_selector_matches_java`：`parseStandalone` 块选择器 + `OutputTemplateHandler` 精确比较 | `SPLIT` | V3 |
+| PP-SP-006 | `TemplateFragmentMarkupReferenceResolverTest#testHtml` | `template_fragment_resolver_html_matches_java`：forPrefix 共享实例身份 + selector 全形态 | `SPLIT` | V3 |
+| PP-SP-007 | `TemplateFragmentMarkupReferenceResolverTest#testXml` | `template_fragment_resolver_xml_matches_java` | `SPLIT` | V3 |
+| PP-SP-008 | `ParsingDecoupled01Test`：parsingdecoupled01/02/03 | `parsing_decoupled_01_02_03_matches_java`：`computeDecoupledTemplateLogic` + `DecoupledTemplateLogic#toString` | `SPLIT` | V3 |
+
+### 17.2 `TEST_ASSET`
+
+| 资产 | 路径 | SHA-256（上游字节级一致） |
+|:---|:---|:---|
+| Parsing01 模板/结果 | `tests/fixtures/parsing/parsingtest01.bulk` / `-result.bulk` | `22051a6c…63023` |
+| Parsing02 模板 | `tests/fixtures/parsing/parsingtest02.bulk` | `89d99ca7…30a91` |
+| Parsing02 结果 | `tests/fixtures/parsing/parsingtest02-result.bulk` | `22051a6c…63023` |
+| Parsing03 模板 | `tests/fixtures/parsing/parsingtest03.bulk` | `99febb27…5da3` |
+| Parsing03 结果 | `tests/fixtures/parsing/parsingtest03-result.bulk` | `22051a6c…63023` |
+| HtmlBlockSelector 输入 | `tests/fixtures/htmlblockselector/test001-003.html` | `996cd829…0114` / `3fb81e95…0275` / `49726d2d…4419` |
+| HtmlBlockSelector 期望 | `tests/fixtures/htmlblockselector/result001-003.html` | `4b8083ea…5355` / `eb3cc1f0…5ebc` / `0f7239ee…0b26` |
+| ParsingDecoupled 解耦逻辑 | `tests/fixtures/parsingdecoupled/parsingdecoupled01-03.th.xml` | `6ff6aacf…24a1` / `43594b01…7847` / `c45fa9a6…95af` |
+| TextParserTest 用例提取 | `tests/fixtures/text_parser_test_cases.json`（提取自 `TextParserTest.java`，一次性提取脚本已移除） | 与上游 Java 源码逐字一致（含转义还原与自洽校验） |
+
+### 17.3 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| PP-RO-001 | Java `IOUtils.readLines` 剔除文件尾空行 | `java_read_lines` 语义 + 块选择器输入/期望处理 | 把尾空行当正文 |
+| PP-RO-002 | Java `ResourceUtils.normalize` 的 `
+` 剔除与尾 Java 空白 | `normalize`（逐行、`
+` 连接、`Character.isWhitespace` 精确集） | 用 Rust `trim` 替换 Java 空白集 |
+| PP-RO-003 | Java `CharArrayReader(input, offset, len)` 与 5 字符填充 | `CharArrayTextParserReader` 双路径（普通 + 前后填充） | 解析器读取 offset 前/len 后数据 |
+| PP-RO-004 | Java UTF-16 带 BOM charset 解码 | Parsing02/03 走 `ClassLoaderTemplateResource` + `CharsetDecoder` 真实解码 | BOM 不剥离 / 字节序错误 |
+| PP-RO-005 | 追踪事件 `toString` 的 UTF-16 精确格式 | `TraceEvent::render` 输出 `TYPE(c){l,c}` 逐代码单元 | 用 lossy 转换破坏代理项 |
+| PP-RO-006 | 块选择器输出含块后空白 | HtmlBlockSelector 3 文件精确比较 | 尾空白/块间空白处置错误 |
+
+### 17.4 `VALUE_ADD`
+
+| ID | 风险 | Rust 证据 | 价值 |
+|:---|:---|:---|:---|
+| PP-VA-001 | buffer size 全扫描成本 | 68 个 case 每 buffer size 1..=16384 × 2 × 2 全量执行（并行约 10s） | 覆盖任意切分边界，等价 Java 全扫描且无抽样偏差 |
+| PP-VA-002 | 解析器对象级往返 | `markup_parsers_roundtrip_identity` / `text_mode_parsers_roundtrip_identity`（XML/HTML/TEXT/JS/CSS/RAW 共 12 个文档） | 对无独立上游单元测试的 5 个对象给出直接对象级证据 |
+
+## 22. `org.thymeleaf.model` 接口族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 17 个对象（`org.thymeleaf.model` 全部剩余接口 + `AbstractModelVisitor`）：
+> `AbstractModelVisitor`（178）、`ICDATASection`（181）、`ICloseElementTag`（182）、
+> `IComment`（183）、`IDocType`（184）、`IElementTag`（185）、`IModelFactory`（187）、
+> `IModelVisitor`（188）、`IOpenElementTag`（189）、`IProcessableElementTag`（190）、
+> `IProcessingInstruction`（191）、`IStandaloneElementTag`（192）、`ITemplateEnd`（193）、
+> `ITemplateEvent`（194）、`ITemplateStart`（195）、`IText`（196）、`IXMLDeclaration`（197）。
+> 其中 11 个为既有差分文件覆盖的表滞后结算（`engine_textual_event_java_parity.rs` /
+> `element_tag_java_parity.rs` / `model_factory_java_parity.rs`），其余 6 个
+> （178/188/193/194/195/187 强化）由新文件 `model_visitor_factory_java_parity.rs`
+> 直接提供差分证据。
+
+### 22.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| MD-SP-001 | 上游 `engine` 包 TextTest/CommentTest/CDATASectionTest/DocTypeTest/XmlDeclarationTest/ProcessingInstructionTest（构造/边界/subSequence/内容标志） | `engine_textual_event_java_parity.rs`（68 断言级，既有） | `MERGED` | V3 |
+| MD-SP-002 | 上游 OpenElementTagTest/StandaloneElementTagTest/CloseElementTagTest（解析获取 + 属性操作序列） | `element_tag_java_parity.rs`（既有） | `MERGED` | V3 |
+| MD-SP-003 | Java `TemplateStart`/`TemplateEnd` 无位置单例契约（`toString` 空串、`write` 空操作、line/col -1、模板名 null） | `template_start_singleton_contract_matches_java` + `template_end_singleton_contract_matches_java`（身份 `Arc::ptr_eq`、accept 分发） | `SPLIT` | V3 |
+| MD-SP-004 | Java `Model.add` 对 TemplateStart/TemplateEnd 的拒绝语义（“can only be added internally during template parsing”） | `model_accept_visitor_dispatch_order_matches_java` 边界拒绝断言（`IModelError::TemplateBoundaryInsertion`） | `SPLIT` | V3 |
+| MD-SP-005 | Java `IModelFactory` 事件构造与串行化（Comment/CDATASection/DocType 类型推导 PUBLIC/SYSTEM/null、XMLDeclaration 字段、PI） | `factory_markup_events_serialization_matches_java`（golden：`<!--...-->`/`<![CDATA[...]]>`/`<!DOCTYPE html PUBLIC ...>`/`<?xml version=...?>`/`<?target data?>`） | `SPLIT` | V3 |
+| MD-SP-006 | Java 标签工厂构造（synthetic/minimized/引号/无位置） | `factory_element_tags_contract_matches_java`（含 synthetic `write` 空操作） | `SPLIT` | V3 |
+| MD-SP-007 | Java `AbstractProcessableElementTag` set/replace/remove（默认引号、删除不存在属性身份保持、replace=删旧+set 覆盖追加） | `factory_attribute_operations_matches_java`（`Arc::ptr_eq` 身份断言、golden 串行化） | `SPLIT` | V3 |
+| MD-SP-008 | Java `Model.accept` 文档顺序分发 + `AbstractModelVisitor` 全部空操作默认 | `model_accept_visitor_dispatch_order_matches_java`（9 类事件顺序）+ `abstract_model_visitor_noop_defaults_match_java`（仅覆盖 visitText）+ `factory_parse_roundtrip_matches_java`（解析模型 6 事件全序含起止单例） | `SPLIT` | V3 |
+| MD-SP-009 | Java `IModelFactory.parse` 往返（单例边界替换、事件位置 templateName/line/col） | `factory_parse_roundtrip_matches_java`（`test-template` 名、line 1 col 1 / col 16 / col 19） | `SPLIT` | V3 |
+| MD-SP-010 | 既有 `model_factory_java_parity.rs`（create_* 基础构造 + TEXT 模式限制） | 表滞后结算 `IModelFactory`（187） | `MERGED` | V3 |
+
+### 22.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| MD-RO-001 | Java `Attributes.removeAttribute(AttributeName)` 按 `equals` 值匹配；Rust `search_attribute_base_name` 以 `std::ptr::eq` 身份匹配 | 注释登记：Java 侧 `AttributeName` 无可公开构造器、全部为 repository 规范化单例，Rust `AttributeNames::for_name` 同样返回规范化实例，二者对可达输入行为一致；差分测试覆盖删除存在/不存在属性的两条路径 | 把非规范化实例的等值匹配差异当 MATCH |
+| MD-RO-002 | 合成（synthetic）标签 `write` 为空操作（Java 注释“synthetic elements were not present at the original template”） | `factory_element_tags_contract_matches_java` 断言 `write` 输出空串 + `get_element_complete_name` 仍可读 | 用 toString 形态断言合成标签 write 输出 |
+
+## 23. `org.thymeleaf.standard.processor` 处理器族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 16 个对象，全部为 fixture 驱动差分（42 个上游 `.thtest` fixture，
+> 字节级一致并逐文件 SHA-256 固定，存于 `tests/fixtures/processorfamily/`）：
+> - `StandardBlockTagProcessor`（331）：`elementprocessors/block/block01-08`
+>   （含 `#{...}` OGNL Map 字面量 CONTEXT 与 `{...}` 集合字面量）；
+> - `StandardConditionalCommentProcessor`（334）+ `StandardConditionalCommentUtils`
+>   （377）+ `StandardConditionalFixedValueTagProcessor`（335）：
+>   `conditionalcomments/conditionalcomments01-08`（8 例全含，4 例为异常合同）；
+> - `StandardDOMEventAttributeTagProcessor`（336）：`domevent/onclick01/02`
+>   + `onchange01/02`（`param.*` 请求参数变异 + 非 Web 上下文禁用异常）；
+> - `StandardUtextTagProcessor`（365）：`insert/insert090/100`（`th:utext`）；
+> - `StandardRefAttributeTagProcessor`（355）：`insert|replace 058/059/060`
+>   共 6 例（`th:ref` 含 `th:remove` 组合）；
+> - `StandardXmlNsTagProcessor`（370）+ `StandardTranslationDocTypeProcessor`
+>   （363）：`xmlns/xmlns01-09`（02/05/06/07/08/09 含 thymeleaf-1..4 DTD
+>   system-id 翻译）；
+> - `StandardInlineTextualTagProcessor`（345）+ `StandardInliningTextProcessor`
+>   （349）：`inline08/09`（HTML `th:inline="text"`）与 `inline29`（XML 模式）；
+> - `StandardXMLInliner`（315）+ `StandardInlineXMLTagProcessor`（346）：
+>   `inline33`（HTML `th:inline="xml"` + `th:inline="none"` 无效模式异常）；
+> - `StandardStyleappendTagProcessor`（360）：`dataprefix/.../styleappend01`；
+> - `StandardInliningCommentProcessor`（348）+ `StandardInliningCDATASectionProcessor`
+>   （347）：直测（`AbstractStandardInliner#inline(IComment/ICDATASection)`
+>   语义：跳过包裹前后缀对内文执行 `[[...]]` 替换后 `setContent` 写回）。
+>
+> 本批同时把 `.thtest` 语料共享机制（CONTEXT 续行/OGNL Map/List 字面量/
+> `param.*` 变异、`%INPUT[name]` 命名片段、命名模板解析器、`TestLinkBuilder`）
+> 提取为 `tests/support/thtest_harness.rs`，批量语料运行器与 fixture 差分
+> 测试共用同一实现，消除复制漂移；语料门禁全量重跑确认 2,595 MATCH 不变。
+
+### 23.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| PR-SP-001 | `elementprocessors/block/block01-08` | `block_processor_fixtures_match_java`（8 例，Map/集合 CONTEXT） | `SPLIT` | V3 |
+| PR-SP-002 | `conditionalcomments/conditionalcomments01-08` | `conditional_comment_fixtures_match_java`（8 例含 4 异常合同） | `SPLIT` | V3 |
+| PR-SP-003 | `attrprocessors/domevent/onclick01/02 + onchange01/02` | `dom_event_processor_fixtures_match_java`（含 `param.*` 变异与禁用异常） | `SPLIT` | V3 |
+| PR-SP-004 | `attrprocessors/insert/insert090/100`（`th:utext`） | `utext_processor_fixtures_match_java` | `SPLIT` | V3 |
+| PR-SP-005 | `attrprocessors/insert|replace 058/059/060`（`th:ref`） | `ref_processor_fixtures_match_java`（6 例） | `SPLIT` | V3 |
+| PR-SP-006 | `xmlns/xmlns01-09`（含 DTD 翻译） | `xmlns_and_doctype_translation_fixtures_match_java`（9 例） | `SPLIT` | V3 |
+| PR-SP-007 | `attrprocessors/inline/inline08/09/29/33` | `inline_textual_processor_fixtures_match_java`（4 例含 XML 模式与无效模式异常） | `SPLIT` | V3 |
+| PR-SP-008 | `dataprefix/.../styleappend01`（`th:styleappend`） | `styleappend_processor_fixture_matches_java` | `SPLIT` | V3 |
+| PR-SP-009 | Comment/CDATASection 事件内文内联（Java `AbstractStandardInliner`） | `inlining_comment_processor_matches_java` + `inlining_cdata_section_processor_matches_java`（直测） | `SPLIT` | V3 |
+
+### 23.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| PR-RO-001 | 语料 CONTEXT 需完整 Properties+OGNL 语义（续行、Map/List 字面量、`param.*` 变异、四 Web 作用域） | 共享机制提取至 `tests/support/thtest_harness.rs` 并与语料运行器同一实现；41 个复杂 CONTEXT fixture 全过 | 简化 CONTEXT 解析导致 fixture 静默跑偏 |
+| PR-RO-002 | 链接表达式 `@{...}` 需要固定 LinkBuilder | 与语料一致设置 `TestLinkBuilder` 后 `xmlns*`/`cc03` 全过 | 缺失 LinkBuilder 误报链接表达式缺陷 |
+| PR-RO-003 | `%INPUT[name]` 命名片段与根模板名解析 | `CorpusStringTemplateResolver` 共享实现；`cc03`/`inline09` 命名片段用例全过 | 把缺失模板名当模板正文（`~{fragg}` 类错误） |
+
+## 24. `org.thymeleaf.engine` 核心链切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 27 个对象（`org.thymeleaf.engine` 全部剩余），分层证据：
+> - **新差分直测**（`engine_core_chain_java_parity.rs`）：`AbstractTemplateHandler`
+>   （56）next 链 11 类事件委托与 `setNext(null)` 空操作；`DataDrivenTemplateIterator`
+>   （69）FIFO 缓冲/NoSuchElement/remove 不支持/feedBuffer/feedingComplete/
+>   hasBeenQueried/SSE 前缀首 id 回退（记录型 SSE 控制器直测）；
+>   `ModelBuilderTemplateHandler`（99）事件收集为 TemplateModel、起止事件
+>   替换为无位置单例、`getTemplateData` 原样返回；
+> - **表滞后结算**：`AbstractElementTag`（52）/`AbstractTemplateEvent`（55）/
+>   `AbstractTextualTemplateEvent`（57）← `engine_textual_event_java_parity.rs` +
+>   `element_tag_java_parity.rs`；`ITemplateHandler`（94）← 两个文件的
+>   trait-object 处理器；`ProcessorTemplateHandler`（106）←
+>   `processor_handler_java_parity.rs` + `processor_handler_deep_java_parity.rs`；
+>   `StandardModelFactory`（111）← `model_factory_java_parity.rs` +
+>   `model_visitor_factory_java_parity.rs`；`TemplateData`（113）←
+>   `engine_context_java_parity.rs` + 本批直测构造；三个 `TemplateHandlerAdapter*`
+>   （117/118/119）← `template_parser_markup_java_parity.rs`（HTML/XML/RAW 解析
+>   经适配器）与 `text_parser_test_java_parity.rs`；`ThrottledTemplateWriterOutputStreamAdapter`
+>   （132）← 节 16 throttle golden（OutputStreamAdapter 独立结算完成）；
+> - **内部机制对象**（`pub(crate)`，可观测行为即引擎流程）：
+>   `AbstractGatheringModelProcessable`（53）/`GatheringModelProcessable`（82）/
+>   `IteratedGatheringModelProcessable`（96）/`DecreaseContextLevelProcessable`（70）/
+>   `OpenElementTagModelProcessable`（101）/`StandaloneElementTagModelProcessable`（110）/
+>   `SimpleModelProcessable`（108）/`TemplateEndModelProcessable`（115）/
+>   `IGatheringModelProcessable`（92）/`ProcessorExecutionVars`（105）←
+>   `processor_handler_deep_java_parity.rs`（th:each/th:block/th:with 等路径）+ 
+>   `engine_processable_java_parity.rs`（IEngineProcessable 动态合同 golden）+
+>   语料 2,595 MATCH；
+> - **标记接口**：`IAttributeDefinitionsAware`（88）/`IElementDefinitionsAware`（89）←
+>   处理器族与 `dialect_set_configuration_java_parity.rs`；
+>   `IEngineTemplateEvent`（91）← model 批（Model 队列事件对象全部实现）。
+>
+> 本批直测发现并修复 `DataDrivenTemplateIterator` 两处真实语义缺陷：
+> ① `composeToken` 前缀分隔符用 `95`（`_`），Java 为 `'-'`（45）；
+> ② `startIteration` 把 `setSseEventsPrefix` 已组合的事件名再次组合（双前缀），
+> Java 以缓存名直接发送。修复后 SSE 记录型控制器断言与 Java 逐字节一致。
+
+### 24.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| EN-SP-001 | Java `AbstractTemplateHandler` next 链委托（未覆盖事件转发、null next 忽略） | `abstract_template_handler_chain_delegation_matches_java`（11 类事件 + getNext） | `SPLIT` | V3 |
+| EN-SP-002 | Java `DataDrivenTemplateIterator` 缓冲/异常/查询语义 | `data_driven_template_iterator_semantics_match_java`（FIFO、NoSuchElement、remove 文本、feedingComplete） | `SPLIT` | V3 |
+| EN-SP-003 | Java SSE 事件 id/前缀组合（`composeToken`、`takeBackLastEventID`、head/tail） | `data_driven_template_iterator_sse_events_match_java` + `..._sse_prefix_and_first_id_match_java`（记录型控制器逐事件断言） | `SPLIT` | V3 |
+| EN-SP-004 | Java `ModelBuilderTemplateHandler` 事件收集 + `TemplateModel` 边界单例 | `model_builder_template_handler_collects_events_matches_java`（size/单例/模板数据/accept 分发） | `SPLIT` | V3 |
+| EN-SP-005 | 既有差分文件的表滞后对象 | 52/55/57/94/106/111/113/117/118/119/132 按上列文件结算 | `MERGED` | V3 |
+| EN-SP-006 | 内部机制对象（`pub(crate)`）可观测行为 | 53/70/82/92/96/101/105/108/110/115 ← 深度处理器路径 + IEngineProcessable golden + 语料 | `MERGED` | V3 |
+
+### 24.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| EN-RO-001 | SSE 前缀分隔符（Java `'-'` vs 曾经的 `'_'`） | 记录型 SSE 控制器断言 `ev--5`/`ev--message` 精确形式；源码已修复为 45 | 前缀拼接分隔符漂移 |
+| EN-RO-002 | message 事件名双组合 | 缓存字段移除，`start_iteration` 以原始名交给 `start_step` 单次组合；SSE 断言逐字节一致 | 双前缀静默吞掉事件名 |
+| EN-RO-003 | `pub(crate)` 内部对象无独立单测入口 | 引擎流程差分 + 语料 2,595 结算，不伪称直接单测 | 把内部字段级断言当行为差分 |
+
+## 25. `org.thymeleaf.util.temporal` 族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 7 个对象：`TemporalArrayUtils`（470）、`TemporalCreationUtils`（471）、
+> `TemporalFormattingUtils`（472）、`TemporalListUtils`（473）、`TemporalObjects`
+> （474）、`TemporalSetUtils`（475）、`Temporals`（167，表达式对象，本批 utils
+> 的委托层 + 既有 `expression_invoker_methods_java_parity.rs` 的 `#temporals`
+> 用例）。
+> 断言值逐字取自上游 `thymeleaf-tests-core` 的 `org.thymeleaf.standard.expression`
+> 包 TemporalsArrayTest / TemporalsListTest / TemporalsSetTest /
+> TemporalsCreationTest / TemporalsFormattingTest（Locale.US / ZoneOffset.UTC
+> 基准）。
+>
+> 本批直测发现并修复 4 处真实实现缺陷：
+> ① 默认/本地化日期模式只区分中英文，德语 locale 下输出英文名——补全 Java
+>    CLDR 德语日期样式（`dd.MM.yy`/`dd.MM.y`/`d. MMMM y`/`EEEE, d. MMMM y`）
+>    与德语月份/星期名替换；
+> ② `java_pattern` 把 Java "d"（不补零）映射为 chrono "%d"（补零）——
+>    单 "d" 改 "% -d"、"dd" 保持补零；
+> ③ 非 zh/de 的 MEDIUM 日期样式缺省落到 LONG（`Dec 31, 2015` 应短月名）；
+> ④ 显式 zone 格式化把 LocalDateTime 解释为目标区本地墙钟时间——Java
+>    `DateTimeFormatter.withZone` 语义是保持瞬时重定区（默认区 UTC 建立
+>    带区时间后再换算，23:59 UTC → Etc/GMT+5 的 18:59）。
+
+### 25.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| TM-SP-001 | `TemporalsCreationTest`（create 字段组合） | `temporal_creation_utils_matches_java`（3/5/6/7 字段、createDate/Time 解析、非法字段拒绝） | `SPLIT` | V3 |
+| TM-SP-002 | `TemporalsFormattingTest`（默认/SHORT/MEDIUM/LONG/FULL、自定义 pattern、时区、null） | `temporal_formatting_utils_matches_java`（US/GERMANY 全样式、`yyyy-MM-dd`/`EEEE, d MMMM, yyyy`、Etc/GMT+5 瞬时换算、null 传播、字段读取） | `SPLIT` | V3 |
+| TM-SP-003 | `TemporalsArrayTest` 全部数组断言 | `temporal_array_utils_matches_java`（默认/GERMANY/pattern/locale、day/month/year/dayOfWeek、名称、null 元素） | `SPLIT` | V3 |
+| TM-SP-004 | `TemporalsListTest` | `temporal_list_utils_matches_java`（listFormat + 字段批量） | `SPLIT` | V3 |
+| TM-SP-005 | `TemporalsSetTest`（LinkedHashSet 去重保序） | `temporal_set_utils_matches_java`（setFormat 去重 + setDay/month） | `SPLIT` | V3 |
+| TM-SP-006 | `TemporalObjects` 字段分解/类型判别 | `temporal_objects_dispatch_matches_java`（dateFields ISO dayOfWeek、timeFields、kind、offset_seconds） | `SPLIT` | V3 |
+
+### 25.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| TM-RO-001 | chrono 仅支持英文月份/星期名 | 德语 locale 输出后替换为 CLDR 名称；`Donnerstag, 1 Januar, 2015` 逐字断言 | 把英文名当德语输出 |
+| TM-RO-002 | Java DateTimeFormatter.withZone 瞬时保持语义 | 显式 zone 路径先以默认区建带区时间再 `with_timezone`；`2015-12-31T23:59` + Etc/GMT+5 → `18:59:00` 断言 | 把本地墙钟当目标区本地时间 |
+| TM-RO-003 | Java "d" vs "dd" 补零差异 | `java_pattern` 单 "d" → `%-d`；`01. Januar` 类补零回归由断言拦截 | 补零语义漂移 |
+
+## 26. `org.thymeleaf.util` 惰性序列与处理器基础设施切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 7 个对象：`LazyEscapingCharSequence`（453）、`AbstractLazyCharSequence`
+> （439）、`IWritableCharSequence`（451）、`LazyProcessingCharSequence`（454）、
+> `ProcessorComparators`（463）、`ProcessorConfigurationUtils`（464）、
+> `ResourceLoaderUtils`（444，对应 Java `ClassLoaderUtils`）。
+> golden 取自 Java `LazyEscapingCharSequence#produceEscapedOutput`
+> （HTML/TEXT → `HtmlEscape.escapeHtml4Xml` 5 字符转义、XML → 内容版
+> `XmlEscape.escapeXml10` 仅 `&<>`、JS/CSS → Standard Serializer、RAW 原样）
+> 与 `StandardCSSSerializer#writeValue`（`CssEscape.escapeCssIdentifier`
+> 无引号）等源码语义。
+>
+> 直测确认 CSS 序列化对 String 无引号（Java `writeString` → escape 后原样
+> 写出，非 JSON 风格），与语料 CSS 用例一致。
+
+### 26.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| UT2-SP-001 | Java `produceEscapedOutput` 六模式转义分发 | `lazy_escaping_char_sequence_html_text_xml_raw_match_java` + `..._javascript_css_match_java`（`a<b>&c"d'e` 逐模式 golden、JS `"hello"`、CSS `hello`） | `SPLIT` | V3 |
+| UT2-SP-002 | Java Validate.notNull 构造校验 | `lazy_escaping_char_sequence_null_arguments_match_java`（精确错误文本） | `SPLIT` | V3 |
+| UT2-SP-003 | Java `AbstractLazyCharSequence` 序列合同 | `abstract_lazy_char_sequence_contract_matches_java`（length/charAt/subSequence/类名） | `SPLIT` | V3 |
+| UT2-SP-004 | Java `IWritableCharSequence.write` 快路径 | `i_writable_char_sequence_write_direct_matches_java`（write_direct 委托） | `SPLIT` | V3 |
+| UT2-SP-005 | Java `LazyProcessingCharSequence.resolveText` | `lazy_processing_char_sequence_processes_model_matches_java`（模型处理后 `to_java_string`） | `SPLIT` | V3 |
+| UT2-SP-006 | Java `ProcessorComparators` 比较链 | `processor_comparators_matches_java`（precedence → 类名 → 身份，Equal 仅同一对象） | `SPLIT` | V3 |
+| UT2-SP-007 | Java `AbstractProcessorWrapper` wrap/unwrap | `processor_configuration_utils_unwrap_matches_java`（方言 precedence 记录/还原） | `SPLIT` | V3 |
+| UT2-SP-008 | Java `ClassLoaderUtils` 类装载 | `resource_loader_utils_class_loading_matches_java`（注册/加载/查找/存在性） | `SPLIT` | V3 |
+
+### 26.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| UT2-RO-001 | `wrapElement` 的对象安全下转依赖处理器覆盖 `as_element_processor` | 标准处理器（StandardDOMEventAttributeTagProcessor）wrap/unwrap 直测；泛型 `AbstractAttributeTagProcessor<F>` 未覆盖时如实返回接口未知错误 | 把泛型处理器当作可包装 IElementProcessor |
+| UT2-RO-002 | CSS String 序列化无引号 | `CssEscape.escapeCssIdentifier` 语义直测 + 语料 CSS 用例 | 误用 JSON 引号风格 |
+
+## 27. `org.thymeleaf.processor.element` 族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 10 个对象：`AbstractAttributeModelProcessor`（213，表滞后结算：
+> `attribute_model_processor_java_parity.rs` 直接实例化 + th:attr 全路径）、
+> `AbstractAttributeTagProcessor`（214）、`AbstractElementModelProcessor`（215）、
+> `AbstractElementTagProcessor`（216）、`IElementModelProcessor`（217）、
+> `IElementProcessor`（219）、`IElementTagProcessor`（220）、
+> `IElementTagStructureHandler`（221，`src/engine/element_tag_structure_handler.rs`
+> 内嵌 Java golden + `processor_structure_events_java_parity.rs`）、
+> `MatchingAttributeName`（222）、`MatchingElementName`（223）。
+> 新差分直测文件 `processor_element_family_java_parity.rs`：构造校验
+> （null 属性名/模板模式精确错误文本）、匹配规则（`forAttributeName`/
+> 前缀通配/全属性/全元素，HTML 完整名 `data-th-*` 与大小写不敏感）、
+> 优先级/类名、trait-object 静态向上转型合同（等价 Java `instanceof`）。
+
+### 27.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| PE-SP-001 | Java `MatchingAttributeName` 构造/匹配/toString | `matching_attribute_name_rules_match_java`（`{th:value,data-th-value}` toString、完整名匹配、前缀通配、null 拒绝） | `SPLIT` | V3 |
+| PE-SP-002 | Java `MatchingElementName` 构造/匹配/toString | `matching_element_name_rules_match_java`（`{div}`、HTML 大小写不敏感、前缀通配） | `SPLIT` | V3 |
+| PE-SP-003 | Java 三个 Abstract*Processor 构造合同 | `abstract_attribute_tag_processor_contract_matches_java` + `..._element_tag_...` + `..._element_model_...`（匹配名、precedence、类名、null 校验） | `SPLIT` | V3 |
+| PE-SP-004 | Java `instanceof` 接口合同（219/220/217） | `element_processor_interfaces_downcast_match_java`（IElementProcessor/IElementTagProcessor/IElementModelProcessor 上转型与互斥） | `SPLIT` | V3 |
+| PE-SP-005 | 既有直接实例化测试 | 213 ← `attribute_model_processor_java_parity.rs`；221 ← 内嵌 golden + 结构事件测试 | `MERGED` | V3 |
+
+### 27.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| PE-RO-001 | 泛型 Abstract*Processor 不覆盖对象安全 `as_element_processor` | 接口合同以静态向上转型断言（等价 Java instanceof）；wrapElement 路径以标准处理器验证（见 UT2-RO-001） | 把泛型处理器当可下转 IElementProcessor |
+| PE-RO-002 | `to_java_string` 呈现完整名集合 | `{th:value,data-th-value}` 形式与 Java `AttributeName.toString` 一致断言 | 用单名断言完整名集合 |
+
+## 28. raw 解析族与序列化/处理器工具切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 8 个对象：`RawParser`（396）+ `IRawHandler`（394）+ `RawParseException`
+> （395）直测（Java RawParser 文档起止 + 单文本事件、异常消息/原因/行列
+> Display 形态）；`StandardSerializers`（376）执行参数属性合同直测；
+> `StandardProcessorUtils`（379）结构处理器委托直测；表滞后结算：
+> `OutputExpressionInlinePreProcessorHandler`（309）与
+> `InlinedOutputExpressionMarkupHandler`（384）← 处理器族批 inline fixture
+> （inline08/09/29/33 全程经过两个处理器）、`DecoupledTemplateLogicMarkupHandler`
+> （390）← `decoupled_logic_java_parity.rs` 既有差分。
+> 直测确认 raw 文档结束事件的列 = 内容末字符列（非长度 + 1）与
+> `(Line = L, Column = C)` 消息前缀等 Java 细节。
+
+### 28.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| RP-SP-001 | Java RawParser 文档事件序列 | `raw_parser_document_events_match_java`（start/text/end 形态、行/列、null 拒绝） | `SPLIT` | V3 |
+| RP-SP-002 | Java RawParseException 构造/Display | `raw_parse_exception_contract_matches_java`（消息/原因回退/行列前缀） | `SPLIT` | V3 |
+| RP-SP-003 | Java StandardSerializers 执行参数 | `standard_serializers_execution_attributes_match_java`（JS/CSS 序列化器产出） | `SPLIT` | V3 |
+| RP-SP-004 | Java StandardProcessorUtils 委托 | `standard_processor_utils_attribute_helpers_match_java`（记录型 handler 参数断言） | `SPLIT` | V3 |
+| RP-SP-005 | 既有 inline/decoupled 差分 | 309/384 ← 处理器族批 fixture；390 ← `decoupled_logic_java_parity.rs` | `MERGED` | V3 |
+
+### 28.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| RP-RO-001 | 计时字段（nanos）由 Java 计时产生 | 事件形态断言（starts_with/contains），不断言精确纳秒值 | 把时钟值当固定 golden |
+| RP-RO-002 | `StandardProcessorUtils` 参数为结构处理器引用 | 记录型 IElementTagStructureHandler 委托断言（set/replace 参数逐项） | 把 tag 引用误当 helper 输入 |
+
+## 29. `org.thymeleaf.web` 接口族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 4 个接口对象：`IWebExchange`（477）、`IWebRequest`（478）、
+> `IWebSession`（479）、`IWebApplication`（476）。以语料 WebExchange
+> （`tests/support/corpus_web_exchange.rs`）为 trait-object 实现直测四个
+> 接口合同：exchange 属性往返与计数/枚举、request 方法/路径/查询串、
+> session/application 属性往返与 `exists`、WebContext 的 exchange 身份
+> 保持（与 `web_context_java_parity.rs` 既有差分互补）。
+
+### 29.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| WB-SP-001 | Java `IWebExchange` 属性/元数据合同 | `web_exchange_contract_matches_java`（属性往返/计数/枚举/locale/principal） | `SPLIT` | V3 |
+| WB-SP-002 | Java `IWebRequest` 合同 | `web_request_contract_matches_java`（方法/路径/查询串） | `SPLIT` | V3 |
+| WB-SP-003 | Java `IWebSession`/`IWebApplication` 合同 | `web_session_and_application_contract_matches_java`（exists/属性往返/资源查询） | `SPLIT` | V3 |
+| WB-SP-004 | Java `WebContext.getExchange` 身份 | `web_context_exchange_identity_matches_java`（ptr_eq） | `SPLIT` | V3 |
+
+### 29.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| WB-RO-001 | 语料 WebExchange 为测试替身（非 Servlet 宿主） | 全部断言基于语料替身合同；Servlet 宿主映射见 12 个 `JAVA_ONLY_EXEMPT` | 把替身行为当 Servlet 行为 |
+
+## 30. `org.thymeleaf.expression` #objects 族切片
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 8 个对象：`Strings`（166）、`Numbers`（163）、`Uris`（168）、
+> `Dates`（154）、`ExecutionInfo`（155）、`Ids`（159）、`Messages`（162）、
+> `Conversions`（153）。证据分层：方法级直测（Strings 14 方法、Numbers
+> formatInteger/formatDecimal/sequence、Uris 五种转义）+ 引擎驱动模板
+> 求值（`#strings.*`/`#numbers.*`/`#uris.*`/`#dates.*`/`#execInfo.*`/
+> `#ids.*`）。`Temporals`（167）已在节 25 结算。
+>
+> 本批直测发现并修复 2 处真实缺陷：
+> ① `#ids` 表达式对象方法名——Java 为 `seq/nextSeq/prevSeq`，Rust invoker
+>    只注册 `seq/next/prev`，模板 `#ids.nextSeq('x')` 直接失败；invoker 现
+>    同时接受 Java 名与别名；
+> ② `#execInfo` 属性访问——Java OGNL 以 bean 属性规则解析
+>    `templateName/templateMode/now` 等，Rust invoker 只接受 getter 名
+>    （`getTemplateName`）；现按 `get` 前缀剥离接受属性名（并确认 Java 3.1
+>    `ExecutionInfo` 无 line/col，Rust 不补）。
+
+### 30.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| EX-SP-001 | Java `Strings` 方法集 | `strings_methods_match_java`（abbreviate/equals/contains/substring/大小写） | `SPLIT` | V3 |
+| EX-SP-002 | Java `Numbers` 方法集 | `numbers_methods_match_java`（formatInteger 补零/千分位、formatDecimal、sequence 含负步长） | `SPLIT` | V3 |
+| EX-SP-003 | Java `Uris` 转义（unbescape） | `uris_methods_match_java`（path/segment/query param/fragment，空格 %20 与语料 uris01 一致） | `SPLIT` | V3 |
+| EX-SP-004 | 引擎驱动 #objects（含 #dates/#ids/#execInfo） | `expression_objects_engine_paths_match_java` + `..._with_context_vars_match_java` | `SPLIT` | V3 |
+| EX-SP-005 | `Messages`/`Conversions`（需 resolver/conversion service 的委托层） | 引擎表达式对象注册路径（Standard 表达式对象工厂）+ 语料 `#messages.*`/`#conversions.*` 用例 | `MERGED` | V3 |
+
+### 30.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| EX-RO-001 | `#ids.nextSeq/prevSeq` Java 方法名 | invoker 同时接受 `next`/`nextSeq` 与 `prev`/`prevSeq`；模板 `#ids.nextSeq('row')` → `row2` 断言 | 只注册别名导致模板直接失败 |
+| EX-RO-002 | `#execInfo` bean 属性 vs getter 名 | getter 前缀剥离接受属性名；`templateMode`/`now` 引擎断言 | 属性访问失败或伪称 line/col 存在 |
+| EX-RO-003 | `formatInteger(pattern)` 字符串重载未实现（Rust API 为 min-digits 形式） | invoke 仅支持整数参数形式；引擎断言使用 `formatInteger(1234, 8)` | 把 pattern 形式当已实现 |
+
+## 31. `org.thymeleaf.standard.expression` 内部结构切片（清零批）
+
+> **审计日期**：2026-08-01
+>
+> 覆盖 16 个对象，`implemented_unverified` 清零：`Assignation`（241）、
+> `AssignationSequence`（242）、`AssignationUtils`（243）、`Each`（250）、
+> `EachUtils`（251）、`ExpressionCache`（255）、`ExpressionParsingNode`（256）、
+> `ExpressionParsingState`（257）、`ExpressionParsingUtil`（258）、
+> `ExpressionSequence`（259）、`ExpressionSequenceUtils`（260）、
+> `IStandardExpression`（270）、`IStandardVariableExpression`（272）、
+> `IStandardVariableExpressionEvaluator`（273）、`SelectionVariableExpression`
+> （295）、`InlinedOutputExpressionTextHandler`（410）。
+> 证据：parse 入口直测（`parseEach`/`parseAssignationSequence`/
+> `parseExpressionSequence` 的 Java 语义与错误文本、缓存路径覆盖）+
+> 引擎驱动（`*{...}` 选择表达式求值、TEXT 模式 `[[...]]` 内联）+
+> 表滞后结算（`IStandardExpression` 等 trait-object 接口被全部表达式测试
+> 使用；`InlinedOutputExpressionTextHandler` ← inliner 批 TEXT fixture）。
+> 直测确认 `getStringRepresentation` 按组件重渲染（无原空白）与
+> `Each`/`AssignationSequence` 的 Java 串形态一致。
+
+### 31.1 `SOURCE_PARITY`
+
+| ID | 上游测试/case | Rust 差分证据 | 处置 | 证据等级 |
+|:---|:---|:---|:---:|:---:|
+| SE-SP-001 | Java `parseEach`（变量/状态变量/错误文本） | `each_parse_matches_java`（含缓存路径） | `SPLIT` | V3 |
+| SE-SP-002 | Java `parseAssignationSequence`（含无值参数开关） | `assignation_sequence_parse_matches_java`（`a=${x},b=${y}` 串形态） | `SPLIT` | V3 |
+| SE-SP-003 | Java `parseExpressionSequence` | `expression_sequence_parse_matches_java`（`a,b,${c}` 串形态 + 错误文本） | `SPLIT` | V3 |
+| SE-SP-004 | Java `SelectionVariableExpression` 构造/执行 + 引擎 `*{...}` | `selection_variable_expression_matches_java` + `selection_expression_engine_path_matches_java`（th:object 选择） | `SPLIT` | V3 |
+| SE-SP-005 | 表滞后结算：272/273/256/257/258/410 | `${...}` 求值路径（StandardVariableExpressionEvaluator）+ TEXT 内联 fixture | `MERGED` | V3 |
+
+### 31.2 `RUST_OBLIGATION`
+
+| ID | 映射风险 | Rust 证据 | 能杀死的错误 |
+|:---|:---|:---|:---|
+| SE-RO-001 | `getStringRepresentation` 无原空白重渲染 | `a=${x},b=${y}`/`v,st : ${list}` 串形态断言 | 用输入空白断言串形态 |
+| SE-RO-002 | ExpressionCache 命中实例身份取决于配置缓存管理器 | 重复解析结果一致性断言，不断言 Arc 身份 | 把缓存命中身份当固定契约 |
+
+---
+
+## 32 多 crate 工作区与 Java 测试全量镜像
+
+### 32.1 工作区布局（参考 freemarker-rust）
+
+| 目录 | 角色 | 发布 |
+|---|---|---|
+| `thymeleaf/` | 主 crate（`src/` + `tests/fixtures/` + `test/` Java lib/testing 镜像） | ✅ |
+| `thymeleaf-test/` | 差分验收 crate（109 个 parity 文件 + 语料运行器 + 资产镜像 + 门禁） | ❌ |
+| `thymeleaf-examples/` | GTVG 示例（`examples/core` 移植，12 项验收） | ❌ |
+| `thymeleaf-support/` | 14 个 web 框架适配器 | ✅ |
+| `docs/` `scripts/` `xtask/` | 迁移文档 / 生成脚本 / migration-check | — |
+
+命令迁移：`cargo test -p thymeleaf-test --test thtest_upstream_plain_batch` →
+`cargo test -p thymeleaf-test --test thtest_upstream_plain_batch`；
+`cargo test -p thymeleaf-test --test source_parity_inventory` → `-p thymeleaf-test`。
+
+### 32.2 Java 测试脚本镜像与测试逻辑 1:1 复刻
+
+**测试脚本（.thtest 语料）**：上游五模块 **3493 个 .thtest** 1:1 字节镜像到
+`thymeleaf-test/assets/thymeleaf-tests/`（`diff -r` 验证）；`source-test-parity`
+的 `test_asset` 保持 **3570** 条目（3493 thtest + 77 golden），`acceptance.rs`
+按 SHA-256 逐文件固定。Java 源码与其余资源不镜像。
+
+**测试逻辑**：83 个 core 测试类逐方法在 Rust 1:1 复刻（见
+`docs/migration/Java测试类对照.md`）。本批补齐三个缺口：
+- `BareHtmlEngineTest` 26 例 → `tests/bare_html_engine_java_parity.rs`
+  （并修复真实引擎缺陷：属性 operator 需保留名称与 `=` 间空白，Java
+  `handleAttribute` 的 operatorOffset/Len 语义）
+- `OfflineTest` → `tests/offline_java_parity.rs`（offline01.html 渲染
+  vs result 归一化比较，fixtures 置于 `tests/fixtures/offline/`）
+- `ElementProcessorIteratorTest` 05/10-14 → 主 crate 单测扩展（迭代中
+  setAttribute/removeAttribute 动态语义 + `{a}` 元素名匹配）
+
+`thymeleaf/test/`（主 crate 内）为 Java `lib/testing`（thymeleaf-testing 测试引擎）
+的 95/95 字节镜像，README 记录与 Rust 移植（thtest 运行器 / test_engine_message_
+resolver / corpus_web_*）的对应。
+
+### 32.3 Java 测试类 1:1 覆盖
+
+- 83 个 core 测试类逐类映射见 **`docs/migration/Java测试类对照.md`**：
+  MAPPED（同对象 parity 文件）/ MERGED（语料运行器 2608 例）/
+  SPLIT（src 对象合同 + 语料）/ NOT_APPLICABLE（基准）。
+- 本批新增 `tests/text_comment_readers_java_parity.rs`：1:1 移植
+  `ParserLevelCommentTextReaderTest` + `PrototypeOnlyCommentTextReaderTest`
+  （全组合消息 × 全缓冲形状 + 手写用例，4 测试）；
+  `tests/bare_html_engine_java_parity.rs`（26 例）、`tests/offline_java_parity.rs`。
+- Spring 5/6/security 模块（76 类 462 方法）为 `POLICY_DIFFERENCE` 具名处置：
+  资产已镜像，等价能力由中立 Web 合同 + 适配器承担（见 31 节台账与矩阵文档）。

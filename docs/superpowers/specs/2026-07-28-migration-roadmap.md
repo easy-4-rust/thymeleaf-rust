@@ -1,0 +1,855 @@
+# thymeleaf-rust 全量语义迁移路线图
+
+- **日期**：2026-07-28
+- **作者**：thymeleaf-rust 团队
+- **状态**：已实施
+- **上游基线**：Thymeleaf 3.1.5.RELEASE（commit `10f9dd2eb8cbd98515ce14b149d115e0287d0add`)
+- **相关计划**：`docs/superpowers/plans/2026-07-28-s0-s10-batch-migration.md`
+
+---
+
+# thymeleaf-rust 全量语义迁移路线图
+
+> **文档说明**：以 Thymeleaf Core 为功能语义基线，规定 `thymeleaf` 核心 crate 从零实现到完全语义迁移的阶段、依赖、验收证据和发布门禁。
+>
+> **文档版本**：v1.1.0
+> **最后更新**：2026-07-31
+> **上游基线**：Thymeleaf `3.1.5.RELEASE`，提交 `10f9dd2eb8cbd98515ce14b149d115e0287d0add`
+> **目标分支**：`dev`
+> **状态**：S1–S10 生产语义已按调用链批量落位；S11 对象级行为验证仍在进行。202 个主对象达到 BEHAVIOR_VERIFIED，277 个主对象为 IMPLEMENTED_UNVERIFIED，12 个 Servlet 运行时对象为 JAVA_ONLY_EXEMPT
+
+## 1. 总目标
+
+`thymeleaf-rust` 的目标不是翻译 Java 语法，而是在 Rust 中完整迁移 Thymeleaf Core 的可观察功能语义：
+
+1. 模板解析、事件模型、Processor、Dialect、表达式、Fragment、缓存和输出行为一致；
+2. HTML、XML、TEXT、JAVASCRIPT、CSS、RAW 六种 `TemplateMode` 行为可对照验证；
+3. 完整渲染和节流/流式渲染具备等价的顺序、错误和取消语义；
+4. Java 反射、ClassLoader、Servlet、OGNL 等运行时机制使用 Rust 等价机制承载，不丢失业务语义；
+5. 核心仅发布一个 `thymeleaf` crate，其他发布 crate 均为 `thymeleaf-{framework}` 或 `thymeleaf-vernal` 整合层；
+6. 每项兼容结论都有对象、测试或差异登记作为证据。
+
+### 1.1 “功能语义完全迁移”的完成定义
+
+只有同时满足以下条件，才能使用“完全迁移”表述：
+
+| 门禁 | 完成条件 |
+|:---|:---|
+| 对象覆盖 | 491 个 Java 主对象和 69 个内部/伴随对象全部迁移或完成有证据的 Rust 等价映射 |
+| 名称覆盖 | 540 个直接迁移类型名称一致；20 个 Java 运行时相关类型全部登记并验证批准的等价名称 |
+| 语义覆盖 | [语义迁移对照表](语义迁移对照表.md)不存在 `NOT_STARTED`、`SKELETON`、`IMPLEMENTED_UNVERIFIED` 或未经解释的差异 |
+| 核心测试 | 上游 `thymeleaf-tests-core` 的 2,609 个 `.thtest` 用例全部进入清单，并通过 Rust Golden/Parity 测试或批准差异 |
+| API 行为 | `TemplateEngine`、`TemplateSpec`、Context、Model、Dialect/Processor SPI 和错误合同通过公共 API 对照 |
+| 模式覆盖 | HTML/XML/TEXT/JAVASCRIPT/CSS/RAW 全部通过解析、处理、转义和输出测试 |
+| 非功能要求 | 并发、缓存、背压、取消、资源限制、诊断位置和安全门禁通过 |
+| 文档一致性 | 路线图、对象表、语义表、名称检查和架构设计引用同一上游基线 |
+
+文件数、代码行数和测试数量只能作为诊断指标，不能单独证明语义完成。
+
+## 2. 基线证据
+
+### 2.1 上游源码基线
+
+| 证据 | 结果 |
+|:---|:---|
+| 上游仓库 | [thymeleaf/thymeleaf](https://github.com/thymeleaf/thymeleaf) |
+| 固定提交 | [`10f9dd2`](https://github.com/thymeleaf/thymeleaf/tree/10f9dd2eb8cbd98515ce14b149d115e0287d0add) |
+| Maven 版本 | `3.1.5.RELEASE` |
+| 核心源码范围 | `lib/thymeleaf/src/main/java` |
+| Java 主对象文件 | 491 |
+| 内部/伴随对象 | 69 |
+| Java 类型合计 | 560 |
+| Core 测试 Java 文件 | 209 |
+| Core `.thtest` 用例 | 2,609 |
+| Core 测试目录文件合计 | 2,881 |
+
+### 2.2 CodeGraph 当前证据
+
+上游和 Rust 仓库当前均存在 `.codegraph/`。对象批次在读取源码前先用 CodeGraph
+冻结调用方、实现关系、动态分派和 blast radius，再以固定提交源码及机器清单复核。
+下列规模数字来自建库时的上游索引；每次升级基线必须重新生成，不能沿用旧索引结论。
+
+| 指标 | 数量 |
+|:---|---:|
+| 索引文件 | 1,783 |
+| 符号节点 | 29,289 |
+| 关系边 | 75,439 |
+| Java 文件 | 1,543 |
+
+CodeGraph 已确认主执行链：
+
+```mermaid
+flowchart LR
+    A["ITemplateEngine.process"] --> B["TemplateEngine.process"]
+    B --> C["TemplateManager.parseAndProcess"]
+    C --> D{"TemplateModel cache hit?"}
+    D -- "是" --> E["prepare EngineContext"]
+    E --> F["create handler chain"]
+    F --> G["TemplateModel.process"]
+    D -- "否" --> H["resolveTemplate"]
+    H --> I["build TemplateData"]
+    I --> J["select parser by TemplateMode"]
+    J --> K{"cacheable?"}
+    K -- "是" --> L["ModelBuilderTemplateHandler"]
+    L --> M["cache TemplateModel"]
+    M --> G
+    K -- "否" --> N["parser → processing handler chain"]
+    G --> O["OutputTemplateHandler / stream sink"]
+    N --> O
+```
+
+该调用链是阶段依赖顺序的主要依据：在解析器和 Standard Dialect 之前，必须先稳定事件、Model、Context 和 Handler 合同。
+
+### 2.3 Vernal Expression 方法参考
+
+本套文档参考 Vernal 仓库 `dev` 分支、提交 `a4d24ae75d679c3ba4c68f4b6182e88a0b3b80ad` 下的四份迁移治理文档：
+
+| 参考文档 | 本项目吸收的方法 |
+|:---|:---|
+| [`迁移路线图.md`](https://github.com/easy-4-rust/vernal/blob/dev/docs/vernal-expression/迁移路线图.md) | 分阶段范围、前置依赖、退出门禁 |
+| [`对象级对照表.md`](https://github.com/easy-4-rust/vernal/blob/dev/docs/vernal-expression/对象级对照表.md) | 一文件一主对象、状态图例、逐对象验收 |
+| [`语义迁移对照表.md`](https://github.com/easy-4-rust/vernal/blob/dev/docs/vernal-expression/语义迁移对照表.md) | 将“对象存在”与“功能语义成立”分开检查 |
+| [`对象名称一致性检查.md`](https://github.com/easy-4-rust/vernal/blob/dev/docs/vernal-expression/对象名称一致性检查.md) | exact/missing/extra/equivalent 统计和自动门禁 |
+
+本项目没有复制其中的 Spring Expression 对象数量或完成状态，而是以 Thymeleaf 固定
+提交源码、当前 CodeGraph 证据和机器清单建立了 491/69/560 的独立基线。
+
+## 3. 范围边界
+
+### 3.1 逐对象迁移范围
+
+以下目录是对象级迁移的规范基线：
+
+```text
+lib/thymeleaf/src/main/java/org/thymeleaf
+```
+
+完整对象落点见[对象级对照表](对象级对照表.md)。
+
+### 3.2 语义吸收但不逐类迁移
+
+| 上游模块 | 使用方式 | Rust 落点 |
+|:---|:---|:---|
+| `thymeleaf-spring5` / `thymeleaf-spring6` | 提取 ViewResolver、WebFlux、SpEL 整合和数据驱动渲染行为 | `thymeleaf-vernal` 与各 `thymeleaf-{framework}` |
+| Spring Security extras | 提取 Dialect、权限表达式和安全输出用例 | 后续安全 Dialect/整合 crate |
+| examples | 提取真实模板、Dialect 扩展和宿主整合场景 | examples 与端到端测试 |
+| testing | 提取测试 DSL、缓存和模板引擎夹具 | Rust test support；不单独发布 `thymeleaf-testkit` |
+
+### 3.3 明确不采用的迁移方式
+
+- 不复制 Java 继承树、反射调用、Servlet 类型或 ClassLoader；
+- 不将 491 个对象拆成多个核心 crate；
+- 不以空文件、空 trait、`todo!()` 或 `unimplemented!()` 计入进度；
+- 不以“同名”替代行为测试；
+- 不在测试矩阵未通过前声明兼容百分比或完全兼容。
+
+## 4. 全局迁移原则
+
+1. **语义先于形态**：可观察输入、输出、顺序、错误和副作用一致，实现使用 Rust 原生所有权、trait、enum、闭包和异步流。
+2. **一个核心 crate**：Engine、Parser、Expression、Standard Dialect、Web 中立合同全部位于 `thymeleaf`。
+3. **一文件一主对象**：一个 Java 主对象对应一个 `.rs` 文件；内部类和伴随 Builder 可留在主对象文件。
+4. **名称默认一致**：类型保持 Java 简单名称；目录/文件/方法/参数转 snake_case。
+5. **中立内核**：`thymeleaf` 不依赖 Axum、Actix Web、Topcoat、Vernal 或其他宿主。
+6. **表达式分层**：`${}`、`*{}`、`#{}`、`@{}`、`~{}` 外层语义属于 `thymeleaf`；变量内部求值由中立 evaluator 承担。
+7. **批量语义迁移优先**：先按完整调用链和语义域批量实现全部生产对象，不以逐对象测试、
+   覆盖率或台账回填打断迁移；生产语义整体闭合后，再统一执行 Java/Rust 差分、Golden、
+   `.thtest`、覆盖率和文档验收。
+8. **差异必须显式**：所有 `JAVA_ONLY_EXEMPT` 项必须记录原因、替代机制、影响和回归测试。
+
+## 5. 阶段总览
+
+本表中的 S1–S10 是**生产代码语义域的批量实施顺序**，不是“迁移一个对象、测试一个
+对象”的串行流程。S1–S10 期间只允许执行格式化、编译、静态清单和红线扫描等快速
+反馈；Java Oracle、Rust 单元测试、`.thtest`、覆盖率、模糊测试和性能测试统一在
+生产语义全部闭合后的 S11 执行。对象状态也在 S11 按证据批量晋级。
+
+| 阶段 | 主对象数 | 交付主题 | 前置阶段 | 生产迁移退出条件 |
+|:---:|---:|:---|:---:|:---|
+| S0 | 0 | 基线、对象表、语义表、名称门禁 | — | 四份迁移文档一致 |
+| S1 | 20 | crate 骨架、根 API、错误、模板模式 | S0 | 生产对象与方法承接点闭合，无 STUB |
+| S2 | 30 | Resource、Resolver、Cache | S1 | 资源、解析顺序、有效性与缓存副作用逻辑闭合 |
+| S3 | 128 | Context、Engine、Event、Model、Handler | S1–S2 | 主处理链生产逻辑闭合 |
+| S4 | 41 | 六种模板模式 Parser 与解耦逻辑 | S3 | 六种解析模式及解耦逻辑闭合 |
+| S5 | 48 | Processor/Dialect/Pre/Post/Inline SPI | S3–S4 | precedence、结构处理和 SPI 逻辑闭合 |
+| S6 | 64 | 核心表达式对象、Message、Link、Util | S3 | 服务 SPI 与值模型生产逻辑闭合 |
+| S7 | 88 | Standard Expression、Inline、Serializer | S5–S6 | 外层表达式、OGNL 等价层和内联逻辑闭合 |
+| S8 | 56 | Standard `th:*` Processor | S5–S7 | Standard Dialect Processor 生产逻辑闭合 |
+| S9 | 16 | 中立 Web 合同和 Servlet 语义等价迁移 | S3–S8 | 完整/流式 Body 与 Host 合同闭合 |
+| S10 | — | `thymeleaf-{framework}`、`thymeleaf-vernal` | S9 | 全部适配器生产代码闭合并可编译 |
+| S11 | — | 全量 Parity、安全、性能和发布 | S1–S10 | 2,609 个 `.thtest` 全部结案 |
+
+截至 2026-07-30，S1–S10 已达到“生产迁移退出条件”，但未因此晋级为行为验证完成。
+当前唯一活动阶段是 S11：统一导入 Java 测试资产、批量运行差分与 `.thtest`，再依据
+证据更新对象和语义状态。
+
+```mermaid
+flowchart TD
+    S0["S0 基线"] --> S1["S1 根 API / 错误 / 模式"]
+    S1 --> S2["S2 Resolver / Resource / Cache"]
+    S1 --> S3["S3 Context / Engine / Model / Handler"]
+    S2 --> S3
+    S3 --> S4["S4 六种 Parser"]
+    S3 --> S5["S5 Processor / Dialect SPI"]
+    S3 --> S6["S6 Expression 服务 / Message / Link"]
+    S4 --> S5
+    S5 --> S7["S7 Standard Expression / Inline"]
+    S6 --> S7
+    S7 --> S8["S8 Standard th:* Processor"]
+    S5 --> S8
+    S8 --> S9["S9 中立 Web / 流式输出"]
+    S9 --> S10["S10 框架与 Vernal 整合"]
+    S4 --> S11["S11 全量 Parity"]
+    S8 --> S11
+    S10 --> S11
+```
+
+## 6. 阶段详细计划
+
+### 6.1 S0：迁移治理基线
+
+**交付物**
+
+- [迁移路线图](迁移路线图.md)
+- [对象级对照表](对象级对照表.md)
+- [语义迁移对照表](语义迁移对照表.md)
+- [对象名称一致性检查](对象名称一致性检查.md)
+
+**验收**
+
+- 四份文档引用同一版本和提交；
+- 491 个主对象全部有唯一 Rust 目标；
+- 491 个默认目标路径碰撞数为 0；
+- 语义域、阶段和对象包之间无未分类项；
+- 当前未实现状态如实为 0%，不把规划写成完成。
+
+### 6.2 S1：根 API、错误与模板模式
+
+**范围：20 个主对象**
+
+- `org.thymeleaf` 根包 10 个；
+- `exceptions` 9 个；
+- `templatemode.TemplateMode` 1 个。
+
+**关键交付**
+
+- `TemplateEngine`、`ITemplateEngine`、`TemplateSpec`；
+- 初始化前可配置、初始化后冻结的配置状态机；
+- `TemplateEngineException`、输入/处理/输出异常及源码位置；
+- `TemplateMode::{HTML, XML, TEXT, JAVASCRIPT, CSS, RAW}`。
+
+**验收**
+
+- 所有 `TemplateEngine.process` 重载语义映射到清晰的 Rust API；
+- `TemplateSpec` 的 selector、mode、resolution attributes 校验完整；
+- 未知模板模式回退/报错策略与上游差异有显式决定；
+- 每个错误保留模板名、行、列和原因链。
+
+**当前进度**
+
+- `exceptions` 9 / 9 个主对象达到 `BEHAVIOR_VERIFIED`；
+- `TemplateMode` 1 / 1 个主对象达到 `BEHAVIOR_VERIFIED`；
+- 根包 `TemplateSpec`、`Thymeleaf`、`DialectConfiguration`、`DialectSetConfiguration` 达到 `BEHAVIOR_VERIFIED`，其余 6 个对象已有生产实现并保持 `IMPLEMENTED_UNVERIFIED`；
+- Foundation Java Oracle 生成 86 条 Golden 记录；
+- `TemplateSpec` Java Oracle 生成 289 条 Golden 记录；
+- `Thymeleaf` Java Oracle 生成 8 条 Golden 记录；
+- 方言基础配置 Java Oracle 生成 23 条 Golden 记录；
+- Dialect 贡献聚合 Java Oracle 生成 59 条 Golden 记录，覆盖执行属性、表达式对象工厂、Pre/PostProcessor、非法贡献、全部 mode getter、定义注入和上游 8 组 Processor computation；
+- 缓存有效性 Java Oracle 生成 31 条 Golden 记录；
+- 缓存键 Java Oracle 生成 58 条 Golden 记录；
+- 缓存合同 Java Oracle 生成 14 条 Golden 记录；
+- 标准缓存 Java Oracle 生成 37 条 Golden 记录；
+- 模板资源 Java Oracle 生成 144 条 Golden 记录；
+- 模板解析结果 Java Oracle 生成 66 条 Golden 记录；
+- 通用参数校验 Java Oracle 生成 36 条 Golden 记录；
+- Map/Object 工具 Java Oracle 生成 40 条 Golden 记录；
+- 模式规则工具 Java Oracle 生成 79 条 Golden 记录；
+- 版本解析工具 Java Oracle 生成 668 条 Golden 记录；
+- 内容类型工具 Java Oracle 生成 375 条 Golden 记录；
+- Set/`#sets` Java Oracle 生成 47 条 Golden 记录；
+- List/`#lists` Java Oracle 生成 66 条 Golden 记录；
+- Map/`#maps`/`#objects` 表达式 Java Oracle 生成 35 条 Golden 记录；
+- 日志模板名工具 Java Oracle 生成 38 条 Golden 记录；
+- 聚合工具/`#aggregates` Java Oracle 生成 68 条 Golden 记录，并对 20,010 个确定性 `f64` 位模式执行输出哈希差分；
+- 数组工具/`#arrays` Java Oracle 生成 72 条 Golden 记录，覆盖引用身份、运行时组件类、primitive 数组、复制和索引异常顺序；
+- 求值工具/`#bools` Java Oracle 生成 90 条 Golden 记录，覆盖真值、精确 `BigDecimal(double)`、Unicode 数字、集合/数组转换、Map 条目身份和短路逻辑，并对 20,010 个确定性 `f64` 位模式执行精确十进制输出哈希差分；
+- 标准表达式基础对象 Java Oracle 生成 27 条 Golden 记录，覆盖 `LiteralValue` 的 null/身份解包和执行上下文六个规范单例的标志、幂等及往返；
+- 标准转换服务/NO-OP 值 Java Oracle 生成 21 条 Golden 记录，覆盖 String 快路径、共享返回身份、目标类错误、运行时异常、扩展钩子和单例值；
+- Token 字符语义 Java Oracle 生成 46 条 Golden 记录，逐码元覆盖完整 BMP、连字符左右上下文、完整 BMP trace，并对 20,000 个确定性 UTF-16 上下文执行判定与 trace 哈希差分；
+- 剩余三个 enum Java Oracle 生成 64 条 Golden 记录，覆盖值顺序、名称、ordinal、显示、void 标志、解析错误，并对每个 inline mode 的每个位置执行完整 BMP 替换差分；
+- 引擎增量处理合同 Java Oracle 生成 7 条 Golden 记录，覆盖有状态实现、动态接口分派、调用顺序、返回序列和对象身份；
+- 流控状态 Java Oracle 生成 6 条 Golden 记录，覆盖两个默认 false 标志、独立实例和 package 内逐字段变更；
+- UTF-16 内存写入器 Java Oracle 生成 46 条 Golden 记录，覆盖全部重载、null/越界异常短路、`Writer#append` 身份、`close` 后写入、完整 `write(int)` 输入域及范围矩阵；
+- 共享字符数组视图 Java Oracle 生成 57 条 Golden 记录，覆盖底层数组修改、浅 clone、UTF-16、异常顺序、负/溢出 length 延迟失败及构造/子序列矩阵；
+- 文本解析器状态/定位 Java Oracle 生成 18 条 Golden 记录，覆盖默认状态、实例独立性、LF/CR/代理项、整数回绕、短数组异常及部分写入；
+- 文本解析 checked exception Java Oracle 生成 27 条 Golden 记录，覆盖八个构造器、UTF-16/null 消息、显式位置、cause 身份与嵌套位置传播；
+- 文本处理器/注释/正则字面量 Java Oracle 生成 40 条记录，覆盖 11 个动态回调、缓冲区修改、checked/runtime 异常、谓词矩阵及全部 BMP 空白字符；
+- 文本通用扫描 Java Oracle 生成 87 条记录，覆盖十个扫描入口、引号/注释/字面量/运算符边界、null/越界与 locator 部分副作用；四类扫描穷举全部 BMP，字面量分隔符覆盖 0–12 个反斜杠；
+- 文本属性序列解析 Java Oracle 生成 56 条记录，覆盖 name-only、运算符、单双引号、嵌入范围、缓冲区修改、checked/runtime 异常、null handler 与运行时边界；空白、引号、语法和 offset/len 四个确定性穷举集合执行哈希差分；
+- 文本元素解析 Java Oracle 生成 99 条记录，覆盖 open/standalone/close、无名元素、属性、引号/内部结束符、handler 修改与异常、UTF-16 和运行时边界；名称码元、谓词范围、语法和解析范围四个确定性集合执行哈希差分；
+- 文本 handler 基类 Java Oracle 生成 39 条记录，覆盖默认空操作、全部 11 个同步转发、可空 buffer、checked/runtime 身份、失败前修改及 11 种 null-next 增强 NPE；
+- `TextParser`/`BufferPool` Java Oracle 生成 244 条记录，覆盖 960 种 Reader/缓冲切分组合、UTF-16、结构事件、错误分类、关闭与池身份；
+- text comment Reader Java Oracle 生成 120 条记录，迁移两个上游 JUnit 文件的
+  结构位置生成器、全部人工 case 和原始 buffer/len/offset 三重循环；
+- markup comment Reader Java Oracle 生成 61 条记录，迁移另外两个上游 JUnit
+  文件并验证 `AbstractMarkupTemplateParser` 所用的双层包装顺序；
+- 内联预处理 SPI Java Oracle 生成 25 条记录，覆盖 12 个动态回调、UTF-16 可变
+  buffer、null、auto element 与 attribute 全部位置参数；
+- `TextUtils` Java Oracle 生成 74 条记录，覆盖全部 48 个 public 重载、动态
+  `CharSequence` 调用轨迹、异常、完整 BMP 大小写摘要及 360 组 contains corpus；
+- `IProcessor` Java Oracle 生成 11 条记录，覆盖可空模板模式、六种模式、`int`
+  边界、动态状态与接口分派；
+- `AbstractProcessor` Java Oracle 生成 8 条记录，覆盖精确非空校验错误、六种模板
+  模式、`int` 边界、不可变 getter 和接口分派；
+- `IProcessorDialect` Java Oracle 生成 8 条记录，覆盖 nullable/空/Unicode 前缀、
+  `int` 边界、动态分派、Set 唯一性/迭代顺序、null 集合与 null 元素；
+- `AbstractProcessorDialect` Java Oracle 生成 5 条记录，覆盖父构造器精确错误、
+  空名称、null/空/Unicode 前缀、`int` 边界、组合委托与 Processor 扩展点；
+- 248 个 Rust 单元测试和 49 组固定 Java Oracle 通过，共登记 3,756 条 Java 记录；
+- 当前 Rust 源码 23,734 行、2,116 个函数、32,208 个区域，覆盖率均为 100%；
+- 完整 Java API 清单登记 4,291 个方法/构造器和 6,936 个参数。
+- `cargo xtask migration-check` 已进入 CI；该阶段报告 89 个已验证对象、2 个已实现待完整验证对象、0 路径冲突、0 STUB。
+
+### 6.3 S2：模板资源、解析和缓存
+
+**范围：30 个主对象**
+
+- `cache` 13 个；
+- `templateresolver` 10 个；
+- `templateresource` 7 个。
+
+**关键语义**
+
+- Resolver 按 order 顺序尝试，第一个非空 `TemplateResolution` 胜出；
+- selector 由 Parser 使用，不传给 Resolver；
+- `TemplateResolution` 同时携带资源、模式、解耦逻辑和缓存有效性；
+- Always/TTL/Non-cacheable validity；
+- Template、Expression、Specific 缓存隔离；
+- Java ClassLoader 的对象名称保持 1:1，运行时装载能力等价为有序资源根/ResourceLoader。
+
+**验收**
+
+- 多 Resolver 顺序、未命中、存在性预检和失败策略测试；
+- 缓存命中、过期、清理单模板、全量清理测试；
+- UTF-8、文件、内存、嵌入资源和不可 seek 资源测试；
+- 缓存键包含 owner、selector、offset、mode 和 resolution attributes。
+
+**当前进度**
+
+- S2 的 30 个主对象由 cache 13 个、templateresolver 10 个和 templateresource 7 个
+  组成；当前 29 / 30 达到 `BEHAVIOR_VERIFIED`，仅 `StandardCache` 因 JVM
+  `SoftReference` 自动内存压力回收边界保持 `IMPLEMENTED_UNVERIFIED`；
+- 模板资源域 7 / 7 已闭合。`ClassLoaderTemplateResource` 恢复 1:1 文件/类型名称，
+  Java ClassLoader 映射为有序资源根；`UrlTemplateResource` 的 file/HTTP/HTTPS 与
+  自定义协议处理器、相对继承和错误传播均有差分/义务测试；
+  `WebApplicationTemplateResource` 保留应用对象优先 null 校验、根路径和
+  `IWebApplication` 动态调用；
+- 缓存域 12 / 13 已闭合。`StandardCache` 与内部 `CacheDataContainer`、`CacheEntry`
+  已迁移 put-if-absent、FIFO、有效性检查、惰性删除、清理、计数器和比例，37 条
+  Java Golden 已通过；Rust 以 `Arc`/`Weak` 和显式
+  `sacrifice_soft_references()` 保留可回收语义，但没有 JVM 内存压力自动通知，因此
+  仍保持 `IMPLEMENTED_UNVERIFIED`；
+- Resolver 域 10 / 10 已闭合。113 条固定 Java Golden 覆盖基础状态、可空校验顺序、
+  pattern/null resource/存在性短路、alias `putAll`、原始 UTF-16 资源名、模式/缓存
+  优先级、默认/字符串 Resolver、真实文件和有序资源根、URL malformed 与
+  `;jsessionid` 行终止符规则、WebApplication 路径；Rust 义务测试另外验证实例级
+  自定义 URL 协议处理器贯穿 Resolver→Resource；
+- 固定 Java Oracle 生成 31 条 Golden，覆盖公开构造器、单例身份、动态接口调用、
+  零/负数/最大/最小 TTL 与实际过期；
+- 缓存键固定 Java Oracle 生成 58 条 Golden，覆盖必填项、null/空集合身份、
+  UTF-16 selector 顺序、显示格式、所有字段相等性与 hash 合同；
+- 缓存合同固定 Java Oracle 生成 14 条 Golden，覆盖 miss、共享值身份、checker
+  参数、显式 checker 覆盖、失效删除、key 快照和两种清理操作；
+- 模板资源固定 Java Oracle 及宿主资源 Oracle 覆盖 null/空模板、Unicode/CRLF/NUL、
+  独立 reader、动态接口、文件路径清理、真实 I/O、charset/BOM/非法字节、relative
+  和文件/编码组合失败优先级，以及 ClassLoader/Web 应用路径、URL 描述、file/HTTP
+  reader、HEAD 状态、自定义协议处理器与连接失败；
+- 模板解析结果固定 Java Oracle 生成 66 条 Golden，覆盖两种构造器、null 校验顺序、
+  六种模板模式、资源存在性验证与解耦逻辑标志，以及资源/有效性动态实例身份；
+- Rust 确定性测试额外覆盖严格过期边界、墙上时钟回拨、纪元前毫秒取整和 Java
+  `long` 环绕加法；
+- `ExpressionCacheKey` 精确保留 Java UTF-16 `int` hash 数值；`TemplateCacheKey`
+  对 JVM 枚举/对象身份 hash 采用合同等价的安全哈希，不承诺不可移植的跨进程数值；
+- S2 仅余 `StandardCache` 的 JVM `SoftReference` 自动回收边界未闭合。
+
+### 6.4 S3：Context、Engine、Event、Model 与 Handler
+
+**范围：128 个主对象**
+
+- `context` 20 个；
+- `engine` 88 个；
+- `model` 20 个。
+
+**关键语义**
+
+- `EngineContextManager` 的创建、level 增减和嵌套模板栈；
+- selection target、inliner、变量层级和元素栈；
+- TemplateStart/End、Text、Comment、CDATA、DocType、PI、XML 声明和元素事件；
+- 不可变 `TemplateModel` 与可变 `Model`；
+- Model 插入时禁止外部加入 TemplateStart/End；
+- `ITemplateHandler` 链和结构处理 Handler；
+- `TemplateManager.parseAndProcess` 缓存命中/未命中双路径。
+
+**验收**
+
+- 事件顺序可重放；
+- 不同 EngineConfiguration/TemplateMode 的 Model 禁止混合；
+- Context level 在成功和错误路径均正确回收；
+- 缓存模型和直通 Parser 的输出一致；
+- Handler 链可注入 Pre/Processor/Post/Output 节点。
+
+### 6.5 S4：六种 Parser 与解耦逻辑
+
+**范围：41 个主对象**
+
+- Parser 抽象；
+- markup、text、raw、reader；
+- decoupled logic。
+
+**关键语义**
+
+| 模式 | 关键语义 |
+|:---|:---|
+| HTML | 宽容标记解析、大小写不敏感、HTML 修复和 selector |
+| XML | 严格 XML、大小写敏感、声明/CDATA/命名空间 |
+| TEXT | 文本原型语法和可见控制标记 |
+| JAVASCRIPT | 文本模式 + JavaScript 内联与序列化 |
+| CSS | 文本模式 + CSS 内联与序列化 |
+| RAW | 原样输出，不执行普通模板语义 |
+
+**验收**
+
+- 每种事件类型保留 template name、line、column；
+- standalone 与 string parsing 行为一致；
+- selector、offset、嵌套模板和 decoupled logic 测试通过；
+- malformed 输入、超大输入、深嵌套和 Unicode 测试通过。
+
+**当前进度**
+
+- `BlockAwareReader`、两个 Text comment Reader 与两个 Markup comment Reader
+  共 5 / 41 个 S4 主对象达到
+  `BEHAVIOR_VERIFIED`，内部 `BlockAction` 与主对象同文件；
+- text 与 markup 两组全丢弃/仅丢容器定界符均通过固定 Java Oracle、UTF-16、
+  任意 Reader 切分、未闭合结构、读取/关闭失败验证；
+- `AbstractTextTemplateParser`、`AbstractMarkupTemplateParser` 等其余 36 个
+  S4 主对象已有生产实现并保持 `IMPLEMENTED_UNVERIFIED`。
+
+### 6.6 S5：Processor 与 Dialect SPI
+
+**范围：48 个主对象**
+
+- `processor` 34 个；
+- `dialect` 8 个；
+- pre/post processor 各 2 个；
+- inline SPI 2 个。
+
+**关键语义**
+
+- Processor 按 Dialect precedence、Processor precedence 和匹配规则稳定排序；
+- TemplateBoundaries、Element、Text、Comment、CDATA、DocType、PI、XML 声明均可处理；
+- StructureHandler 支持 remove、replace、insert、iterate、set body/attribute/local variable；
+- PreProcessor、PostProcessor 与 Output Handler 顺序固定；
+- Dialect 可贡献 Processor、ExpressionObject、ExecutionAttribute、Pre/PostProcessor。
+
+**验收**
+
+- 相同 precedence 的稳定顺序可重复；
+- 结构修改不会重复执行或跳过事件；
+- 自定义 Dialect 示例覆盖全部 SPI；
+- 多 Dialect prefix、无 prefix、冲突和覆盖测试通过。
+
+**当前进度**
+
+- `IInlinePreProcessorHandler` 已完整迁移 12 个同步事件回调，并通过固定 Java
+  Golden 验证动态分派、参数顺序和可空 UTF-16 buffer；
+- `IInliner` 与 `NoOpInliner` 已以 23 条固定 Java Golden、动态 trait 分派、三个
+  nullable 重载、单例身份、8 线程共享和 compile-fail 私有构造义务完整结算；
+- `TextUtils` 已完整迁移 51 个清单方法，为
+  `OutputExpressionInlinePreProcessorHandler`、名称仓库和 element/attribute
+  matching 调用链提供统一 UTF-16 比较、搜索与散列基础；
+- `org.thymeleaf.inline` 基础 SPI 当前 2 / 2 个对象达到 `BEHAVIOR_VERIFIED`；
+- Processor 基础 2 / 2 个对象均达到 `BEHAVIOR_VERIFIED`：`IProcessor` 保留
+  Java 接口可返回 `null` 的边界、六种模板模式、完整 `int` 优先级与动态分派；
+  `AbstractProcessor` 以组合式基础状态保留非空构造校验、不可变 getter 和接口分派；
+- `IProcessorDialect` 已保留默认/调用前缀、方言级 precedence、动态分派及
+  `Set<IProcessor>` 的唯一性、迭代顺序、共享身份和全部 nullable 边界；
+- `AbstractProcessorDialect` 已以 `AbstractDialect` 组合状态保留父构造器非空
+  名称校验、nullable prefix、完整 `int` precedence、不可变 getter，并把
+  `getProcessors` 留作具体方言扩展点；
+- 七类非元素 StructureHandler 与对应的 21 个 Processor SPI/抽象实现已作为一个
+  28 对象批次完成固定 Java/Rust Golden：验证 Text、Comment、CDATA、DocType、
+  ProcessingInstruction、XMLDeclaration 和 TemplateBoundaries 的互斥状态机、
+  reset-before-validation、精确异常消息、`CharSequence`/`IModel` 身份、
+  nullable 局部变量名、组合动作，以及抽象 Processor 的异常身份、位置补全和
+  非处理异常包装；该批次 28 / 28 达到 `BEHAVIOR_VERIFIED`；
+- `OutputExpressionInlinePreProcessorHandler` 及其名称仓库、转义工具与标准
+  Processor 依赖链均已有生产实现，保持 `IMPLEMENTED_UNVERIFIED` 等待统一差分。
+
+### 6.7 S6：表达式服务、Message、Link 与通用对象
+
+**范围：64 个主对象**
+
+- 核心 `expression` 20 个；
+- message resolver 4 个；
+- link builder 3 个；
+- util/temporal 37 个。
+
+**关键决策**
+
+- Thymeleaf 外层表达式由 `thymeleaf` 解析；
+- 变量/selection 内部表达式通过 `IStandardVariableExpressionEvaluator`；
+- 默认实现为 Rust 原生 evaluator；
+- `thymeleaf` 自行实现只读、受控的 OGNL 兼容层；`thymeleaf-vernal` 只做 Vernal
+  Web/View 宿主适配，不能用 SpEL 语义的 `vernal-expression` 替换 OGNL；
+- Message 按 resolver order、locale、template stack 回退；
+- LinkBuilder 处理 context-relative、server-relative、absolute、protocol-relative 和参数编码。
+
+**验收**
+
+- 值模型覆盖 Null、Boolean、Number、String、List、Map、Object；
+- 属性、索引、函数和受控方法调用具备安全白名单；
+- Locale、消息参数、缺失消息和默认消息测试；
+- URL 编码、路径变量、query、fragment、base URL 测试。
+
+**当前进度**
+
+- `NumberPointType`、`IdentityCounter`、`Validate`、`MapUtils`、`ObjectUtils`、
+  `ListUtils`、`Lists`、`Maps`、`Objects`、`SetUtils`、`Sets`、
+  `AggregateUtils`、`Aggregates`、`LoggingUtils`、`PatternUtils`、`PatternSpec` 与
+  `VersionUtils` 共 17 / 64 个 S6 主对象达到
+  `BEHAVIOR_VERIFIED`；
+- 固定 Java Oracle 生成 1,109 条 Golden，覆盖五个枚举成员及顺序、严格名称匹配、
+  引用 alias、值相等但身份不同、null 身份、容量边界，以及八个参数校验重载的成功与
+  异常路径，并覆盖 Map 全部查询重载、null 安全对象选择、字符串模式转换及有序模式
+  集合的匹配与失败后状态、List/Set 转换与 `#lists`/`#sets` 委托、聚合重载与
+  `#aggregates` 委托，以及版本解析、限定符、构建时间戳和三层版本比较；
+- `IdentityCounter` 使用 `Rc` 保留上游非线程安全和强引用身份语义，不以值哈希替代
+  `IdentityHashMap` 的引用比较；
+- `Validate` 使用 `ValidateError` 区分 Java 显式 `IllegalArgumentException` 与循环
+  解引用触发的隐式 `NullPointerException`，并由 `StandardCache` 复用统一空白判定；
+- `MapUtils` 复用 `ValidateError` 保留 null target/keys/values 的校验顺序与精确消息，
+  `ObjectUtils` 则以移动语义保持被选中引用的对象身份；
+- `SetUtils` 通过只读 `JavaSet` 同时保留已有集合身份、`LinkedHashSet` 首次插入顺序、
+  primitive array 强转异常和不可修改单例；`Sets` 的六个操作均走该工具的真实委托链；
+- `ListUtils` 保留已有列表身份、顺序、重复/null 元素、两个 `containsAll` 重载、
+  UTF-16/浮点自然排序、nullable Comparator、稳定排序及反射构造回退；`Lists`
+  的八个操作均走该工具的真实委托链；
+- `Maps` 的八个查询操作均走 `MapUtils` 真实委托链；`Objects` 保留标量身份、
+  同运行时组件类数组克隆、仅在实际替换 null 时触发的数组存储检查，以及固定
+  ArrayList/LinkedHashSet 等价结果的独立性、可变性、顺序和去重；
+- `LoggingUtils` 已替换 `TemplateSpec`/`TemplateCacheKey` 的重复内部算法，按原始
+  UTF-16 单元保留 120 长度阈值、头 35/尾 80 截断、LF 替换、字符串身份和孤立代理项；
+- `AggregateUtils` 以 unscaled `BigInt` 和 `i32 scale` 保留 Java `BigDecimal`
+  表示，按运行时 Number 类别转换并保持 Iterable 两次遍历、null/强转优先级、
+  精确除法及非终止平均值的 `HALF_UP` 回退；`Aggregates` 的全部入口走真实委托链；
+- `PatternUtils` 按上游替换顺序生成 Java 正则文本，`PatternSpec` 保留字符串集合的
+  插入顺序、去重规则、重复编译对象以及编译失败时不回滚的可观察状态；
+- `VersionUtils` 保留 Java `String#trim()`、UTF-16 `charAt()`、Unicode 15.0
+  `Character` 分类、`Integer.parseInt` 溢出和失败回退 `UNKNOWN`；`Thymeleaf`
+  版本入口已改为复用该解析链。
+- `messageresolver` 四对象已完成 CodeGraph 调用链复核，并以固定 Java 导出器生成
+  109 条 V3 Golden：覆盖 nullable SPI、模板/origin/default 三阶段、Properties
+  资源与语法、原始 UTF-16、精确大数、主要 number/choice/date/time 格式和异常边界；
+  Java protected 扩展点由 Rust 组合钩子承接且经真实主链验证。28 个方法/构造器的
+  功能族、边界、异常和运行时机制映射均已闭合，四对象达到 `BEHAVIOR_VERIFIED`；
+  JVM ClassLoader 资源发现以显式 `TypeId` 消息和父类型登记承接，不要求穷举全部
+  JDK Locale provider 数据或无限 pattern 输入空间。
+- 引擎配置冻结与诊断三个对象已完成 79 个 Java 声明的一次性对照，并以 44 条固定
+  Java Golden 和 12 线程并发义务验证不可变有序快照、接口能力 Dialect 查询、
+  ModelFactory 单次发布、六种 reshape、全部 Processor bucket，以及完整
+  DEBUG/TRACE 配置输出；累计固定 Oracle 为 56 组、4,064 条记录。
+- Engine Context 工厂与管理器三个对象已完成 7 个 Java 声明的一次性对照。46 条
+  固定 Golden 验证普通/Web 分流、有序变量复制、内建 `WebContext` 与
+  `WebExpressionContext` capability、已有上下文身份复用、工厂单次调用、层级增减
+  及嵌套 TemplateData 栈恢复；12 线程义务验证无状态标准工厂并发共享。累计固定
+  Oracle 为 57 组、4,110 条记录。
+- 表达式对象生命周期批次一次冻结 `IExpressionObjectFactory`、`IExpressionObjects`、
+  `ExpressionObjects`、`StandardExpressionObjectFactory` 和包级
+  `OGNLExpressionObjectsWrapper` 五个对象的 36 个 Java 声明。114 条固定 Golden
+  验证共享名称集合身份、惰性构造、可缓存 null、非缓存重建、标准对象单例/新实例、
+  Context/selection/template-only 对象、已移除 Servlet 对象异常，以及包装 Map 的
+  全部操作。Rust 额外以 12 线程和 `Weak` 生命周期义务证明缓存发布安全且不会形成
+  `Arc` 环；基础 Context 六对象批次继续验证实时变量名视图身份、具体表达式 Context
+  工厂身份与惰性单例；累计固定 Oracle 为 59 组、4,295 条记录。
+- Web Context 批次一次冻结 `IWebContext`、`WebContext` 和
+  `WebExpressionContext` 三个对象的 9 个 Java 声明。43 条固定 Golden 验证三组公开
+  构造形态、父构造优先的校验顺序、Locale/变量浅复制、exchange/interface 身份、
+  惰性表达式对象，以及自定义工厂收到具体 `WebExpressionContext` 并可观察同一
+  `IWebContext` capability；Rust 额外以 12 线程验证容器与 exchange 身份稳定。累计
+  固定 Oracle 为 60 组、4,338 条记录，累计验证 994 个生产构造器/方法。
+- Context 工具批次一次冻结 `ILazyContextVariable`、`LazyContextVariable`、
+  `IdentifierSequences` 和 `Contexts` 四个对象的 16 个 Java 声明。46 条固定 Golden
+  验证惰性成功/null/异常后重试、ID 序列 next/previous/increment、Java `int` 回绕、
+  Context/Web capability 与强制转换；12 线程义务验证 loader 只执行一次。该批次修正
+  了任意中立 Web exchange 被错误视作 Servlet exchange 的偏差；累计固定 Oracle 为 61
+  组、4,384 条记录，累计验证 1,010 个生产构造器/方法。
+- Engine Context 层级与 Web 属性批次一次冻结 `AbstractEngineContext`、`ITemplateContext`、
+  `IEngineContext`、`EngineContext`、`WebEngineContext` 五个对象的 86 个声明。41 条固定
+  Golden 验证延迟 expression factory、ID 序列 getter、变量删除/覆盖、显式 null selection
+  阴影、模板栈与 Web exchange 身份回滚；修复 Web 诊断串顺序和不应出现的私有附加文本。
+  累计固定 Oracle 为 62 组、4,425 条记录，累计验证 1,096 个生产构造器/方法。
+
+### 6.8 S7：Standard Expression、Inline 与 Serializer
+
+**范围：88 个主对象**
+
+- Standard root 1 个；
+- Standard expression 70 个；
+- Standard inline 9 个；
+- serializer 5 个；
+- Standard util 3 个。
+
+**关键语义**
+
+- `${}` variable；
+- `*{}` selection variable；
+- `#{}` message；
+- `@{}` link；
+- `~{}` fragment；
+- literal、token、binary operation、conditional、default、assignation、each 和 expression sequence；
+- `__...__` preprocessing；
+- `[[...]]` escaped inline 与 `[(...)]` unescaped inline；
+- JavaScript/CSS serializer 的字符串、集合、Map、Bean 和转义规则；
+- 禁止不可信字符串进入 `th:on*` 等事件属性。
+
+**验收**
+
+- Expression Cache 的键与预处理后输入一致；
+- parsing/execute/type-conversion context 分离；
+- short-circuit、null、类型转换和错误位置测试；
+- JavaScript/CSS/HTML/XML/TEXT 各上下文转义 Golden 测试。
+
+### 6.9 S8：Standard `th:*` Processor
+
+**范围：56 个主对象**
+
+**P0 Processor**
+
+- `th:text`、`th:utext`；
+- `th:if`、`th:unless`、`th:switch`、`th:case`；
+- `th:each`；
+- `th:object`、`th:with`；
+- `th:attr`、`th:attrappend`、`th:attrprepend` 及固定属性 Processor；
+- `th:insert`、`th:replace`、兼容性 `th:include`；
+- `th:fragment`、`th:remove`、`th:block`；
+- `th:inline` 和注释/CDATA 内联。
+
+**验收**
+
+- 每个 Processor 至少一组成功、空值、错误和边界测试；
+- fragment 参数、synthetic 参数、签名和嵌套选择测试；
+- `th:each` 覆盖 List、Map、iterator、状态变量和空集合；
+- 属性冲突、布尔属性、DOM event 安全限制和 XML namespace 测试。
+
+### 6.10 S9：中立 Web 与完整/流式输出
+
+**范围：16 个主对象**
+
+- `web` 4 个中立接口；
+- `web.servlet` 12 个对象做宿主等价迁移，不进入核心 Servlet API。
+
+**目标合同**
+
+```rust
+RenderedTemplate::Full(Bytes)
+RenderedTemplate::Stream(Stream<Frame<Bytes>>)
+```
+
+**验收**
+
+- Web application/exchange/request/session 的中立 trait；
+- request parameter、session/application attribute 可见性；
+- 完整输出与流式输出字节一致；
+- 背压、取消、flush、trailers、最大输出限制和中途错误策略；
+- Servlet 对象全部在名称例外清单中有宿主等价证据。
+
+### 6.11 S10：框架与 Vernal 整合
+
+整合 crate 不计入 491 个核心对象，但属于正式发布面：
+
+| 整合 | 验收重点 |
+|:---|:---|
+| `thymeleaf-topcoat` | View/Page/Fragment/受控 RawHtml |
+| `thymeleaf-actix-web` | Responder、MessageBody、Stream |
+| `thymeleaf-axum` | IntoResponse、Body |
+| `thymeleaf-gotham` | Handler、Response |
+| `thymeleaf-hyper` | 标准 HTTP Response/Body |
+| `thymeleaf-ntex` | Responder、Service、Body |
+| `thymeleaf-poem` | IntoResponse、Endpoint、Stream |
+| `thymeleaf-rocket` | Responder、ByteStream |
+| `thymeleaf-salvo` | Handler、Response Body |
+| `thymeleaf-tide` | Endpoint、Response |
+| `thymeleaf-warp` | Reply、Rejection |
+| `thymeleaf-tower` | Service、Layer、Body |
+| `thymeleaf-tonic` | 动态 String/Bytes、Gateway、Service 内容 |
+| `thymeleaf-vernal` | ViewEngine、ViewResolver、Context、Expression、Cache、HTTP bridge |
+
+每个整合 crate 必须独立可用；用户不应为了使用 `thymeleaf-axum` 而依赖 Vernal。
+
+### 6.12 S11：全量 Parity 与发布
+
+**上游用例迁移流程**
+
+```mermaid
+flowchart LR
+    A["2,609 个 .thtest"] --> B["解析 fixture 元数据"]
+    B --> C["Java 基线输出/错误快照"]
+    C --> D["Rust 对照执行"]
+    D --> E{"一致?"}
+    E -- "是" --> F["登记通过证据"]
+    E -- "否" --> G["修复或差异 ADR"]
+    G --> D
+```
+
+**发布门禁**
+
+- `cargo fmt --check`；
+- `cargo clippy --workspace --all-targets --all-features -- -D warnings`；
+- `cargo test --workspace --all-features`；
+- Golden/Parity 全通过；
+- Miri 覆盖核心 unsafe 边界；原则上核心不使用 unsafe；
+- Parser、Expression、Fragment fuzz；
+- Criterion 基准和内存上限；
+- 文档、License、NOTICE 和上游归属检查；
+- 公开 API 与名称检查无未批准差异。
+
+## 7. 测试迁移策略
+
+测试是最终兼容性声明的硬门禁，但不是生产对象批量迁移期间的逐对象停机点。实施顺序固定为：
+
+1. 从 Java 基线一次性提取对象、方法、调用链和可观察语义；
+2. 按 Context/Expression、Parser、Engine、Standard Dialect、Processor 等语义域批量迁移；
+3. 语义域之间只运行格式化、全目标编译、静态布局和 STUB 红线检查；
+4. 所有生产语义闭合后，统一迁移和运行单元、组件、Golden、Java Oracle 与 2,609 个
+   `.thtest`；
+5. 最后统一修复差异、补齐覆盖率并回填对象级/方法级状态。
+
+禁止恢复“一次迁移一个对象、立即编写一个测试、立即更新一次统计”的串行节奏。
+
+### 7.1 测试层级
+
+| 层级 | 目标 | 主要证据 |
+|:---|:---|:---|
+| 单元 | 每个对象的局部合同 | Rust 单元测试 |
+| 组件 | Parser、Expression、Processor、Cache | 固定输入输出和错误快照 |
+| Golden | Java/Rust 模板输出一致 | 上游 `.thtest` |
+| 差分 | 随机/边界输入行为一致 | Java oracle + Rust runner |
+| 整合 | Web 框架响应和流式 Body | 每个整合 crate 的真实服务器测试 |
+| 安全 | XSS、路径、递归、资源限制 | 恶意模板语料和 fuzz |
+| 性能 | 延迟、吞吐、内存、首帧 | Criterion 与端到端基准 |
+
+### 7.2 `.thtest` 迁移台账
+
+每个上游用例必须记录：
+
+- 上游相对路径；
+- 适用 TemplateMode；
+- 输入模板和 Context；
+- 期望输出或期望错误；
+- Java 基线版本/提交；
+- Rust 测试路径；
+- 状态：通过、批准差异、阻塞；
+- 差异 ADR 链接。
+
+不允许只抽样常用用例后宣称完整迁移。
+
+## 8. 风险与控制
+
+| 风险 | 影响 | 控制措施 | 阻断门禁 |
+|:---|:---|:---|:---|
+| HTML 宽容解析与源码位置不一致 | 高 | 事件 Golden + malformed corpus | S4 |
+| Java 动态对象模型无法直接映射 | 高 | TemplateValue + accessor/evaluator trait | S6 |
+| Processor 重处理和 precedence 错误 | 高 | 顺序快照 + 结构变换属性测试 | S5/S8 |
+| Fragment 递归或参数绑定差异 | 高 | 深度限制 + 签名/参数 Golden | S8 |
+| 流式渲染错误已写出部分响应 | 高 | 显式 preflight/stream error policy | S9 |
+| OGNL/SpEL 行为混淆 | 高 | 外层语法与内部 evaluator 分层 | S6/S7 |
+| Servlet 形态污染核心 | 高 | 中立 Web trait + 整合 crate | S9 |
+| 上游版本漂移 | 中 | 固定 commit；升级单独生成差异清单 | 全程 |
+| 许可证归属遗漏 | 高 | 保留 Apache-2.0 归属和修改说明 | S11 |
+
+## 9. 进度更新协议
+
+对象和方法台账采用“冻结基线 + 批次结算”，不得把旧快照当成实时进度。每个完整语义域
+实现结束、或统一验证阶段结束时，批量更新：
+
+1. [对象级对照表](对象级对照表.md)中的对象状态；
+2. [语义迁移对照表](语义迁移对照表.md)中的功能状态和测试证据；
+3. [对象名称一致性检查](对象名称一致性检查.md)的统计；
+4. 本路线图的阶段状态；
+5. 若有批准差异，新增或更新 ADR。
+
+生产迁移期间允许对象保持“已实现待统一验证”；状态更新不得仅基于文件存在。只有统一
+验证通过后才可标记 `BEHAVIOR_VERIFIED`。
+
+## 10. 冻结历史快照（2026-07-29，非实时状态）
+
+| 维度 | 当前状态 |
+|:---|:---|
+| 迁移治理文档 | ✅ 已建立；执行策略已切换为批量语义迁移 |
+| Java 主对象行为验证 | 89 / 491 |
+| Java 主对象已实现待完整验证 | 2 / 491 |
+| Java 类型已实现 | 100 / 560 |
+| `.thtest` 迁移 | 0 / 2,609 |
+| Cargo workspace | ✅ `thymeleaf` 已创建 |
+| Java API 机器清单 | ✅ 4,291 方法 / 6,936 参数 |
+| 核心 API | S1 Foundation、方言基础配置、Processor 基础契约（`IProcessor`/`AbstractProcessor`）以及 `IProcessorDialect`/`AbstractProcessorDialect`，S2 缓存/解析/资源切片、text parser 状态/定位/异常/处理器接口/默认与链式 handler/事件结构预处理/注释事件预处理/注释解析/字面量判定/通用结构扫描/属性序列解析/元素解析、上游五个 enum、`FastStringWriter`、`CharArrayWrapperSequence`、完整 `TextUtils`，以及 S6 参数、求值、聚合、Array/List/Set、`#bools`/`#aggregates`/`#arrays`/`#lists`/`#sets`/`#maps`/`#objects`、对象、模式、版本与 Token 字符语义已验证；URL 资源和 `StandardCache` 的 JVM 运行时边界待完整验证；Engine 尚未实现 |
+| 当时已验证切片覆盖率 | 行 / 函数 / 区域 100%；不得外推为当前全项目覆盖率 |
+| 兼容性声明 | 不允许 |
+
+以上表格及当时的“Engine 尚未实现”判断只描述 2026-07-29 快照，不是当前待办。
+快照之后，`AbstractTextTemplateParser`、六种模式入口、TemplateManager/Engine 主链、
+URL 资源协议 handler、Cache/Resolver、Dialect/Processor、Standard Expression、
+Standard Processor、中立 Web 和全部整合 crate 已按语义域批量落位。当前不再回到逐对象
+迁移，统一进入 S11 测试资产与行为差分结算。
+
+2026-07-31 的实时 S11 门禁结果为：格式化、严格 Clippy、全 workspace 测试和
+`migration-check` 均通过；固定 Java 五模块 Oracle 为 2,156 / 2,156，SOURCE_PARITY
+为 875 / 875 且 `MISSING=0`；CI 原样全 workspace
+`cargo-llvm-cov` 为 region 42.28%、function 36.46%、line 42.41%；核心 crate
+累计执行全部 15 个语料 scope 后为 region 72.02%、function 64.80%、line 73.44%，
+这些源码覆盖率仅作为诊断指标，不设置 100% 发布门槛。发布门禁改为对象、方法、
+测试资源、可比较行为和具名策略差异全部 100% 处置，并要求固定 Java/Rust 结果一致。
+随后统一 runner
+已用同一批量 runner 结算 parsing 域 69 / 69，并把标准、单输入/输出、无需自定义
+Dialect 的 `plain` 范围扩展到 200 / 200；两者存在包含关系，当前不同用例完成数为
+200。随后选择带 Context 的标准输出用例，改用生产 `VariableExpression`/OGNL
+求值器建立真实 `Context` 后整批执行。把 61 个
+`elementstack`/`inlining/nostandard` 用例移入专用 Dialect 批次后，标准 context 固定
+分母为 996；一次性补齐测试宿主 runtime、可变 Map、表达式、序列化、跨模式处理和
+ACL 语义后，统一重跑为 **996 / 996**。该批次与 plain 用例不重叠，所以当前绿灯结算
+1,196 个不同 `.thtest`。
+
+随后专用 Dialect 批次按 Java `FeaturesTest` 的方言组合整体迁移：13 个
+`elementstack` 使用 `StandardDialect + ElementStackDialect`，48 个
+`inlining/nostandard` 仅使用 `Dialect01`。首轮 48 / 61 通过，并统一定位出 Rust HTML
+parser 错误执行 auto-open 的生产缺陷；依据 Java `HTMLTemplateParser` 的
+`ElementBalancing.AUTO_CLOSE` 配置修复后为 **61 / 61**。`verified` 统一范围已一次性
+通过 **1,257 / 1,257** 个不同 `.thtest`。
+
+随后 `exception` 域一次性执行全部 500 个 `%EXCEPTION` 用例，并以递归异常类、消息
+正则和 cause 链作为合同。该批次集中修复 Reader/模板处理 cause 透传、模板名与行列、
+内联错误边界、命名模板模式、优先级 Dialect、lazy variable、链接协议安全，以及
+OGNL 的类型化异常与属性 ACL；统一结果为 **500 / 500**。它与 `verified` 不重叠，
+`validated` 并集因此为 **1,757 / 1,757**。
+
+随后按 directive 语义域一次性接入继承、消息、命名模板与模式、Fragment、精确比较和
+NAME，共 **433 / 433**；再按 Java `PrePostProcessorsTest` 的真实方言配置接入五种模式
+的 pre/post handler，共 **10 / 10**。此后继续整域接入多输入模板 237、Link 35、
+内联交互 18、自定义 Conversion Service 28、Block 8 与 NoOp 4 个用例，全部通过。
+这些批次之后又整域完成 Aggregation 3、Markup 11、Context vartest 38、
+Precedence 6、Web Context 5，以及 remove/replace/surround 4 个用例；Precedence
+中 2 个异常用例已被 `validated` 包含。去重后 **2,595 / 2,608** 个用例通过 Rust
+行为验证，其余 13 个全部具名处置：12 个是上游已禁用且违反 RESTRICTED
+`#execInfo` 合同的历史资源，1 个依赖默认安全子集明确拒绝的任意 Java `Class`
+反射链。当前未解释用例为 0，不能把 13 个处置项表述为成功执行。
+
+该批次坚持只读安全 OGNL 子集：上游已禁用且与 RESTRICTED `#execInfo` 明确冲突的
+12 个历史 TEXT 资源已具名排除；Java `Class` 反射链也不纳入默认安全子集。所有差异
+必须显式登记，禁止为追求兼容数字开放任意反射或受限表达式对象。
+
+---
+
+**文档版本**：v1.1.0
+**创建日期**：2026-07-28
+**最后更新**：2026-07-30
+**文档状态**：生产语义批量迁移中；本节数字仅为 2026-07-29 冻结历史快照，统一验证前
+不发布实时兼容百分比
