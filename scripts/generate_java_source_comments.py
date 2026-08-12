@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """为缺失"对应 Java"来源注释的公共对象/方法生成诚实注释草稿。
 
-- 从 docs/migration/对象级对照表.md 解析 Rust 文件 -> Java 类映射
+- 从 docs/superpowers/specs/2026-07-28-object-level-mapping.md 解析 Rust 文件 -> Java 类映射
 - 从 docs/migration/baseline/java_api_inventory.json 索引 Java 类方法名
 - 从 Rust 源文件读取公共项种类（fn/struct/enum/trait/union）
 - 方法名 snake_case -> camelCase 与 Java 方法名核对：
@@ -90,7 +90,7 @@ def main() -> int:
     ap.add_argument("--rust-root", default=str(ROOT / "thymeleaf"))
     args = ap.parse_args()
 
-    table = parse_object_table(ROOT / "docs/migration/对象级对照表.md")
+    table = parse_object_table(ROOT / "docs/superpowers/specs/2026-07-28-object-level-mapping.md")
     java_methods, all_java_methods = load_java_methods(
         ROOT / "docs/migration/baseline/java_api_inventory.json"
     )

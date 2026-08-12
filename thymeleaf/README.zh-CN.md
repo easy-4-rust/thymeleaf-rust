@@ -238,7 +238,7 @@ Web 能力；出站时，只转换 Status、Header 和 Body 类型。整合 crat
 Resolver、Parser、Expression、Processor、Charset 编码或节流控制。独立框架适配与
 `thymeleaf-vernal` 是同一组中立合同的平级消费者，两条路径互不依赖。详细设计、
 调用链证据和风险见
-[可行性与架构设计](docs/Thymeleaf-Rust-可行性与架构设计.md)。
+[可行性与架构设计](docs/superpowers/specs/2026-07-28-architecture-design.md)。
 
 当前 Hyper 宿主桥已经实现中立入站 trait；其他框架 crate 目前主要完成
 `RenderedTemplate` 出站转换，对等的原生 Request/Session/Application Wrapper 仍属于
@@ -343,7 +343,7 @@ flowchart TB
 
 | 交付物 | 状态 | 证据 |
 |:---|:---:|:---|
-| 可行性与架构基线 | 已有，CodeGraph 复核 | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
+| 可行性与架构基线 | 已有，CodeGraph 复核 | [`docs/superpowers/specs/2026-07-28-architecture-design.md`](docs/superpowers/specs/2026-07-28-architecture-design.md) |
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
 | Rust 核心 API | 语义清单已闭合 | Engine、配置、Resolver、六种 Parser、事件模型、Context、缓存、Standard Dialect、Processor SPI、表达式安全子集与中立 Web 输出均有真实实现 |
@@ -371,14 +371,14 @@ cargo llvm-cov --workspace --all-features --summary-only
 
 然后阅读：
 
-- [可行性与架构基线](docs/Thymeleaf-Rust-可行性与架构设计.md)
-- [迁移路线图](docs/migration/迁移路线图.md)
-- [对象级对照表](docs/migration/对象级对照表.md)
-- [方法级对照表](docs/migration/方法级对照表.md)
-- [语义迁移对照表](docs/migration/语义迁移对照表.md)
-- [对象名称一致性检查](docs/migration/对象名称一致性检查.md)
-- [迁移技术要求](docs/migration/Thymeleaf-Rust-迁移技术要求.md)
-- [迁移测试对照表](docs/migration/迁移测试对照表.md)
+- [可行性与架构基线](docs/superpowers/specs/2026-07-28-architecture-design.md)
+- [迁移路线图](docs/superpowers/specs/2026-07-28-migration-roadmap.md)
+- [对象级对照表](docs/superpowers/specs/2026-07-28-object-level-mapping.md)
+- [方法级对照表](docs/superpowers/specs/2026-07-28-method-level-mapping.md)
+- [语义迁移对照表](docs/superpowers/specs/2026-07-28-semantic-migration-mapping.md)
+- [对象名称一致性检查](docs/superpowers/specs/2026-07-28-naming-consistency-check.md)
+- [迁移技术要求](docs/superpowers/specs/2026-07-28-migration-technical-requirements.md)
+- [迁移测试对照表](docs/superpowers/specs/2026-07-28-migration-test-mapping.md)
 - [English README](README.md)
 
 ## 兼容方向
@@ -451,7 +451,7 @@ Parser 和渲染 Runtime 已可执行。默认表达式求值采用只读安全�
 
 <div align="center">
 
-[返回顶部](#readme-top) · [架构文档](docs/Thymeleaf-Rust-可行性与架构设计.md) ·
+[返回顶部](#readme-top) · [架构文档](docs/superpowers/specs/2026-07-28-architecture-design.md) ·
 [Issues](https://github.com/easy-4-rust/thymeleaf-rust/issues)
 
 </div>

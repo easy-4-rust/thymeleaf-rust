@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""生成 docs/migration/Java测试方法对照.md —— 上游测试类**方法级**映射表。
+"""生成 docs/superpowers/specs/2026-07-28-java-test-method-mapping.md —— 上游测试类**方法级**映射表。
 
 数据源：docs/migration/baseline/source_parity_inventory.json（由
 generate_source_parity_inventory.py 生成，875 个源码入口方法级处置，MISSING=0）。

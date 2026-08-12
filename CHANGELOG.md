@@ -2,7 +2,7 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
-[docs/release/versioning.md](docs/release/versioning.md)）。
+[docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
 ## [Unreleased]
 
@@ -40,7 +40,7 @@
   接口/继承方法 → `Java 接口/超类方法`；Rust 侧辅助 → 显式标注）。
 - **独立对象拆分**：`JavaString`/`JavaStringResult` 从 `util/logging_utils.rs`
   拆分为 `util/java_string.rs`（重导出保持外部零 churn）。
-- **发布配套文档**：`docs/release/versioning.md`（alpha→beta→1.0 晋级规则）、
+- **发布配套文档**：`docs/superpowers/specs/2026-07-28-versioning-governance.md`（alpha→beta→1.0 晋级规则）、
   `docs/release/` 目录建立。
 
 ### Fixed

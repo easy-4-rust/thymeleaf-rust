@@ -249,7 +249,7 @@ status, headers, and body types. They must not reimplement resolvers, parsers,
 expressions, processors, charset handling, or streaming control. Direct adapters and
 `thymeleaf-vernal` are peer consumers of the same contracts; neither path depends on
 the other. See the detailed
-[feasibility and architecture design](docs/Thymeleaf-Rust-可行性与架构设计.md) for
+[feasibility and architecture design](docs/superpowers/specs/2026-07-28-architecture-design.md) for
 call-chain evidence and risks.
 
 The neutral inbound traits are implemented today by the Hyper host bridge. The other
@@ -357,7 +357,7 @@ Release order may be phased, but the architecture must not require independent u
 
 | Deliverable | Status | Evidence |
 |:---|:---:|:---|
-| Feasibility and architecture baseline | Available; CodeGraph reviewed | [`docs/Thymeleaf-Rust-可行性与架构设计.md`](docs/Thymeleaf-Rust-可行性与架构设计.md) |
+| Feasibility and architecture baseline | Available; CodeGraph reviewed | [`docs/superpowers/specs/2026-07-28-architecture-design.md`](docs/superpowers/specs/2026-07-28-architecture-design.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
 | Rust core API | Semantic inventory closed | Engine, configuration, resolvers, six parsers, event model, context, caches, standard dialect, processor SPI, safe expression subset, and neutral web output have real implementations |
@@ -385,14 +385,14 @@ cargo llvm-cov --workspace --all-features --summary-only
 
 Then read:
 
-- [Feasibility and architecture baseline](docs/Thymeleaf-Rust-可行性与架构设计.md)
-- [Migration roadmap](docs/migration/迁移路线图.md)
-- [Object-level mapping](docs/migration/对象级对照表.md)
-- [Method-level mapping](docs/migration/方法级对照表.md)
-- [Semantic migration matrix](docs/migration/语义迁移对照表.md)
-- [Object naming consistency check](docs/migration/对象名称一致性检查.md)
-- [Migration technical requirements](docs/migration/Thymeleaf-Rust-迁移技术要求.md)
-- [Migration test ledger](docs/migration/迁移测试对照表.md)
+- [Feasibility and architecture baseline](docs/superpowers/specs/2026-07-28-architecture-design.md)
+- [Migration roadmap](docs/superpowers/specs/2026-07-28-migration-roadmap.md)
+- [Object-level mapping](docs/superpowers/specs/2026-07-28-object-level-mapping.md)
+- [Method-level mapping](docs/superpowers/specs/2026-07-28-method-level-mapping.md)
+- [Semantic migration matrix](docs/superpowers/specs/2026-07-28-semantic-migration-mapping.md)
+- [Object naming consistency check](docs/superpowers/specs/2026-07-28-naming-consistency-check.md)
+- [Migration technical requirements](docs/superpowers/specs/2026-07-28-migration-technical-requirements.md)
+- [Migration test ledger](docs/superpowers/specs/2026-07-28-migration-test-mapping.md)
 - [Chinese README](README.zh-CN.md)
 
 ## Compatibility direction
@@ -472,7 +472,7 @@ Upstream-derived material remains subject to its original license and attributio
 
 <div align="center">
 
-[Back to top](#readme-top) · [Architecture](docs/Thymeleaf-Rust-可行性与架构设计.md) ·
+[Back to top](#readme-top) · [Architecture](docs/superpowers/specs/2026-07-28-architecture-design.md) ·
 [Issues](https://github.com/easy-4-rust/thymeleaf-rust/issues)
 
 </div>

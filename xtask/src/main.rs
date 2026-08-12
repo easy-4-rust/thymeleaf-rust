@@ -9,7 +9,7 @@ use std::process::Command;
 use serde::{Deserialize, Serialize};
 
 const INVENTORY_PATH: &str = "docs/migration/baseline/java_api_inventory.json";
-const OBJECT_TABLE_PATH: &str = "docs/migration/对象级对照表.md";
+const OBJECT_TABLE_PATH: &str = "docs/superpowers/specs/2026-07-28-object-level-mapping.md";
 const TODO_MACRO: &str = concat!("todo", "!(");
 const UNIMPLEMENTED_MACRO: &str = concat!("unimplemented", "!(");
 const APPROVED_RUST_EXTENSION_FILES: [&str; 2] = [

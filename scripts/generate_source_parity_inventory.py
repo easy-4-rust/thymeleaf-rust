@@ -169,7 +169,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--object-table",
         type=Path,
-        default=Path("docs/migration/对象级对照表.md"),
+        default=Path("docs/superpowers/specs/2026-07-28-object-level-mapping.md"),
     )
     parser.add_argument(
         "--surefire-root",
