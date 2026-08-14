@@ -44,3 +44,40 @@ fn error_response_is_generic_while_cause_remains_diagnostic() {
         .to_bytes();
     assert_eq!(bytes.as_ref(), b"Template rendering failed");
 }
+
+#[tokio::test]
+async fn render_async_renders_template_on_blocking_pool() {
+    use std::sync::Arc;
+    use thymeleaf::context::Context;
+    use thymeleaf::expression::TemplateValue;
+    use thymeleaf::templateresolver::StringTemplateResolver;
+    use thymeleaf::util::Utf16String;
+    use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
+
+    let mut resolver = StringTemplateResolver::new();
+    resolver.set_template_mode(TemplateMode::HTML);
+    let engine = TemplateEngine::new();
+    engine
+        .set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
+        .expect("resolver");
+    let context = Context::new();
+    context.set_variable(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
+            "async-axum",
+        )))),
+    );
+
+    let view = thymeleaf_axum::ThymeleafView::render_async(
+        Arc::new(engine),
+        "<p th:text=\"${name}\">x</p>",
+        Arc::new(context),
+    )
+    .await
+    .unwrap_or_else(|error| panic!("async render: {}", error.get_cause().get_message()));
+    let response = view.into_response();
+    let bytes = block_on(response.into_body().collect())
+        .expect("body collection")
+        .to_bytes();
+    assert!(String::from_utf8_lossy(&bytes).contains("async-axum"));
+}

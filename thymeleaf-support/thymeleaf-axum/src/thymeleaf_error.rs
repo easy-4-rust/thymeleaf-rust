@@ -1,6 +1,7 @@
 use axum::body::Body;
 use axum::http::{Response, StatusCode};
 use axum::response::IntoResponse;
+use thymeleaf::TemplateEngineException;
 use thymeleaf::web::RenderError;
 
 /// Axum handler 使用的渲染错误响应。
@@ -34,6 +35,12 @@ impl ThymeleafError {
 impl From<RenderError> for ThymeleafError {
     fn from(cause: RenderError) -> Self {
         Self::new(cause)
+    }
+}
+
+impl From<Box<dyn TemplateEngineException + Send + Sync>> for ThymeleafError {
+    fn from(cause: Box<dyn TemplateEngineException + Send + Sync>) -> Self {
+        Self::new(RenderError::new(&cause.to_string()))
     }
 }
 
