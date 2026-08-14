@@ -3,7 +3,7 @@ name = "thymeleaf-gotham"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Gotham integration for the framework-neutral thymeleaf template engine"
+description = "Gotham integration for the framework-neutral thymeleaf template engine (experimental: Gotham 上游 2022 年后停滞维护)"
 license.workspace = true
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
@@ -25,3 +25,10 @@ dbg_macro = "deny"
 todo = "deny"
 unimplemented = "deny"
 wildcard_imports = "deny"
+
+[features]
+full = []
+
+[[test]]
+name = "adapter_contract"
+required-features = ["full"]

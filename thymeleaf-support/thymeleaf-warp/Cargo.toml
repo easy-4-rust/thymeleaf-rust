@@ -3,7 +3,7 @@ name = "thymeleaf-warp"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Warp integration for the framework-neutral thymeleaf template engine"
+description = "Warp integration for the framework-neutral thymeleaf template engine (experimental: Warp 被 axum 取代中（vernal 优先级 4 之后的生态趋势）)"
 license.workspace = true
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
@@ -27,3 +27,10 @@ dbg_macro = "deny"
 todo = "deny"
 unimplemented = "deny"
 wildcard_imports = "deny"
+
+[features]
+full = []
+
+[[test]]
+name = "adapter_contract"
+required-features = ["full"]
