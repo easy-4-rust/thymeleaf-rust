@@ -79,7 +79,7 @@ impl HostWebRequest {
         };
         let headers = collect_headers(request.headers());
         let parameters = collect_parameters(query);
-        let cookies = collect_cookies(request);
+        let cookies = collect_cookies(request.headers());
         Self {
             method: Utf16String::from_rust_str(request.method().as_str()),
             scheme,
@@ -243,18 +243,23 @@ fn collect_parameters(
 }
 
 fn collect_cookies(
-    request: &HttpRequest,
+    headers: &HeaderMap,
 ) -> IndexMap<Option<Utf16String>, Option<Vec<Option<Utf16String>>>> {
+    // 直接从 Cookie 头解析（与 thymeleaf-hyper 标杆逐字节一致）；不走
+    // actix 的 cookies() —— 其 extensions 缓存在构造快照期间会与
+    // connection_info 的借用交叉，导致 RefCell 双重借用 panic。
     let mut output = IndexMap::new();
-    // Actix 的 Cookie 解析失败（畸形 Cookie 头）按无该 Cookie 处理。
-    if let Ok(cookies) = request.cookies() {
-        for cookie in cookies.iter() {
+    for header in headers.get_all(actix_web::http::header::COOKIE) {
+        for cookie in header.to_str().unwrap_or_default().split(';') {
+            let Some((name, value)) = cookie.trim().split_once('=') else {
+                continue;
+            };
             output
-                .entry(Some(Utf16String::from_rust_str(cookie.name())))
+                .entry(Some(Utf16String::from_rust_str(name)))
                 .or_insert_with(|| Some(Vec::new()))
                 .as_mut()
                 .expect("cookie entry is initialized")
-                .push(Some(Utf16String::from_rust_str(cookie.value())));
+                .push(Some(Utf16String::from_rust_str(value)));
         }
     }
     output

@@ -59,3 +59,41 @@ fn responder_preserves_status_headers_and_body() {
     };
     assert_eq!(chunk.as_ref(), b"view");
 }
+
+#[actix_web::test]
+async fn render_async_renders_template_on_blocking_pool() {
+    use std::sync::Arc;
+    use thymeleaf::context::Context;
+    use thymeleaf::expression::TemplateValue;
+    use thymeleaf::templateresolver::StringTemplateResolver;
+    use thymeleaf::util::Utf16String;
+    use thymeleaf::{ITemplateResolver, TemplateEngine, TemplateMode};
+
+    let mut resolver = StringTemplateResolver::new();
+    resolver.set_template_mode(TemplateMode::HTML);
+    let engine = TemplateEngine::new();
+    engine
+        .set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
+        .expect("resolver");
+    let context = Context::new();
+    context.set_variable(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str(
+            "async-actix",
+        )))),
+    );
+
+    let view = thymeleaf_actix_web::ThymeleafView::render_async(
+        Arc::new(engine),
+        "<p th:text=\"${name}\">x</p>",
+        Arc::new(context),
+    )
+    .await
+    .unwrap_or_else(|error| panic!("async render: {error}"));
+    let response = view.respond_to(&actix_test::TestRequest::default().to_http_request());
+    assert_eq!(response.status(), 200);
+    let bytes = actix_web::body::to_bytes(response.into_body())
+        .await
+        .expect("body bytes");
+    assert!(String::from_utf8_lossy(&bytes).contains("async-actix"));
+}
