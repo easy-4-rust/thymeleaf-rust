@@ -9,7 +9,9 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
 axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
+indexmap = "2.12"
 thymeleaf = { path = "../../thymeleaf" }
+url = "2.5.8"
 
 [dev-dependencies]
 futures-executor = "0.3.31"
