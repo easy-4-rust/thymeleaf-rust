@@ -59,7 +59,7 @@ impl HostWebRequest {
             },
         };
         let scheme_for_defaults = scheme.as_ref().map(|value| value.to_string_lossy());
-        let server_port = explicit_port.or_else(|| match scheme_for_defaults.as_deref() {
+        let server_port = explicit_port.or(match scheme_for_defaults.as_deref() {
             Some("http") => Some(80),
             Some("https") => Some(443),
             _ => None,
