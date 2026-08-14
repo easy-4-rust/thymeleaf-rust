@@ -40,7 +40,7 @@ impl From<RenderError> for ThymeleafError {
 
 impl From<Box<dyn TemplateEngineException + Send + Sync>> for ThymeleafError {
     fn from(cause: Box<dyn TemplateEngineException + Send + Sync>) -> Self {
-        Self::new(RenderError::new(&cause.to_string()))
+        Self::new(RenderError::new(cause.to_string()))
     }
 }
 
