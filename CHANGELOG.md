@@ -6,6 +6,30 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Web 适配器 P0 做厚**（superpowers plan `2026-08-15-web-adapter-p0`）：
+  - `thymeleaf-axum` / `thymeleaf-actix-web` / `thymeleaf-topcoat` 补齐
+    `HostWeb` 四件套（`IWebRequest` ~24 方法 + `IWebExchange`/`IWebSession`/
+    `IWebApplication`），契约测试与 `thymeleaf-hyper` 标杆逐断言对齐
+    （axum 13 / actix 13 / topcoat 12 测试全绿，含端到端渲染）。
+  - 三件新增 `ThymeleafView::render_async`：axum/topcoat 走 tokio
+    `spawn_blocking`，actix 走原生 `web::block`；同步入口并存。
+  - topcoat API 勘察落档（`2026-08-15-topcoat-api-notes.md`）：topcoat 0.5.0
+    router 层为 http 1.x 类型族 re-export，与 axum 路线同构；响应式 view
+    宏与 Thymeleaf SSR 互补。
+  - vernal-webmvc 对接缺口清单（`2026-08-15-webmvc-view-integration-notes.md`）：
+    ViewResolver trait 缺失等 5 项桥接，作为下一计划输入。
+
+### Changed
+
+- `thymeleaf-gotham` / `thymeleaf-tide` / `thymeleaf-warp` 降级**实验性**
+  （上游停滞/被取代；测试移入 `full` feature，CI `--all-features` 仍看护）。
+- Vernal 约定文档新增 4.7 视图层选型节（thymeleaf-rust 替代
+  ThymeleafViewResolver，状态 `[待验证]` → 本轮 P0 完成后 `[已验证]`）。
+
+
+
 ### Changed
 
 - **命名 Rust 化（语义锁定，行为零变更）**：全量移除 `Java*` 前缀类型与

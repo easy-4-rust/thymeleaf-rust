@@ -347,8 +347,8 @@ flowchart TB
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
 | Rust 核心 API | 语义清单已闭合 | Engine、配置、Resolver、六种 Parser、事件模型、Context、缓存、Standard Dialect、Processor SPI、表达式安全子集与中立 Web 输出均有真实实现 |
-| 框架适配器 | 已有，宿主测试待加强 | Workspace 中 13 个独立框架 crate 与 `thymeleaf-vernal` 均可编译；28 个适配器/Hyper 宿主合同测试通过 |
-| 上游兼容矩阵 | 结构清单已闭合，行为验证进行中 | 491 个主对象、69 个内部对象和 4,291 个方法都有处置；主对象状态为 202 已验证、277 已实现待验证、12 个 Java-only 宿主等价映射 |
+| 框架适配器（P0） | ✅ 稳定 | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | IWebExchange 四件套 + 与 hyper 标杆对齐的契约测试 + `render_async` |
+| 框架适配器（薄层/实验性） | 🧪 预览/实验 | hyper/tower/ntex/poem/rocket/salvo/tonic；gotham/tide/warp 实验性 | 响应级适配；实验性三件测试在 `full` feature 后 | 上游兼容矩阵 | 结构清单已闭合，行为验证进行中 | 491 个主对象、69 个内部对象和 4,291 个方法都有处置；主对象状态为 202 已验证、277 已实现待验证、12 个 Java-only 宿主等价映射 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
 | 测试与 CI | 语义门禁通过 | Java 五模块基线 2,156/2,156；SOURCE_PARITY 875/875、0 缺失；Rust 与 2,595/2,595 个可比较 `.thtest` 一致；源码覆盖率仅作诊断 |
 | crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |

@@ -195,8 +195,8 @@
 
 ## 完成定义（DoD）
 
-- [ ] axum/actix/topcoat 四件套齐备，契约测试与 hyper 逐断言对齐
-- [ ] 三件 `render_async` 可用（spawn_blocking）
-- [ ] gotham/tide/warp 标实验性且移出必测矩阵
-- [ ] Vernal 约定文档视图层立项 + 状态回填
-- [ ] CI 双平台绿，main 合并完成
+- [x] axum/actix/topcoat 四件套齐备，契约测试与 hyper 逐断言对齐
+- [x] 三件 `render_async` 可用（spawn_blocking）
+- [x] gotham/tide/warp 标实验性且移出必测矩阵
+- [x] Vernal 约定文档视图层立项 + 状态回填
+- [x] CI 双平台绿，main 合并完成

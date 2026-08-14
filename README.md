@@ -61,8 +61,11 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 | Auto-escaping & output formats | ✅ Stable | `thymeleaf` | HTML/XML/JavaScript/CSS/JSON/RTF/PlainText |
 | Decoupled template logic | ✅ Stable | `thymeleaf` | `.th.xml` sidecar |
 | Framework-neutral web contract | ✅ Stable | `thymeleaf` | IWebExchange / IWebRequest / IWebSession |
-| Framework adapters | 🧪 Preview | `thymeleaf-support/*` | 13 publishable + 2 non-published (tide, vernal) |
+| Framework adapters (P0) | ✅ Stable | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | Full IWebExchange suite + contract tests aligned with hyper benchmark + `render_async` |
+| Framework adapters (thin) | 🧪 Preview | hyper/tower/ntex/poem/rocket/salvo/tonic | Response-level adapters; IWebExchange via hyper benchmark |
+| Framework adapters (experimental) | 🧪 Experimental | gotham/tide/warp | Upstream stalled/replaced; best-effort, tests behind `full` feature |
 | sa-token security dialect | 🧪 Preview | `thymeleaf-sa-token` | 12 contract tests |
+| Vernal view layer | 🧪 Preview | `thymeleaf-vernal` | ThymeleafView → vernal HttpResponse; ViewResolver bridge planned |
 | Fuzz (property tests) | 🚧 Partial | `thymeleaf-test` | XML/TEXT parser proptest; HTML/render excluded (see Known Limitations) |
 
 ### 2.2 Upstream Compatibility
