@@ -11,7 +11,7 @@ use std::sync::Arc;
 use thymeleaf::TemplateEngine;
 use thymeleaf::templateresolver::StringTemplateResolver;
 use thymeleaf_vernal::ThymeleafViewResolver;
-use vernal_web::{Model, View, ViewResolver};
+use vernal_web::{Model, ViewResolver};
 
 /// 直渲解析器：前缀/后缀置空，视图名 = 模板文本。
 fn direct_resolver() -> ThymeleafViewResolver {
