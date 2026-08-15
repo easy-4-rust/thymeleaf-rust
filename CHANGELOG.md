@@ -8,6 +8,19 @@
 
 ### Added
 
+- **vernal-webmvc ViewResolver 桥**（plan `2026-08-15-webmvc-viewresolver-bridge`）：
+  - `ThymeleafViewResolver`（thymeleaf-vernal）：对标
+    `org.thymeleaf.spring6.view.ThymeleafViewResolver` 核心子集——视图名
+    prefix/suffix 映射（Spring 默认 `classpath:/templates/`+`.html`）、
+    Model 弱类型桥（Any→TemplateValue）、Locale 协商（render(locale)→
+    Context::set_locale）、cacheable=false 每渲染失效缓存。集成测试 5/5 绿。
+  - vernal-web 新视图合同（`Model`/`RenderedView`/`View`/`ViewResolver`，
+    dev `6d137da`）：对标 `org.springframework.ui.Model` 与 Web MVC
+    View/ViewResolver；`RenderedView` 用 http/bytes 底层类型避免与
+    vernal-http 环依赖。
+  - vernal-aop 修复：aspect-core/std 本地 path 依赖改 aspect-rs git 依赖
+    （rev 89beaa90），恢复 git 消费方（thymeleaf-vernal）可用性。
+
 - **Web 适配器 P0 做厚**（superpowers plan `2026-08-15-web-adapter-p0`）：
   - `thymeleaf-axum` / `thymeleaf-actix-web` / `thymeleaf-topcoat` 补齐
     `HostWeb` 四件套（`IWebRequest` ~24 方法 + `IWebExchange`/`IWebSession`/
