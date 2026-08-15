@@ -8,9 +8,11 @@
 //!   消费当前请求的认证身份。
 
 mod thymeleaf_view;
+mod view_resolver;
 mod web_exchange;
 mod web_request;
 
 pub use thymeleaf_view::ThymeleafView;
+pub use view_resolver::ThymeleafViewResolver;
 pub use web_exchange::{VernalWebApplication, VernalWebExchange, VernalWebSession};
 pub use web_request::VernalWebRequest;

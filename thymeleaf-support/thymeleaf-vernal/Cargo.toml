@@ -12,12 +12,13 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 form_urlencoded = "1.2"
 futures-executor = "0.3.31"
 futures-util = "0.3.31"
+bytes = "1.10"
 http = "1.3"
 indexmap = "2.12"
 thymeleaf = { path = "../../thymeleaf" }
 tokio = { version = "1", features = ["rt", "macros", "sync"] }
-vernal-http = { git = "https://github.com/easy-4-rust/vernal.git", rev = "8dce0d5c32f1ba3a4078791cdef8654860680bc7" }
-vernal-web = { git = "https://github.com/easy-4-rust/vernal.git", rev = "8dce0d5c32f1ba3a4078791cdef8654860680bc7" }
+vernal-http = { git = "https://github.com/easy-4-rust/vernal.git", rev = "6d137da66529fc10c8c8af9fee175d2936a78e33" }
+vernal-web = { git = "https://github.com/easy-4-rust/vernal.git", rev = "6d137da66529fc10c8c8af9fee175d2936a78e33" }
 
 [dev-dependencies]
 futures-executor = "0.3.31"
