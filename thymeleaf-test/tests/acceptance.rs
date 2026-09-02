@@ -125,11 +125,11 @@ fn manifest_pins_baseline_and_full_denominator() {
     let assets = manifest["test_asset"]["entries"]
         .as_array()
         .expect("assets");
-    // 上游 .thtest 语料镜像：2,609 thtest + 78 golden（Java 源码不镜像，
+    // 上游 .thtest 语料镜像：2,609 thtest + 79 golden（Java 源码不镜像，
     // 测试逻辑以 Rust 1:1 复刻于 thymeleaf-test/tests/*_java_parity.rs）。
     // 4 个 Spring 集成资产目录（spring5/6/springsecurity5/6，884 文件）已移除，
     // 等价安全/上下文能力由 thymeleaf-support/thymeleaf-sa-token 与 thymeleaf-vernal 承接。
-    assert_eq!(assets.len(), 2_687, "TEST_ASSET: 2,609 thtest + 78 golden");
+    assert_eq!(assets.len(), 2_688, "TEST_ASSET: 2,609 thtest + 79 golden");
 }
 
 #[test]
