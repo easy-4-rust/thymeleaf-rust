@@ -128,6 +128,16 @@ docs/superpowers/
 | `specs/2026-07-28-java-test-class-mapping.md` | `docs/migration/Java测试类对照.md` | 参考 spec |
 | `specs/2026-07-28-java-test-method-mapping.md` | `docs/migration/Java测试方法对照.md` | 参考 spec |
 | `specs/2026-08-09-raii-guard-invariants.md` | `docs/coding/raii-guard-and-progress-invariants.md` | 编码 spec |
+| `specs/2026-09-02-upstream-graph-report.md` | codegraph 全量重建（上游 3.1.5 `10f9dd2`） | 证据型 spec：热点扇出/引擎分派点/双胞胎镜像的迁移对照 |
+
+## 新增 spec（非迁移，原生）
+
+| spec | 内容 |
+|------|------|
+| `specs/2026-08-15-web-adapter-p0-design.md` | Web 适配器 P0 做厚设计（四件套契约/降级决策） |
+| `specs/2026-08-15-topcoat-api-notes.md` | topcoat 0.5.0 API 勘察（http 1.x 类型族，与 axum 同构） |
+| `specs/2026-08-15-webmvc-view-integration-notes.md` | vernal-webmvc 对接缺口清单（5 项桥接，已全部落地） |
+| `specs/2026-09-02-upstream-graph-report.md` | Java 上游深度图谱报告（迁移对照证据） |
 
 ## 历史计划索引
 
