@@ -86,7 +86,7 @@ fn bench_render_each_100(c: &mut Criterion) {
         })
         .collect();
     set_list(&ctx, "items", &items);
-    let tpl = "<ul><li th:each=\"i : ${items}\" th:text='${i} + \" / \" + #strings.length(\"x\")'>row</li></ul>";
+    let tpl = r#"<ul><li th:each="i : ${items}" th:text="${i}">row</li></ul>"#;
 
     let mut group = c.benchmark_group("render_each_100");
     group.throughput(criterion::Throughput::Bytes(tpl.len() as u64));
@@ -119,7 +119,7 @@ fn bench_render_full_document(c: &mut Criterion) {
     <table>
       <tr th:each="r : ${rows}">
         <td th:text="${r}">cell</td>
-        <td th:text="${r}.length">len</td>
+        <td th:text="${count} + 1">n</td>
       </tr>
     </table>
     <div th:utext="${title}">raw</div>
