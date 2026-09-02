@@ -1,0 +1,100 @@
+name: Release
+
+# Beta/稳定版发版工作流：tag v* 触发 → 完整发布演练 + 生成 Release 资产（dry-run）。
+# 与 VERSION-PLAN §2 对齐：beta 阶段仅演练 + GitHub Release；0.1.0 阶段再实际
+# 执行 cargo publish（待 crates.io token 准备 + 双人评审）。
+#
+# 验收纪律（与 docs/release/security.md 一致）：
+# - 仅 cargo publish --dry-run（不实际上传 crates.io）
+# - 仅生成 GitHub Release 草稿（不自动 publish）
+# - CHANGELOG 必须含对应版本条目（CI 提取失败 → 整体失败）
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}  # 手动重跑：gh workflow run release.yml --ref v0.1.0-beta.0
+
+permissions:
+  contents: write
+
+jobs:
+  publish-dry-run:
+    name: cargo publish --dry-run (thymeleaf)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: cargo publish --dry-run (thymeleaf)
+        # 完整发布演练：打 .crate 包 + 自检 + 包内 README/LICENSE/依赖校验
+        # 仅 dry-run——待 0.1.0 阶段有 crates.io token 后改 cargo publish
+        run: cargo publish --dry-run -p thymeleaf --allow-dirty
+
+  changelog-extract:
+    name: Extract CHANGELOG section for tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version section from CHANGELOG.md
+        id: extract
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # 提取以 [VERSION] 开头的块到下一个 ## [
+          SECTION=$(awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" {found=1}
+            found {print}
+            found && /^## \[/ && $0 !~ "^## \\[" ver "\\]" {exit}
+          ' CHANGELOG.md)
+          if [ -z "$SECTION" ]; then
+            echo "::error::CHANGELOG.md 缺少 [${VERSION}] 条目"
+            exit 1
+          fi
+          {
+            echo "# Release Notes"
+            echo
+            echo "完整变更日志见 [CHANGELOG.md](../../blob/main/CHANGELOG.md)。"
+            echo
+            echo "## Highlights"
+            echo
+            echo "$SECTION"
+          } > release-notes.md
+          echo "release-notes.md generated ($(wc -l < release-notes.md) 行)"
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+
+  release-draft:
+    name: Create GitHub Release draft
+    needs: [publish-dry-run, changelog-extract]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download release notes artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
+      - name: Create GitHub Release draft (dry-run publish)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true  # 草稿，不自动发布——待维护者审核
+          generate_release_notes: false  # 使用我们提取的版本章节而非自动生成
+          body_path: release-notes.md
+          # 不附带二进制资产——crates.io 通路独立（待 0.1.0 阶段 token 准备后启用）
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
