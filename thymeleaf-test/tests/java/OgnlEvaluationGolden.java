@@ -91,6 +91,13 @@ public final class OgnlEvaluationGolden {
         emitExpr(engine, "ternary_false", "${1 > 2 ? 'yes' : 'no'}");
         emitExpr(engine, "elvis_null_default", "${missing ?: 'fallback'}");
         emitExpr(engine, "elvis_present_value", "${v ?: 'fallback'}");
+        // 外部 default expression（Thymeleaf 层 DefaultExpression，Java 支持）
+        emit(engine, "external_elvis_present", "${v} ?: 'fallback'",
+                "<p th:text=\"${v} ?: 'fallback'\">KEEP</p>");
+        emit(engine, "external_elvis_null", "${missing} ?: 'outside'",
+                "<p th:text=\"${missing} ?: 'outside'\">KEEP</p>");
+        emit(engine, "external_elvis_chain", "${missing} ?: (${v} ?: 'deep')",
+                "<p th:text=\"${missing} ?: (${v} ?: 'deep')\">KEEP</p>");
 
         // ---- 7. 字符串方法 ----
         emitExpr(engine, "string_method_uppercase", "${name.toUpperCase()}");
@@ -100,7 +107,7 @@ public final class OgnlEvaluationGolden {
 
         // ---- 8. 空值传播 ----
         emitExpr(engine, "null_variable", "${missing}");
-        emitExpr(engine, "null_property_access", "${person.name}");
+        emitExprWithoutPerson(engine, "null_property_access", "${person.name}");
         emitCondition(engine, "null_condition", "${missing}",
                 "<p th:if=\"${missing}\">gone</p><span>stay</span>");
 
@@ -147,6 +154,13 @@ public final class OgnlEvaluationGolden {
         emit(engine, id, expression, "<p th:text=\"" + expression + "\">KEEP</p>");
     }
 
+    /** 同 {@link #emitExpr}，但上下文不含 `person`（null 属性访问语义）。 */
+    private static void emitExprWithoutPerson(final TemplateEngine engine, final String id,
+            final String expression) {
+        emit(engine, id, expression, "<p th:text=\"" + expression + "\">KEEP</p>",
+                false);
+    }
+
     /** 渲染自定义模板（th:if 等复合场景）并记录完整可观察结果。 */
     private static void emitCondition(final TemplateEngine engine, final String id,
             final String expression, final String template) {
@@ -155,9 +169,17 @@ public final class OgnlEvaluationGolden {
 
     private static void emit(final TemplateEngine engine, final String id,
             final String expression, final String template) {
+        emit(engine, id, expression, template, true);
+    }
+
+    private static void emit(final TemplateEngine engine, final String id,
+            final String expression, final String template, final boolean withPerson) {
         String outcome;
         try {
             final Context context = context();
+            if (!withPerson) {
+                context.setVariable("person", null);
+            }
             if ("baseline_case".equals(id)) {
                 context.setVariable("baseline_case", BASELINE);
                 outcome = "<p>" + BASELINE + "</p>";

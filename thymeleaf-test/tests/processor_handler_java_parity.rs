@@ -20,6 +20,13 @@ fn engine() -> TemplateEngine {
     e
 }
 
+fn render_err(tmpl: &str, ctx: &dyn IContext) -> Option<String> {
+    match engine().process_template(tmpl, ctx) {
+        Ok(_) => None,
+        Err(error) => Some(error.to_string()),
+    }
+}
+
 fn render(tmpl: &str, ctx: &dyn IContext) -> String {
     engine()
         .process_template(tmpl, ctx)
@@ -558,5 +565,9 @@ fn ternary() {
 
 #[test]
 fn elvis() {
-    assert!(render("<p th:text=\"${m?:'default'}\">x</p>", &Context::new()).contains("default"));
+    // Java 3.1.5 parity：内部 Elvis（含无空格形式）由 OGNL 3.3.4 拒绝。
+    assert!(
+        render_err("<p th:text=\"${m?:'default'}\">x</p>", &Context::new()).is_some(),
+        "内部 Elvis 应解析失败（Java OGNL 语义）"
+    );
 }
