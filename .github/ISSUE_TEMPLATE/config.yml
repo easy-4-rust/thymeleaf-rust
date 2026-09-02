@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Thymeleaf 3.1 上游文档
+    url: https://www.thymeleaf.org/documentation.html
+    about: 模板语法与方言语义的上游参考
+  - name: 问题讨论
+    url: https://github.com/easy-4-rust/thymeleaf-rust/discussions
+    about: 使用问题与方案讨论请到 Discussions

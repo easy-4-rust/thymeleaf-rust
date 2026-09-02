@@ -1,53 +1,96 @@
 name: Release
 
-# Beta/稳定版发版工作流：tag v* 触发 → 完整发布演练 + 生成 Release 资产（dry-run）。
-# 与 VERSION-PLAN §2 对齐：beta 阶段仅演练 + GitHub Release；0.1.0 阶段再实际
-# 执行 cargo publish（待 crates.io token 准备 + 双人评审）。
+# Beta/稳定版发版工作流：tag v* 触发 → 4 步流水线（参考 easydoc-rust .github/workflows/release.yml）。
+# 1. validate-tag：解析与校验 tag 格式（vX.Y.Z 或 vX.Y.Z-alpha.N）
+# 2. publish：在三平台（ubuntu/macos/windows）build + test + cargo publish --dry-run
+# 3. create-release + publish-crates：并行创建 GitHub Release 草稿与（可选）crates.io 发布
+#
+# 0.1.0 阶段启用 publish-crates（需 CARGO_REGISTRY_TOKEN secret）；当前 beta 阶段仅演练。
 #
 # 验收纪律（与 docs/release/security.md 一致）：
 # - 仅 cargo publish --dry-run（不实际上传 crates.io）
-# - 仅生成 GitHub Release 草稿（不自动 publish）
-# - CHANGELOG 必须含对应版本条目（CI 提取失败 → 整体失败）
+# - GitHub Release 草稿（draft=true，待维护者审核）
+# - CHANGELOG 必须含对应版本条目（缺失 → 整体失败）
 
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch: {}  # 手动重跑：gh workflow run release.yml --ref v0.1.0-beta.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. v0.1.0 or v0.1.0-beta.0)"
+        required: true
+        type: string
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
-  publish-dry-run:
-    name: cargo publish --dry-run (thymeleaf)
+  validate-tag:
+    name: Validate Tag
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
-
-      - name: cargo publish --dry-run (thymeleaf)
-        # 完整发布演练：打 .crate 包 + 自检 + 包内 README/LICENSE/依赖校验
-        # 仅 dry-run——待 0.1.0 阶段有 crates.io token 后改 cargo publish
-        run: cargo publish --dry-run -p thymeleaf --allow-dirty
-
-  changelog-extract:
-    name: Extract CHANGELOG section for tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Extract version section from CHANGELOG.md
+      - name: Extract and validate version
         id: extract
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.version }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          # 支持 stable (vX.Y.Z) 与 pre-release (vX.Y.Z-{alpha,beta,rc}.N) 两种 tag
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Invalid tag format: $TAG (expected vX.Y.Z or vX.Y.Z-alpha.N)"
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Validated version: $TAG"
+
+  publish:
+    name: Release (${{ matrix.os }})
+    needs: validate-tag
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build release
+        run: cargo build --workspace --release
+
+      - name: Run tests (release profile, same targets as CI)
+        run: cargo test --workspace --release --locked
+
+      - name: Validate crate manifest (dry-run)
+        run: cargo publish --dry-run --allow-dirty -p thymeleaf
+
+      - name: Build documentation
+        run: cargo doc --no-deps --workspace
+
+  create-release:
+    name: Create GitHub Release
+    needs: [validate-tag, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract CHANGELOG section for tag
+        id: extract
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
           # 提取以 [VERSION] 开头的块到下一个 ## [
           SECTION=$(awk -v ver="$VERSION" '
             $0 ~ "^## \\[" ver "\\]" {found=1}
@@ -67,34 +110,85 @@ jobs:
             echo
             echo "$SECTION"
           } > release-notes.md
-          echo "release-notes.md generated ($(wc -l < release-notes.md) 行)"
 
-      - name: Upload release notes artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-notes
-          path: release-notes.md
-
-  release-draft:
-    name: Create GitHub Release draft
-    needs: [publish-dry-run, changelog-extract]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download release notes artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: release-notes
-
-      - name: Create GitHub Release draft (dry-run publish)
+      - name: Create GitHub Release (draft, auto-pre-release for alpha/beta/rc)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          draft: true  # 草稿，不自动发布——待维护者审核
-          generate_release_notes: false  # 使用我们提取的版本章节而非自动生成
+          name: ${{ github.ref_name }}
           body_path: release-notes.md
-          # 不附带二进制资产——crates.io 通路独立（待 0.1.0 阶段 token 准备后启用）
+          draft: true  # 草稿——待维护者审核
+          prerelease: ${{ contains(needs.validate-tag.outputs.version, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crates:
+    name: Publish to crates.io
+    needs: [validate-tag, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish crates in dependency order (via cargo metadata)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          # 前置：token 未配置立即失败（避免空 token 重试 21×3 次的假绿）
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "::warning::CARGO_REGISTRY_TOKEN secret 未配置——跳过实际发布（beta 阶段仅演练）"
+            exit 0
+          fi
+
+          # cargo metadata 自动解析依赖顺序（比硬编码列表更鲁棒；
+          # thymeleaf 有 16 个 publish=true crates，依赖 thymeleaf-core 顺序敏感）
+          echo "解析 workspace 依赖顺序..."
+          ORDER=$(cargo metadata --no-deps --format-version 1 2>/dev/null | \
+            python3 -c "
+          import json, sys
+          m = json.load(sys.stdin)
+          pkgs = [p for p in m['packages'] if p.get('publish') is not False]
+          # 按依赖深度拓扑序：dependency 少的先发
+          names = {p['name'] for p in pkgs}
+          order = []
+          while names:
+              nxt = [n for n in names if all(d not in names for d in
+                  [dep['name'] for dep in next(p for p in pkgs if p['name']==n)['dependencies'] if dep['name'] in names])]
+              if not nxt: break
+              order.extend(nxt); names -= set(nxt)
+          print('\n'.join(order))
+          ")
+          echo "发布顺序：\n$ORDER"
+
+          FAILED=()
+          for crate in $ORDER; do
+            echo "::group::Publishing $crate"
+            ok=0
+            # Retry up to 3 times with backoff for crates.io index propagation
+            for attempt in 1 2 3; do
+              # if 条件捕获：Actions 默认 bash -e，独立赋值会在 cargo 失败（exit 101）时终止脚本
+              if out=$(cargo publish -p "$crate" --allow-dirty 2>&1); then
+                echo "Successfully published $crate"
+                ok=1
+                break
+              fi
+              # 幂等：版本已上传视为成功
+              if echo "$out" | grep -qiE "already (uploaded|exists)"; then
+                echo "$crate already published (version exists), skipping"
+                ok=1
+                break
+              fi
+              echo "$out" | tail -5
+              echo "Attempt $attempt failed for $crate, waiting before retry..."
+              sleep 15
+            done
+            if [ "$ok" -ne 1 ]; then
+              echo "::error::$crate 3 次重试后仍发布失败"
+              FAILED+=("$crate")
+            fi
+            echo "::endgroup::"
+          done
+          if [ "${#FAILED[@]}" -gt 0 ]; then
+            echo "::error::发布失败的 crate: ${FAILED[*]}"
+            exit 1
+          fi
