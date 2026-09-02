@@ -205,9 +205,14 @@ fn arithmetic_in_condition_chain() {
 
 #[test]
 fn elvis_chain() {
+    // Java 3.1.5 parity：链式内部 Elvis 同样由 OGNL 3.3.4 拒绝
+    // （`${a} ?: ${b} ?: 'c'` 外部链式形式才是 Thymeleaf DefaultExpression）。
     let ctx = Context::new();
-    let s = render_ok("<p th:text=\"${a ?: b ?: 'fallback'}\">x</p>", &ctx);
-    assert!(s.contains("fallback"));
+    let error = render("<p th:text=\"${a ?: b ?: 'fallback'}\">x</p>", &ctx).err();
+    assert!(
+        error.is_some(),
+        "链式内部 Elvis 应解析失败（Java OGNL 语义）"
+    );
 }
 
 #[test]

@@ -47,6 +47,13 @@ fn ctx_num(name: &str, value: i64) -> Context {
     ctx
 }
 
+fn render_err(engine: &TemplateEngine, template: &str, ctx: &dyn IContext) -> Option<String> {
+    match engine.process_template(template, ctx) {
+        Ok(_) => None,
+        Err(error) => Some(error.to_string()),
+    }
+}
+
 fn render(engine: &TemplateEngine, template: &str, ctx: &dyn IContext) -> String {
     engine
         .process_template(template, ctx)
@@ -403,24 +410,27 @@ fn ternary_false_branch() {
 // ===========================================================================
 
 #[test]
-fn elvis_with_null_uses_default() {
+fn internal_elvis_rejected_like_java_ognl() {
+    // Java 3.1.5 parity：`${a ?: b}`（Elvis 简写在 ${} 内部）原样交给 OGNL
+    // 3.3.4 求值，而 OGNL 不支持 Elvis 简写 → 渲染期 TemplateInputException。
+    // Thymeleaf 的 default expression 只支持 `${a} ?: b` 外部形式。
+    // golden 锚点：ognl_evaluation_golden.txt elvis_null_default/elvis_present_value。
     let engine = create_engine();
     let ctx = Context::new();
     assert!(
-        render(
+        render_err(
             &engine,
             "<p th:text=\"${missing ?: 'default'}\">x</p>",
             &ctx
         )
-        .contains("default")
+        .is_some(),
+        "内部 Elvis 应像 Java OGNL 一样解析失败"
     );
-}
-
-#[test]
-fn elvis_with_value_uses_value() {
-    let engine = create_engine();
     let ctx = ctx_var("name", "Alice");
-    assert!(render(&engine, "<p th:text=\"${name ?: 'default'}\">x</p>", &ctx).contains("Alice"));
+    assert!(
+        render_err(&engine, "<p th:text=\"${name ?: 'default'}\">x</p>", &ctx).is_some(),
+        "内部 Elvis 应像 Java OGNL 一样解析失败"
+    );
 }
 
 // ===========================================================================

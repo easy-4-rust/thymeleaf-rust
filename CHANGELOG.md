@@ -8,6 +8,19 @@
 
 ### Added
 
+- **OGNL 求值器 Java golden 差分（V3）**：`OgnlEvaluationGolden.java` 在 pinned
+  上游（3.1.5 @ 10f9dd2）导出 46 case 端到端矩阵（属性导航/方法调用/集合/
+  算术/比较/逻辑/三元/default/空值/字面量），`ognl_evaluation_golden_diff.rs`
+  逐案断言 Rust 输出与 golden 一致（含异常类名归一化映射）。
+
+### Fixed
+
+- **内部 Elvis 语义偏差（Java parity）**：`${a ?: b}`（Elvis 简写在 `${}`
+  内部）Java 3.1.5 原样交 OGNL 3.3.4 求值，OGNL 不支持 Elvis → 渲染期
+  TemplateInputException；Rust 此前错误支持了该简写。移除 native 求值器的
+  default 分支（外部 `${a} ?: b` DefaultExpression 不受影响，corpus 全部
+  使用外部形式）。4 个测试文件 5 处断言修正为 Java parity。
+
 - **vernal-webmvc ViewResolver 桥**（plan `2026-08-15-webmvc-viewresolver-bridge`）：
   - `ThymeleafViewResolver`（thymeleaf-vernal）：对标
     `org.thymeleaf.spring6.view.ThymeleafViewResolver` 核心子集——视图名

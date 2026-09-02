@@ -289,21 +289,24 @@ fn ternary_false() {
 }
 
 #[test]
-fn elvis_null_default() {
+fn internal_elvis_null_rejected_like_java_ognl() {
+    // Java 3.1.5 parity：`${a ?: b}` 内部 Elvis 交给 OGNL 3.3.4，不支持简写
+    // → TemplateInputException（golden: ognl_evaluation_golden.txt）。
     let ctx = Context::new();
-    let s = render("<p th:text=\"${missing ?: 'fallback'}\">x</p>", &ctx);
-    assert!(s.contains("fallback"));
+    let result = engine().process_template("<p th:text=\"${missing ?: 'fallback'}\">x</p>", &ctx);
+    assert!(result.is_err(), "内部 Elvis 应解析失败（Java OGNL 语义）");
 }
 
 #[test]
-fn elvis_present_value() {
+fn internal_elvis_present_rejected_like_java_ognl() {
+    // 同上：v 存在也不能拯救 OGNL 语法错误。
     let ctx = Context::new();
     ctx.set_variable(
         Some(js("v")),
         Some(Arc::new(TemplateValue::string(js("value")))),
     );
-    let s = render("<p th:text=\"${v ?: 'fallback'}\">x</p>", &ctx);
-    assert!(s.contains("value"));
+    let result = engine().process_template("<p th:text=\"${v ?: 'fallback'}\">x</p>", &ctx);
+    assert!(result.is_err(), "内部 Elvis 应解析失败（Java OGNL 语义）");
 }
 
 // ===========================================================================
