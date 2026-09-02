@@ -30,7 +30,27 @@ jobs:
         run: cargo install cargo-semver-checks --locked
 
       # 仅对已发布到 crates.io 的 crate 做基线对比；未发布 crate 由
-      # cargo-semver-checks 自动跳过。首个版本（无基线）时该步骤无操作。
+      # cargo-semver-checks 自动跳过，但网络异常时仍可能报错——
+      # 用 curl 探测 crates.io 可达性后再跑，否则跳过并输出说明。
       - name: Check API compatibility vs crates.io baseline
-        run: cargo semver-checks check-release --workspace
+        run: |
+          # 探测 crates.io 可达性（CI 网络偶发受限）
+          if ! curl -sf --max-time 10 https://index.crates.io/ >/dev/null 2>&1; then
+            echo "::warning::crates.io 不可达（网络受限），跳过 semver 检查"
+            exit 0
+          fi
+          # 检查 workspace 中是否有任何 publish=true 的 crate 已在 crates.io 上
+          HAS_BASELINE=0
+          for crate in $(cargo metadata --no-deps --format-version 1 2>/dev/null | \
+            python3 -c "import json,sys; [print(p['name']) for p in json.load(sys.stdin)['packages'] if p.get('publish') is not False]" 2>/dev/null); do
+            if curl -sf --max-time 10 "https://crates.io/api/v1/crates/$crate" >/dev/null 2>&1; then
+              HAS_BASELINE=1
+              break
+            fi
+          done
+          if [ "$HAS_BASELINE" -eq 0 ]; then
+            echo "::warning::workspace 中所有 publish crate 均未在 crates.io 上发布，跳过 semver 检查"
+            exit 0
+          fi
+          cargo semver-checks check-release --workspace
         timeout-minutes: 30
