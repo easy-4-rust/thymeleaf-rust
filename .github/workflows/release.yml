@@ -7,7 +7,7 @@ name: Release
 #
 # 0.1.0 阶段启用 publish-crates（需 CARGO_REGISTRY_TOKEN secret）；当前 beta 阶段仅演练。
 #
-# 验收纪律（与 docs/release/security.md 一致）：
+# 验收纪律 v2（与 docs/release/security.md 一致）：
 # - 仅 cargo publish --dry-run（不实际上传 crates.io）
 # - GitHub Release 草稿（draft=true，待维护者审核）
 # - CHANGELOG 必须含对应版本条目（缺失 → 整体失败）
