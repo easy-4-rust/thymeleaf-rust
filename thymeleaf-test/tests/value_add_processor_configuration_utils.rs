@@ -12,8 +12,8 @@ use thymeleaf::context::ITemplateContext;
 use thymeleaf::doctype::{IDocTypeProcessor, IDocTypeStructureHandler};
 use thymeleaf::exceptions::TemplateEngineException;
 use thymeleaf::model::{
-    ICDATASection, IComment, IDocType, IProcessingInstruction, ITemplateEnd, ITemplateStart,
-    IText, IXMLDeclaration,
+    ICDATASection, IComment, IDocType, IProcessingInstruction, ITemplateEnd, ITemplateStart, IText,
+    IXMLDeclaration,
 };
 use thymeleaf::processinginstruction::{
     IProcessingInstructionProcessor, IProcessingInstructionStructureHandler,
@@ -139,9 +139,7 @@ impl IProcessor for MockPIProcessor {
     fn get_precedence(&self) -> i32 {
         self.0
     }
-    fn as_processing_instruction_processor(
-        &self,
-    ) -> Option<&dyn IProcessingInstructionProcessor> {
+    fn as_processing_instruction_processor(&self) -> Option<&dyn IProcessingInstructionProcessor> {
         Some(self)
     }
 }
@@ -166,9 +164,7 @@ impl IProcessor for MockBoundariesProcessor {
     fn get_precedence(&self) -> i32 {
         self.0
     }
-    fn as_template_boundaries_processor(
-        &self,
-    ) -> Option<&dyn ITemplateBoundariesProcessor> {
+    fn as_template_boundaries_processor(&self) -> Option<&dyn ITemplateBoundariesProcessor> {
         Some(self)
     }
 }
@@ -228,8 +224,15 @@ fn unwrap_text_returns_inner_when_wrapped() {
         .expect("text processor must be wrappable");
     let wrapped_ref: &dyn ITextProcessor = wrapped.as_ref();
     let unwrapped = ProcessorConfigurationUtils::unwrap_text(wrapped_ref);
-    assert_eq!(unwrapped.get_precedence(), 100, "unwrapped must carry original precedence");
-    assert!(unwrapped.get_dialect_precedence().is_none(), "unwrapped must not carry dialect precedence");
+    assert_eq!(
+        unwrapped.get_precedence(),
+        100,
+        "unwrapped must carry original precedence"
+    );
+    assert!(
+        unwrapped.get_dialect_precedence().is_none(),
+        "unwrapped must not carry dialect precedence"
+    );
 }
 
 #[test]
@@ -237,7 +240,11 @@ fn unwrap_text_returns_self_when_not_wrapped() {
     let raw = MockTextProcessor(50);
     let raw_ref: &dyn ITextProcessor = &raw;
     let unwrapped = ProcessorConfigurationUtils::unwrap_text(raw_ref);
-    assert_eq!(unwrapped.get_precedence(), 50, "bare unwrap must return self");
+    assert_eq!(
+        unwrapped.get_precedence(),
+        50,
+        "bare unwrap must return self"
+    );
 }
 
 // ===========================================================================
@@ -347,8 +354,16 @@ fn wrapped_processor_carries_dialect_precedence() {
     let raw: Arc<dyn IProcessor> = Arc::new(MockTextProcessor(100));
     let wrapped = ProcessorConfigurationUtils::wrap_text(Arc::clone(&raw), 999)
         .expect("text processor must be wrappable");
-    assert_eq!(wrapped.get_dialect_precedence(), Some(999), "wrapper must carry dialect precedence");
-    assert_eq!(wrapped.get_precedence(), 100, "wrapper must preserve original precedence");
+    assert_eq!(
+        wrapped.get_dialect_precedence(),
+        Some(999),
+        "wrapper must carry dialect precedence"
+    );
+    assert_eq!(
+        wrapped.get_precedence(),
+        100,
+        "wrapper must preserve original precedence"
+    );
 }
 
 // ===========================================================================
@@ -359,5 +374,8 @@ fn wrapped_processor_carries_dialect_precedence() {
 fn wrap_cdata_section_rejects_non_cdata_processor() {
     let text_processor: Arc<dyn IProcessor> = Arc::new(MockTextProcessor(10));
     let result = ProcessorConfigurationUtils::wrap_cdata_section(Arc::clone(&text_processor), 1);
-    assert!(result.is_err(), "wrapping a text processor as CDATA must fail");
+    assert!(
+        result.is_err(),
+        "wrapping a text processor as CDATA must fail"
+    );
 }
