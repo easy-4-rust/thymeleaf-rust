@@ -80,7 +80,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [validate-tag, publish]
+    needs: [validate-tag, publish-crates]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -122,73 +122,63 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish-crates:
-    name: Publish to crates.io
-    needs: [validate-tag, publish]
+      - name: Block-on gate (CHANGELOG [Unreleased] 无未完成项)
+        run: scripts/check_block_on.sh
+
+  precheck:
+    name: Publish Precheck
+    needs: [validate-tag, build-and-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
 
-      - name: Publish crates in dependency order (via cargo metadata)
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      # 参考 wxrust scripts/publish-order.sh：本仓只发 1 个 crate（thymeleaf-test
+      # publish=false），预检脚本验证元数据/无内部 path 依赖/dry-run/CHANGELOG
+      - name: Run publish-precheck (metadata + dry-run + CHANGELOG)
+        env:
+          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
+        run: scripts/publish-precheck.sh
+
+  dry-run-publish:
+    name: Dry-run Publish (validation)
+    needs: [validate-tag, precheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Cargo publish --dry-run for single crate
+        env:
+          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
+        run: cargo publish -p thymeleaf --dry-run --allow-dirty
+
+  publish-crates:
+    name: Publish to crates.io
+    needs: [validate-tag, dry-run-publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      # 参考 wxrust publish-013.sh：3 次重试（含 429 限流退避 + 版本已存在
+      # 幂等成功）。脚本内置 token 前置检查与失败终止。
+      - name: Publish crates in dependency order
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          # 前置：token 未配置立即失败（避免空 token 重试 21×3 次的假绿）
-          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
-            echo "::warning::CARGO_REGISTRY_TOKEN secret 未配置——跳过实际发布（beta 阶段仅演练）"
-            exit 0
-          fi
-
-          # cargo metadata 自动解析依赖顺序（比硬编码列表更鲁棒；
-          # thymeleaf 有 16 个 publish=true crates，依赖 thymeleaf-core 顺序敏感）
-          echo "解析 workspace 依赖顺序..."
-          ORDER=$(cargo metadata --no-deps --format-version 1 2>/dev/null | \
-            python3 -c "
-          import json, sys
-          m = json.load(sys.stdin)
-          pkgs = [p for p in m['packages'] if p.get('publish') is not False]
-          # 按依赖深度拓扑序：dependency 少的先发
-          names = {p['name'] for p in pkgs}
-          order = []
-          while names:
-              nxt = [n for n in names if all(d not in names for d in
-                  [dep['name'] for dep in next(p for p in pkgs if p['name']==n)['dependencies'] if dep['name'] in names])]
-              if not nxt: break
-              order.extend(nxt); names -= set(nxt)
-          print('\n'.join(order))
-          ")
-          echo "发布顺序：\n$ORDER"
-
-          FAILED=()
-          for crate in $ORDER; do
-            echo "::group::Publishing $crate"
-            ok=0
-            # Retry up to 3 times with backoff for crates.io index propagation
-            for attempt in 1 2 3; do
-              # if 条件捕获：Actions 默认 bash -e，独立赋值会在 cargo 失败（exit 101）时终止脚本
-              if out=$(cargo publish -p "$crate" --allow-dirty 2>&1); then
-                echo "Successfully published $crate"
-                ok=1
-                break
-              fi
-              # 幂等：版本已上传视为成功
-              if echo "$out" | grep -qiE "already (uploaded|exists)"; then
-                echo "$crate already published (version exists), skipping"
-                ok=1
-                break
-              fi
-              echo "$out" | tail -5
-              echo "Attempt $attempt failed for $crate, waiting before retry..."
-              sleep 15
-            done
-            if [ "$ok" -ne 1 ]; then
-              echo "::error::$crate 3 次重试后仍发布失败"
-              FAILED+=("$crate")
-            fi
-            echo "::endgroup::"
-          done
-          if [ "${#FAILED[@]}" -gt 0 ]; then
-            echo "::error::发布失败的 crate: ${FAILED[*]}"
-            exit 1
-          fi
+        run: scripts/publish.sh
