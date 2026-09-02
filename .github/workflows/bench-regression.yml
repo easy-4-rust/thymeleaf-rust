@@ -1,0 +1,52 @@
+name: bench-regression
+
+# Criterion 基准回归检查（与 easydoc-rust 一致）。
+# tag v* 或 main push 触发：跑三基准 → 与上次 CI 缓存的 estimates.json 对比 →
+# 任一基准 >10% 退化 → 失败（防 performance regression 静默入库）。
+#
+# 缓存策略：Swatinem/rust-cache 不缓存 target/criterion，单独缓存
+# target/criterion/*/prev（与 easydoc 同款——criterion 历史基线由 cache
+# 跨 run 保留，保证首次 vs 第二次的 delta 真实）。
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  bench-regression:
+    name: Criterion regression check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Restore criterion baseline cache
+        # 跨 run 保留 prev/estimates.json：第二次跑与首次对比才能产生 delta。
+        # 缓存键含 bench 名与 OS——ubuntu-latest 与 macOS/Windows 不同 runner 互不污染。
+        uses: actions/cache@v4
+        with:
+          path: |
+            target/criterion/*/prev
+            target/criterion/*/base
+          key: criterion-prev-${{ runner.os }}-${{ hashFiles('thymeleaf/benches/**', 'thymeleaf/Cargo.toml') }}
+          restore-keys: criterion-prev-${{ runner.os }}-
+
+      - name: Run criterion bench (save as cur)
+        run: cargo bench -p thymeleaf --bench render_baseline -- --save-baseline cur --noplot
+
+      - name: Upload cur estimates for next-run cache (auto via cache@v4)
+        run: echo "cur estimates uploaded via cache restore-keys"
+
+      - name: Run regression check
+        run: python3 scripts/bench_regression_check.py
