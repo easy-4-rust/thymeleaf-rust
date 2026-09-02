@@ -6,7 +6,7 @@ TEST_ASSET 两个部分，且每个资产按 SHA-256 校验字节一致。
 
 - test_case.entries：2,608 个可执行 .thtest（排除 *.common.thtest 支持文件），
   字段 source_relative_path（"tests/" + assets 相对路径）与 asset_sha256
-- test_asset.entries：2,686 个资产（2,609 thtest 镜像 + 77 golden fixtures），
+- test_asset.entries：2,687 个资产（2,609 thtest 镜像 + 78 golden fixtures），
   字段 target_path（仓库根相对）与 sha256
 - upstream：固定基线 10f9dd2eb... 与版本 3.1.5.RELEASE（上游 pom.xml）
 
@@ -75,9 +75,9 @@ def main() -> int:
             file=sys.stderr,
         )
         return 2
-    if len(assets) != 2_686:
+    if len(assets) != 2_687:
         print(
-            f"error: expected 2,686 assets (2,609 thtest + 77 golden), got {len(assets)}",
+            f"error: expected 2,687 assets (2,609 thtest + 78 golden), got {len(assets)}",
             file=sys.stderr,
         )
         return 2
