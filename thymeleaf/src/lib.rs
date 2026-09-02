@@ -13,6 +13,8 @@ mod dialect_configuration;
 mod dialect_set_configuration;
 mod dialect_set_configuration_error;
 pub mod doctype;
+#[cfg(feature = "dtd-validation")]
+pub mod dtd;
 pub mod element;
 pub mod engine;
 mod engine_configuration;
