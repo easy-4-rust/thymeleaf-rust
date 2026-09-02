@@ -103,14 +103,16 @@ jobs:
         id: extract
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
-          # 提取以 [VERSION] 开头的块到下一个 ## [
-          SECTION=$(awk -v ver="$VERSION" '
+          # 剥掉 v 前缀：tag v0.1.0-beta.0 → CHANGELOG 条目 [0.1.0-beta.0]
+          CHANGELOG_VER="${VERSION#v}"
+          # 提取以 [CHANGELOG_VER] 开头的块到下一个 ## [
+          SECTION=$(awk -v ver="$CHANGELOG_VER" '
             $0 ~ "^## \\[" ver "\\]" {found=1}
             found {print}
             found && /^## \[/ && $0 !~ "^## \\[" ver "\\]" {exit}
           ' CHANGELOG.md)
           if [ -z "$SECTION" ]; then
-            echo "::error::CHANGELOG.md 缺少 [${VERSION}] 条目"
+            echo "::error::CHANGELOG.md 缺少 [${CHANGELOG_VER}] 条目"
             exit 1
           fi
           {
