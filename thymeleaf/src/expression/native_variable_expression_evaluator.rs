@@ -13,7 +13,7 @@ use crate::util::{BigDecimalValue, ExpressionUtils, NumberValue, Utf16String};
 
 use super::{
     AdditionExpression, AndExpression, ClassNotFoundError, ConditionalExpression, ConversionResult,
-    ConversionValue, DefaultExpression, DivisionExpression, EqualsExpression,
+    ConversionValue, DivisionExpression, EqualsExpression,
     GreaterOrEqualToExpression, GreaterThanExpression, IStandardExpression,
     IStandardVariableExpression, IStandardVariableExpressionEvaluator, LessOrEqualToExpression,
     LessThanExpression, LiteralValue, MinusExpression, MultiplicationExpression,
