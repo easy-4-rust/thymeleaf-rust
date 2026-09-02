@@ -4,7 +4,7 @@
 
      This is XHTML 1.1, a reformulation of HTML as a modular XML application.
      Copyright 1998-2008 W3C (MIT, ERCIM, Keio), All Rights Reserved.
-     Revision: $Id: xhtml11-model-1.mod,v 1.1 2018/03/20 05:54:52 plehegar Exp $ SMI
+     Revision: $Id: xhtml11-model-1.mod,v 1.18 2009/06/24 17:24:55 ahby Exp $ SMI
 
      This DTD module is identified by the PUBLIC and SYSTEM identifiers:
 

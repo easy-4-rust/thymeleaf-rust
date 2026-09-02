@@ -23,29 +23,29 @@
 - **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd
 - **说明**: XHTML 1.0 Frameset DTD（支持框架）
 
-### xhtml1/xhtml1-strict-model-1.mod
+### xhtml1/xhtml-strict-model-1.mod
 - **SHA-256**: `c5dd5baea0f05b9e6488e087252a0d9712c9533657b665a6357a8a8fcd503c2d`
-- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml1-strict-model-1.mod
+- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml-strict-model-1.mod
 - **说明**: XHTML 1.0 Strict 内容模型定义
 
-### xhtml1/xhtml1-framework-1.mod
+### xhtml1/xhtml-framework-1.mod
 - **SHA-256**: `c5dd5baea0f05b9e6488e087252a0d9712c9533657b665a6357a8a8fcd503c2d`
-- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml1-framework-1.mod
+- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml-framework-1.mod
 - **说明**: XHTML 1.0 框架模块
 
-### xhtml1/xhtml1-lat1.ent
+### xhtml1/xhtml-lat1.ent
 - **SHA-256**: `c5dd5baea0f05b9e6488e087252a0d9712c9533657b665a6357a8a8fcd503c2d`
-- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml1-lat1.ent
+- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml-lat1.ent
 - **说明**: Latin-1 字符实体定义
 
-### xhtml1/xhtml1-special.ent
+### xhtml1/xhtml-special.ent
 - **SHA-256**: `c5dd5baea0f05b9e6488e087252a0d9712c9533657b665a6357a8a8fcd503c2d`
-- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml1-special.ent
+- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml-special.ent
 - **说明**: 特殊字符实体定义
 
-### xhtml1/xhtml1-symbol.ent
+### xhtml1/xhtml-symbol.ent
 - **SHA-256**: `c5dd5baea0f05b9e6488e087252a0d9712c9533657b665a6357a8a8fcd503c2d`
-- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml1-symbol.ent
+- **来源**: https://www.w3.org/TR/xhtml1/DTD/xhtml-symbol.ent
 - **说明**: 符号字符实体定义
 
 ### xhtml11/xhtml11.dtd
