@@ -31,7 +31,7 @@
 | S8 | 56 | Standard `th:*` Processor | ✅ 完成 |
 | S9 | 16 | 中立 Web 合同和 Servlet 语义等价迁移 | ✅ 完成 |
 | S10 | — | `thymeleaf-{framework}`、`thymeleaf-vernal` | ✅ 完成 |
-| S11 | — | 全量 Parity、安全、性能和发布 | 🔄 进行中 |
+| S11 | — | 全量 Parity、安全、性能和发布 | ✅ 完成（计划 A-E 全勾；对象账本 479 BEHAVIOR_VERIFIED / 0 待验证；2026-08-16 复核） |
 
 ## 3. 后迁移里程碑
 
@@ -54,8 +54,8 @@
 | workspace 全测试 | ✅ 通过 | 2,595/2,595 .thtest |
 | `cargo-deny` + `cargo-audit` | ✅ 通过 | CI 硬门禁 |
 | fuzz 基线 | ✅ 落档 | proptest + cargo-fuzz |
-| 安全文档 | ✅ 评审通过 | docs/release/security.md |
-| `cargo package --verify` | ⏳ 待执行 | 发布演练 |
+| 安全文档 | ✅ 落档（2026-08-16 补齐并实测取证：unsafe=0 / ACL+白名单 / deny / fuzz） | docs/release/security.md（此前门禁虚标，文件当日补建） |
+| `cargo package --verify` | ✅ 通过 | 2026-08-16 `cargo package -p thymeleaf` 演练（verify 构建 36.96s） |
 
 ### 4.2 beta → 1.0 门禁
 

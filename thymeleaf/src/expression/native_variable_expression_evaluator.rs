@@ -657,15 +657,14 @@ fn parse_ognl_range(
         .ok()
         .map(|value| ComputedExpression::Operation(Arc::new(value)));
     }
-    if let Some((question, colon)) = find_default_operator(input) {
-        let queried =
-            parse_ognl_operand(&input[..question], apply_shortcuts, use_selection_as_root)?;
-        let default =
-            parse_ognl_operand(&input[colon + 1..], apply_shortcuts, use_selection_as_root)?;
-        return DefaultExpression::new(Some(queried), Some(default))
-            .ok()
-            .map(|value| ComputedExpression::Operation(Arc::new(value)));
-    }
+
+    // 注意：此处不解析 Elvis 简写 `a ?: b`——与 Java 上游一致。Thymeleaf 的
+    // default expression 只存在于 `${...}` 之外（Thymeleaf 层 DefaultExpression，
+    // 由 expression_parsing_util 解析）；`${...}` 内部内容由 OGNL 3.3.4 求值，
+    // 而 OGNL 不支持 Elvis 简写（实测抛 ExpressionSyntaxException → 渲染期
+    // TemplateInputException）。完整三元 `a ? b : c` OGNL 支持，上方分支保留。
+    // Java 3.1.5 实测锚点：`${v ?: 'f'}` 异常、`${v} ?: 'f'` 取默认、
+    // `${1 > 2 ? 'y' : 'n'}` 输出 n（golden: ognl_evaluation_golden.txt）。
 
     macro_rules! binary_group {
         ($operators:expr) => {
@@ -3235,20 +3234,6 @@ fn find_conditional(input: &[u16]) -> Option<(usize, Option<usize>)> {
         }
     });
     question.map(|position| (position, colon))
-}
-
-fn find_default_operator(input: &[u16]) -> Option<(usize, usize)> {
-    let mut found = None;
-    scan_top_level(input, |position, unit| {
-        if found.is_none()
-            && unit == b'?' as u16
-            && let Some(colon) = next_non_whitespace(input, position + 1)
-            && input[colon] == b':' as u16
-        {
-            found = Some((position, colon));
-        }
-    });
-    found
 }
 
 fn next_non_whitespace(input: &[u16], mut position: usize) -> Option<usize> {
