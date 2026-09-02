@@ -4,6 +4,47 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
+## [0.1.0-beta.0] - 2026-09-03
+
+> 本版本相对 0.1.0-alpha.1：**文档↔代码核对收口 + 性能基线 + 覆盖率体系 +
+> VALUE_ADD 97 测试 + web 桥接域交付**。alpha→beta 八门禁全绿
+> （VERSION-PLAN §4.1），本版起进入 beta 通道。
+
+### Added
+
+- **VALUE_ADD 测试批（97 例）**：方言装饰契约（processor_configuration_utils 11）、
+  数字格式边界（number_utils 26）、string_utils 分支（23）、资源加载工具（12）、
+  web 渲染路径（thymeleaf_renderer 9）、WebExchange 参数契约（i_web_request 16）
+  ——归因结论：Java 侧均无独立测试类，全部为缺口导向的合规 VALUE_ADD
+- **criterion 性能基线**（`benches/render_baseline.rs` 三基准 +
+  `docs/release/benchmarks.md` drift gate）：单变量插值 10.18µs /
+  th:each×100 145µs / 混合文档 225.5µs
+- **覆盖率体系**：`coverage-baseline`（79.89%→**80.20%** 行，--all-features）
+  + `coverage-gap-attribution`（337 文件归因 + Top12 分类 + 5 批排期）
+- **安全模型文档**（`docs/release/security.md`）：零 unsafe 实测 /
+  表达式 ACL 禁止类型表 + 静态方法白名单 / deny 策略 / proptest fuzz 基线
+- **web 桥接域**（8-15 计划线）：topcoat P0 四件套、actix HostWeb 契约、
+  vernal ThymeleafViewResolver（Spring MVC 视图解析桥）
+- **OGNL 求值器 V3 golden 差分**（46 case 端到端矩阵）
+
+### Changed
+
+- alpha→beta 门禁全表落定（VERSION-PLAN §4.1）：security.md 补建（修正虚标）、
+  `cargo package --verify` 通过、S11 状态更正为完成
+- CI：concurrency cancel-in-progress（同分支新推送取消旧排队 run）
+
+### Fixed
+
+- 内部 Elvis 语义偏差（`${a ?: b}` 对齐 Java OGNL 行为）
+- 表达式求值器若干 parity 修正（随 golden 差分）
+
+### Verification
+
+- workspace `--all-features`：**1,534 passed / 0 failed**
+- corpus `semantic_all`：2/2 批次（2,595 .thtest）
+- 布局审计（CI 口径）：strict_blockers=0（113 豁免登记）
+- `cargo package -p thymeleaf` 演练通过
+
 ## [Unreleased]
 
 ### Added
