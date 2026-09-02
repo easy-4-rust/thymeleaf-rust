@@ -1,0 +1,75 @@
+name: Coverage
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: Code Coverage (llvm-cov)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # corpus 批次（2608 .thtest）需要上游资源目录
+      - name: Checkout fixed Thymeleaf baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: thymeleaf/thymeleaf
+          ref: 10f9dd2eb8cbd98515ce14b149d115e0287d0add
+          path: upstream-thymeleaf
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        with:
+          toolchain: stable
+          components: llvm-tools-preview
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov --locked
+
+      # acceptance.rs 编译期 include_str! 该清单，必须先于编译生成
+      - name: Generate source-test parity manifest
+        run: python3 scripts/generate_test_asset_manifest.py --output thymeleaf-test/source-test-parity.json
+
+      - name: Generate LCOV report
+        env:
+          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
+        run: cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
+        timeout-minutes: 40
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: lcov.info
+          # CODECOV_TOKEN 未配置时上传失败不阻断（配置 secret 后可改回 true）
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+
+      - name: Generate HTML coverage report
+        env:
+          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
+        run: cargo llvm-cov --workspace --all-features --html --output-dir coverage-html
+
+      - name: Upload HTML coverage artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-html
+          path: coverage-html/
+          retention-days: 30

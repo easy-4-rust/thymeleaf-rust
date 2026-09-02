@@ -1,0 +1,29 @@
+[package]
+name = "thymeleaf-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+thymeleaf = { path = "../thymeleaf" }
+
+# 防止被根 workspace 探测到：独立 workspace
+[workspace]
+
+[[bin]]
+name = "render_html"
+path = "fuzz_targets/render_html.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "expression_eval"
+path = "fuzz_targets/expression_eval.rs"
+test = false
+doc = false
+bench = false
