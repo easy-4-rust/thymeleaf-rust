@@ -49,6 +49,13 @@
 
 ### Added
 
+- **DOCTYPE 翻译（Thymeleaf 专有 DTD 体系）Java golden 差分（V3）**：
+  `DocTypeTranslationGolden.java` 导出 24 case（16 个专有
+  `thymeleaf.org/dtd` SystemID 全枚举 + 大小写/PUBLIC 类型/未知 ID/
+  internalSubset/XML 模式边界），`doc_type_translation_golden_diff.rs`
+  逐案断言 24/24 MATCH；处理器覆盖率 0→90.27%。已知偏差记录：HTML 模式
+  DOCTYPE internal subset 不保留（html5gum HTML5 tokenizer 能力边界，
+  Java attoparser 支持，语料零覆盖）。
 - **OGNL 求值器 Java golden 差分（V3）**：`OgnlEvaluationGolden.java` 在 pinned
   上游（3.1.5 @ 10f9dd2）导出 46 case 端到端矩阵（属性导航/方法调用/集合/
   算术/比较/逻辑/三元/default/空值/字面量），`ognl_evaluation_golden_diff.rs`

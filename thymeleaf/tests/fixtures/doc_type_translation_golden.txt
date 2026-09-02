@@ -1,0 +1,25 @@
+baseline_case	<p>10f9dd2eb8cbd98515ce14b149d115e0287d0add</p>
+strict_1	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html><body><p>x</p></body></html>
+strict_2	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html><body><p>x</p></body></html>
+strict_3	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html><body><p>x</p></body></html>
+strict_4	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html><body><p>x</p></body></html>
+transitional_1	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html><body><p>x</p></body></html>
+transitional_2	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html><body><p>x</p></body></html>
+transitional_3	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html><body><p>x</p></body></html>
+transitional_4	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html><body><p>x</p></body></html>
+frameset_1	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">\n<html><body><p>x</p></body></html>
+frameset_2	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">\n<html><body><p>x</p></body></html>
+frameset_3	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">\n<html><body><p>x</p></body></html>
+frameset_4	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">\n<html><body><p>x</p></body></html>
+xhtml11_1	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">\n<html><body><p>x</p></body></html>
+xhtml11_2	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">\n<html><body><p>x</p></body></html>
+xhtml11_3	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">\n<html><body><p>x</p></body></html>
+xhtml11_4	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">\n<html><body><p>x</p></body></html>
+case_sensitive_upper_host	<!DOCTYPE html SYSTEM "HTTP://WWW.THYMELEAF.ORG/dtd/xhtml1-strict-thymeleaf-1.dtd">\n<html><body><p>x</p></body></html>
+case_sensitive_upper_path	<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/XHTML1-STRICT-THYMELEAF-1.DTD">\n<html><body><p>x</p></body></html>
+public_type_not_translated	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html><body><p>x</p></body></html>
+unknown_version_5	<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-5.dtd">\n<html><body><p>x</p></body></html>
+unknown_name	<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/some-other.dtd">\n<html><body><p>x</p></body></html>
+unrelated_system_id	<!DOCTYPE html SYSTEM "http://example.org/dtd/unrelated.dtd">\n<html><body><p>x</p></body></html>
+internal_subset_preserved	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [\n<!ELEMENT html ANY>\n]>\n<html><body><p>x</p></body></html>
+xml_mode_not_translated	<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-1.dtd">\n<html><body><p>x</p></body></html>
