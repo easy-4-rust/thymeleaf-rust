@@ -138,6 +138,8 @@ docs/superpowers/
 | `specs/2026-08-15-topcoat-api-notes.md` | topcoat 0.5.0 API 勘察（http 1.x 类型族，与 axum 同构） |
 | `specs/2026-08-15-webmvc-view-integration-notes.md` | vernal-webmvc 对接缺口清单（5 项桥接，已全部落地） |
 | `specs/2026-09-02-upstream-graph-report.md` | Java 上游深度图谱报告（迁移对照证据） |
+| `specs/2026-09-03-dtd-validation-design.md` | DTD 验证集成设计（oxixml-dtd + XHTML DTD 内嵌 + XML 模式可选验证） |
+| `plans/2026-09-03-dtd-validation.md` | DTD 验证实施计划（5 阶段 / 14 Task：依赖引入 → 模块实现 → parse_xml 集成 → 测试 → 收尾） |
 
 ## 历史计划索引
 
