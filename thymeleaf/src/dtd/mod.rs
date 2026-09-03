@@ -11,6 +11,9 @@ pub mod embedded_dtd;
 pub mod entity_budget;
 
 #[cfg(feature = "dtd-validation")]
+pub mod validation_policy;
+
+#[cfg(feature = "dtd-validation")]
 pub mod validator;
 
 #[cfg(feature = "dtd-validation")]
@@ -20,4 +23,7 @@ pub use embedded_dtd::build_xhtml_resolver;
 pub use entity_budget::default_budget;
 
 #[cfg(feature = "dtd-validation")]
-pub use validator::{DtdValidator, ValidationPolicy, Validator, ValidityError};
+pub use validation_policy::ValidationPolicy;
+
+#[cfg(feature = "dtd-validation")]
+pub use validator::{DtdValidator, Validator, ValidityError};
