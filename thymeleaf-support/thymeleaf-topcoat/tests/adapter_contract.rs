@@ -5,7 +5,7 @@ use http_body_util::BodyExt;
 use thymeleaf::web::{RenderedTemplate, RenderedTemplateBody};
 use thymeleaf_topcoat::ThymeleafView;
 use topcoat::context::CxTestBuilder;
-use topcoat::router::IntoResponse;
+use topcoat::router::response::IntoResponse;
 
 #[test]
 fn response_preserves_status_headers_and_full_payload() {
