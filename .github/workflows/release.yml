@@ -71,6 +71,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
       - uses: Swatinem/rust-cache@v2
 
       - name: Build release
@@ -143,6 +145,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
@@ -163,6 +167,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
@@ -181,6 +187,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2

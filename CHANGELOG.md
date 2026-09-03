@@ -4,22 +4,55 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
-## [Unreleased]
+## [0.1.0-beta.1] - 2026-09-03
+
+> 本版本相对 0.1.0-beta.0：**可选 DTD 验证（以 Java 实现版本化 DTD 集
+> 为准）+ 依赖刷新 + 健壮性修复**。
 
 ### Added
 
 - **可选 DTD 验证**（`dtd-validation` feature gate，XML 模式）：新增
-  `thymeleaf::dtd` 模块——内嵌 W3C XHTML 四族 DTD（xhtml1
-  strict/transitional/frameset + xhtml11，`include_str!` + `MemoryResolver`
-  解析 `.ent`/`.mod` 引用，SHA-256 完整性测试 14 文件）+ 实体展开预算
-  （深度 10/次数 1000/1MB，反 expansion bomb）+ 有状态 push 验证器封装。
-  配置面：`TemplateEngine::set_dtd_validation_policy` +
+  `thymeleaf::dtd` 模块。DTD 约束集以 **Java 实现为准**——内嵌
+  Thymeleaf 2.1.6 jar `org/thymeleaf/dtd/` 官方版本化集合（58 文件）：
+  - Thymeleaf 命名空间 16 个 SYSTEM ID（xhtml1
+    strict/transitional/frameset + xhtml11 × thymeleaf-1..4，与
+    `StandardTranslationDocTypeProcessor` 翻译表一一对应，自包含单体）
+  - transitional 历史拼写别名 4（文件头自引用 `transitonal`）
+  - W3C 命名空间 4 个标准 URL（xhtml11 为 jar 自包含单体，离线可解析）
+  - 模块/实体 URL→本地文件映射（modularization 24 + ruby 1 + .ent 3
+    + xhtml11-model 1）与裸文件名 42——完全离线
+- 配置面：`TemplateEngine::set_dtd_validation_policy` +
   `IEngineConfiguration::get_dtd_validation_policy`，三策略
   `Disabled`（默认，零开销零行为影响）/`Warn`（验证但不拒绝）/
   `Strict`（违反即 `TemplateParserError`）。DOCTYPE 缺失或含内部子集
-  时跳过验证；DOCTYPE 无法解析时 Strict 失败关闭、Warn 降级。
-  测试：`dtd_validation` 13 例 + `dtd_file_integrity` 3 例，
-  dtd 模块行覆盖 100%（cargo-llvm-cov）
+  时跳过验证；DOCTYPE 无法解析时 Strict 失败关闭、Warn 降级
+- `dtd-files/thymeleaf-2.1.6/` jar 镜像布局 + 58 文件 SHA-256 台账
+  （`dtd_file_integrity` 逐字节比对 + `.gitattributes` 行尾冻结）
+
+### Changed
+
+- 实体展开预算放宽至库默认档（10,000 次/10MiB）：1,000 次预算实测
+  误杀 xhtml11 完整展开；预算仅作用于内嵌可信文件集，防炸弹属性保留
+- 依赖刷新 14 项（含 quick-xml 0.42、unicode-general-category 1.1、
+  sha2 0.11、actix-web 4.15 / salvo 0.96 / ntex 3.12 等适配器升级）
+
+### Fixed
+
+- `safe_range` 反转区间 panic（`html_parser_never_panics` proptest
+  随机命中：start>end 时字节切片越界，clamp 后取 max 兜底）
+- Release 工作流 push main 误触发 Validate Tag（收敛为 tag-only +
+  workflow_dispatch）；全部 rust-toolchain 步骤补必填 `toolchain` 输入
+- h2 0.4.15→0.4.19（RUSTSEC-2026-0258）；依赖刷新涉及的金标
+  （letter_ranges）与本地 parity 清单同步
+
+### Verification
+
+- workspace `--all-features`：**1,554 passed / 0 failed**；默认 feature
+  1,531 passed / 0 failed；fmt / clippy（all-features all-targets）零警告
+- DTD：16 版本 ID + 4 拼写别名 + 4 W3C URL 全部可构建验证器；
+  xhtml11 文档 Strict 端到端通过；dtd 模块行覆盖 100%（cargo-llvm-cov）
+- 双分支 CI 全绿（CI 14m23s / Coverage / SemVer / Security Audit /
+  bench-regression）
 
 ## [0.1.0-beta.0] - 2026-09-03
 
