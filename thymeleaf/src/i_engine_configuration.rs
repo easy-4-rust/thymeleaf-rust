@@ -164,6 +164,15 @@ pub trait IEngineConfiguration: Send + Sync {
     /// 返回方言聚合阶段构建并冻结的属性定义。
     fn get_attribute_definitions(&self) -> &AttributeDefinitions;
 
+    /// 返回 DTD 验证策略（`dtd-validation` feature gate）。
+    ///
+    /// 默认返回 `Disabled`（零影响）。仅在 XML 模式下生效；
+    /// HTML 模式不受此策略约束（WHATWG 容错语义）。
+    #[cfg(feature = "dtd-validation")]
+    fn get_dtd_validation_policy(&self) -> crate::dtd::ValidationPolicy {
+        crate::dtd::ValidationPolicy::Disabled
+    }
+
     /// 返回指定模式的模板边界 Processor。
     ///
     /// 对应 Java: `IEngineConfiguration#getTemplateBoundariesProcessors(TemplateMode)`。

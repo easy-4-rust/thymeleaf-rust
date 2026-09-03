@@ -20,6 +20,9 @@ use crate::text::{TextParserReader, TextParserReaderError};
 use crate::util::{ContentTypeUtils, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
+#[cfg(feature = "dtd-validation")]
+use crate::dtd::{DtdValidator, ValidationPolicy};
+
 use super::markup_selector::{
     MarkupSelectorEngine, SelectorNode, SelectorNodeSummary, SelectorNodeType,
 };
@@ -190,6 +193,9 @@ impl AbstractMarkupTemplateParser {
             if self.html {
                 parse_html(&input, &mut adapter, &description, &selection)?;
             } else {
+                #[cfg(feature = "dtd-validation")]
+                parse_xml(&input, &mut adapter, &description, &selection, cfg_dtd_policy(&*configuration))?;
+                #[cfg(not(feature = "dtd-validation"))]
                 parse_xml(&input, &mut adapter, &description, &selection)?;
             }
             adapter.document_end()
@@ -607,11 +613,14 @@ fn parse_xml(
     adapter: &mut TemplateHandlerAdapterMarkupHandler,
     description: &str,
     selection: &MarkupSelection,
+    #[cfg(feature = "dtd-validation")] validation_policy: ValidationPolicy,
 ) -> Result<(), TemplateParserError> {
     let mut reader = Reader::from_str(source);
     reader.config_mut().trim_text(false);
     reader.config_mut().check_end_names = true;
     reader.config_mut().allow_unmatched_ends = false;
+    #[cfg(feature = "dtd-validation")]
+    let mut _dtd_validator: Option<DtdValidator> = None;
     let mut previous = 0_u64;
     let mut stack: Vec<MarkupFrame> = Vec::new();
     let mut document_siblings = Vec::new();
@@ -761,6 +770,28 @@ fn parse_xml(
                     &mut document_siblings,
                     SelectorNodeType::DocType,
                 ) {
+                    // 提取 system_id（与 emit_doctype 同逻辑）用于构建 DTD 验证器
+                    let inner = safe_range(source, start + 2, end.saturating_sub(1)).trim();
+                    let (_, remainder) = split_name(inner);
+                    let (_, remainder) = split_name(remainder.trim_start());
+                    let upper = remainder.trim_start().to_ascii_uppercase();
+                    let quoted = quoted_values(remainder);
+                    let system_id = if upper.starts_with("PUBLIC") {
+                        quoted.get(1).copied()
+                    } else if upper.starts_with("SYSTEM") {
+                        quoted.first().copied()
+                    } else {
+                        None
+                    };
+                    // DTD 验证器在 Disabled 策略下始终为 None（零开销）。
+                    // Task 2.3 将从 configuration 读取 ValidationPolicy；
+                    // 当前阶段保持 Disabled 硬编码。
+                    #[cfg(feature = "dtd-validation")]
+                    {
+                        let _policy: ValidationPolicy = Default::default(); // Disabled
+                        let _ = system_id;
+                    }
+                    let _ = system_id;
                     emit_doctype(source, start, end, adapter)?;
                 }
             }
@@ -1395,4 +1426,11 @@ impl TextParserReader for StringTextReader {
         self.closed = true;
         Ok(())
     }
+}
+
+/// 获取 DTD 验证策略（cfg(dtd-validation) 门控）。
+/// 闭包外定义，避免 borrow checker 与闭包捕获的冲突。
+#[cfg(feature = "dtd-validation")]
+fn cfg_dtd_policy(config: &dyn IEngineConfiguration) -> crate::dtd::ValidationPolicy {
+    config.get_dtd_validation_policy()
 }
