@@ -5,7 +5,8 @@ use thymeleaf::context::IContext;
 use thymeleaf::web::{RenderedTemplate, RenderedTemplateBody};
 use topcoat::Result;
 use topcoat::context::Cx;
-use topcoat::router::{Body, IntoResponse, Response};
+use topcoat::router::Body;
+use topcoat::router::response::{IntoResponse, Response};
 
 /// 可直接从 Topcoat route 返回的 Thymeleaf 渲染结果。
 ///
