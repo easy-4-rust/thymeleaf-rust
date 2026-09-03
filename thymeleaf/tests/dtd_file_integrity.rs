@@ -85,7 +85,7 @@ mod integrity_tests {
             }
             hasher.update(&buf[..n]);
         }
-        format!("{:x}", hasher.finalize())
+        hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect()
     }
 
     #[test]
