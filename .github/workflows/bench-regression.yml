@@ -34,7 +34,7 @@ jobs:
       - name: Restore criterion baseline cache
         # 跨 run 保留 prev/estimates.json：第二次跑与首次对比才能产生 delta。
         # 缓存键含 bench 名与 OS——ubuntu-latest 与 macOS/Windows 不同 runner 互不污染。
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             target/criterion/*/prev
