@@ -8,7 +8,7 @@ license.workspace = true
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
-gotham = { version = "=0.8.0", default-features = false }
+gotham = { version = "=0.8.1", default-features = false }
 http = "1.3"
 http-body-util = "0.1.3"
 thymeleaf = { path = "../../thymeleaf" }
