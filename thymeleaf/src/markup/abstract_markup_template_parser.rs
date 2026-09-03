@@ -193,6 +193,9 @@ impl AbstractMarkupTemplateParser {
             if self.html {
                 parse_html(&input, &mut adapter, &description, &selection)?;
             } else {
+                #[cfg(feature = "dtd-validation")]
+                parse_xml(&input, &mut adapter, &description, &selection, cfg_dtd_policy(&*configuration))?;
+                #[cfg(not(feature = "dtd-validation"))]
                 parse_xml(&input, &mut adapter, &description, &selection)?;
             }
             adapter.document_end()
@@ -610,6 +613,7 @@ fn parse_xml(
     adapter: &mut TemplateHandlerAdapterMarkupHandler,
     description: &str,
     selection: &MarkupSelection,
+    #[cfg(feature = "dtd-validation")] validation_policy: ValidationPolicy,
 ) -> Result<(), TemplateParserError> {
     let mut reader = Reader::from_str(source);
     reader.config_mut().trim_text(false);
@@ -1422,4 +1426,11 @@ impl TextParserReader for StringTextReader {
         self.closed = true;
         Ok(())
     }
+}
+
+/// 获取 DTD 验证策略（cfg(dtd-validation) 门控）。
+/// 闭包外定义，避免 borrow checker 与闭包捕获的冲突。
+#[cfg(feature = "dtd-validation")]
+fn cfg_dtd_policy(config: &dyn IEngineConfiguration) -> crate::dtd::ValidationPolicy {
+    config.get_dtd_validation_policy()
 }
