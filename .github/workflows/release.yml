@@ -69,7 +69,7 @@ jobs:
         # 待 vernal 上游修复后再启用。
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Generate source-test parity manifest
         run: python3 scripts/generate_test_asset_manifest.py --output thymeleaf-test/source-test-parity.json
@@ -97,7 +97,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Extract CHANGELOG section for tag
         id: extract
@@ -144,7 +144,7 @@ jobs:
     needs: [validate-tag, publish]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -164,7 +164,7 @@ jobs:
     needs: [validate-tag, precheck]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -182,7 +182,7 @@ jobs:
     needs: [validate-tag, dry-run-publish]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

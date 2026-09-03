@@ -25,10 +25,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Checkout fixed Thymeleaf baseline
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: thymeleaf/thymeleaf
           ref: 10f9dd2eb8cbd98515ce14b149d115e0287d0add
