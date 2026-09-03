@@ -37,7 +37,7 @@ regex = "1.12"
 ryu = "1.0.20"
 thiserror = "2.0"
 tracing = "0.1"
-unicode-general-category = "=0.6.0"
+unicode-general-category = "=1.1.0"
 # DTD 验证（XML 模式可选）：content-model automata + attribute defaulting +
 # ID/IDREF + 实体展开防爆。feature gate dtd-validation 控制，零二进制影响。
 oxixml-dtd = { version = "=0.1.2", optional = true }
