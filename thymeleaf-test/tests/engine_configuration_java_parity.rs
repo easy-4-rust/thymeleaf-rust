@@ -80,6 +80,8 @@ fn configuration(
         Some(Arc::new(StandardCacheManager::new())),
         Arc::new(StandardEngineContextFactory::new()),
         Arc::new(StandardDecoupledTemplateLogicResolver::new()),
+        #[cfg(feature = "dtd-validation")]
+        thymeleaf::dtd::ValidationPolicy::default(),
     )
     .expect("engine configuration")
 }

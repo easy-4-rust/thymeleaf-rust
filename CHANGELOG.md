@@ -4,6 +4,23 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
+## [Unreleased]
+
+### Added
+
+- **可选 DTD 验证**（`dtd-validation` feature gate，XML 模式）：新增
+  `thymeleaf::dtd` 模块——内嵌 W3C XHTML 四族 DTD（xhtml1
+  strict/transitional/frameset + xhtml11，`include_str!` + `MemoryResolver`
+  解析 `.ent`/`.mod` 引用，SHA-256 完整性测试 14 文件）+ 实体展开预算
+  （深度 10/次数 1000/1MB，反 expansion bomb）+ 有状态 push 验证器封装。
+  配置面：`TemplateEngine::set_dtd_validation_policy` +
+  `IEngineConfiguration::get_dtd_validation_policy`，三策略
+  `Disabled`（默认，零开销零行为影响）/`Warn`（验证但不拒绝）/
+  `Strict`（违反即 `TemplateParserError`）。DOCTYPE 缺失或含内部子集
+  时跳过验证；DOCTYPE 无法解析时 Strict 失败关闭、Warn 降级。
+  测试：`dtd_validation` 13 例 + `dtd_file_integrity` 3 例，
+  dtd 模块行覆盖 100%（cargo-llvm-cov）
+
 ## [0.1.0-beta.0] - 2026-09-03
 
 > 本版本相对 0.1.0-alpha.1：**文档↔代码核对收口 + 性能基线 + 覆盖率体系 +

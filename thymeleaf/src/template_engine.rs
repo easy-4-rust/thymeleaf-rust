@@ -36,6 +36,9 @@ struct TemplateEngineState {
     cache_manager: Option<Arc<dyn ICacheManager>>,
     engine_context_factory: Arc<dyn IEngineContextFactory>,
     decoupled_template_logic_resolver: Arc<dyn IDecoupledTemplateLogicResolver>,
+    // DTD 验证策略（dtd-validation feature；初始化前可改，初始化时快照进配置）。
+    #[cfg(feature = "dtd-validation")]
+    dtd_validation_policy: crate::dtd::ValidationPolicy,
 }
 
 /// Thymeleaf 默认模板引擎实现。
@@ -75,6 +78,8 @@ impl TemplateEngine {
                 decoupled_template_logic_resolver: Arc::new(
                     StandardDecoupledTemplateLogicResolver::new(),
                 ),
+                #[cfg(feature = "dtd-validation")]
+                dtd_validation_policy: crate::dtd::ValidationPolicy::default(),
             }),
             configuration: OnceLock::new(),
         }
@@ -343,6 +348,26 @@ impl TemplateEngine {
     /// 对应 Java: `TemplateEngine#getCacheManager()`。
     pub fn get_cache_manager(&self) -> Option<Arc<dyn ICacheManager>> {
         lock(&self.state).cache_manager.clone()
+    }
+
+    /// 设置 XML 模式 DTD 验证策略（初始化前可改；默认 `Disabled` 零开销）。
+    ///
+    /// 仅 `dtd-validation` feature 启用时存在。
+    #[cfg(feature = "dtd-validation")]
+    pub fn set_dtd_validation_policy(
+        &self,
+        policy: crate::dtd::ValidationPolicy,
+    ) -> Result<(), AlreadyInitializedException> {
+        self.mutate_before_initialization(|state| state.dtd_validation_policy = policy)
+    }
+
+    /// 返回当前 DTD 验证策略。
+    ///
+    /// 仅 `dtd-validation` feature 启用时存在。
+    #[cfg(feature = "dtd-validation")]
+    #[must_use]
+    pub fn get_dtd_validation_policy(&self) -> crate::dtd::ValidationPolicy {
+        lock(&self.state).dtd_validation_policy
     }
 
     /// 设置引擎上下文工厂。
@@ -634,6 +659,8 @@ impl TemplateEngine {
             state.cache_manager.clone(),
             Arc::clone(&state.engine_context_factory),
             Arc::clone(&state.decoupled_template_logic_resolver),
+            #[cfg(feature = "dtd-validation")]
+            state.dtd_validation_policy,
         )
         .map_err(|error| Box::new(error) as Box<dyn TemplateEngineException + Send + Sync>)?;
         drop(state);

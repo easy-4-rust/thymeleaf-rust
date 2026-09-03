@@ -60,6 +60,7 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 | Template cache & resolvers | ✅ Stable | `thymeleaf` | String/File/Class/URL/Multi/ByteArray loaders |
 | Auto-escaping & output formats | ✅ Stable | `thymeleaf` | HTML/XML/JavaScript/CSS/JSON/RTF/PlainText |
 | Decoupled template logic | ✅ Stable | `thymeleaf` | `.th.xml` sidecar |
+| Optional DTD validation (XML mode) | 🧪 Preview | `thymeleaf` (`dtd-validation` feature) | Embedded W3C XHTML DTDs; `Disabled`/`Warn`/`Strict` policy, default `Disabled` (zero overhead); internal-subset DOCTYPEs skip validation |
 | Framework-neutral web contract | ✅ Stable | `thymeleaf` | IWebExchange / IWebRequest / IWebSession |
 | Framework adapters (P0) | ✅ Stable | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | Full IWebExchange suite + contract tests aligned with hyper benchmark + `render_async` |
 | Framework adapters (thin) | 🧪 Preview | hyper/tower/ntex/poem/rocket/salvo/tonic | Response-level adapters; IWebExchange via hyper benchmark |

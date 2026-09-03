@@ -20,4 +20,4 @@ pub use embedded_dtd::build_xhtml_resolver;
 pub use entity_budget::default_budget;
 
 #[cfg(feature = "dtd-validation")]
-pub use validator::{DtdValidator, ValidationPolicy};
+pub use validator::{DtdValidator, ValidationPolicy, Validator, ValidityError};

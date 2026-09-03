@@ -7,6 +7,10 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 
+[features]
+# 转发 thymeleaf 的可选 DTD 验证 feature（供 cfg 门控的 EngineConfiguration::new 参数）。
+dtd-validation = ["thymeleaf/dtd-validation"]
+
 [dependencies]
 thymeleaf = { path = "../thymeleaf" }
 

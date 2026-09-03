@@ -13,6 +13,8 @@ use crate::dialect::{
     IPreProcessorDialect, IProcessorDialect,
 };
 use crate::doctype::IDocTypeProcessor;
+#[cfg(feature = "dtd-validation")]
+use crate::dtd::ValidationPolicy;
 use crate::element::IElementProcessor;
 use crate::engine::{
     AttributeDefinitions, ElementDefinitions, ITemplateManager, StandardModelFactory,
@@ -53,6 +55,9 @@ pub struct EngineConfiguration {
     cache_manager: Option<Arc<dyn ICacheManager>>,
     engine_context_factory: Arc<dyn IEngineContextFactory>,
     decoupled_template_logic_resolver: Arc<dyn IDecoupledTemplateLogicResolver>,
+    // DTD 验证策略（dtd-validation feature；构造时快照，发布后不可变）。
+    #[cfg(feature = "dtd-validation")]
+    dtd_validation_policy: ValidationPolicy,
     dialect_set_configuration: DialectSetConfiguration,
     self_weak: OnceLock<Weak<EngineConfiguration>>,
     template_manager: OnceLock<TemplateManager>,
@@ -87,6 +92,7 @@ impl EngineConfiguration {
     ///
     /// 模板 Resolver 为空、方言聚合失败或 TemplateManager 重复初始化时返回
     /// [`crate::exceptions::ConfigurationException`]。
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         mut template_resolvers: Vec<Arc<dyn ITemplateResolver>>,
         mut message_resolvers: Vec<Arc<dyn IMessageResolver>>,
@@ -95,6 +101,7 @@ impl EngineConfiguration {
         cache_manager: Option<Arc<dyn ICacheManager>>,
         engine_context_factory: Arc<dyn IEngineContextFactory>,
         decoupled_template_logic_resolver: Arc<dyn IDecoupledTemplateLogicResolver>,
+        #[cfg(feature = "dtd-validation")] dtd_validation_policy: ValidationPolicy,
     ) -> Result<Arc<Self>, crate::exceptions::ConfigurationException> {
         if template_resolvers.is_empty() {
             return Err(crate::exceptions::ConfigurationException::new(Some(
@@ -115,6 +122,8 @@ impl EngineConfiguration {
             cache_manager,
             engine_context_factory,
             decoupled_template_logic_resolver,
+            #[cfg(feature = "dtd-validation")]
+            dtd_validation_policy,
             dialect_set_configuration,
             self_weak: OnceLock::new(),
             template_manager: OnceLock::new(),
@@ -252,6 +261,10 @@ impl IEngineConfiguration for EngineConfiguration {
     }
     fn get_decoupled_template_logic_resolver(&self) -> &dyn IDecoupledTemplateLogicResolver {
         self.decoupled_template_logic_resolver.as_ref()
+    }
+    #[cfg(feature = "dtd-validation")]
+    fn get_dtd_validation_policy(&self) -> ValidationPolicy {
+        self.dtd_validation_policy
     }
     fn get_dialect_configurations(&self) -> Vec<&DialectConfiguration> {
         self.dialect_set_configuration

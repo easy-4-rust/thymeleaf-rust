@@ -59,6 +59,7 @@ HTML/XML/TEXT 模板，支持表达式求值、方言处理器、模板缓存和
 | 模板缓存与解析器 | ✅ 稳定 | `thymeleaf` | String/File/Class/URL/Multi/ByteArray 加载器 |
 | 自动转义与输出格式 | ✅ 稳定 | `thymeleaf` | HTML/XML/JavaScript/CSS/JSON/RTF/PlainText |
 | 解耦模板逻辑 | ✅ 稳定 | `thymeleaf` | `.th.xml` 边车 |
+| 可选 DTD 验证（XML 模式） | 🧪 预览 | `thymeleaf`（`dtd-validation` feature） | 内嵌 W3C XHTML DTD；`Disabled`/`Warn`/`Strict` 三策略，默认 `Disabled` 零开销；含内部子集的 DOCTYPE 跳过验证 |
 | 框架无关中立 Web 合同 | ✅ 稳定 | `thymeleaf` | IWebExchange / IWebRequest / IWebSession |
 | 框架适配器 | 🧪 预览 | `thymeleaf-support/*` | 13 个可发布 + 2 个不发布（tide, vernal） |
 | sa-token 安全方言 | 🧪 预览 | `thymeleaf-sa-token` | 12 个合同测试 |

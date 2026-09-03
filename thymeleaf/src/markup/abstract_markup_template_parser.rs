@@ -21,7 +21,7 @@ use crate::util::{ContentTypeUtils, Utf16String};
 use crate::{IEngineConfiguration, TemplateMode};
 
 #[cfg(feature = "dtd-validation")]
-use crate::dtd::{DtdValidator, ValidationPolicy};
+use crate::dtd::{DtdValidator, ValidationPolicy, Validator, ValidityError};
 
 use super::markup_selector::{
     MarkupSelectorEngine, SelectorNode, SelectorNodeSummary, SelectorNodeType,
@@ -180,6 +180,9 @@ impl AbstractMarkupTemplateParser {
             } else {
                 handler
             };
+        // dtd-validation: clone before move to avoid E0382 use-after-move
+        #[cfg(feature = "dtd-validation")]
+        let cfg_for_dtd = Arc::clone(&configuration);
         let mut adapter = TemplateHandlerAdapterMarkupHandler::new(
             Some(template_name),
             handler,
@@ -194,7 +197,13 @@ impl AbstractMarkupTemplateParser {
                 parse_html(&input, &mut adapter, &description, &selection)?;
             } else {
                 #[cfg(feature = "dtd-validation")]
-                parse_xml(&input, &mut adapter, &description, &selection, cfg_dtd_policy(&*configuration))?;
+                parse_xml(
+                    &input,
+                    &mut adapter,
+                    &description,
+                    &selection,
+                    cfg_for_dtd.get_dtd_validation_policy(),
+                )?;
                 #[cfg(not(feature = "dtd-validation"))]
                 parse_xml(&input, &mut adapter, &description, &selection)?;
             }
@@ -620,7 +629,32 @@ fn parse_xml(
     reader.config_mut().check_end_names = true;
     reader.config_mut().allow_unmatched_ends = false;
     #[cfg(feature = "dtd-validation")]
-    let mut _dtd_validator: Option<DtdValidator> = None;
+    // DTD 验证器：Disabled 策略零开销；否则主循环前从源码预扫描 DOCTYPE 的
+    // SYSTEM 标识符并解析 DTD（Validator 为有状态 push 接口，须跨事件持有）。
+    // 无 DOCTYPE 即无验证义务；有 DOCTYPE 但解析/展开超限失败时
+    // Strict 报错、Warn 降级为不验证。
+    #[cfg(feature = "dtd-validation")]
+    let dtd_holder: Option<DtdValidator> = if validation_policy == ValidationPolicy::Disabled {
+        None
+    } else if let Some(declaration) = scan_doctype_declaration(source) {
+        match DtdValidator::new(&declaration) {
+            Some(holder) => Some(holder),
+            None if validation_policy == ValidationPolicy::Strict => {
+                return Err(parse_error(
+                    description,
+                    source,
+                    0,
+                    "Cannot resolve DTD declared by the document DOCTYPE",
+                ));
+            }
+            None => None,
+        }
+    } else {
+        None
+    };
+    #[cfg(feature = "dtd-validation")]
+    let mut dtd_validator: Option<Validator<'_>> =
+        dtd_holder.as_ref().map(|holder| holder.validator());
     let mut previous = 0_u64;
     let mut stack: Vec<MarkupFrame> = Vec::new();
     let mut document_siblings = Vec::new();
@@ -675,6 +709,23 @@ fn parse_xml(
                         &injected_attributes,
                     )?;
                 }
+                #[cfg(feature = "dtd-validation")]
+                if let Some(validator) = dtd_validator.as_mut() {
+                    let attributes = xml_attributes(source, name_end, end);
+                    let _defaults = validator.start_element(&name, &attributes);
+                    // 自闭合标签（quick-xml Empty 事件）对验证器是立即开合
+                    if empty {
+                        validator.end_element(&name);
+                    }
+                    if validation_policy == ValidationPolicy::Strict && validator.has_errors() {
+                        return Err(dtd_validation_error(
+                            description,
+                            source,
+                            start,
+                            validator.errors(),
+                        ));
+                    }
+                }
                 if !empty {
                     stack.push(MarkupFrame {
                         name,
@@ -707,9 +758,38 @@ fn parse_xml(
                 if frame.emit_tag {
                     adapter.element_end(source, start, end, name_start, name_end, false, false)?;
                 }
+                #[cfg(feature = "dtd-validation")]
+                if let Some(validator) = dtd_validator.as_mut() {
+                    validator.end_element(name);
+                    if validation_policy == ValidationPolicy::Strict && validator.has_errors() {
+                        return Err(dtd_validation_error(
+                            description,
+                            source,
+                            start,
+                            validator.errors(),
+                        ));
+                    }
+                }
                 finish_node(frame.node.summary(), &mut stack, &mut document_siblings);
             }
-            Event::Text(_) | Event::GeneralRef(_) => {
+            _text_event @ (Event::Text(_) | Event::GeneralRef(_)) => {
+                #[cfg(feature = "dtd-validation")]
+                if let Some(validator) = dtd_validator.as_mut() {
+                    // 通用实体引用按标记处理（EMPTY 内容违反）；字面文本按字符数据校验
+                    if matches!(_text_event, Event::GeneralRef(_)) {
+                        validator.markup();
+                    } else {
+                        validator.characters(&source[start..end]);
+                    }
+                    if validation_policy == ValidationPolicy::Strict && validator.has_errors() {
+                        return Err(dtd_validation_error(
+                            description,
+                            source,
+                            start,
+                            validator.errors(),
+                        ));
+                    }
+                }
                 if should_emit_event(
                     selection,
                     &mut stack,
@@ -722,6 +802,18 @@ fn parse_xml(
             Event::CData(_) => {
                 let content_start = start + "<![CDATA[".len();
                 let content_end = end.saturating_sub("]]>".len()).max(content_start);
+                #[cfg(feature = "dtd-validation")]
+                if let Some(validator) = dtd_validator.as_mut() {
+                    validator.reference_data(&source[content_start..content_end]);
+                    if validation_policy == ValidationPolicy::Strict && validator.has_errors() {
+                        return Err(dtd_validation_error(
+                            description,
+                            source,
+                            start,
+                            validator.errors(),
+                        ));
+                    }
+                }
                 if should_emit_event(
                     selection,
                     &mut stack,
@@ -734,6 +826,10 @@ fn parse_xml(
             Event::Comment(_) => {
                 let content_start = start + "<!--".len();
                 let content_end = end.saturating_sub("-->".len()).max(content_start);
+                #[cfg(feature = "dtd-validation")]
+                if let Some(validator) = dtd_validator.as_mut() {
+                    validator.markup();
+                }
                 if should_emit_event(
                     selection,
                     &mut stack,
@@ -754,6 +850,10 @@ fn parse_xml(
                 }
             }
             Event::PI(_) => {
+                #[cfg(feature = "dtd-validation")]
+                if let Some(validator) = dtd_validator.as_mut() {
+                    validator.markup();
+                }
                 if should_emit_event(
                     selection,
                     &mut stack,
@@ -770,28 +870,6 @@ fn parse_xml(
                     &mut document_siblings,
                     SelectorNodeType::DocType,
                 ) {
-                    // 提取 system_id（与 emit_doctype 同逻辑）用于构建 DTD 验证器
-                    let inner = safe_range(source, start + 2, end.saturating_sub(1)).trim();
-                    let (_, remainder) = split_name(inner);
-                    let (_, remainder) = split_name(remainder.trim_start());
-                    let upper = remainder.trim_start().to_ascii_uppercase();
-                    let quoted = quoted_values(remainder);
-                    let system_id = if upper.starts_with("PUBLIC") {
-                        quoted.get(1).copied()
-                    } else if upper.starts_with("SYSTEM") {
-                        quoted.first().copied()
-                    } else {
-                        None
-                    };
-                    // DTD 验证器在 Disabled 策略下始终为 None（零开销）。
-                    // Task 2.3 将从 configuration 读取 ValidationPolicy；
-                    // 当前阶段保持 Disabled 硬编码。
-                    #[cfg(feature = "dtd-validation")]
-                    {
-                        let _policy: ValidationPolicy = Default::default(); // Disabled
-                        let _ = system_id;
-                    }
-                    let _ = system_id;
                     emit_doctype(source, start, end, adapter)?;
                 }
             }
@@ -805,6 +883,18 @@ fn parse_xml(
             source.len(),
             format!("Element <{}> is not closed", unclosed.name),
         ));
+    }
+    #[cfg(feature = "dtd-validation")]
+    if let Some(validator) = dtd_validator {
+        let errors = validator.finish();
+        if validation_policy == ValidationPolicy::Strict && !errors.is_empty() {
+            return Err(dtd_validation_error(
+                description,
+                source,
+                source.len(),
+                &errors,
+            ));
+        }
     }
     Ok(())
 }
@@ -1251,6 +1341,92 @@ fn find_pseudo_attribute<'a>(source: &'a str, name: &str) -> Option<&'a str> {
     None
 }
 
+/// 预扫描源码定位首个 `<!DOCTYPE ...>` 并返回声明主体
+/// （`<!DOCTYPE` 与匹配 `>` 之间的文本，供 `DtdValidator::new` 解析）。
+/// 引号内的 `>` 不作为声明结束符；含内部子集 `[` 的声明返回 `None`
+/// （跳过验证，与既有"DOCTYPE internal subset 不保留"偏差保持一致）。
+#[cfg(feature = "dtd-validation")]
+fn scan_doctype_declaration(source: &str) -> Option<String> {
+    let marker = "<!DOCTYPE";
+    let name_start = source.find(marker)? + marker.len();
+    let bytes = source.as_bytes();
+    let mut quote: Option<u8> = None;
+    let mut cursor = name_start;
+    let decl_end = loop {
+        if cursor >= bytes.len() {
+            return None;
+        }
+        let byte = bytes[cursor];
+        if let Some(active) = quote {
+            if byte == active {
+                quote = None;
+            }
+        } else if byte == b'"' || byte == b'\'' {
+            quote = Some(byte);
+        } else if byte == b'[' {
+            // 内部子集不支持：多级 `>` 使简单扫描无法定位声明边界。
+            return None;
+        } else if byte == b'>' {
+            break cursor;
+        }
+        cursor += 1;
+    };
+    Some(safe_range(source, name_start, decl_end).trim().to_owned())
+}
+
+/// 解析 XML 开始标签内部属性（name="value" / name='value'），供 DTD 验证使用。
+#[cfg(feature = "dtd-validation")]
+fn xml_attributes(source: &str, name_end: usize, tag_end: usize) -> Vec<(&str, &str)> {
+    let mut attributes = Vec::new();
+    let mut rest = safe_range(source, name_end, tag_end.saturating_sub(1)).trim_start();
+    while !rest.is_empty() {
+        let (name, after_name) = split_name_or_equals(rest);
+        if name.is_empty() {
+            break;
+        }
+        let after_name = after_name.trim_start();
+        if !after_name.starts_with('=') {
+            break;
+        }
+        let after_operator = after_name[1..].trim_start();
+        let Some(quote) = after_operator.chars().next() else {
+            break;
+        };
+        if quote != '\'' && quote != '"' {
+            break;
+        }
+        let value_start = quote.len_utf8();
+        let Some(relative_end) = after_operator[value_start..].find(quote) else {
+            break;
+        };
+        let value_end = value_start + relative_end;
+        attributes.push((name, &after_operator[value_start..value_end]));
+        rest = after_operator[value_end + quote.len_utf8()..].trim_start();
+    }
+    attributes
+}
+
+/// 将 DTD 有效性错误归一为模板解析错误（Strict 策略通道）。
+#[cfg(feature = "dtd-validation")]
+fn dtd_validation_error(
+    description: &str,
+    source: &str,
+    position: usize,
+    errors: &[ValidityError],
+) -> TemplateParserError {
+    let message = errors
+        .iter()
+        .map(|error| error.to_string())
+        .collect::<Vec<_>>()
+        .join("; ");
+    parse_error(
+        description,
+        source,
+        position,
+        format!("DTD validation failed: {message}"),
+    )
+}
+
 fn split_name_or_equals(value: &str) -> (&str, &str) {
     let end = value
         .find(|character: char| character.is_whitespace() || character == '=')
@@ -1426,11 +1602,4 @@ impl TextParserReader for StringTextReader {
         self.closed = true;
         Ok(())
     }
-}
-
-/// 获取 DTD 验证策略（cfg(dtd-validation) 门控）。
-/// 闭包外定义，避免 borrow checker 与闭包捕获的冲突。
-#[cfg(feature = "dtd-validation")]
-fn cfg_dtd_policy(config: &dyn IEngineConfiguration) -> crate::dtd::ValidationPolicy {
-    config.get_dtd_validation_policy()
 }
