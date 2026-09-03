@@ -353,6 +353,7 @@ impl TemplateEngine {
     /// 设置 XML 模式 DTD 验证策略（初始化前可改；默认 `Disabled` 零开销）。
     ///
     /// 仅 `dtd-validation` feature 启用时存在。
+    /// 对应 Java 语义：Rust 侧扩展配置项（Java 上游无对应设置）。
     #[cfg(feature = "dtd-validation")]
     pub fn set_dtd_validation_policy(
         &self,
@@ -364,6 +365,7 @@ impl TemplateEngine {
     /// 返回当前 DTD 验证策略。
     ///
     /// 仅 `dtd-validation` feature 启用时存在。
+    /// 对应 Java 语义：Rust 侧扩展配置项（Java 上游无对应设置）。
     #[cfg(feature = "dtd-validation")]
     #[must_use]
     pub fn get_dtd_validation_policy(&self) -> crate::dtd::ValidationPolicy {

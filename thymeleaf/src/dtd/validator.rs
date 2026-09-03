@@ -20,6 +20,8 @@ use super::entity_budget::default_budget;
 ///
 /// 未知 SYSTEM 标识符或 DTD 解析/实体展开超限 → `DtdValidator::new`
 /// 返回 `None`（调用方按策略处理：Strict 报错、Warn 降级为不验证）。
+///
+/// 对应 Java 语义：Rust 侧扩展封装（Java 上游无内建 DTD 验证器）。
 #[cfg(feature = "dtd-validation")]
 pub struct DtdValidator {
     dtd: Dtd,
@@ -37,6 +39,8 @@ impl DtdValidator {
     ///
     /// # 返回
     /// 解析成功（含实体展开预算内）→ `Some(Self)`；否则 → `None`。
+    ///
+    /// 对应 Java 语义：Rust 侧扩展构造路径（Java 无直接对应）。
     #[must_use]
     pub fn new(declaration: &str) -> Option<Self> {
         let resolver = build_xhtml_resolver();
@@ -51,6 +55,7 @@ impl DtdValidator {
     /// 创建驱动文档事件的有状态验证器。
     ///
     /// 返回值借用内部 DTD，因此 `DtdValidator` 本体在验证期间不可移动。
+    /// 对应 Java 语义：Rust 侧扩展方法（Java 无直接对应）。
     #[must_use]
     pub fn validator(&self) -> Validator<'_> {
         Validator::new(&self.dtd, ValidationOptions::default())

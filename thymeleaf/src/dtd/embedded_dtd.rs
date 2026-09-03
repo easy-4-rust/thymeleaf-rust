@@ -28,6 +28,9 @@ macro_rules! dtd_entry {
 ///
 /// # 返回
 /// 包含全部内嵌 .ent/.dtd 文件的 MemoryResolver（SYSTEM key 精确匹配）。
+///
+/// 对应 Java 语义：Rust 侧扩展（Java 经 Xerces EntityResolver/类路径
+/// 解析 DTD；Rust 侧以 `include_str!` 内嵌等价内容，零运行时 IO）。
 #[cfg(feature = "dtd-validation")]
 pub fn build_xhtml_resolver() -> MemoryResolver {
     let mut resolver = MemoryResolver::new();

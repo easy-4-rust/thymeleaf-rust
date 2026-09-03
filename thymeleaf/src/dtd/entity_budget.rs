@@ -14,6 +14,9 @@ use oxixml_dtd::ExpansionLimits;
 /// - `max_expanded_size=1MB`：展开后总字节数
 ///
 /// 超限返回 `DtdError::LimitExceeded`（oxixml-dtd 的错误分类）。
+///
+/// 对应 Java 语义：Rust 侧扩展（Java 容器默认不限制实体展开；
+/// Rust 侧按安全基线显式设防，见 docs/release/security.md）。
 #[cfg(feature = "dtd-validation")]
 #[must_use]
 pub fn default_budget() -> ExpansionLimits {
