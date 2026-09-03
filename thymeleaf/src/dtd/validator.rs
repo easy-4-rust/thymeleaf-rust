@@ -16,7 +16,8 @@ use super::embedded_dtd::build_xhtml_resolver;
 #[cfg(feature = "dtd-validation")]
 use super::entity_budget::default_budget;
 
-/// 封装已解析的 DTD（对应 W3C XHTML 四族 SYSTEM 标识符）。
+/// 封装已解析的 DTD（覆盖内嵌版本化 DTD 集的全部 SYSTEM 标识符：
+/// Thymeleaf 16 + 拼写别名 4 + W3C 4，见 `embedded_dtd`）。
 ///
 /// 未知 SYSTEM 标识符或 DTD 解析/实体展开超限 → `DtdValidator::new`
 /// 返回 `None`（调用方按策略处理：Strict 报错、Warn 降级为不验证）。

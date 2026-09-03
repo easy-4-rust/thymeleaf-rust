@@ -1186,7 +1186,9 @@ fn clamp_backward(source: &str, position: usize) -> usize {
 }
 
 fn safe_range(source: &str, start: usize, end: usize) -> &str {
-    &source[clamp_forward(source, start)..clamp_backward(source, end)]
+    let start = clamp_forward(source, start);
+    let end = clamp_backward(source, end).max(start);
+    &source[start..end]
 }
 
 fn start_tag_name(source: &str, start: usize, end: usize) -> Option<(usize, usize)> {

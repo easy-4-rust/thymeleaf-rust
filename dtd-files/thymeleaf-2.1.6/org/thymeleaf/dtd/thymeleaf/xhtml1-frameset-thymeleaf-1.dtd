@@ -1,3 +1,17 @@
+<!-- 
+   Modified XHTML 1.0 Frameset DTD for Thymeleaf, v1
+     
+   This file is a copy of the original W3C XHTML 1.0 Frameset DTD 
+   including all the tags provided by Thymeleaf's Standard Dialect.
+
+   Use of this file requires a SYSTEM DOCTYPE (no PUBLICID) with the 
+   following identifier:
+
+   SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-frameset-thymeleaf-1.dtd"
+     
+   More info: http://www.thymeleaf.org
+      
+-->
 <!--
    Extensible HTML version 1.0 Frameset DTD
 
@@ -16,8 +30,8 @@
    PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
    SYSTEM "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd"
 
-   $Revision: 1.1 $
-   $Date: 2018/03/20 03:13:13 $
+   $Revision: 1.2 $
+   $Date: 2002/08/01 18:37:55 $
 
 -->
 
@@ -25,17 +39,17 @@
 
 <!ENTITY % HTMLlat1 PUBLIC
    "-//W3C//ENTITIES Latin 1 for XHTML//EN"
-   "xhtml-lat1.ent">
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml-lat1.ent">
 %HTMLlat1;
 
 <!ENTITY % HTMLsymbol PUBLIC
    "-//W3C//ENTITIES Symbols for XHTML//EN"
-   "xhtml-symbol.ent">
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml-symbol.ent">
 %HTMLsymbol;
 
 <!ENTITY % HTMLspecial PUBLIC
    "-//W3C//ENTITIES Special for XHTML//EN"
-   "xhtml-special.ent">
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml-special.ent">
 %HTMLspecial;
 
 <!--================== Imported Names ====================================-->
@@ -1233,3 +1247,500 @@ several semantically related columns together.
   height      %Pixels;       #IMPLIED
   >
 
+<!-- start of XHTML 1.0 Frameset DTD thymeleaf specific features............ -->
+<!-- ....................................................................... -->
+
+<!ENTITY % allthymeleafattrs
+ "th:abbr            CDATA  #IMPLIED
+  th:accept          CDATA  #IMPLIED
+  th:accept-charset  CDATA  #IMPLIED
+  th:accesskey       CDATA  #IMPLIED
+  th:action          CDATA  #IMPLIED
+  th:align           CDATA  #IMPLIED
+  th:alt             CDATA  #IMPLIED
+  th:alt-title       CDATA  #IMPLIED
+  th:archive         CDATA  #IMPLIED
+  th:attr            CDATA  #IMPLIED
+  th:attrappend      CDATA  #IMPLIED
+  th:attrprepend     CDATA  #IMPLIED
+  th:axis            CDATA  #IMPLIED
+  th:background      CDATA  #IMPLIED
+  th:bgcolor         CDATA  #IMPLIED
+  th:border          CDATA  #IMPLIED
+  th:cellpadding     CDATA  #IMPLIED
+  th:cellspacing     CDATA  #IMPLIED
+  th:charset         CDATA  #IMPLIED
+  th:checked         CDATA  #IMPLIED
+  th:cite            CDATA  #IMPLIED
+  th:class           CDATA  #IMPLIED
+  th:classid         CDATA  #IMPLIED
+  th:classappend     CDATA  #IMPLIED
+  th:codebase        CDATA  #IMPLIED
+  th:codetype        CDATA  #IMPLIED
+  th:cols            CDATA  #IMPLIED
+  th:colspan         CDATA  #IMPLIED
+  th:compact         CDATA  #IMPLIED
+  th:content         CDATA  #IMPLIED
+  th:data            CDATA  #IMPLIED
+  th:declare         CDATA  #IMPLIED
+  th:defer           CDATA  #IMPLIED
+  th:dir             CDATA  #IMPLIED
+  th:disabled        CDATA  #IMPLIED
+  th:each            CDATA  #IMPLIED
+  th:enctype         CDATA  #IMPLIED
+  th:for             CDATA  #IMPLIED
+  th:fragment        CDATA  #IMPLIED
+  th:frame           CDATA  #IMPLIED
+  th:frameborder     CDATA  #IMPLIED
+  th:headers         CDATA  #IMPLIED
+  th:height          CDATA  #IMPLIED
+  th:href            CDATA  #IMPLIED
+  th:hreflang        CDATA  #IMPLIED
+  th:hspace          CDATA  #IMPLIED
+  th:http-equiv      CDATA  #IMPLIED
+  th:id              CDATA  #IMPLIED
+  th:if              CDATA  #IMPLIED
+  th:include         CDATA  #IMPLIED
+  th:inline          CDATA  #IMPLIED
+  th:ismap           CDATA  #IMPLIED
+  th:label           CDATA  #IMPLIED
+  th:lang            CDATA  #IMPLIED
+  th:lang-xmllang    CDATA  #IMPLIED
+  th:longdesc        CDATA  #IMPLIED
+  th:marginheight    CDATA  #IMPLIED
+  th:marginwidth     CDATA  #IMPLIED
+  th:maxlength       CDATA  #IMPLIED
+  th:media           CDATA  #IMPLIED
+  th:method          CDATA  #IMPLIED
+  th:multiple        CDATA  #IMPLIED
+  th:name            CDATA  #IMPLIED
+  th:nowrap          CDATA  #IMPLIED
+  th:object          CDATA  #IMPLIED
+  th:onblur          CDATA  #IMPLIED
+  th:onchange        CDATA  #IMPLIED
+  th:onclick         CDATA  #IMPLIED
+  th:ondblclick      CDATA  #IMPLIED
+  th:onfocus         CDATA  #IMPLIED
+  th:onkeydown       CDATA  #IMPLIED
+  th:onkeypress      CDATA  #IMPLIED
+  th:onkeyup         CDATA  #IMPLIED
+  th:onload          CDATA  #IMPLIED
+  th:onmousedown     CDATA  #IMPLIED
+  th:onmousemove     CDATA  #IMPLIED
+  th:onmouseout      CDATA  #IMPLIED
+  th:onmouseover     CDATA  #IMPLIED
+  th:onmouseup       CDATA  #IMPLIED
+  th:onreset         CDATA  #IMPLIED
+  th:onselect        CDATA  #IMPLIED
+  th:onsubmit        CDATA  #IMPLIED
+  th:onunload        CDATA  #IMPLIED
+  th:readonly        CDATA  #IMPLIED
+  th:rel             CDATA  #IMPLIED
+  th:remove          CDATA  #IMPLIED
+  th:rev             CDATA  #IMPLIED
+  th:rows            CDATA  #IMPLIED
+  th:rowspan         CDATA  #IMPLIED
+  th:rules           CDATA  #IMPLIED
+  th:scheme          CDATA  #IMPLIED
+  th:scope           CDATA  #IMPLIED
+  th:scrolling       CDATA  #IMPLIED
+  th:selected        CDATA  #IMPLIED
+  th:size            CDATA  #IMPLIED
+  th:span            CDATA  #IMPLIED
+  th:src             CDATA  #IMPLIED
+  th:srclang         CDATA  #IMPLIED
+  th:standby         CDATA  #IMPLIED
+  th:start           CDATA  #IMPLIED
+  th:style           CDATA  #IMPLIED
+  th:styleappend     CDATA  #IMPLIED
+  th:summary         CDATA  #IMPLIED
+  th:tabindex        CDATA  #IMPLIED
+  th:target          CDATA  #IMPLIED
+  th:text            CDATA  #IMPLIED
+  th:title           CDATA  #IMPLIED
+  th:type            CDATA  #IMPLIED
+  th:unless          CDATA  #IMPLIED
+  th:usemap          CDATA  #IMPLIED
+  th:utext           CDATA  #IMPLIED
+  th:value           CDATA  #IMPLIED
+  th:valuetype       CDATA  #IMPLIED
+  th:vspace          CDATA  #IMPLIED
+  th:width           CDATA  #IMPLIED
+  th:with            CDATA  #IMPLIED
+  th:xmlbase         CDATA  #IMPLIED
+  th:xmllang         CDATA  #IMPLIED
+  th:xmlspace        CDATA  #IMPLIED"
+  >
+
+<!ATTLIST a
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST abbr
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST acronym
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST address
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST applet
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST area
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST b
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST base
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST basefont
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST bdo
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST big
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST blockquote
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST body
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST br
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST button
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST caption
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST center
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST cite
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST code
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST col
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST colgroup
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST dd
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST del
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST dfn
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST dir
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST div
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST dl
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST dt
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST em
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST fieldset
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST font
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST form
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST frame
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST frameset
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h1
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h1
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h2
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h3
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h4
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h5
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST h6
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST head
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST hr
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST html
+  xmlns:th   %URI;   #IMPLIED
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST i
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST iframe
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST img
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST input
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST ins
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST isindex
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST kbd
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST label
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST legend
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST li
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST link
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST map
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST menu
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST meta
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST noframes
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST noscript
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST object
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST ol
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST optgroup
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST option
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST p
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST param
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST pre
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST q
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST s
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST samp
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST script
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST select
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST small
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST span
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST strike
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST strong
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST style
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST sub
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST sup
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST table
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST tbody
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST td
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST textarea
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST tfoot
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST th
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST thead
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST title
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST tr
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST tt
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST u
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST ul
+  %allthymeleafattrs;
+  >
+
+<!ATTLIST var
+  %allthymeleafattrs;
+  >
+
+
+<!-- end of XHTML 1.0 Frameset DTD thymeleaf specific features.............. -->
+<!-- ....................................................................... -->

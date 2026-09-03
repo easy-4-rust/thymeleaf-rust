@@ -225,19 +225,71 @@ fn warn_with_unknown_system_id_degrades_to_no_validation() {
 }
 
 #[test]
-fn validator_builds_for_w3c_system_ids_and_rejects_unknown() {
+fn validator_builds_for_all_versioned_system_ids() {
     use thymeleaf::dtd::DtdValidator;
-    for system_id in [XHTML1_STRICT, XHTML1_TRANSITIONAL, XHTML1_FRAMESET] {
+    // Thymeleaf 命名空间：4 族 × 4 版本 = 16 个，全部必须可解析。
+    for family in [
+        "xhtml1-strict",
+        "xhtml1-transitional",
+        "xhtml1-frameset",
+        "xhtml11",
+    ] {
+        for version in ["1", "2", "3", "4"] {
+            let system_id =
+                format!("http://www.thymeleaf.org/dtd/{family}-thymeleaf-{version}.dtd");
+            let declaration = format!("html SYSTEM \"{system_id}\"");
+            assert!(
+                DtdValidator::new(&declaration).is_some(),
+                "versioned system id must resolve: {system_id}"
+            );
+        }
+    }
+    // W3C 命名空间：4 个标准 URL（含 xhtml11——jar 自包含单体）。
+    for system_id in [
+        XHTML1_STRICT,
+        XHTML1_TRANSITIONAL,
+        XHTML1_FRAMESET,
+        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd",
+    ] {
         let declaration = format!("html SYSTEM \"{system_id}\"");
         assert!(
             DtdValidator::new(&declaration).is_some(),
-            "known system id must resolve: {system_id}"
+            "W3C system id must resolve: {system_id}"
         );
     }
     let unknown = "html SYSTEM \"http://example.com/x.dtd\"";
     assert!(DtdValidator::new(unknown).is_none());
     // 未声明外部标识符的声明主体按内部子集 DTD 解析，仍可构建。
     assert!(DtdValidator::new("html").is_some());
+}
+
+#[test]
+fn validator_accepts_transitional_typo_aliases() {
+    use thymeleaf::dtd::DtdValidator;
+    // transitional 族文件头自引用的历史拼写（`transitonal`，缺 i）：
+    // Thymeleaf 2 时代模板可能照抄进 DOCTYPE，防御性注册必须生效。
+    for version in ["1", "2", "3", "4"] {
+        let system_id =
+            format!("http://www.thymeleaf.org/dtd/xhtml1-transitonal-thymeleaf-{version}.dtd");
+        let declaration = format!("html SYSTEM \"{system_id}\"");
+        assert!(
+            DtdValidator::new(&declaration).is_some(),
+            "typo alias must resolve: {system_id}"
+        );
+    }
+}
+
+#[test]
+fn strict_validates_xhtml11_document() {
+    let engine = xml_engine(ValidationPolicy::Strict);
+    // XHTML 1.1 文档：此前 W3C 官方分体版在离线环境解析失败会失败关闭；
+    // 换用 jar 自包含单体后必须端到端可验证。
+    let template = format!(
+        "{}<html><head><title>t</title></head><body><p>x</p></body></html>",
+        doctype("http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd")
+    );
+    let output = process(&engine, &template).expect("xhtml11 document must pass Strict");
+    assert!(output.contains("<p>x</p>"), "unexpected output: {output}");
 }
 
 #[test]
