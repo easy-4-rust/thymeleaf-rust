@@ -37,17 +37,47 @@ pub fn build_xhtml_resolver() -> MemoryResolver {
     resolver.insert("xhtml-special.ent", dtd_entry!("xhtml1/xhtml-special.ent"));
     // xhtml11 .ent 文件（与 xhtml1 共享文件名，内容一致，W3C MarkUp/DTD）
     resolver.insert("xhtml11-lat1.ent", dtd_entry!("xhtml11/xhtml11-lat1.ent"));
-    resolver.insert("xhtml11-symbol.ent", dtd_entry!("xhtml11/xhtml11-symbol.ent"));
-    resolver.insert("xhtml11-special.ent", dtd_entry!("xhtml11/xhtml11-special.ent"));
+    resolver.insert(
+        "xhtml11-symbol.ent",
+        dtd_entry!("xhtml11/xhtml11-symbol.ent"),
+    );
+    resolver.insert(
+        "xhtml11-special.ent",
+        dtd_entry!("xhtml11/xhtml11-special.ent"),
+    );
     // .mod 文件（W3C 提供的模块文件，真实 SGML 内容）
-    resolver.insert("xhtml1-strict-model-1.mod", dtd_entry!("xhtml1/xhtml-strict-model-1.mod"));
-    resolver.insert("xhtml1-framework-1.mod", dtd_entry!("xhtml1/xhtml-framework-1.mod"));
-    resolver.insert("xhtml11-model-1.mod", dtd_entry!("xhtml11/xhtml11-model-1.mod"));
-    resolver.insert("xhtml11-framework-1.mod", dtd_entry!("xhtml11/xhtml11-framework-1.mod"));
+    resolver.insert(
+        "xhtml1-strict-model-1.mod",
+        dtd_entry!("xhtml1/xhtml-strict-model-1.mod"),
+    );
+    resolver.insert(
+        "xhtml1-framework-1.mod",
+        dtd_entry!("xhtml1/xhtml-framework-1.mod"),
+    );
+    resolver.insert(
+        "xhtml11-model-1.mod",
+        dtd_entry!("xhtml11/xhtml11-model-1.mod"),
+    );
+    resolver.insert(
+        "xhtml11-framework-1.mod",
+        dtd_entry!("xhtml11/xhtml11-framework-1.mod"),
+    );
     // 主 DTD 文件（按完整 SYSTEM 标识符注册）
-    resolver.insert("http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd", dtd_entry!("xhtml1/xhtml1-strict.dtd"));
-    resolver.insert("http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd", dtd_entry!("xhtml1/xhtml1-transitional.dtd"));
-    resolver.insert("http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd", dtd_entry!("xhtml1/xhtml1-frameset.dtd"));
-    resolver.insert("http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd", dtd_entry!("xhtml11/xhtml11.dtd"));
+    resolver.insert(
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd",
+        dtd_entry!("xhtml1/xhtml1-strict.dtd"),
+    );
+    resolver.insert(
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd",
+        dtd_entry!("xhtml1/xhtml1-transitional.dtd"),
+    );
+    resolver.insert(
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd",
+        dtd_entry!("xhtml1/xhtml1-frameset.dtd"),
+    );
+    resolver.insert(
+        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd",
+        dtd_entry!("xhtml11/xhtml11.dtd"),
+    );
     resolver
 }

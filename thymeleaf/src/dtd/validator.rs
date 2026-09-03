@@ -23,7 +23,7 @@ impl Default for ValidationPolicy {
     }
 }
 
-use oxixml_dtd::{Budget, Dtd, DtdParser, ValidationOptions, ValidityError, Validator};
+use oxixml_dtd::{Budget, Dtd, DtdParser, ValidationOptions, Validator, ValidityError};
 
 #[cfg(feature = "dtd-validation")]
 use super::embedded_dtd::build_xhtml_resolver;
