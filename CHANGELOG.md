@@ -20,6 +20,11 @@
   UTF-8 序列中间导致渲染 panic（同 fuzz 目标第二轮实证，触发输入
   `<![CDATA[&z\u{C6}\x01]`）：HTML/XML 的 CDATA 与 XML 注释路径改为
   closer 仅在真实存在时剔除，content_start 钳制到 char boundary
+- 退化闭合标签（`</H</>`）名称终点越过内容终点导致渲染 panic（第三轮
+  fuzz 实证）：事件适配器 `TemplateHandlerAdapterMarkupHandler` 作为
+  全部 parser 事件切片的唯一汇聚点，统一做 char boundary 钳制与区间
+  排序恢复，结构性杜绝 parser 侧偏移缺陷引发渲染 panic（合法流恒等，
+  语料 parity 不变）
 
 ## [0.1.0-beta.2] - 2026-09-17
 
