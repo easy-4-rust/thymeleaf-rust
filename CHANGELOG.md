@@ -16,6 +16,10 @@
   （render_html cargo-fuzz crash 实证，6 字节触发输入 `<<!-->`）：
   HTML 注释路径 content_end 钳到 content_start，与 XML 路径既有护栏
   同款；此类注释按 HTML5 语义输出空内容
+- CDATA/注释 closer 缺失且尾部为多字节字符时，无条件 `end-3` 切进
+  UTF-8 序列中间导致渲染 panic（同 fuzz 目标第二轮实证，触发输入
+  `<![CDATA[&z\u{C6}\x01]`）：HTML/XML 的 CDATA 与 XML 注释路径改为
+  closer 仅在真实存在时剔除，content_start 钳制到 char boundary
 
 ## [0.1.0-beta.2] - 2026-09-17
 

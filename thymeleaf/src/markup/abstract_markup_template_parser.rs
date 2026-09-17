@@ -502,7 +502,15 @@ fn parse_html(
                 let end = comment.span.end;
                 if safe_range(source, start, end).starts_with("<![CDATA[") {
                     let content_start = start + "<![CDATA[".len();
-                    let content_end = end.saturating_sub("]]>".len()).max(content_start);
+                    // closer 仅在真实存在时剔除：closer 缺失时无条件 end-3
+                    // 会切进尾部多字节字符的 UTF-8 序列中间（fuzz crash
+                    // 5cf7dcff 实证），还会错误吞掉内容尾巴；ends_with
+                    // 判定同时保证减法落在 char boundary。
+                    let content_end = if safe_range(source, start, end).ends_with("]]>") {
+                        (end - 3).max(content_start)
+                    } else {
+                        end
+                    };
                     if should_emit_event(
                         selection,
                         &mut stack,
@@ -533,7 +541,8 @@ fn parse_html(
                     let content_start = if safe_range(source, start, end).starts_with("<!--") {
                         start + 4
                     } else {
-                        start + 2
+                        // 非 `<!--` 前缀的退化 comment span：钳到 char boundary
+                        clamp_forward(source, start + 2)
                     };
                     // 退化注释（`<!-->`/`<!--->`）：ends_with 命中的 `--` 是
                     // opener 尾巴而非闭合符，content_end 会退到 content_start
@@ -805,8 +814,14 @@ fn parse_xml(
                 }
             }
             Event::CData(_) => {
-                let content_start = start + "<![CDATA[".len();
-                let content_end = end.saturating_sub("]]>".len()).max(content_start);
+                // 钳制防 tokenizer 退化 span 越界；closer 剔除条件同上
+                // （fuzz crash 5cf7dcff 同款）。
+                let content_start = clamp_forward(source, start + "<![CDATA[".len());
+                let content_end = if safe_range(source, start, end).ends_with("]]>") {
+                    (end - 3).max(content_start)
+                } else {
+                    end
+                };
                 #[cfg(feature = "dtd-validation")]
                 if let Some(validator) = dtd_validator.as_mut() {
                     validator.reference_data(&source[content_start..content_end]);
@@ -829,8 +844,13 @@ fn parse_xml(
                 }
             }
             Event::Comment(_) => {
-                let content_start = start + "<!--".len();
-                let content_end = end.saturating_sub("-->".len()).max(content_start);
+                // closer 剔除条件同 CDATA 路径（fuzz crash 5cf7dcff 同款）。
+                let content_start = clamp_forward(source, start + "<!--".len());
+                let content_end = if safe_range(source, start, end).ends_with("-->") {
+                    (end - 3).max(content_start)
+                } else {
+                    end
+                };
                 #[cfg(feature = "dtd-validation")]
                 if let Some(validator) = dtd_validator.as_mut() {
                     validator.markup();

@@ -199,6 +199,24 @@ fn degenerate_html_comment_never_inverts_content_range() {
     }
 }
 
+/// 回归：CDATA/注释 closer 缺失且尾部为多字节字符时，无条件 `end-3`
+/// 会切进 UTF-8 序列中间（fuzz crash 5cf7dcff：`<![CDATA[&z\u{C6}\u{1}]`
+/// 经 from_utf8_lossy 产生 3 字节 U+FFFD，content_end=12 落在字节
+/// 11..14 内 → char boundary panic）。closer 仅在真实存在时剔除，
+/// content_start 钳制防 tokenizer 退化 span 越界。
+#[test]
+#[serial(fuzz)]
+fn unclosed_cdata_and_comment_never_split_utf8_sequence() {
+    for template in [
+        "<![CDATA[&z\u{C6}\u{1}]",
+        "<![CDATA[\u{6F22}\u{5B57}",
+        "<!--\u{6F22}\u{5B57}",
+    ] {
+        parse_template_no_panic(template, TemplateMode::HTML);
+        parse_template_no_panic(template, TemplateMode::XML);
+    }
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
         cases: 16,
