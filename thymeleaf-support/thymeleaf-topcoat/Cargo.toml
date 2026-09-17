@@ -2,7 +2,9 @@
 name = "thymeleaf-topcoat"
 version.workspace = true
 edition.workspace = true
-rust-version.workspace = true
+# topcoat 0.7.0 起全线要求 rustc 1.98（0.6.2 及以前为 1.95），故本 crate
+# 实际 MSRV 已被依赖抬升；显式覆盖 workspace 的 1.95，避免 manifest 谎报。
+rust-version = "1.98"
 description = "Topcoat integration for the framework-neutral thymeleaf template engine"
 license.workspace = true
 repository = "https://github.com/easy-4-rust/thymeleaf-rust"
