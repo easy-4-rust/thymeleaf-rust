@@ -84,6 +84,8 @@ impl TemplateHandlerAdapterMarkupHandler {
         start: usize,
         end: usize,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
         if start == end {
             return Ok(());
         }
@@ -108,6 +110,10 @@ impl TemplateHandlerAdapterMarkupHandler {
         content_end: usize,
         end: usize,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
+        let content_start = boundary_floor(source, content_start).clamp(start, end);
+        let content_end = boundary_floor(source, content_end).clamp(content_start, end);
         let (line, col) = self.location(source, start);
         let content: Arc<dyn CharSequenceValue> = Arc::new(Utf16String::from_rust_str(
             &source[content_start..content_end],
@@ -134,6 +140,10 @@ impl TemplateHandlerAdapterMarkupHandler {
         content_end: usize,
         end: usize,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
+        let content_start = boundary_floor(source, content_start).clamp(start, end);
+        let content_end = boundary_floor(source, content_end).clamp(content_start, end);
         let (line, col) = self.location(source, start);
         let content: Arc<dyn CharSequenceValue> = Arc::new(Utf16String::from_rust_str(
             &source[content_start..content_end],
@@ -163,6 +173,8 @@ impl TemplateHandlerAdapterMarkupHandler {
         encoding: Option<&str>,
         standalone: Option<&str>,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
         let (line, col) = self.location(source, start);
         self.template_handler
             .handle_xml_declaration(Arc::new(XMLDeclaration::with_location(
@@ -192,6 +204,8 @@ impl TemplateHandlerAdapterMarkupHandler {
         system_id: Option<&str>,
         internal_subset: Option<&str>,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
         let (line, col) = self.location(source, start);
         let event = DocType::with_location(
             Some(Utf16String::from_rust_str(&source[start..end])),
@@ -220,6 +234,8 @@ impl TemplateHandlerAdapterMarkupHandler {
         target: &str,
         content: Option<&str>,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
         let (line, col) = self.location(source, start);
         self.template_handler
             .handle_processing_instruction(Arc::new(ProcessingInstruction::with_location(
@@ -281,6 +297,10 @@ impl TemplateHandlerAdapterMarkupHandler {
         synthetic: bool,
         injected_attributes: &[Arc<DecoupledInjectedAttribute>],
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
+        let name_start = boundary_floor(source, name_start).clamp(start, end);
+        let name_end = boundary_floor(source, name_end).clamp(name_start, end);
         let complete_name = Utf16String::from_rust_str(&source[name_start..name_end]);
         let definition = self
             .configuration
@@ -288,7 +308,11 @@ impl TemplateHandlerAdapterMarkupHandler {
             .for_name(Some(self.template_mode), Some(&complete_name))
             .map_err(|error| input_error(error.to_string(), None, None))?;
         let attributes = self.append_injected_attributes(
-            self.parse_attributes(source, name_end, tag_content_end(source, start, end))?,
+            self.parse_attributes(
+                source,
+                name_end,
+                boundary_floor(source, tag_content_end(source, start, end)).max(name_end),
+            )?,
             injected_attributes,
             source,
             start,
@@ -406,13 +430,19 @@ impl TemplateHandlerAdapterMarkupHandler {
         synthetic: bool,
         unmatched: bool,
     ) -> Result<(), TemplateParserError> {
+        let end = boundary_floor(source, end);
+        let start = boundary_floor(source, start).min(end);
+        let name_start = boundary_floor(source, name_start).clamp(start, end);
+        let name_end = boundary_floor(source, name_end).clamp(name_start, end);
         let complete_name = Utf16String::from_rust_str(&source[name_start..name_end]);
         let definition = self
             .configuration
             .get_element_definitions()
             .for_name(Some(self.template_mode), Some(&complete_name))
             .map_err(|error| input_error(error.to_string(), None, None))?;
-        let trailing = source[name_end..tag_content_end(source, start, end)]
+        let trailing_end =
+            boundary_floor(source, tag_content_end(source, start, end)).max(name_end);
+        let trailing = source[name_end..trailing_end]
             .trim_end_matches('/')
             .to_owned();
         let trailing_white_space = if trailing.is_empty() {
@@ -655,12 +685,28 @@ impl TemplateHandlerAdapterMarkupHandler {
     }
 
     fn location(&self, source: &str, byte_offset: usize) -> (i32, i32) {
+        let byte_offset = boundary_floor(source, byte_offset);
         let (line, col) = source_location(source, byte_offset);
         (
             self.line_offset.wrapping_add(line),
             (if line == 1 { self.col_offset } else { 0 }).wrapping_add(col),
         )
     }
+}
+
+/// 将 parser 提供的字节偏移钳回 `[0, len]` 内最近的 char boundary（向下取）。
+///
+/// 本适配器是全部 parser 事件切片的唯一汇聚点；parser 侧区间算术（closer
+/// 剔除、退化 span、名称越界等）在病态输入下可能产生非边界或反转偏移，
+/// 在此统一钳制并恢复排序，保证渲染路径零 panic。合法流上为恒等变换，
+/// 2608 语料与既有测试不受影响。对应 Java attoparser 有序 span 保证的
+/// 防御性等价物。
+fn boundary_floor(source: &str, offset: usize) -> usize {
+    let mut offset = offset.min(source.len());
+    while offset > 0 && !source.is_char_boundary(offset) {
+        offset -= 1;
+    }
+    offset
 }
 
 fn tag_content_end(source: &str, start: usize, end: usize) -> usize {

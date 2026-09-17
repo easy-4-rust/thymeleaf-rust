@@ -217,6 +217,18 @@ fn unclosed_cdata_and_comment_never_split_utf8_sequence() {
     }
 }
 
+/// 回归：退化闭合标签（`</H</>`，fuzz crash 6a93d16c）名称终点越过
+/// 标签内容终点 → `element_end` 反转切片。适配器现为全部事件切片的
+/// 钳制汇聚点，三类 crash 输入一并列为本测试常备语料。
+#[test]
+#[serial(fuzz)]
+fn degenerate_close_tag_never_inverts_name_range() {
+    for template in ["</H</>", "</>", "</", "<</>"] {
+        parse_template_no_panic(template, TemplateMode::HTML);
+        parse_template_no_panic(template, TemplateMode::XML);
+    }
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
         cases: 16,
