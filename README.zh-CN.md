@@ -19,7 +19,7 @@
 
 ---
 
-> **版本**：`0.1.0-beta.2` · **MSRV**：Rust 1.95 · **Edition**：2024 · **Resolver**：3
+> **版本**：`0.1.0` · **MSRV**：Rust 1.95 · **Edition**：2024 · **Resolver**：3
 >
 > **上游基线**：Thymeleaf `3.1.5.RELEASE` @ `10f9dd2e`
 
@@ -216,7 +216,7 @@ THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream
 
 - **html5gum tokenizer**：病态 Unicode 输入（孤立代理对、特殊序列）可能导致内部内存膨胀。HTML parser fuzz 排除；鲁棒性由 2,608 语料覆盖。
 - **渲染 smoke proptest**：随机表达式注入可能导致 `process_template` 超时（>60s）。排除；由语料 + workspace 测试覆盖。
-- **API 基线 CI**：`cargo public-api` 需要 nightly；CI 用 stable → `continue-on-error`（alpha 阶段）。
+- **API 基线 CI**：`cargo public-api` 基线为 CI 硬门禁（固定 nightly-2026-07-28），任何公开 API 漂移即失败。
 
 ## 10. 路线图
 
@@ -226,7 +226,7 @@ THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream
 | 治理审计 | ✅ 完成 | strict blockers 0、warnings 0、CI 强制 |
 | Fuzz OOM 修复 | ✅ 完成 | DiscardingWriter + shrink 钳制 + serial |
 | 发布生态 | 🚧 进行中 | `cargo package --verify`、docs.rs、适配器合同 |
-| 版本 0.1.0 | 🗓️ 计划 | API 冻结、CHANGELOG、tag |
+| 版本 0.1.0 | ✅ 完成 | 首个稳定版，2026-09-17 |
 | 基准套件 | 🗓️ 计划 | Criterion 渲染/解析/表达式 |
 
 ## 11. 贡献

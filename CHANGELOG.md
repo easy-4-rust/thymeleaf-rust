@@ -4,6 +4,19 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
+## [0.1.0] - 2026-09-17
+
+> **首个稳定版**。相对 0.1.0-beta.2 仅一处鲁棒性修复；完整演进见
+> beta.0 / beta.1 / beta.2 条目。自本版本起按 SemVer 承诺演化
+> （晋级规则见 docs/superpowers/specs/2026-07-28-versioning-governance.md）。
+
+### Fixed
+
+- 退化 HTML 注释（`<!-->`/`<!--->`）反转内容区间导致渲染 panic
+  （render_html cargo-fuzz crash 实证，6 字节触发输入 `<<!-->`）：
+  HTML 注释路径 content_end 钳到 content_start，与 XML 路径既有护栏
+  同款；此类注释按 HTML5 语义输出空内容
+
 ## [0.1.0-beta.2] - 2026-09-17
 
 > 本版本相对 0.1.0-beta.1：**适配器依赖刷新 + thymeleaf-topcoat MSRV

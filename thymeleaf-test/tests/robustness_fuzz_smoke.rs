@@ -177,6 +177,28 @@ fn decoupled_attribute_scan_never_stalls_on_bare_delimiter() {
     }
 }
 
+/// 回归：退化 HTML 注释（opener 尾部与伪闭合符重叠）不得反转内容区间。
+///
+/// render_html cargo-fuzz 实测 crash（artifact cce68b14，CI 连续 3 天红）：
+/// `<<!-->` 的 `<!-->` 中 `ends_with("-->")` 命中的 `--` 是 opener `<!--`
+/// 的尾巴而非闭合符，content_end 被减到 3 < content_start=5，
+/// `&source[5..3]` 在 `TemplateHandlerAdapterMarkupHandler::comment`
+/// 切片 panic。修复与 XML 路径既有护栏同款：content_end 钳到
+/// content_start（HTML5 语义：此类退化注释内容为空）。
+#[test]
+#[serial(fuzz)]
+fn degenerate_html_comment_never_inverts_content_range() {
+    for template in [
+        "<<!-->",
+        "<!-->",
+        "<!--->",
+        "<html><body><!--->x</body></html>",
+    ] {
+        // 必须立即完成：Err/空注释均为合法路径，panic 即回归。
+        parse_template_no_panic(template, TemplateMode::HTML);
+    }
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
         cases: 16,

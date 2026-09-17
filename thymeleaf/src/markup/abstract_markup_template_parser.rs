@@ -535,13 +535,18 @@ fn parse_html(
                     } else {
                         start + 2
                     };
-                    let content_end = if safe_range(source, start, end).ends_with("-->") {
+                    // 退化注释（`<!-->`/`<!--->`）：ends_with 命中的 `--` 是
+                    // opener 尾巴而非闭合符，content_end 会退到 content_start
+                    // 之前；钳到 content_start 保证区间不反转（内容为空，与
+                    // HTML5 及本函数 XML 路径的既有护栏一致）。
+                    let content_end = (if safe_range(source, start, end).ends_with("-->") {
                         end - 3
                     } else if safe_range(source, start, end).ends_with('>') {
                         end - 1
                     } else {
                         end
-                    };
+                    })
+                    .max(content_start);
                     if should_emit_event(
                         selection,
                         &mut stack,

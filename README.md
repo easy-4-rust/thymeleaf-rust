@@ -19,7 +19,7 @@
 
 ---
 
-> **Version**: `0.1.0-beta.2` · **MSRV**: Rust 1.95 · **Edition**: 2024 · **Resolver**: 3
+> **Version**: `0.1.0` · **MSRV**: Rust 1.95 · **Edition**: 2024 · **Resolver**: 3
 >
 > **Upstream baseline**: Thymeleaf `3.1.5.RELEASE` @ `10f9dd2e`
 
@@ -220,7 +220,7 @@ THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream
 
 - **html5gum tokenizer**: Pathological Unicode input (isolated surrogates, special sequences) can cause internal memory inflation. HTML parser fuzz excluded; robustness covered by 2,608 corpus.
 - **Render smoke proptest**: Random expression injection can cause `process_template` timeout (>60s). Excluded; covered by corpus + workspace tests.
-- **API baseline CI**: `cargo public-api` requires nightly; CI uses stable → `continue-on-error` (alpha stage).
+- **API baseline CI**: `cargo public-api` baseline is a hard CI gate on pinned nightly (`nightly-2026-07-28`); any public-API drift fails CI.
 
 ## 10. Roadmap
 
@@ -230,7 +230,7 @@ THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream
 | Governance audit | ✅ Done | strict blockers 0, warnings 0, CI enforced |
 | Fuzz OOM fix | ✅ Done | DiscardingWriter + shrink clamp + serial |
 | Release ecosystem | 🚧 In progress | `cargo package --verify`, docs.rs, adapter contracts |
-| Version 0.1.0 | 🗓️ Planned | API freeze, CHANGELOG, tag |
+| Version 0.1.0 | ✅ Done | First stable release, 2026-09-17 |
 | Benchmark suite | 🗓️ Planned | Criterion render/parse/expression |
 
 ## 11. Contributing
