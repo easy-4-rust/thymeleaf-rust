@@ -19,7 +19,7 @@
 
 ---
 
-> **版本**：`0.1.0-alpha.1` · **MSRV**：Rust 1.95 · **Edition**：2024 · **Resolver**：3
+> **版本**：`0.1.0-beta.2` · **MSRV**：Rust 1.95 · **Edition**：2024 · **Resolver**：3
 >
 > **上游基线**：Thymeleaf `3.1.5.RELEASE` @ `10f9dd2e`
 

@@ -4,6 +4,22 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
+## [0.1.0-beta.2] - 2026-09-17
+
+> 本版本相对 0.1.0-beta.1：**适配器依赖刷新 + thymeleaf-topcoat MSRV
+> 如实声明**。核心 crate `thymeleaf` 源码零变更，随 workspace 版本
+> 步进发布。
+
+### Changed
+
+- 适配器依赖刷新 3 项（Dependabot #15/#16/#17）：tonic
+  `=0.12.3`→`=0.14.6`、sa-token-core `0.1.18`→`0.2.0`、topcoat
+  `=0.6.2`→`=0.8.0`，适配器测试全绿
+- thymeleaf-topcoat 显式声明 `rust-version = "1.98"`：topcoat 0.7.0
+  起全线要求 rustc 1.98（0.6.2 及以前为 1.95），显式覆盖 workspace
+  继承使 manifest 与事实一致；该 crate 暂未发布 crates.io，声明于
+  后续发布时生效
+
 ## [0.1.0-beta.1] - 2026-09-03
 
 > 本版本相对 0.1.0-beta.0：**可选 DTD 验证（以 Java 实现版本化 DTD 集
