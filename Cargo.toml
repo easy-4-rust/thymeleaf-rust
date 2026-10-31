@@ -1,6 +1,6 @@
 [workspace]
 members = ["thymeleaf", "thymeleaf-test", "thymeleaf-examples", "thymeleaf-support/*"]
-exclude = ["xtask"]
+exclude = ["xtask", "vendor/sa-token-core"]
 default-members = ["thymeleaf"]
 resolver = "3"
 
