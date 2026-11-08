@@ -61,7 +61,8 @@ HTML/XML/TEXT 模板，支持表达式求值、方言处理器、模板缓存和
 | 解耦模板逻辑 | ✅ 稳定 | `thymeleaf` | `.th.xml` 边车 |
 | 可选 DTD 验证（XML 模式） | 🧪 预览 | `thymeleaf`（`dtd-validation` feature） | 内嵌 W3C XHTML DTD；`Disabled`/`Warn`/`Strict` 三策略，默认 `Disabled` 零开销；含内部子集的 DOCTYPE 跳过验证 |
 | 框架无关中立 Web 合同 | ✅ 稳定 | `thymeleaf` | IWebExchange / IWebRequest / IWebSession |
-| 框架适配器 | 🧪 预览 | `thymeleaf-support/*` | 13 个可发布 + 2 个不发布（tide, vernal） |
+| 框架适配器 | 🧪 预览 | `thymeleaf-support/*` | 13 个可发布 + Vernal 1 个不发布；Tide 保留源码但不进入 Workspace |
+| Tide 适配器（仅源码） | 🧪 实验 | `thymeleaf-tide` | Tide / async-std 上游已停止维护，排除默认 Workspace、CI 与安全依赖图；不发布 |
 | sa-token 安全方言 | 🧪 预览 | `thymeleaf-sa-token` | 12 个合同测试 |
 | Fuzz（属性测试） | 🚧 部分 | `thymeleaf-test` | XML/TEXT parser proptest；HTML/render 排除（见已知限制） |
 
@@ -98,7 +99,7 @@ HTML/XML/TEXT 模板，支持表达式求值、方言处理器、模板缓存和
 │ thymeleaf               核心引擎、公开 API、Web 合同     │
 │ thymeleaf-test          Java parity 语料、golden 测试    │
 │ thymeleaf-examples      GTVG 示例移植                    │
-│ thymeleaf-support/*     15 个框架适配器                  │
+│ thymeleaf-support/*     14 个 Workspace 适配器           │
 │   ├── thymeleaf-actix-web   thymeleaf-axum               │
 │   ├── thymeleaf-hyper       thymeleaf-rocket              │
 │   ├── thymeleaf-sa-token    thymeleaf-salvo  ...          │
@@ -127,7 +128,7 @@ HTML/XML/TEXT 模板，支持表达式求值、方言处理器、模板缓存和
 | `thymeleaf-topcoat` | ✅ | Topcoat 适配器 |
 | `thymeleaf-tower` | ✅ | Tower 适配器 |
 | `thymeleaf-warp` | ✅ | Warp 适配器 |
-| `thymeleaf-tide` | ❌ | Tide 适配器（上游未维护） |
+| `thymeleaf-tide` | ❌ | Tide 适配器（不属于 Workspace，上游未维护） |
 | `thymeleaf-vernal` | ❌ | Vernal 适配器（git 依赖，待 crates.io） |
 | `thymeleaf-test` | ❌ | 测试基建（内部） |
 | `thymeleaf-examples` | ❌ | 示例（内部） |
