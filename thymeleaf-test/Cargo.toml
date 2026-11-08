@@ -18,8 +18,8 @@ thymeleaf = { path = "../thymeleaf" }
 bytes = "1.10"
 chrono = "0.4.45"
 chrono-tz = "0.10.4"
-futures-executor = "0.3.31"
-futures-util = { version = "0.3.31", features = ["sink"] }
+futures-executor = "0.3.34"
+futures-util = { version = "0.3.34", features = ["sink"] }
 html-escape = "0.3.0"
 html5gum = { version = "0.8.4", default-features = false }
 http = "1.3"
