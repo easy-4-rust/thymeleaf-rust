@@ -10,8 +10,8 @@ repository = "https://github.com/easy-4-rust/thymeleaf-rust"
 
 [dependencies]
 form_urlencoded = "1.2"
-futures-executor = "0.3.31"
-futures-util = "0.3.31"
+futures-executor = "0.3.34"
+futures-util = "0.3.34"
 bytes = "1.10"
 http = "1.3"
 indexmap = "2.12"
@@ -21,7 +21,7 @@ vernal-http = { git = "https://github.com/easy-4-rust/vernal.git", rev = "6d137d
 vernal-web = { git = "https://github.com/easy-4-rust/vernal.git", rev = "6d137da66529fc10c8c8af9fee175d2936a78e33" }
 
 [dev-dependencies]
-futures-executor = "0.3.31"
+futures-executor = "0.3.34"
 http-body = "1.0"
 thymeleaf-sa-token = { path = "../thymeleaf-sa-token" }
 tokio = { version = "1", features = ["rt", "macros", "sync"] }
