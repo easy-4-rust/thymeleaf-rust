@@ -64,7 +64,8 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 | Framework-neutral web contract | ✅ Stable | `thymeleaf` | IWebExchange / IWebRequest / IWebSession |
 | Framework adapters (P0) | ✅ Stable | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | Full IWebExchange suite + contract tests aligned with hyper benchmark + `render_async` |
 | Framework adapters (thin) | 🧪 Preview | hyper/tower/ntex/poem/rocket/salvo/tonic | Response-level adapters; IWebExchange via hyper benchmark |
-| Framework adapters (experimental) | 🧪 Experimental | gotham/tide/warp | Upstream stalled/replaced; best-effort, tests behind `full` feature |
+| Framework adapters (experimental) | 🧪 Experimental | gotham/warp | Upstream stalled/replaced; best-effort, tests behind `full` feature |
+| Tide adapter (source-only) | 🧪 Experimental | `thymeleaf-tide` | Excluded from workspace CI/security graph: Tide and async-std are discontinued; `publish = false`; retained for reference only |
 | sa-token security dialect | 🧪 Preview | `thymeleaf-sa-token` | 12 contract tests |
 | Vernal view layer | 🧪 Preview | `thymeleaf-vernal` | ThymeleafView → vernal HttpResponse; ViewResolver bridge planned |
 | Fuzz (property tests) | 🚧 Partial | `thymeleaf-test` | XML/TEXT parser proptest; HTML/render excluded (see Known Limitations) |
@@ -102,7 +103,7 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 │ thymeleaf               Core engine, public API, web     │
 │ thymeleaf-test          Java parity corpus, golden tests │
 │ thymeleaf-examples      GTVG sample port                 │
-│ thymeleaf-support/*     15 framework adapters            │
+│ thymeleaf-support/*     14 workspace adapters            │
 │   ├── thymeleaf-actix-web   thymeleaf-axum               │
 │   ├── thymeleaf-hyper       thymeleaf-rocket              │
 │   ├── thymeleaf-sa-token    thymeleaf-salvo  ...          │
@@ -131,7 +132,7 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 | `thymeleaf-topcoat` | ✅ | Topcoat adapter |
 | `thymeleaf-tower` | ✅ | Tower adapter |
 | `thymeleaf-warp` | ✅ | Warp adapter |
-| `thymeleaf-tide` | ❌ | Tide adapter (unmaintained upstream) |
+| `thymeleaf-tide` | ❌ | Tide adapter (excluded from workspace; unmaintained upstream) |
 | `thymeleaf-vernal` | ❌ | Vernal adapter (git deps, pending crates.io) |
 | `thymeleaf-test` | ❌ | Test harness (internal) |
 | `thymeleaf-examples` | ❌ | Examples (internal) |

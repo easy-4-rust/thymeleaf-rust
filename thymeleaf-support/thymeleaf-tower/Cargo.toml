@@ -13,7 +13,7 @@ thymeleaf = { path = "../../thymeleaf" }
 tower = { version = "0.5.3", features = ["util"] }
 
 [dev-dependencies]
-futures-executor = "0.3.31"
+futures-executor = "0.3.34"
 
 [lints.rust]
 missing_docs = "deny"
