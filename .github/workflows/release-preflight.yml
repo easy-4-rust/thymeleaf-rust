@@ -1,0 +1,46 @@
+name: Release Preflight
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - Cargo.toml
+      - thymeleaf/Cargo.toml
+      - CHANGELOG.md
+      - scripts/publish-precheck.sh
+      - scripts/check_block_on.sh
+      - .github/workflows/release-preflight.yml
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-verification:
+    name: Verify crates.io package (no credentials)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Generate source-test parity manifest
+        run: python3 scripts/generate_test_asset_manifest.py --output thymeleaf-test/source-test-parity.json
+
+      - name: Ensure release notes contain no blocked items
+        run: bash scripts/check_block_on.sh
+
+      - name: Validate version, dependency graph and dry-run publish
+        run: bash scripts/publish-precheck.sh
+
+      - name: Verify standalone package build
+        run: cargo package -p thymeleaf --verify --allow-dirty
