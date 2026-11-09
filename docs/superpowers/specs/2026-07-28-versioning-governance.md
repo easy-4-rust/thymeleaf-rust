@@ -11,12 +11,12 @@
 # 版本治理与发布门禁
 
 > 本文件定义 thymeleaf-rust 从 `0.1.0-alpha` 到稳定版的版本晋级规则、发布门禁与
-> 语义化版本承诺。核心 crate `thymeleaf` 与 15 个整合 crate 共享 `[workspace.package]`
+> 语义化版本承诺。核心 crate `thymeleaf` 与当前 14 个 Workspace 整合 crate 共享 `[workspace.package]`
 > 版本号（`Cargo.toml`），保持同批发布。
 
 ## 1. 当前版本与目标
 
-- 当前：`0.1.1`（2026-11-09 依赖安全及兼容性维护版；`0.1.0` 于 2026-09-17 晋级首个稳定版；历程 `0.1.0-alpha.1`（2026-08-02）→
+- 当前开发版本：`0.1.1`（2026-11-09 准备兼容性与安全补丁版；此前 `0.1.0` 于 2026-09-17 晋级首个稳定版；历程 `0.1.0-alpha.1`（2026-08-02）→
   `0.1.0-beta.0/1/2` → `0.1.0`，此后按 SemVer 承诺演化）
 - 阶段目标：维持 alpha 系列（`0.1.0-alpha.x`）直至治理、鲁棒性与发布流程全部就绪，
   再按 §3 晋级 `0.1.0`（首个稳定版），此后按 SemVer 承诺演化。
@@ -63,8 +63,8 @@ alpha 阶段不承诺稳定 API；但以下红线始终有效：
 
 ## 4. 版本号纪律
 
-- 版本号单一事实来源：`Cargo.toml` `[workspace.package].version`（15 个 support
-  crate 已全部 `*.workspace = true` 继承，禁止手写版本号）；
+- 版本号单一事实来源：`Cargo.toml` `[workspace.package].version`（当前 14 个 Workspace support
+  crate 已全部 `*.workspace = true` 继承，Tide 作为不发布的独立源码示例排除；禁止手写版本号）；
 - `thymeleaf-topcoat` 因依赖 topcoat 0.7+ 强制 rustc 1.98，已按本条规则显式声明
   `rust-version = "1.98"` 并在 `docs/release/versioning.md` 登记例外（2026-09-17）；
   其余 crate 维持 workspace 继承的 1.95
