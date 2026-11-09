@@ -51,6 +51,11 @@ jobs:
             echo "::error::Invalid tag format: $TAG (expected vX.Y.Z or vX.Y.Z-alpha.N)"
             exit 1
           fi
+          CARGO_VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('Cargo.toml', 'rb'))['workspace']['package']['version'])")
+          if [ "$TAG" != "v$CARGO_VERSION" ]; then
+            echo "::error::Tag $TAG differs from Cargo workspace version v$CARGO_VERSION"
+            exit 1
+          fi
           echo "version=$TAG" >> "$GITHUB_OUTPUT"
           echo "Validated version: $TAG"
 
@@ -153,6 +158,9 @@ jobs:
 
       # 参考 wxrust scripts/publish-order.sh：本仓只发 1 个 crate（thymeleaf-test
       # publish=false），预检脚本验证元数据/无内部 path 依赖/dry-run/CHANGELOG
+      - name: Enforce unpublished task gate before publishing
+        run: bash scripts/check_block_on.sh
+
       - name: Run publish-precheck (metadata + dry-run + CHANGELOG)
         env:
           THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf

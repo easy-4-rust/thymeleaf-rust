@@ -4,6 +4,31 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
+## [Unreleased]
+
+暂无新的待发布变更。历史开发记录保留在本文件底部，不计入 0.1.1 的新增变更。
+
+## [0.1.1] - 2026-11-09
+
+> 0.1.x 兼容性与依赖安全维护版本，核心模板处理算法及公开 API 不变。固定 Java Oracle 仍为 Thymeleaf 3.1.5.RELEASE @ `10f9dd2e`。
+
+### Security
+
+- `thymeleaf-actix-web`：升级 `actix-web =4.15.0` → `=4.18.2`，对应修复压缩请求体内存耗尽风险 `RUSTSEC-2026-0447`（传递依赖 `actix-http >=3.20.1`）。
+- `thymeleaf-sa-token`：使用仓库内来源可追踪的 `sa-token-core 0.2.1` 和 `jsonwebtoken 10.4` AWS-LC 后端，移除受 `RUSTSEC-2026-0387` 影响的 RustCrypto / `crypto-bigint 0.5.5` 路径；补充 HS256/HS384/HS512 JWT 兼容性测试。
+- `thymeleaf-tide`：因 Tide / async-std 上游停止维护，改为**仅保留源码**的独立非发布适配器，排除默认 Cargo Workspace 和安全依赖图；删除失效的 Tide 专属安全公告豁免，而非为新问题增加忽略项。
+
+### Changed
+
+- 核心依赖：`html-escape 0.2.14` → `0.3.0`；`futures-*` 版本下限更新为 `0.3.34`。
+- Web 适配器：Rocket `0.5.1` → `0.5.2`、Salvo `0.96.0` → `1.0.1`、Topcoat `0.8.0` → `0.10.0`。
+- GitHub Actions 的依赖、覆盖率、Fuzz、安全审计及版本兼容工作流更新；保持现有语义差分与发布质量门禁。
+
+### Verification
+
+- 基于 `main@255f3c4d` 的 Ubuntu/macOS CI、Java 语义差分、Coverage、cargo-deny、cargo-audit、SemVer 与基准回归均通过。
+- 本版本号变更的发布验证以对应发布提交和 GitHub Actions Release 工作流结果为准；不将历史通过记录视为本版本已发布证据。
+
 ## [0.1.0] - 2026-09-17
 
 > **首个稳定版**。相对 0.1.0-beta.2 仅一处鲁棒性修复；完整演进见
@@ -133,7 +158,9 @@
 - 布局审计（CI 口径）：strict_blockers=0（113 豁免登记）
 - `cargo package -p thymeleaf` 演练通过
 
-## [Unreleased]
+## [Historical development notes before 0.1.0]
+
+> 以下为首次稳定版发布前累计的历史开发记录，保留原文供溯源；不是 0.1.1 的新增能力。
 
 ### Added
 
