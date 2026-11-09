@@ -4,6 +4,43 @@
 [语义化版本](https://semver.org/lang/zh-CN/)（晋级规则见
 [docs/superpowers/specs/2026-07-28-versioning-governance.md](docs/superpowers/specs/2026-07-28-versioning-governance.md)）。
 
+## [Unreleased]
+
+## [0.1.1] - 2026-11-09
+
+> 0.1.0 之后的兼容性与依赖安全维护版本。Thymeleaf 3.1.5.RELEASE
+> Java 行为基线和核心公开 API 均未有意改变；本次 crates.io 只发布 `thymeleaf` 核心 Crate。
+
+### Security
+
+- Actix Web 适配器升级至 `4.18.2`（及 `actix-http >=3.20.1`），修复
+  压缩请求体可能在解压阶段绕过请求体大小限制的问题
+  （RUSTSEC-2026-0447）。
+- Sa-Token JWT 适配改用审查过的 `sa-token-core 0.2.1` 本仓镜像和
+  `jsonwebtoken 10.4` AWS-LC 后端，不再通过 RustCrypto 路径依赖
+  受影响的 `crypto-bigint 0.5.5`（RUSTSEC-2026-0387）；
+  新增 HS256/HS384/HS512 兼容性测试。
+- 停止维护的 Tide / async-std 适配器保留实验性源码但排除默认 Cargo
+  Workspace、CI 和正式依赖安全图；移除对应过期的安全公告豁免。
+  Tide **未被修复或宣称生产可用**，也不会随核心 Crate 发布。
+
+### Changed
+
+- Rocket 适配依赖从 `0.5.1` 调整为 `0.5.2`，解决 Hyper API 编译兼容性问题。
+- 全 Workspace 的 Futures 系列依赖要求提升至 `0.3.34`。
+- Salvo、Topcoat、html-escape 等依赖与 GitHub Actions 按已合并 PR
+  更新（#18、#24–#29、#37、#38）。
+- 保留独立的 Java 3.1.5 Oracle、Golden/Source parity、Fuzz、
+  安全扫描和 API 基线检查；不改变旧版 `v0.1.0` Tag。
+
+### Verification
+
+- 本轮发布基于 `main` 提交 `255f3c4d35c6` 的验收结果：
+  Ubuntu / macOS CI、Coverage、Security Audit、SemVer、Criterion 均通过。
+- 本版继续使用 2,608 个 Java 语义对照用例（其中 2,595 行为一致、
+  13 项有明确定义的策略差异）；尚未宣布这些政策差异被消除。
+- 发布前仍须对 `0.1.1` 的正式 Tag 运行 Release dry-run 和上传验证。
+
 ## [0.1.0] - 2026-09-17
 
 > **首个稳定版**。相对 0.1.0-beta.2 仅一处鲁棒性修复；完整演进见
@@ -133,7 +170,10 @@
 - 布局审计（CI 口径）：strict_blockers=0（113 豁免登记）
 - `cargo package -p thymeleaf` 演练通过
 
-## [Unreleased]
+## [Historical development notes (pre-0.1.0)]
+
+> 以下为原先遗留在 Unreleased 下的早期迁移工程记录，现归档为历史说明，
+> 不计入 0.1.1 的新增功能或变更范围。
 
 ### Added
 
