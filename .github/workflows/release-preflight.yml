@@ -43,4 +43,4 @@ jobs:
         run: bash scripts/publish-precheck.sh
 
       - name: Verify standalone package build
-        run: cargo package -p thymeleaf --verify --allow-dirty
+        run: cargo package -p thymeleaf --allow-dirty
