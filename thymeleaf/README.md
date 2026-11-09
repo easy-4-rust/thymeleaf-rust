@@ -19,14 +19,14 @@
 
 ---
 
-> **Project status: runtime surface implemented; semantic verification and release preparation in progress**
+> **Project status: core crate published; 0.1.1 is a security/dependency maintenance release**
 >
-> The workspace now contains the `thymeleaf` engine, all six parser modes, event model,
-> standard dialect, processors, safe expression subset, neutral web output, 13 independent
-> framework integrations, and `thymeleaf-vernal`. Every fixed-upstream object, method,
-> JUnit entry, and `.thtest` has a disposition, but only 202 of 491 main objects currently
-> meet the object-level `BEHAVIOR_VERIFIED` bar. The crate is not yet on crates.io, and
-> real HTTP full/stream/error/cancellation tests still need expansion.
+> The `thymeleaf` core crate is available on [crates.io](https://crates.io/crates/thymeleaf).
+> Its fixed Java 3.1.5 oracle has 2,608 tracked `.thtest` cases: 2,595 identical
+> outcomes and 13 documented policy differences. Object/method disposition is
+> tracked separately from behavioral parity; this does not certify every input.
+> Framework adapter completeness and HTTP full/stream/error/cancellation coverage
+> continue to be tracked in the repository's main README and CI.
 
 ## Overview
 
@@ -34,9 +34,9 @@
 engine that migrates [Thymeleaf](https://www.thymeleaf.org/) 3.1.5.RELEASE core template
 semantics at object, method, and behavioral levels.
 
-The public core crate name is **`thymeleaf`**, although it has not yet been uploaded to
-crates.io. Framework integration crates use the `thymeleaf-{framework}` pattern; no
-published crate or Rust module will use a `thymeleaf-rust-*` prefix.
+The public core crate name is **`thymeleaf`**, available on crates.io. Framework
+integration crates use the `thymeleaf-{framework}` pattern; no published crate or
+Rust module uses a `thymeleaf-rust-*` prefix.
 
 The project is intended to support two equal integration paths:
 
@@ -312,7 +312,7 @@ it into the host response.
 | Layer | Name | Status |
 |:---|:---|:---:|
 | Project and Git repository | `thymeleaf-rust` | Confirmed |
-| crates.io core | `thymeleaf` | Workspace created; not published |
+| crates.io core | `thymeleaf` | Published; version on crates.io |
 | Public Rust path | `thymeleaf::...` | Foundation API implemented |
 | Integration crates | `thymeleaf-{framework}` | 13 adapter crates implemented; basic response contracts pass; end-to-end verification pending |
 | Optional Vernal integration | `thymeleaf-vernal` | HTTP protocol bridge implemented; status/header/data/trailer contract passes |
@@ -362,10 +362,10 @@ Release order may be phased, but the architecture must not require independent u
 | Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
 | Rust core API | Semantic inventory closed | Engine, configuration, resolvers, six parsers, event model, context, caches, standard dialect, processor SPI, safe expression subset, and neutral web output have real implementations |
 | Framework adapters | Available; host tests need expansion | 13 independent framework crates plus `thymeleaf-vernal` compile; 28 adapter/Hyper host contract tests pass |
-| Upstream compatibility matrix | Structural inventory closed; behavior verification ongoing | All 491 main objects, 69 nested objects, and 4,291 methods have dispositions; main-object status is 202 verified, 277 implemented-unverified, and 12 Java-only host equivalents |
+| Upstream compatibility matrix | Structural inventory and registered parity corpus verified | All 491 main objects and 4,291 methods have dispositions; the repository's migration ledger records 479 verified objects and 12 Java-only host equivalents; 2,595 of 2,608 semantic cases match with 13 approved differences |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
 | Tests and CI | Semantic gate passing | Java five-module baseline 2,156/2,156; SOURCE_PARITY 875/875 with 0 missing; Rust matches 2,595/2,595 comparable `.thtest` cases; source coverage is informational |
-| crates.io package | Not published | `thymeleaf` remains a planned publication name |
+| crates.io package | Published | [crates.io/crates/thymeleaf](https://crates.io/crates/thymeleaf) |
 
 ## Documentation quick start
 
@@ -423,16 +423,16 @@ The upstream Thymeleaf project is licensed under Apache License 2.0. Any source,
 | P0 | Streaming execution model | Load-test one-thread-per-response behavior; introduce a configurable executor or bounded pool if required |
 | P1 | Third-party dialect compatibility suite | Custom processors, pre/post-processors, and expression-object factories pass plugin contracts |
 | P1 | Published capability matrix | Document the safe OGNL subset, host policy differences, MSRV, and supported targets |
-| P2 | crates.io release | Packaging, documentation, security review, and parity gates pass |
+| P2 | crates.io updates | Package verification, documentation, security review, and parity gates pass for every version |
 
-Release dates are intentionally omitted until host-framework acceptance, streaming-load,
-security, and packaging gates are closed.
+Release history is tracked in the repository CHANGELOG and crates.io. Adapter and
+streaming-load acceptance remains a separate, ongoing verification effort.
 
 ## Usage status
 
-The core API can be used from the source workspace, but the crate has not been
-published. Until this README explicitly marks a crates.io release, use a Git checkout
-and the commands in “Documentation quick start”; do not run `cargo add thymeleaf`.
+The core API is published as [`thymeleaf`](https://crates.io/crates/thymeleaf).
+Use `cargo add thymeleaf` for a registry dependency or Git checkout when reproducing
+migration and Java parity tests; consult crates.io for the current published version.
 
 ## Contributing
 

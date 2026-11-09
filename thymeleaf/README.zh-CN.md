@@ -18,13 +18,13 @@
 
 ---
 
-> **项目状态：运行时承接面已实现，语义验证与发布准备进行中**
+> **项目状态：核心 Crate 已发布，0.1.1 为安全与依赖维护版本**
 >
-> `thymeleaf` 核心 Engine、六种 Parser 模式、事件模型、Standard Dialect、Processor、
-> 表达式安全子集、中立 Web 输出、13 个独立框架整合 crate 和 `thymeleaf-vernal`
-> 已进入 Workspace。固定上游的对象、方法、JUnit 和 `.thtest` 均已登记处置，但
-> 491 个主对象中当前已有 202 个达到对象级 `BEHAVIOR_VERIFIED`；crates.io 尚未发布，
-> 框架适配器的真实 HTTP Full/Stream/Error/Cancellation 测试仍需加强。
+> `thymeleaf` 核心包已在 [crates.io](https://crates.io/crates/thymeleaf) 发布。
+> 固定 Java 3.1.5 基线登记了 2,608 个 `.thtest` 用例：2,595 个行为相同，
+> 13 个为明确记录的策略差异。对象/方法处置率不等于任意输入下行为完全兼容。
+> 框架适配器的 HTTP Full/Stream/Error/Cancellation 合同仍需持续补充；
+> 当前版本与 CI 证据以仓库根目录 README 和 crates.io 为准。
 
 ## 项目概览
 
@@ -32,8 +32,8 @@
 [Thymeleaf](https://www.thymeleaf.org/) 3.1.5.RELEASE 核心模板语义进行对象级、
 方法级和行为级迁移的动态内容渲染引擎。
 
-对外发布的核心 crate 名称是 **`thymeleaf`**，当前尚未上传 crates.io。框架整合
-crate 使用 `thymeleaf-{framework}` 模式；不会发布或创建任何 `thymeleaf-rust-*`
+对外发布的核心 crate 名称是 **`thymeleaf`**，已在 crates.io 发布。框架整合
+crate 使用 `thymeleaf-{framework}` 命名；不会发布或创建任何 `thymeleaf-rust-*`
 crate 或 Rust 模块。
 
 项目计划同时支持两条地位相同的集成路径：
@@ -299,7 +299,7 @@ flowchart TB
 | 层级 | 名称 | 状态 |
 |:---|:---|:---:|
 | 项目与 Git 仓库 | `thymeleaf-rust` | 已确认 |
-| crates.io 核心 | `thymeleaf` | Workspace 已创建，尚未发布 |
+| crates.io 核心 | `thymeleaf` | 已发布，具体版本见 crates.io |
 | Rust 公共路径 | `thymeleaf::...` | Foundation API 已实现 |
 | 整合 crate | `thymeleaf-{framework}` | 13 个适配 crate 已实现，基础响应合同通过，端到端验证待加强 |
 | 可选 Vernal 整合 | `thymeleaf-vernal` | HTTP 协议桥已实现，状态/Header/Data/Trailer 合同通过 |
@@ -348,10 +348,11 @@ flowchart TB
 | Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
 | Rust 核心 API | 语义清单已闭合 | Engine、配置、Resolver、六种 Parser、事件模型、Context、缓存、Standard Dialect、Processor SPI、表达式安全子集与中立 Web 输出均有真实实现 |
 | 框架适配器（P0） | ✅ 稳定 | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | IWebExchange 四件套 + 与 hyper 标杆对齐的契约测试 + `render_async` |
-| 框架适配器（薄层/实验性） | 🧪 预览/实验 | hyper/tower/ntex/poem/rocket/salvo/tonic；gotham/tide/warp 实验性 | 响应级适配；实验性三件测试在 `full` feature 后 | 上游兼容矩阵 | 结构清单已闭合，行为验证进行中 | 491 个主对象、69 个内部对象和 4,291 个方法都有处置；主对象状态为 202 已验证、277 已实现待验证、12 个 Java-only 宿主等价映射 |
+| 框架适配器（薄层/实验性） | 预览/实验 | hyper/tower/ntex/poem/rocket/salvo/tonic；gotham/warp 实验性，tide 仅保留源码 |
+| 上游兼容矩阵 | 迁移清单与登记语义语料已验收 | 491 个主对象与 4,291 个方法已有处置记录；迁移账本记录 479 个行为已验证对象和 12 个 Java-only 宿主等价映射，2,608 个语义用例中 2,595 个一致、13 个策略差异 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
 | 测试与 CI | 语义门禁通过 | Java 五模块基线 2,156/2,156；SOURCE_PARITY 875/875、0 缺失；Rust 与 2,595/2,595 个可比较 `.thtest` 一致；源码覆盖率仅作诊断 |
-| crates.io 包 | 未发布 | `thymeleaf` 仍是规划发布名 |
+| crates.io 包 | 已发布 | [crates.io/crates/thymeleaf](https://crates.io/crates/thymeleaf) |
 
 ## 文档快速开始
 
@@ -406,15 +407,15 @@ Thymeleaf 上游采用 Apache License 2.0。任何从上游调整而来的源码
 | P0 | 流式运行模型 | 压测每响应一线程模型；必要时引入可配置执行器或受控线程池 |
 | P1 | 第三方 Dialect 兼容套件 | 自定义 Processor、Pre/PostProcessor、表达式对象工厂通过插件合同测试 |
 | P1 | 发布能力矩阵 | 明确安全 OGNL 子集、宿主策略差异、MSRV 和支持平台 |
-| P2 | crates.io 发布 | Package、文档、安全审计和 Parity 门禁通过 |
+| P2 | crates.io 版本更新 | 每次更新均通过 Package、文档、安全审计与 Parity 门禁 |
 
-在宿主框架验收、流式负载、安全和打包门禁闭合前，发布路线不提供时间承诺。
+历史发布信息见仓库 CHANGELOG 与 crates.io；宿主框架验收与流式负载仍作为独立质量目标。
 
 ## 使用状态
 
-核心 API 已能从 Workspace 源码使用，但 crate 尚未发布。发布前请通过 Git 检出和本页
-“文档快速开始”命令验证；在 README 明确标记 crates.io 已发布之前，请勿执行
-`cargo add thymeleaf`。
+核心包现已在 [crates.io](https://crates.io/crates/thymeleaf) 发布。业务项目可以执行
+`cargo add thymeleaf`；若需要复现 Java 差分与迁移测试，则使用仓库固定基线检出。
+具体版本以 crates.io 的当前发布记录为准。
 
 ## 参与贡献
 
