@@ -13,14 +13,18 @@ use crate::model::{
 use super::gathering_model_execution_state::GatheringModelExecutionState;
 use super::model::Model;
 use super::processor_execution_vars::ProcessorExecutionVars;
+use super::processor_template_handler::{
+    ProcessorTemplateHandlerStateWeak, create_reentrant_handler_from_state,
+    set_current_gathering_model_state,
+};
 use super::template_flow_controller::TemplateFlowController;
-use super::{ITemplateHandler, SkipBody, TemplateHandlerHandle, TemplateModelController};
+use super::{ITemplateHandler, SkipBody, TemplateModelController};
 
 /// Gathering processable 共享的模型构建、skip 恢复和上下文状态。
 ///
 /// 对应 Java: `org.thymeleaf.engine.AbstractGatheringModelProcessable`。
 pub(crate) struct AbstractGatheringModelProcessable {
-    processor_template_handler: TemplateHandlerHandle,
+    processor_template_handler_state: ProcessorTemplateHandlerStateWeak,
     context: Arc<dyn IEngineContext>,
     synthetic_model: Model,
     model_controller: Weak<RefCell<TemplateModelController>>,
@@ -38,7 +42,7 @@ impl AbstractGatheringModelProcessable {
     /// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
-        processor_template_handler: TemplateHandlerHandle,
+        processor_template_handler_state: ProcessorTemplateHandlerStateWeak,
         context: Arc<dyn IEngineContext>,
         model_controller: Weak<RefCell<TemplateModelController>>,
         flow_controller: Option<Arc<Mutex<TemplateFlowController>>>,
@@ -48,7 +52,7 @@ impl AbstractGatheringModelProcessable {
     ) -> Self {
         let template_mode = context.get_template_mode();
         Self {
-            processor_template_handler,
+            processor_template_handler_state,
             context,
             synthetic_model: Model::new(configuration, template_mode),
             model_controller,
@@ -86,34 +90,26 @@ impl AbstractGatheringModelProcessable {
 
     /// 对应 Java: `AbstractGatheringModelProcessable#prepareProcessing()`。
     pub(crate) fn prepare_processing(&self) {
-        self.processor_template_handler
-            .borrow_mut()
-            .set_current_gathering_model(Some(GatheringModelExecutionState::new(
+        // Gathering can finish synchronously inside a ProcessorTemplateHandler callback.
+        // Its proxy handle is then already mutably borrowed, so update the shared state
+        // directly rather than re-borrowing the RefCell-wrapped ITemplateHandler.
+        set_current_gathering_model_state(
+            &self.processor_template_handler_state,
+            Some(GatheringModelExecutionState::new(
                 clone_model(&self.synthetic_model),
                 self.processor_execution_vars.clone_vars(),
                 self.model_controller.clone(),
                 self.build_time_skip_body,
                 self.build_time_skip_close_tag,
-            )));
+            )),
+        );
         self.reset_gathered_skip_flags();
     }
 
     /// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `reentrant_processor_template_handler` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn reentrant_processor_template_handler(&self) -> Box<dyn ITemplateHandler> {
-        let handler = self.get_processor_template_handler();
-        handler
-            .borrow()
-            .create_reentrant_handler()
-            .expect("ProcessorTemplateHandler always supplies a reentrant proxy")
-    }
-
-    /// 返回 ProcessorTemplateHandler 的共享句柄。
-    ///
-    /// 对应 Java:
-    /// `AbstractGatheringModelProcessable#getProcessorTemplateHandler()`；Rust 返回共享
-    /// trait 句柄，以支持不持有 `RefCell` 借用的重入模型回放。
-    pub(crate) fn get_processor_template_handler(&self) -> TemplateHandlerHandle {
-        self.processor_template_handler.clone()
+        // Construct a sibling proxy from shared state without borrowing the active proxy handle.
+        create_reentrant_handler_from_state(&self.processor_template_handler_state)
     }
 
     /// 对应 Java 语义：`AbstractGatheringModelProcessable` 的 `flow_controller` 行为（Rust 侧辅助/私有路径）。
