@@ -18,10 +18,11 @@ use super::i_engine_processable::EngineProcessableResult;
 use super::i_gathering_model_processable::IGatheringModelProcessable;
 use super::model::Model;
 use super::processor_execution_vars::ProcessorExecutionVars;
+use super::processor_template_handler::ProcessorTemplateHandlerStateWeak;
 use super::template_flow_controller::TemplateFlowController;
 use super::{
     DataDrivenTemplateIterator, IEngineProcessable, IterationStatusVar, SkipBody,
-    TemplateHandlerHandle, TemplateModelController, Text,
+    TemplateModelController, Text,
 };
 
 const DEFAULT_STATUS_VAR_SUFFIX: &str = "Stat";
@@ -70,7 +71,7 @@ impl IteratedGatheringModelProcessable {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
-        processor_template_handler: TemplateHandlerHandle,
+        processor_template_handler_state: ProcessorTemplateHandlerStateWeak,
         context: Arc<dyn IEngineContext>,
         model_controller: Weak<RefCell<TemplateModelController>>,
         flow_controller: Option<Arc<Mutex<TemplateFlowController>>>,
@@ -94,7 +95,7 @@ impl IteratedGatheringModelProcessable {
         Self {
             base: AbstractGatheringModelProcessable::new(
                 configuration,
-                processor_template_handler,
+                processor_template_handler_state,
                 Arc::clone(&context),
                 model_controller,
                 flow_controller,

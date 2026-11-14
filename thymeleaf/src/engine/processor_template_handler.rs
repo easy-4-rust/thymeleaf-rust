@@ -101,6 +101,30 @@ pub(crate) struct ProcessorTemplateHandlerState {
     xml_declaration_structure_handler: XMLDeclarationStructureHandler,
 }
 
+/// Weak direct access to ProcessorTemplateHandler state for reentrant processables.
+pub(crate) type ProcessorTemplateHandlerStateWeak = Weak<RefCell<ProcessorTemplateHandlerState>>;
+
+/// 对应 Java: `ProcessorTemplateHandler` 的 `currentGatheringModel` 状态更新语义（Rust 侧重入辅助路径）。
+pub(crate) fn set_current_gathering_model_state(
+    state: &ProcessorTemplateHandlerStateWeak,
+    current: Option<GatheringModelExecutionState>,
+) {
+    state
+        .upgrade()
+        .expect("ProcessorTemplateHandler state must outlive gathering processables")
+        .borrow_mut()
+        .current_gathering_model = current;
+}
+
+/// 对应 Java: `ProcessorTemplateHandler` 的重入 Handler 调用语义（Rust 侧代理创建辅助路径）。
+pub(crate) fn create_reentrant_handler_from_state(
+    state: &ProcessorTemplateHandlerStateWeak,
+) -> Box<dyn ITemplateHandler> {
+    Box::new(ProcessorTemplateHandlerProxy {
+        state: state.clone(),
+    })
+}
+
 impl ProcessorTemplateHandler {
     /// 创建尚未连接下一 Handler、上下文和流控器的处理器。
     ///
@@ -363,15 +387,11 @@ fn set_context_state(
     let configuration = context.get_configuration_arc();
     let template_mode = context.get_template_mode();
     let engine_context = context.get_engine_context_arc();
-    let self_handler = state
-        .borrow()
-        .self_handler
-        .clone()
-        .expect("processor self handler is initialized in constructor");
+    let processor_template_handler_state = Rc::downgrade(state);
     let model_controller = TemplateModelController::new(
         Arc::clone(&configuration),
         template_mode,
-        self_handler,
+        processor_template_handler_state,
         engine_context.clone(),
     );
     let mut state = state.borrow_mut();
