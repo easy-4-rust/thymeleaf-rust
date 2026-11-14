@@ -16,12 +16,12 @@
 #[cfg(feature = "dtd-validation")]
 use oxixml_dtd::MemoryResolver;
 
-/// DTD 文件内嵌：`dtd-files/thymeleaf-2.1.6/org/thymeleaf/dtd/` 相对路径。
+/// DTD 文件内嵌：crate 内 `src/dtd/assets/`，与原始 `dtd-files/` 逐字节一致。
 #[cfg(feature = "dtd-validation")]
 macro_rules! dtd_entry {
     ($path:literal) => {
         include_str!(concat!(
-            "../../../dtd-files/thymeleaf-2.1.6/org/thymeleaf/dtd/",
+            "assets/",
             $path
         ))
     };
