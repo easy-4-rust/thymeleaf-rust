@@ -104,7 +104,7 @@ pub(crate) struct ProcessorTemplateHandlerState {
 /// Weak direct access to ProcessorTemplateHandler state for reentrant processables.
 pub(crate) type ProcessorTemplateHandlerStateWeak = Weak<RefCell<ProcessorTemplateHandlerState>>;
 
-/// Set the gathering snapshot without borrowing the RefCell-wrapped handler proxy.
+/// 对应 Java: `ProcessorTemplateHandler` 的 `currentGatheringModel` 状态更新语义（Rust 侧重入辅助路径）。
 pub(crate) fn set_current_gathering_model_state(
     state: &ProcessorTemplateHandlerStateWeak,
     current: Option<GatheringModelExecutionState>,
@@ -116,7 +116,7 @@ pub(crate) fn set_current_gathering_model_state(
         .current_gathering_model = current;
 }
 
-/// Create a fresh reentrant proxy directly from shared state, even when another proxy call is active.
+/// 对应 Java: `ProcessorTemplateHandler` 的重入 Handler 调用语义（Rust 侧代理创建辅助路径）。
 pub(crate) fn create_reentrant_handler_from_state(
     state: &ProcessorTemplateHandlerStateWeak,
 ) -> Box<dyn ITemplateHandler> {
