@@ -19,7 +19,7 @@
 
 ---
 
-> **Version**: `0.1.0` · **MSRV**: Rust 1.95 · **Edition**: 2024 · **Resolver**: 3
+> **Version**: `0.1.1` · **MSRV**: Rust 1.95 · **Edition**: 2024 · **Resolver**: 3
 >
 > **Upstream baseline**: Thymeleaf `3.1.5.RELEASE` @ `10f9dd2e`
 
@@ -149,7 +149,14 @@ Expression evaluation defaults to a read-only safe subset:
 
 ## 6. Quick Start
 
-### From Git (not yet on crates.io)
+### From crates.io (recommended)
+
+```toml
+[dependencies]
+thymeleaf = "0.1"
+```
+
+### From Git (development snapshots)
 
 ```toml
 [dependencies]

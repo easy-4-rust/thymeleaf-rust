@@ -19,7 +19,7 @@
 
 ---
 
-> **版本**：`0.1.0` · **MSRV**：Rust 1.95 · **Edition**：2024 · **Resolver**：3
+> **版本**：`0.1.1` · **MSRV**：Rust 1.95 · **Edition**：2024 · **Resolver**：3
 >
 > **上游基线**：Thymeleaf `3.1.5.RELEASE` @ `10f9dd2e`
 
@@ -145,7 +145,14 @@ HTML/XML/TEXT 模板，支持表达式求值、方言处理器、模板缓存和
 
 ## 6. 快速开始
 
-### 从 Git 使用（尚未发布到 crates.io）
+### 从 crates.io 安装（推荐）
+
+```toml
+[dependencies]
+thymeleaf = "0.1"
+```
+
+### 从 Git 使用（开发快照）
 
 ```toml
 [dependencies]
