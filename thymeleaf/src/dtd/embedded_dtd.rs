@@ -20,10 +20,7 @@ use oxixml_dtd::MemoryResolver;
 #[cfg(feature = "dtd-validation")]
 macro_rules! dtd_entry {
     ($path:literal) => {
-        include_str!(concat!(
-            "assets/",
-            $path
-        ))
+        include_str!(concat!("assets/", $path))
     };
 }
 
