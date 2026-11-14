@@ -26,10 +26,15 @@ fi
 echo "  无内部 path 依赖"
 
 echo "=== 3) thymeleaf 单 crate 完整干跑 ==="
-if cargo publish -p thymeleaf --dry-run --allow-dirty 2>&1 | tail -20 | tee /tmp/publish-dryrun.log | grep -qE "aborting upload due to dry run"; then
+DRYRUN_LOG="$(mktemp)"
+if cargo publish -p thymeleaf --dry-run --allow-dirty >"$DRYRUN_LOG" 2>&1; then
+  tail -20 "$DRYRUN_LOG"
+  rm -f "$DRYRUN_LOG"
   echo "  PASS（dry-run 完成）"
 else
-  echo "::error::cargo publish --dry-run 异常，详见 /tmp/publish-dryrun.log"
+  echo "::error::cargo publish --dry-run 失败：" >&2
+  tail -80 "$DRYRUN_LOG" >&2
+  rm -f "$DRYRUN_LOG"
   exit 1
 fi
 
