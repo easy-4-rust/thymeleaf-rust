@@ -340,8 +340,13 @@ fn parse_html(
     let mut stalled_tokens = 0_u32;
 
     while let Some(token) = tokenizer.next() {
-        let token =
-            token.map_err(|error| parse_error(description, source, 0, error.to_string()))?;
+        // html5gum 0.9's DefaultEmitter uses Infallible for the tokenizer error type.
+        // Handle the impossible error exhaustively instead of mapping it through
+        // unreachable error formatting (which fails the strict Clippy gate).
+        let token = match token {
+            Ok(token) => token,
+            Err(never) => match never {},
+        };
         let token_end = match &token {
             Token::StartTag(tag) => tag.span.end,
             Token::EndTag(tag) => tag.span.end,
