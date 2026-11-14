@@ -15,8 +15,9 @@ use super::i_engine_processable::EngineProcessableResult;
 use super::i_gathering_model_processable::IGatheringModelProcessable;
 use super::model::Model;
 use super::processor_execution_vars::ProcessorExecutionVars;
+use super::processor_template_handler::ProcessorTemplateHandlerStateWeak;
 use super::template_flow_controller::TemplateFlowController;
-use super::{IEngineProcessable, SkipBody, TemplateHandlerHandle, TemplateModelController};
+use super::{IEngineProcessable, SkipBody, TemplateModelController};
 
 /// 收集一次延迟元素 Model 并按原 Processor handler 重放。
 ///
@@ -32,7 +33,7 @@ impl GatheringModelProcessable {
     /// 对应 Java 语义：`GatheringModelProcessable` 的 `new` 行为（Rust 侧辅助/私有路径）。
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
-        processor_template_handler: TemplateHandlerHandle,
+        processor_template_handler_state: ProcessorTemplateHandlerStateWeak,
         context: Arc<dyn IEngineContext>,
         model_controller: Weak<RefCell<TemplateModelController>>,
         flow_controller: Option<Arc<Mutex<TemplateFlowController>>>,
@@ -43,7 +44,7 @@ impl GatheringModelProcessable {
         Self {
             base: AbstractGatheringModelProcessable::new(
                 configuration,
-                processor_template_handler,
+                processor_template_handler_state,
                 context,
                 model_controller,
                 flow_controller,

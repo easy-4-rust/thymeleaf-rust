@@ -13,11 +13,11 @@ use crate::model::{
 };
 use crate::util::Utf16String;
 
-use super::TemplateHandlerHandle;
 use super::gathering_model_processable::GatheringModelProcessable;
 use super::i_gathering_model_processable::IGatheringModelProcessable;
 use super::iterated_gathering_model_processable::IteratedGatheringModelProcessable;
 use super::processor_execution_vars::ProcessorExecutionVars;
+use super::processor_template_handler::ProcessorTemplateHandlerStateWeak;
 use super::template_flow_controller::TemplateFlowController;
 
 const DEFAULT_MODEL_LEVELS: usize = 25;
@@ -54,7 +54,7 @@ pub(crate) struct TemplateModelController {
     self_reference: Weak<RefCell<TemplateModelController>>,
     configuration: Arc<dyn IEngineConfiguration>,
     template_mode: TemplateMode,
-    processor_template_handler: TemplateHandlerHandle,
+    processor_template_handler_state: ProcessorTemplateHandlerStateWeak,
     context: Option<Arc<dyn IEngineContext>>,
     template_flow_controller: Option<Arc<Mutex<TemplateFlowController>>>,
     gathered_model: Option<Rc<RefCell<dyn IGatheringModelProcessable>>>,
@@ -73,7 +73,7 @@ impl TemplateModelController {
     pub(crate) fn new(
         configuration: Arc<dyn IEngineConfiguration>,
         template_mode: TemplateMode,
-        processor_template_handler: TemplateHandlerHandle,
+        processor_template_handler_state: ProcessorTemplateHandlerStateWeak,
         context: Option<Arc<dyn IEngineContext>>,
     ) -> Rc<RefCell<Self>> {
         Rc::new_cyclic(|weak| {
@@ -81,7 +81,7 @@ impl TemplateModelController {
                 self_reference: weak.clone(),
                 configuration,
                 template_mode,
-                processor_template_handler,
+                processor_template_handler_state,
                 context,
                 template_flow_controller: None,
                 gathered_model: None,
@@ -124,7 +124,7 @@ impl TemplateModelController {
         })?;
         let mut gathering = GatheringModelProcessable::new(
             Arc::clone(&self.configuration),
-            Rc::clone(&self.processor_template_handler),
+            self.processor_template_handler_state.clone(),
             self.require_engine_context()?,
             self.self_reference.clone(),
             self.template_flow_controller.clone(),
@@ -152,7 +152,7 @@ impl TemplateModelController {
             };
         let mut gathering = GatheringModelProcessable::new(
             Arc::clone(&self.configuration),
-            Rc::clone(&self.processor_template_handler),
+            self.processor_template_handler_state.clone(),
             self.require_engine_context()?,
             self.self_reference.clone(),
             self.template_flow_controller.clone(),
@@ -187,7 +187,7 @@ impl TemplateModelController {
             self.compute_whitespace_preceding_iteration(first_tag.as_ref())?;
         let mut gathering = IteratedGatheringModelProcessable::new(
             Arc::clone(&self.configuration),
-            Rc::clone(&self.processor_template_handler),
+            self.processor_template_handler_state.clone(),
             self.require_engine_context()?,
             self.self_reference.clone(),
             self.template_flow_controller.clone(),
@@ -227,7 +227,7 @@ impl TemplateModelController {
             self.compute_whitespace_preceding_iteration(first_tag.as_ref())?;
         let mut gathering = IteratedGatheringModelProcessable::new(
             Arc::clone(&self.configuration),
-            Rc::clone(&self.processor_template_handler),
+            self.processor_template_handler_state.clone(),
             self.require_engine_context()?,
             self.self_reference.clone(),
             self.template_flow_controller.clone(),
@@ -267,7 +267,7 @@ impl TemplateModelController {
             };
         let mut gathering = GatheringModelProcessable::new(
             Arc::clone(&self.configuration),
-            Rc::clone(&self.processor_template_handler),
+            self.processor_template_handler_state.clone(),
             self.require_engine_context()?,
             self.self_reference.clone(),
             self.template_flow_controller.clone(),
