@@ -1,4 +1,4 @@
-//! 验证 `dtd-files/` 中 Thymeleaf 官方版本化 DTD 文件集的完整性与可解析性。
+//! 验证已随 crate 发布的 `src/dtd/assets/` 官方版本化 DTD 文件集完整性。
 //!
 //! 文件来源：Thymeleaf 2.1.6.RELEASE jar `org/thymeleaf/dtd/`（58 文件），
 //! SHA-256 台账见 dtd-files/README.md；本测试逐字节比对防漂移。
@@ -77,8 +77,7 @@ fn expected_hashes() -> BTreeMap<&'static str, &'static str> {
 #[test]
 fn dtd_files_sha256_match_expected() {
     let expected = expected_hashes();
-    let dtd_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../dtd-files/thymeleaf-2.1.6/org/thymeleaf/dtd");
+    let dtd_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/dtd/assets");
     assert_eq!(
         expected.len(),
         std::fs::read_dir(&dtd_root)
@@ -130,8 +129,7 @@ fn sha256_hex(path: &PathBuf) -> String {
 fn filesystem_resolver_parses_xhtml1_strict() {
     // FilesystemResolver 根目录 = standard/（各单体 DTD 无外部引用，
     // 模块文件亦可按裸文件名解析）。
-    let dtd_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../dtd-files/thymeleaf-2.1.6/org/thymeleaf/dtd/standard");
+    let dtd_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/dtd/assets/standard");
     let main_dtd = std::fs::read_to_string(dtd_root.join("xhtml1-strict.dtd"))
         .expect("read xhtml1-strict.dtd");
     let resolver = FilesystemResolver::new(&dtd_root);

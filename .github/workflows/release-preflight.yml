@@ -5,6 +5,9 @@ on:
     paths:
       - Cargo.toml
       - thymeleaf/Cargo.toml
+      - 'thymeleaf/src/dtd/**'
+      - thymeleaf/tests/dtd_file_integrity.rs
+      - 'dtd-files/**'
       - CHANGELOG.md
       - scripts/publish-precheck.sh
       - scripts/check_block_on.sh
