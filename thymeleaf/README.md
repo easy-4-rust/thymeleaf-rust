@@ -19,7 +19,7 @@
 
 ---
 
-> **Project status: core crate published; 0.1.1 is a security/dependency maintenance release**
+> **Project status: preparing 0.1.2 with DTD packaging and throttled-rendering fixes; the published core crate remains 0.1.1**
 >
 > The `thymeleaf` core crate is available on [crates.io](https://crates.io/crates/thymeleaf).
 > Its fixed Java 3.1.5 oracle has 2,608 tracked `.thtest` cases: 2,595 identical
