@@ -61,6 +61,9 @@ trap 'rm -rf "$PACKAGED_DIR"' EXIT
 tar -xzf "$PACKAGED_ARCHIVE" -C "$PACKAGED_DIR"
 (
   cd "$PACKAGED_DIR/thymeleaf-$PACKAGED_VERSION"
+  # Keep compile-time CARGO_MANIFEST_DIR paths scoped to this extraction. Reusing
+  # an external target can run cached test binaries pointing at a removed temp dir.
+  export CARGO_TARGET_DIR="$PACKAGED_DIR/target"
   cargo test --no-default-features
   cargo test --all-features
   cargo doc --all-features --no-deps
