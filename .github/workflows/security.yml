@@ -32,7 +32,7 @@ jobs:
         run: cargo install cargo-audit --locked
 
       - name: Install cargo-deny
-        run: cargo install cargo-deny --locked
+        run: cargo install cargo-deny --locked --version 0.21.0
 
       - name: cargo audit
         run: cargo audit
