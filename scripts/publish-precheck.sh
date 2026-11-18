@@ -38,6 +38,38 @@ else
   exit 1
 fi
 
+echo "=== 3a) Verify the shipped .crate with all features (not just workspace) ==="
+PACKAGED_VERSION="$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"])')"
+PACKAGE_LIST="$(cargo package -p thymeleaf --list --allow-dirty)"
+PACKAGED_DTD_COUNT="$(printf '%s\n' "$PACKAGE_LIST" | grep -Ec '^src/dtd/assets/(standard|thymeleaf)/' || true)"
+if [ "$PACKAGED_DTD_COUNT" -ne 58 ]; then
+  echo "::error::Expected 58 embedded DTD assets in the published crate; found $PACKAGED_DTD_COUNT" >&2
+  exit 1
+fi
+echo "  Published archive contains all 58 DTD files"
+
+# cargo package verifies compilation from the *unpacked package*, unlike a
+# workspace cargo doc/test that can accidentally see ../dtd-files.
+cargo package -p thymeleaf --all-features --allow-dirty --locked
+PACKAGED_ARCHIVE="${CARGO_TARGET_DIR:-target}/package/thymeleaf-${PACKAGED_VERSION}.crate"
+if [ ! -f "$PACKAGED_ARCHIVE" ]; then
+  echo "::error::Missing verified package archive: $PACKAGED_ARCHIVE" >&2
+  exit 1
+fi
+PACKAGED_DIR="$(mktemp -d)"
+trap 'rm -rf "$PACKAGED_DIR"' EXIT
+tar -xzf "$PACKAGED_ARCHIVE" -C "$PACKAGED_DIR"
+(
+  cd "$PACKAGED_DIR/thymeleaf-$PACKAGED_VERSION"
+  # Keep compile-time CARGO_MANIFEST_DIR paths scoped to this extraction. Reusing
+  # an external target can run cached test binaries pointing at a removed temp dir.
+  export CARGO_TARGET_DIR="$PACKAGED_DIR/target"
+  cargo test --no-default-features
+  cargo test --all-features
+  cargo doc --all-features --no-deps
+)
+echo "  PASS (packaged default/all-features tests and rustdoc)"
+
 echo "=== 4) CHANGELOG 存在未发布条目检查 ==="
 NEXT=$(cargo metadata --format-version 1 --no-deps | python3 -c "import json,sys; m=json.load(sys.stdin); print([p['version'] for p in m['packages'] if p['name']=='thymeleaf'][0])")
 echo "  待发布版本: $NEXT"

@@ -16,7 +16,7 @@
 
 ## 1. 当前版本与目标
 
-- 当前开发版本：`0.1.1`（2026-11-09 准备兼容性与安全补丁版；此前 `0.1.0` 于 2026-09-17 晋级首个稳定版；历程 `0.1.0-alpha.1`（2026-08-02）→
+- 当前开发版本：`0.1.2`（2026-11-17 准备 DTD 发布包与节流渲染补丁版；当前已发布核心 crate 为 `0.1.1`；此前 `0.1.0` 于 2026-09-17 晋级首个稳定版；历程 `0.1.0-alpha.1`（2026-08-02）→
   `0.1.0-beta.0/1/2` → `0.1.0`，此后按 SemVer 承诺演化）
 - 阶段目标：维持 alpha 系列（`0.1.0-alpha.x`）直至治理、鲁棒性与发布流程全部就绪，
   再按 §3 晋级 `0.1.0`（首个稳定版），此后按 SemVer 承诺演化。
@@ -65,8 +65,8 @@ alpha 阶段不承诺稳定 API；但以下红线始终有效：
 
 - 版本号单一事实来源：`Cargo.toml` `[workspace.package].version`（当前 14 个 Workspace support
   crate 已全部 `*.workspace = true` 继承，Tide 作为不发布的独立源码示例排除；禁止手写版本号）；
-- `thymeleaf-topcoat` 因依赖 topcoat 0.7+ 强制 rustc 1.98，已按本条规则显式声明
-  `rust-version = "1.98"` 并在 `docs/release/versioning.md` 登记例外（2026-09-17）；
+- `thymeleaf-topcoat` 因依赖 topcoat 0.12.1 强制 rustc 1.99，已按本条规则显式声明
+  `rust-version = "1.99"` 并在 `docs/release/versioning.md` 登记例外（2026-11-18）；
   其余 crate 维持 workspace 继承的 1.95
 - 根 `Cargo.lock` 不跟踪（库 crate 发布惯例），CI 使用 `--locked` 时以
   `xtask/Cargo.lock` 为准。

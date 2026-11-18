@@ -70,6 +70,9 @@ feature-depth = 1
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
+    # --- 限时保留 0.1.x 公开时间类型，迁移见 #57（cargo-deny 0.21.0+） ---
+    { id = "RUSTSEC-2026-0543", expiry = "2026-12-18", reason = "chrono 停止维护。保留 0.1.x 公开 API，替换进度见 #57" },
+    { id = "RUSTSEC-2026-0555", expiry = "2026-12-18", reason = "chrono-tz 停止维护。保留 0.1.x 公开 API，替换进度见 #57" },
     # --- sa-token-core 外部依赖链（jsonwebtoken -> rsa -> 旧 AES），notice/unmaintained ---
     { id = "RUSTSEC-2023-0071", reason = "rsa notice，经 sa-token-core 外部依赖引入" },
     { id = "RUSTSEC-2021-0060", reason = "aes-soft 未维护，sa-token-core crypto 链" },

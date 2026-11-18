@@ -18,7 +18,7 @@
 
 ---
 
-> **项目状态：核心 Crate 已发布，0.1.1 为安全与依赖维护版本**
+> **项目状态：0.1.2 修复 DTD 打包与节流渲染**
 >
 > `thymeleaf` 核心包已在 [crates.io](https://crates.io/crates/thymeleaf) 发布。
 > 固定 Java 3.1.5 基线登记了 2,608 个 `.thtest` 用例：2,595 个行为相同，

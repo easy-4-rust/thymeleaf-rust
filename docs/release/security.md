@@ -55,6 +55,9 @@ grep -rn "unsafe " thymeleaf/src --include="*.rs" | wc -l   # → 0
 - **cargo-deny**：licenses 显式 allowlist（`deny.toml [licenses]`）；
   advisories 检查启用，例外逐条登记并注明理由（如 sa-token 外部链的
   notice/unmaintained 豁免，deny.toml:80 注释）；
+- [#57](https://github.com/easy-4-rust/thymeleaf-rust/issues/57) 的兼容期只覆盖
+  `RUSTSEC-2026-0543` 和 `RUSTSEC-2026-0555` 两条停止维护公告。Cargo-deny
+  0.21.0 在 `2026-12-18` 到期后恢复将这两项报告为错误。其他公告规则照常执行。
 - **cargo-audit**：RUSTSEC 公告门禁；
 - **来源约束**：crates.io 之外的新依赖源须增补 sources 白名单并评审
   （2026-08-16 曾为 aspect-rs git 源做过一次增补，commit d59d2fa）。

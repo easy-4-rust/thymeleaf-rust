@@ -4,7 +4,7 @@ use futures_executor::block_on;
 use http_body_util::BodyExt;
 use thymeleaf::web::{RenderedTemplate, RenderedTemplateBody};
 use thymeleaf_topcoat::ThymeleafView;
-use topcoat::context::CxTestBuilder;
+use topcoat::context::Cx;
 use topcoat::router::response::IntoResponse;
 
 #[test]
@@ -17,7 +17,7 @@ fn response_preserves_status_headers_and_full_payload() {
     rendered
         .get_headers_mut()
         .insert("x-template", "thymeleaf".parse().expect("valid header"));
-    let context = CxTestBuilder::new().build();
+    let context = Cx::new();
 
     let response = ThymeleafView::new(rendered)
         .into_response(&context)
@@ -60,7 +60,7 @@ async fn render_async_renders_template_on_blocking_pool() {
     )
     .await
     .unwrap_or_else(|error| panic!("async render: {error}"));
-    let cx = topcoat::context::CxTestBuilder::new().build();
+    let cx = Cx::new();
     let response = view.into_response(&cx).expect("into response");
     let bytes = http_body_util::BodyExt::collect(response.into_body())
         .await

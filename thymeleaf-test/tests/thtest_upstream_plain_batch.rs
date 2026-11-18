@@ -1279,11 +1279,33 @@ fn canonical_markup_trace(markup: &str) -> Vec<String> {
                 "C:{}",
                 String::from_utf8_lossy(comment.value.as_ref())
             )),
-            Token::Doctype(doctype) => trace.push(format!("D:{:?}", doctype.value)),
+            // html5gum 0.9 represents DOCTYPE by its parsed fields, not `value`.
+            // Preserve every semantically relevant field in the canonical trace.
+            Token::Doctype(doctype) => trace.push(format!(
+                "D:{:?}:{:?}:{:?}:{}",
+                doctype.name,
+                doctype.public_identifier,
+                doctype.system_identifier,
+                doctype.force_quirks,
+            )),
             Token::Error(_) => {}
         }
     }
     trace
+}
+
+#[test]
+fn canonical_markup_trace_preserves_doctype_identifiers() {
+    let original = "<!DOCTYPE html PUBLIC \"public-A\" \"system-A\"><html></html>";
+    let case_variant = "<!doctype HTML public \"public-A\" \"system-A\"><html></html>";
+    let other_public = "<!DOCTYPE html PUBLIC \"public-B\" \"system-A\"><html></html>";
+    let other_system = "<!DOCTYPE html PUBLIC \"public-A\" \"system-B\"><html></html>";
+
+    let original_trace = canonical_markup_trace(original);
+    assert_eq!(original_trace, canonical_markup_trace(case_variant));
+    assert_ne!(original_trace, canonical_markup_trace(other_public));
+    assert_ne!(original_trace, canonical_markup_trace(other_system));
+    assert_ne!(original_trace, canonical_markup_trace("<html></html>"));
 }
 
 fn normalize_markup_whitespace(markup: &str) -> String {
