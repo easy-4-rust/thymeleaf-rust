@@ -65,8 +65,8 @@ alpha 阶段不承诺稳定 API；但以下红线始终有效：
 
 - 版本号单一事实来源：`Cargo.toml` `[workspace.package].version`（当前 14 个 Workspace support
   crate 已全部 `*.workspace = true` 继承，Tide 作为不发布的独立源码示例排除；禁止手写版本号）；
-- `thymeleaf-topcoat` 因依赖 topcoat 0.7+ 强制 rustc 1.98，已按本条规则显式声明
-  `rust-version = "1.98"` 并在 `docs/release/versioning.md` 登记例外（2026-09-17）；
+- `thymeleaf-topcoat` 因依赖 topcoat 0.12.1 强制 rustc 1.99，已按本条规则显式声明
+  `rust-version = "1.99"` 并在 `docs/release/versioning.md` 登记例外（2026-11-18）；
   其余 crate 维持 workspace 继承的 1.95
 - 根 `Cargo.lock` 不跟踪（库 crate 发布惯例），CI 使用 `--locked` 时以
   `xtask/Cargo.lock` 为准。

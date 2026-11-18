@@ -33,3 +33,10 @@ topcoat 的响应式 view（`topcoat_view` 宏）与 Thymeleaf 服务端模板�
 ## 5. render_async 路线
 
 topcoat 是 Tokio-first（serve/tower 生态），用 `tokio::task::spawn_blocking` 包同步渲染（同 axum 路线）。
+
+## 6. 0.12.1 兼容性维护（2026-11-18）
+
+- 依赖更新为 `=0.12.1`，最低 Rust 版本按上游声明调整为 `1.99`；核心 crate 仍保持 workspace 的 `1.95`。
+- 上游移除 `topcoat::context::CxTestBuilder`，契约测试改用公开的 `topcoat::context::Cx::new()` 创建空请求上下文。
+- `IntoResponse` 的状态码、Header、完整响应体与异步渲染行为保持现有断言；升级必须通过适配器契约及双平台 Workspace 回归。
+- 依据：上游 `v0.12.1` 的 `Cargo.toml` 与 `crates/topcoat-core/src/context.rs`；PR #53 的两平台 CI 以未解析的 `CxTestBuilder` 导入失败。

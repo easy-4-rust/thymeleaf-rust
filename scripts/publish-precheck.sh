@@ -61,10 +61,11 @@ trap 'rm -rf "$PACKAGED_DIR"' EXIT
 tar -xzf "$PACKAGED_ARCHIVE" -C "$PACKAGED_DIR"
 (
   cd "$PACKAGED_DIR/thymeleaf-$PACKAGED_VERSION"
+  cargo test --no-default-features
   cargo test --all-features
   cargo doc --all-features --no-deps
 )
-echo "  PASS (packaged all-features tests and rustdoc)"
+echo "  PASS (packaged default/all-features tests and rustdoc)"
 
 echo "=== 4) CHANGELOG 存在未发布条目检查 ==="
 NEXT=$(cargo metadata --format-version 1 --no-deps | python3 -c "import json,sys; m=json.load(sys.stdin); print([p['version'] for p in m['packages'] if p['name']=='thymeleaf'][0])")
