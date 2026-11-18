@@ -6,6 +6,8 @@
 
 use std::sync::Arc;
 
+use jiff::Timestamp;
+
 use thymeleaf::expression::TemplateValue;
 use thymeleaf::util::{DateUtils, DateValue, Locale, Utf16String};
 
@@ -617,5 +619,37 @@ fn z_pattern_zero_offset_plus0000_and_x_uses_z() {
     assert_eq!(
         z, "2024-05-17T00:00:00.000-0500",
         "'Z' 模式非零偏移为 +HHmm 无冒号: {z}"
+    );
+}
+
+#[test]
+fn submillisecond_before_epoch_uses_calendar_floor() {
+    let instant = Timestamp::from_nanosecond(-1).expect("valid instant");
+    assert_eq!(DateValue::date(instant).time_in_millis(), -1);
+}
+
+#[test]
+fn lenient_calendar_resolves_dst_gap_and_overlap() {
+    let create = |month, day, hour| {
+        DateUtils::create(
+            Some(2024),
+            Some(month),
+            Some(day),
+            Some(hour),
+            Some(30),
+            Some(17),
+            Some(250),
+            Some("America/New_York"),
+            Some(&locale_en()),
+        )
+        .expect("lenient calendar should resolve local time")
+    };
+    assert_eq!(
+        DateUtils::format_iso(Some(&create(3, 10, 2))).unwrap(),
+        js("2024-03-10T03:00:17.250-04:00")
+    );
+    assert_eq!(
+        DateUtils::format_iso(Some(&create(11, 3, 1))).unwrap(),
+        js("2024-11-03T01:30:17.250-04:00")
     );
 }

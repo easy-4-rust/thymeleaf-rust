@@ -4,7 +4,7 @@
 
 use std::sync::{Arc, OnceLock};
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 mod csprng;
@@ -139,13 +139,13 @@ pub struct TokenInfo {
     pub login_type: Arc<str>,
 
     /// Token 创建时间 | Token creation time
-    pub create_time: DateTime<Utc>,
+    pub create_time: Timestamp,
 
     /// Token 最后活跃时间 | Token last active time
-    pub last_active_time: DateTime<Utc>,
+    pub last_active_time: Timestamp,
 
     /// Token 过期时间（None 表示永不过期）| Token expiration time (None means never expires)
-    pub expire_time: Option<DateTime<Utc>>,
+    pub expire_time: Option<Timestamp>,
 
     /// 设备标识 | Device identifier
     pub device: Option<String>,
@@ -160,7 +160,7 @@ pub struct TokenInfo {
     pub refresh_token: Option<String>,
 
     /// Refresh Token 过期时间 | Refresh Token expiration time
-    pub refresh_token_expire_time: Option<DateTime<Utc>>,
+    pub refresh_token_expire_time: Option<Timestamp>,
 
     /// Per-token idle timeout (seconds). Used only when `dynamic_active_timeout` is on.
     /// 单 token 闲置超时（秒）。仅 `dynamic_active_timeout` 打开时使用。
@@ -171,7 +171,7 @@ pub struct TokenInfo {
 impl TokenInfo {
     /// Create a new instance | 创建新实例
     pub fn new(token: TokenValue, login_id: impl AsRef<str>) -> Self {
-        let now = Utc::now();
+        let now = Timestamp::now();
         Self {
             token,
             login_id: Arc::from(login_id.as_ref()),
@@ -202,7 +202,7 @@ impl TokenInfo {
     /// `is_expired` — is expired | `is_expired`
     pub fn is_expired(&self) -> bool {
         if let Some(expire_time) = self.expire_time {
-            Utc::now() > expire_time
+            Timestamp::now() > expire_time
         } else {
             false
         }
@@ -210,7 +210,7 @@ impl TokenInfo {
 
     /// `update_active_time` — update active time | `update_active_time`
     pub fn update_active_time(&mut self) {
-        self.last_active_time = Utc::now();
+        self.last_active_time = Timestamp::now();
     }
 
     /// True when idle longer than `active_timeout`.
@@ -221,9 +221,9 @@ impl TokenInfo {
         if active_timeout <= 0 {
             return false;
         }
-        Utc::now()
-            .signed_duration_since(self.last_active_time)
-            .num_seconds()
+        Timestamp::now()
+            .duration_since(self.last_active_time)
+            .as_secs()
             > active_timeout
     }
 }
@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn test_is_freeze_respects_active_timeout() {
         let mut info = TokenInfo::new(TokenValue::new("t"), "u");
-        info.last_active_time = Utc::now() - chrono::Duration::seconds(120);
+        info.last_active_time = Timestamp::now() - jiff::SignedDuration::from_secs(120);
         assert!(info.is_freeze(60));
         assert!(!info.is_freeze(-1));
         assert!(!info.is_freeze(0));

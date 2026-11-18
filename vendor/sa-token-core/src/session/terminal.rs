@@ -37,7 +37,7 @@ impl SaTerminalInfo {
             device_type: device_type.into(),
             device_id: None,
             extra_data: None,
-            create_time: chrono::Utc::now().timestamp_millis(),
+            create_time: jiff::Timestamp::now().as_millisecond(),
         }
     }
 

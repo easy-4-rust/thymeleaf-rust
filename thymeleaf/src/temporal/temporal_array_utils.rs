@@ -1,4 +1,4 @@
-use chrono_tz::Tz;
+use jiff::tz::TimeZone;
 
 use crate::util::{Locale, Utf16String};
 
@@ -15,7 +15,7 @@ pub struct TemporalArrayUtils {
 impl TemporalArrayUtils {
     /// 使用 Locale 与默认 ZoneId 创建数组工具。
     /// 对应 Java 语义：`TemporalArrayUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(locale: Locale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
+    pub fn new(locale: Locale, default_zone_id: TimeZone) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             formatting: TemporalFormattingUtils::new(locale, default_zone_id)?,
         })

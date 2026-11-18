@@ -105,7 +105,7 @@ impl TicketChecker for HttpTicketChecker {
         params.insert("service".into(), service.to_string());
         params.insert(
             "timestamp".into(),
-            chrono::Utc::now().timestamp().to_string(),
+            jiff::Timestamp::now().as_second().to_string(),
         );
         params.insert("nonce".into(), Uuid::new_v4().simple().to_string());
         let sign = self.sign.sign_params(&params)?;

@@ -9,7 +9,7 @@
 //! and invisible to the compiler; a named builder makes them impossible and
 //! turns future optional fields into non-breaking additions.
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde_json::Value;
 
 use crate::keys::LOGIN_TYPE_DEFAULT;
@@ -29,7 +29,7 @@ pub struct LoginRequest {
     pub nonce: Option<String>,
     /// 自定义过期时间，缺省时由 config.timeout 推导
     /// Custom expiry; derived from `config.timeout` when absent
-    pub expire_time: Option<DateTime<Utc>>,
+    pub expire_time: Option<Timestamp>,
     /// 调用方预置的 token 值（SSO / 迁移场景复用既有 token）。
     /// 为空字符串时视为未预置，由服务层生成。
     /// Caller-supplied token value (SSO / migration); an empty string means
@@ -79,7 +79,7 @@ impl LoginRequest {
     }
 
     /// 设置自定义过期时间 | Set a custom expiry
-    pub fn expire_time(mut self, t: DateTime<Utc>) -> Self {
+    pub fn expire_time(mut self, t: Timestamp) -> Self {
         self.expire_time = Some(t);
         self
     }

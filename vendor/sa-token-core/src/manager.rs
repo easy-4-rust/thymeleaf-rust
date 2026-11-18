@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use sa_token_adapter::storage::SaStorage;
 
 use crate::config::SaTokenConfig;
@@ -375,7 +375,7 @@ impl SaTokenManager {
         device: Option<String>,
         extra_data: Option<serde_json::Value>,
         nonce: Option<String>,
-        expire_time: Option<DateTime<Utc>>,
+        expire_time: Option<Timestamp>,
     ) -> SaTokenResult<TokenValue> {
         let mut req = LoginRequest::new(login_id);
         if let Some(lt) = login_type {
@@ -819,7 +819,7 @@ mod tests {
     use super::*;
     use crate::config::{LogoutMode, TokenStyle};
     use crate::error::SaTokenError;
-    use chrono::{Duration, Utc};
+    use jiff::{SignedDuration, Timestamp};
     use sa_token_storage_memory::MemoryStorage;
 
     fn make_manager(is_concurrent: bool, auto_renew: bool, active_timeout: i64) -> SaTokenManager {
@@ -875,7 +875,7 @@ mod tests {
         let token = mgr.login("user_1").await.unwrap();
         let key = mgr.keys().token_info(token.as_str());
         let mut info = mgr.get_token_info(&token).await.unwrap();
-        info.last_active_time = Utc::now() - Duration::seconds(10);
+        info.last_active_time = Timestamp::now() - SignedDuration::from_secs(10);
         mgr.storage
             .set(
                 &key,

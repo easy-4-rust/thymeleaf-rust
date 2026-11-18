@@ -1,7 +1,8 @@
 use std::any::Any;
 
-use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
-use chrono_tz::Tz;
+use jiff::civil::{Date, DateTime, Time};
+use jiff::tz::Offset;
+use jiff::{Timestamp, ZonedDateTime};
 
 use crate::expression::TemplateObject;
 use crate::util::Utf16String;
@@ -37,23 +38,23 @@ pub enum TemporalKind {
 /// 对应 Java 语义：Rust 侧内部类型（Java 无直接对应对象）。
 pub enum TemporalValue {
     /// `java.time.Instant`。
-    Instant(DateTime<Utc>),
+    Instant(Timestamp),
     /// `java.time.LocalDate`。
-    LocalDate(NaiveDate),
+    LocalDate(Date),
     /// `java.time.LocalDateTime`。
-    LocalDateTime(NaiveDateTime),
+    LocalDateTime(DateTime),
     /// `java.time.LocalTime`。
-    LocalTime(NaiveTime),
+    LocalTime(Time),
     /// `java.time.OffsetDateTime`。
-    OffsetDateTime(DateTime<FixedOffset>),
+    OffsetDateTime(ZonedDateTime),
     /// `java.time.OffsetTime`。
-    OffsetTime(NaiveTime, FixedOffset),
+    OffsetTime(Time, Offset),
     /// `java.time.Year`。
     Year(i32),
     /// `java.time.YearMonth`。
     YearMonth(i32, u32),
     /// `java.time.ZonedDateTime`。
-    ZonedDateTime(DateTime<Tz>),
+    ZonedDateTime(ZonedDateTime),
 }
 
 impl TemporalValue {
@@ -81,7 +82,9 @@ impl TemporalValue {
     /// 对应 Java 语义：Rust 侧辅助函数（Java 无直接对应）。
     pub fn to_javascript_iso_string(&self) -> Utf16String {
         Utf16String::from_rust_str(&match self {
-            Self::LocalDateTime(value) => value.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),
+            Self::LocalDateTime(value) => value
+                .strftime(&iso_pattern(value.subsec_nanosecond(), ""))
+                .to_string(),
             _ => self.to_utf16_string().to_string_lossy(),
         })
     }
@@ -104,26 +107,37 @@ impl TemplateObject for TemporalValue {
 
     fn to_utf16_string(&self) -> Utf16String {
         Utf16String::from_rust_str(&match self {
-            Self::Instant(value) => value.to_rfc3339_opts(chrono::SecondsFormat::AutoSi, true),
-            Self::LocalDate(value) => value.format("%Y-%m-%d").to_string(),
-            Self::LocalDateTime(value) if value.second() == 0 && value.nanosecond() == 0 => {
-                value.format("%Y-%m-%dT%H:%M").to_string()
+            Self::Instant(value) => value
+                .strftime(&iso_pattern(value.subsec_nanosecond(), "Z"))
+                .to_string(),
+            Self::LocalDate(value) => value.strftime("%Y-%m-%d").to_string(),
+            Self::LocalDateTime(value) if value.second() == 0 && value.subsec_nanosecond() == 0 => {
+                value.strftime("%Y-%m-%dT%H:%M").to_string()
             }
-            Self::LocalDateTime(value) => value.format("%Y-%m-%dT%H:%M:%S%.f").to_string(),
-            Self::LocalTime(value) => value.format("%H:%M:%S%.f").to_string(),
-            Self::OffsetDateTime(value) => {
-                value.to_rfc3339_opts(chrono::SecondsFormat::AutoSi, false)
-            }
+            Self::LocalDateTime(value) => value
+                .strftime(&iso_pattern(value.subsec_nanosecond(), ""))
+                .to_string(),
+            Self::LocalTime(value) => value
+                .strftime(time_pattern(value.subsec_nanosecond()))
+                .to_string(),
+            Self::OffsetDateTime(value) => value
+                .strftime(&iso_pattern(value.subsec_nanosecond(), "%:z"))
+                .to_string(),
             Self::OffsetTime(value, offset) => {
-                format!("{}{}", value.format("%H:%M:%S%.f"), offset)
+                let time = value.strftime(time_pattern(value.subsec_nanosecond()));
+                if offset.seconds() % 3_600 == 0 {
+                    format!("{time}{offset}:00")
+                } else {
+                    format!("{time}{offset}")
+                }
             }
             Self::Year(value) => value.to_string(),
             Self::YearMonth(year, month) => format!("{year:04}-{month:02}"),
             Self::ZonedDateTime(value) => {
                 format!(
                     "{}[{}]",
-                    value.to_rfc3339_opts(chrono::SecondsFormat::AutoSi, false),
-                    value.timezone()
+                    value.strftime(&iso_pattern(value.subsec_nanosecond(), "%:z")),
+                    value.time_zone().iana_name().unwrap_or("UTC")
                 )
             }
         })
@@ -131,5 +145,19 @@ impl TemplateObject for TemporalValue {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+/// 保留 Java 兼容的 ISO 秒与 3、6、9 位小数输出。
+fn iso_pattern(nanos: i32, suffix: &str) -> String {
+    format!("%Y-%m-%dT{}{suffix}", time_pattern(nanos))
+}
+
+fn time_pattern(nanos: i32) -> &'static str {
+    match nanos {
+        0 => "%H:%M:%S",
+        value if value % 1_000_000 == 0 => "%H:%M:%S%.3f",
+        value if value % 1_000 == 0 => "%H:%M:%S%.6f",
+        _ => "%H:%M:%S%.9f",
     }
 }

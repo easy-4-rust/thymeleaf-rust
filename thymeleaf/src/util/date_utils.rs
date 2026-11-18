@@ -1,11 +1,9 @@
 use std::any::Any;
 use std::sync::Arc;
 
-use chrono::{
-    DateTime, Datelike, Duration, FixedOffset, LocalResult, NaiveDate, NaiveDateTime, Offset,
-    TimeZone, Timelike, Utc, Weekday,
-};
-use chrono_tz::Tz;
+use jiff::civil::{Date, DateTime, Weekday};
+use jiff::tz::{AmbiguousOffset, Offset, TimeZone};
+use jiff::{SignedDuration, Timestamp};
 use thiserror::Error;
 
 use crate::expression::{TemplateObject, TemplateValue};
@@ -16,9 +14,9 @@ use super::{Locale, NumberValue, Utf16String};
 /// 对应 Java 语义：`DateUtils` 的 Rust 侧类型 `DateValue`。
 #[derive(Clone, Debug)]
 pub struct DateValue {
-    instant: DateTime<Utc>,
-    time_zone: Option<Tz>,
-    fixed_offset: Option<FixedOffset>,
+    instant: Timestamp,
+    time_zone: Option<TimeZone>,
+    fixed_offset: Option<Offset>,
     zone_display_name: Option<String>,
     calendar: bool,
 }
@@ -26,7 +24,7 @@ pub struct DateValue {
 impl DateValue {
     /// 从 UTC 瞬时创建 Java `Date` 等价值。
     #[must_use]
-    pub const fn date(instant: DateTime<Utc>) -> Self {
+    pub const fn date(instant: Timestamp) -> Self {
         Self {
             instant,
             time_zone: None,
@@ -38,7 +36,7 @@ impl DateValue {
 
     /// 从瞬时和时区创建 Java `Calendar` 等价值。
     #[must_use]
-    pub const fn calendar(instant: DateTime<Utc>, time_zone: Tz) -> Self {
+    pub const fn calendar(instant: Timestamp, time_zone: TimeZone) -> Self {
         Self {
             instant,
             time_zone: Some(time_zone),
@@ -48,7 +46,7 @@ impl DateValue {
         }
     }
 
-    fn calendar_for_time_zone(instant: DateTime<Utc>, time_zone: TimeZoneValue) -> Self {
+    fn calendar_for_time_zone(instant: Timestamp, time_zone: TimeZoneValue) -> Self {
         match time_zone {
             TimeZoneValue::Named(time_zone, zone_display_name) => Self {
                 instant,
@@ -71,7 +69,8 @@ impl DateValue {
     /// 对应 Java 语义：`DateUtils` 的 `time_in_millis` 行为（Rust 侧辅助/私有路径）。
     #[must_use]
     pub fn time_in_millis(&self) -> i64 {
-        self.instant.timestamp_millis()
+        i64::try_from(self.instant.as_nanosecond().div_euclid(1_000_000))
+            .expect("Jiff timestamp range fits in i64 milliseconds")
     }
 
     /// 判断对象是否保留 Calendar 时区。
@@ -100,8 +99,8 @@ impl TemplateObject for DateValue {
         let local = self.local_date_time();
         Utf16String::from_rust_str(&format!(
             "{} {} {:02} {:02}:{:02}:{:02} {} {}",
-            local.format("%a"),
-            local.format("%b"),
+            local.strftime("%a"),
+            local.strftime("%b"),
             local.day(),
             local.hour(),
             local.minute(),
@@ -173,30 +172,24 @@ impl DateValue {
         if let Some(fixed_offset) = self.fixed_offset {
             TimeZoneValue::Fixed(fixed_offset)
         } else {
-            TimeZoneValue::Named(self.time_zone.unwrap_or_else(default_time_zone), None)
+            TimeZoneValue::Named(
+                self.time_zone.clone().unwrap_or_else(default_time_zone),
+                None,
+            )
         }
     }
 
-    fn local_date_time(&self) -> NaiveDateTime {
+    fn local_date_time(&self) -> DateTime {
         match self.effective_time_zone() {
-            TimeZoneValue::Named(time_zone, _) => {
-                self.instant.with_timezone(&time_zone).naive_local()
-            }
-            TimeZoneValue::Fixed(fixed_offset) => {
-                self.instant.with_timezone(&fixed_offset).naive_local()
-            }
+            TimeZoneValue::Named(time_zone, _) => time_zone.to_datetime(self.instant),
+            TimeZoneValue::Fixed(fixed_offset) => fixed_offset.to_datetime(self.instant),
         }
     }
 
     fn offset_seconds(&self) -> i32 {
         match self.effective_time_zone() {
-            TimeZoneValue::Named(time_zone, _) => self
-                .instant
-                .with_timezone(&time_zone)
-                .offset()
-                .fix()
-                .local_minus_utc(),
-            TimeZoneValue::Fixed(fixed_offset) => fixed_offset.local_minus_utc(),
+            TimeZoneValue::Named(time_zone, _) => time_zone.to_offset(self.instant).seconds(),
+            TimeZoneValue::Fixed(fixed_offset) => fixed_offset.seconds(),
         }
     }
 
@@ -205,20 +198,19 @@ impl DateValue {
             return zone_display_name.clone();
         }
         match self.effective_time_zone() {
-            TimeZoneValue::Named(time_zone, _) => self
-                .instant
-                .with_timezone(&time_zone)
-                .format("%Z")
-                .to_string(),
-            TimeZoneValue::Fixed(fixed_offset) => format_gmt_offset(fixed_offset.local_minus_utc()),
+            TimeZoneValue::Named(time_zone, _) => time_zone
+                .to_offset_info(self.instant)
+                .abbreviation()
+                .to_owned(),
+            TimeZoneValue::Fixed(fixed_offset) => format_gmt_offset(fixed_offset.seconds()),
         }
     }
 }
 
 #[derive(Clone, Debug)]
 enum TimeZoneValue {
-    Named(Tz, Option<String>),
-    Fixed(FixedOffset),
+    Named(TimeZone, Option<String>),
+    Fixed(Offset),
 }
 
 /// 日期创建、归一化或格式化错误。
@@ -285,21 +277,22 @@ impl DateUtils {
         let total_months = i64::from(year) * 12 + i64::from(month) - 1;
         let normalized_year = total_months.div_euclid(12);
         let normalized_month = total_months.rem_euclid(12) + 1;
-        let normalized_year = i32::try_from(normalized_year)
+        let normalized_year = i16::try_from(normalized_year)
             .map_err(|_| invalid("Calendar year is outside supported range"))?;
-        let date = NaiveDate::from_ymd_opt(normalized_year, normalized_month as u32, 1)
-            .ok_or_else(|| invalid("Calendar date is outside supported range"))?
-            + Duration::days(i64::from(day) - 1);
-        let naive = date
-            .and_hms_milli_opt(0, 0, 0, 0)
-            .expect("midnight is valid")
-            + Duration::hours(i64::from(hour.unwrap_or(0)))
-            + Duration::minutes(i64::from(minute.unwrap_or(0)))
-            + Duration::seconds(i64::from(second.unwrap_or(0)))
-            + Duration::milliseconds(i64::from(millisecond.unwrap_or(0)));
+        let base = Date::new(normalized_year, normalized_month as i8, 1)
+            .map_err(|_| invalid("Calendar date is outside supported range"))?;
+        let millis = (((i64::from(day) - 1) * 24 + i64::from(hour.unwrap_or(0))) * 3600
+            + i64::from(minute.unwrap_or(0)) * 60
+            + i64::from(second.unwrap_or(0)))
+            * 1000
+            + i64::from(millisecond.unwrap_or(0));
+        let naive = base
+            .at(0, 0, 0, 0)
+            .checked_add(SignedDuration::from_millis(millis))
+            .map_err(|_| invalid("Calendar date is outside supported range"))?;
         let time_zone = parse_time_zone(time_zone);
         Ok(DateValue::calendar_for_time_zone(
-            resolve_local_datetime(&time_zone, naive),
+            resolve_local_datetime(&time_zone, naive)?,
             time_zone,
         ))
     }
@@ -308,7 +301,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#createNow()`。
     #[must_use]
     pub fn create_now(time_zone: Option<&str>, _locale: Option<&Locale>) -> DateValue {
-        DateValue::calendar_for_time_zone(Utc::now(), parse_time_zone(time_zone))
+        DateValue::calendar_for_time_zone(Timestamp::now(), parse_time_zone(time_zone))
     }
 
     /// 返回指定时区当天零点 Calendar。
@@ -316,13 +309,12 @@ impl DateUtils {
     #[must_use]
     pub fn create_today(time_zone: Option<&str>, locale: Option<&Locale>) -> DateValue {
         let now = Self::create_now(time_zone, locale);
-        let midnight = now
-            .local_date_time()
-            .date()
-            .and_hms_opt(0, 0, 0)
-            .expect("midnight");
+        let midnight = now.local_date_time().date().at(0, 0, 0, 0);
         let time_zone = now.effective_time_zone();
-        DateValue::calendar_for_time_zone(resolve_local_datetime(&time_zone, midnight), time_zone)
+        DateValue::calendar_for_time_zone(
+            resolve_local_datetime(&time_zone, midnight).expect("current midnight is in range"),
+            time_zone,
+        )
     }
 
     /// 使用 Locale 默认长日期时间格式或指定 SimpleDateFormat pattern 格式化。
@@ -387,7 +379,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#year()`。
     #[must_use]
     pub fn year(target: Option<&DateValue>) -> Option<i32> {
-        target.map(|target| target.local_date_time().year())
+        target.map(|target| i32::from(target.local_date_time().year()))
     }
 
     /// 返回 Java Calendar 周日为 1 的星期编号。
@@ -395,13 +387,13 @@ impl DateUtils {
     #[must_use]
     pub fn day_of_week(target: Option<&DateValue>) -> Option<i32> {
         target.map(|target| match target.local_date_time().weekday() {
-            Weekday::Sun => 1,
-            Weekday::Mon => 2,
-            Weekday::Tue => 3,
-            Weekday::Wed => 4,
-            Weekday::Thu => 5,
-            Weekday::Fri => 6,
-            Weekday::Sat => 7,
+            Weekday::Sunday => 1,
+            Weekday::Monday => 2,
+            Weekday::Tuesday => 3,
+            Weekday::Wednesday => 4,
+            Weekday::Thursday => 5,
+            Weekday::Friday => 6,
+            Weekday::Saturday => 7,
         })
     }
 
@@ -450,7 +442,7 @@ impl DateUtils {
     /// 对应 Java: `DateUtils#millisecond()`。
     #[must_use]
     pub fn millisecond(target: Option<&DateValue>) -> Option<i32> {
-        target.map(|target| target.local_date_time().and_utc().timestamp_subsec_millis() as i32)
+        target.map(|target| target.local_date_time().subsec_nanosecond() / 1_000_000)
     }
 
     /// 输出 `yyyy-MM-dd'T'HH:mm:ss.SSS+HH:MM` 形式（Java `formatISO` 的
@@ -462,7 +454,7 @@ impl DateUtils {
             let local = target.local_date_time();
             Utf16String::from_rust_str(&format!(
                 "{}{}",
-                local.format("%Y-%m-%dT%H:%M:%S%.3f"),
+                local.strftime("%Y-%m-%dT%H:%M:%S%.3f"),
                 iso_offset_colon(target.offset_seconds())
             ))
         })
@@ -545,25 +537,23 @@ fn parse_time_zone(value: Option<&str>) -> TimeZoneValue {
     if let Some((time_zone, display_name)) = short_time_zone(value) {
         return TimeZoneValue::Named(time_zone, Some(display_name.to_owned()));
     }
-    let time_zone = value.parse::<Tz>().unwrap_or(chrono_tz::UTC);
-    TimeZoneValue::Named(
-        // TimeZone#getTimeZone 对未知 ID 返回 GMT，而不是 JVM 默认时区。
-        time_zone,
-        (time_zone != chrono_tz::UTC
-            && value.len() <= 4
-            && value
-                .chars()
-                .all(|character| character.is_ascii_uppercase()))
-        .then(|| value.to_owned()),
-    )
+    let time_zone = TimeZone::get(value).unwrap_or(TimeZone::UTC);
+    // TimeZone#getTimeZone 对未知 ID 返回 GMT，而不是 JVM 默认时区。
+    let display = (time_zone != TimeZone::UTC
+        && value.len() <= 4
+        && value
+            .chars()
+            .all(|character| character.is_ascii_uppercase()))
+    .then(|| value.to_owned());
+    TimeZoneValue::Named(time_zone, display)
 }
 
-fn fixed_time_zone(value: &str) -> Option<FixedOffset> {
+fn fixed_time_zone(value: &str) -> Option<Offset> {
     let suffix = value
         .strip_prefix("GMT")
         .or_else(|| value.strip_prefix("UTC"))?;
     if suffix.is_empty() {
-        return FixedOffset::east_opt(0);
+        return Some(Offset::UTC);
     }
     let (sign, digits) = match suffix.as_bytes().first() {
         Some(b'+') => (1, &suffix[1..]),
@@ -584,10 +574,10 @@ fn fixed_time_zone(value: &str) -> Option<FixedOffset> {
     if hours > 23 || minutes > 59 {
         return None;
     }
-    FixedOffset::east_opt(sign * (hours * 3_600 + minutes * 60))
+    Offset::from_seconds(sign * (hours * 3_600 + minutes * 60)).ok()
 }
 
-fn short_time_zone(value: &str) -> Option<(Tz, &'static str)> {
+fn short_time_zone(value: &str) -> Option<(TimeZone, &'static str)> {
     let canonical = match value {
         "GMT" | "UTC" | "UT" | "GMT+00:00" | "GMT-00:00" => "UTC",
         "ACT" => "Australia/Darwin",
@@ -617,8 +607,7 @@ fn short_time_zone(value: &str) -> Option<(Tz, &'static str)> {
         "VST" => "Asia/Ho_Chi_Minh",
         _ => return None,
     };
-    canonical
-        .parse()
+    TimeZone::get(canonical)
         .ok()
         .map(|time_zone| (time_zone, value_id(value)))
 }
@@ -659,36 +648,33 @@ fn value_id(value: &str) -> &'static str {
     }
 }
 
-fn default_time_zone() -> Tz {
+fn default_time_zone() -> TimeZone {
     std::env::var("TZ")
         .ok()
-        .and_then(|value| value.parse::<Tz>().ok())
-        .unwrap_or(chrono_tz::UTC)
+        .and_then(|value| TimeZone::get(&value).ok())
+        .unwrap_or(TimeZone::UTC)
 }
 
-fn resolve_local_datetime(time_zone: &TimeZoneValue, naive: NaiveDateTime) -> DateTime<Utc> {
+fn resolve_local_datetime(
+    time_zone: &TimeZoneValue,
+    naive: DateTime,
+) -> Result<Timestamp, DateUtilsError> {
+    let out_of_range = |_| invalid("Calendar date is outside supported range");
     match time_zone {
-        TimeZoneValue::Named(time_zone, _) => match time_zone.from_local_datetime(&naive) {
-            LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => {
-                value.with_timezone(&Utc)
-            }
-            LocalResult::None => {
-                let mut candidate = naive;
-                loop {
-                    candidate += Duration::minutes(1);
-                    if let LocalResult::Single(value) | LocalResult::Ambiguous(value, _) =
-                        time_zone.from_local_datetime(&candidate)
-                    {
-                        break value.with_timezone(&Utc);
-                    }
+        TimeZoneValue::Named(zone, _) => {
+            let mut candidate = naive;
+            loop {
+                let mapping = zone.to_ambiguous_timestamp(candidate);
+                if !matches!(mapping.offset(), AmbiguousOffset::Gap { .. }) {
+                    return mapping.earlier().map_err(out_of_range);
                 }
+                // 保留旧 Calendar 行为：推进到第一个可解析的分钟，保留秒和小数。
+                candidate = candidate
+                    .checked_add(SignedDuration::from_mins(1))
+                    .map_err(out_of_range)?;
             }
-        },
-        TimeZoneValue::Fixed(fixed_offset) => fixed_offset
-            .from_local_datetime(&naive)
-            .single()
-            .expect("固定时区的本地时间映射唯一")
-            .with_timezone(&Utc),
+        }
+        TimeZoneValue::Fixed(offset) => offset.to_timestamp(naive).map_err(out_of_range),
     }
 }
 
@@ -700,7 +686,7 @@ fn default_long_pattern(locale: &Locale) -> &'static str {
 }
 
 fn format_java_pattern(
-    date_time: &NaiveDateTime,
+    date_time: &DateTime,
     offset_seconds: i32,
     zone_display_name: &str,
     pattern: &str,
@@ -751,7 +737,7 @@ fn format_java_pattern(
 
 fn append_pattern_field(
     output: &mut String,
-    date_time: &NaiveDateTime,
+    date_time: &DateTime,
     offset_seconds: i32,
     zone_display_name: &str,
     field: char,
@@ -761,46 +747,54 @@ fn append_pattern_field(
     match field {
         'G' => output.push_str(if date_time.year() > 0 { "AD" } else { "BC" }),
         'y' => {
-            let year = date_time.year();
+            let year = i32::from(date_time.year());
             if count == 2 {
                 output.push_str(&format!("{:02}", year.rem_euclid(100)));
             } else {
                 append_signed_number(output, year, count);
             }
         }
-        'Y' => append_signed_number(output, date_time.iso_week().year(), count),
+        'Y' => append_signed_number(output, i32::from(date_time.iso_week_date().year()), count),
         'M' | 'L' if count >= 4 => {
-            output.push_str(localized_month_name(date_time.month0(), locale, false));
+            output.push_str(localized_month_name(
+                (date_time.month() - 1) as u32,
+                locale,
+                false,
+            ));
         }
         'M' | 'L' if count == 3 => {
-            output.push_str(localized_month_name(date_time.month0(), locale, true));
+            output.push_str(localized_month_name(
+                (date_time.month() - 1) as u32,
+                locale,
+                true,
+            ));
         }
-        'M' | 'L' => append_number(output, date_time.month(), count),
-        'w' => append_number(output, date_time.iso_week().week(), count),
-        'W' => append_number(output, date_time.day0() / 7 + 1, count),
-        'D' => append_number(output, date_time.ordinal(), count),
-        'd' => append_number(output, date_time.day(), count),
-        'F' => append_number(output, date_time.day0() / 7 + 1, count),
+        'M' | 'L' => append_number(output, date_time.month() as u32, count),
+        'w' => append_number(output, date_time.iso_week_date().week() as u32, count),
+        'W' => append_number(output, ((date_time.day() - 1) / 7 + 1) as u32, count),
+        'D' => append_number(output, date_time.day_of_year() as u32, count),
+        'd' => append_number(output, date_time.day() as u32, count),
+        'F' => append_number(output, ((date_time.day() - 1) / 7 + 1) as u32, count),
         'E' => output.push_str(weekday_name(date_time.weekday(), locale, count < 4)),
-        'u' => append_number(output, date_time.weekday().number_from_monday(), count),
-        'a' => output.push_str(day_period(date_time.hour(), locale)),
-        'H' => append_number(output, date_time.hour(), count),
+        'u' => append_number(output, date_time.weekday() as u32, count),
+        'a' => output.push_str(day_period(date_time.hour() as u32, locale)),
+        'H' => append_number(output, date_time.hour() as u32, count),
         'k' => append_number(
             output,
             if date_time.hour() == 0 {
                 24
             } else {
-                date_time.hour()
+                date_time.hour() as u32
             },
             count,
         ),
-        'K' => append_number(output, date_time.hour() % 12, count),
-        'h' => append_number(output, (date_time.hour() + 11) % 12 + 1, count),
-        'm' => append_number(output, date_time.minute(), count),
-        's' => append_number(output, date_time.second(), count),
+        'K' => append_number(output, (date_time.hour() % 12) as u32, count),
+        'h' => append_number(output, ((date_time.hour() + 11) % 12 + 1) as u32, count),
+        'm' => append_number(output, date_time.minute() as u32, count),
+        's' => append_number(output, date_time.second() as u32, count),
         'S' => output.push_str(&format!(
             "{:0width$}",
-            date_time.and_utc().timestamp_subsec_millis(),
+            date_time.subsec_nanosecond() / 1_000_000,
             width = count
         )),
         'z' => output.push_str(localized_zone_display_name(
@@ -998,7 +992,7 @@ fn localized_month_name(month: u32, locale: &Locale, short: bool) -> &'static st
 }
 
 fn weekday_name(weekday: Weekday, locale: &Locale, short: bool) -> &'static str {
-    let index = weekday.num_days_from_sunday() as usize;
+    let index = (weekday as usize) % 7;
     const EN_LONG: [&str; 7] = [
         "Sunday",
         "Monday",

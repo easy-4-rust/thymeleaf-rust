@@ -8,6 +8,12 @@
 
 暂无新的待发布变更。
 
+## [0.2.0]
+
+### Changed
+
+- 日期与时间依赖迁移至 Jiff（#57）。模板继续使用 `#dates` 和 `#temporals`。直接构建 Rust 时间值的调用方须改用 Jiff 类型，迁移映射见[日期与时间迁移说明](docs/superpowers/specs/2026-11-18-chrono-migration.md)。
+
 ## [0.1.2]
 
 > 修复 DTD 发布包及节流渲染。固定 Java Oracle 保持 Thymeleaf 3.1.5.RELEASE @ `10f9dd2e`。

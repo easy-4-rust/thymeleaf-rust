@@ -21,7 +21,7 @@ pub use slo::HttpSloNotifier;
 
 use std::sync::Arc;
 
-use chrono::{DateTime, Duration as ChronoDuration, Utc};
+use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
 
 use crate::error::{SaTokenError, SaTokenResult};
@@ -45,10 +45,10 @@ pub struct SsoTicket {
     pub login_id: String,
     /// Creation time.
     /// 创建时间。
-    pub create_time: DateTime<Utc>,
+    pub create_time: Timestamp,
     /// Expiration time.
     /// 过期时间。
-    pub expire_time: DateTime<Utc>,
+    pub expire_time: Timestamp,
     /// Used flag (kept for serialization compatibility; consume deletes the key).
     /// 已使用标记（保留以兼容序列化；消费时删除键）。
     pub used: bool,
@@ -58,13 +58,13 @@ impl SsoTicket {
     /// Create a new ticket.
     /// 创建新票据。
     pub fn new(login_id: String, service: String, timeout_seconds: i64) -> Self {
-        let now = Utc::now();
+        let now = Timestamp::now();
         Self {
             ticket_id: uuid::Uuid::new_v4().to_string(),
             service,
             login_id,
             create_time: now,
-            expire_time: now + ChronoDuration::seconds(timeout_seconds),
+            expire_time: now + SignedDuration::from_secs(timeout_seconds),
             used: false,
         }
     }
@@ -72,7 +72,7 @@ impl SsoTicket {
     /// True when past expire_time.
     /// 已超过过期时间时为 true。
     pub fn is_expired(&self) -> bool {
-        Utc::now() > self.expire_time
+        Timestamp::now() > self.expire_time
     }
 
     /// True when unused and not expired.
@@ -94,17 +94,17 @@ pub struct SsoSession {
     pub clients: Vec<String>,
     /// Creation time.
     /// 创建时间。
-    pub create_time: DateTime<Utc>,
+    pub create_time: Timestamp,
     /// Last activity time.
     /// 最后活动时间。
-    pub last_active_time: DateTime<Utc>,
+    pub last_active_time: Timestamp,
 }
 
 impl SsoSession {
     /// Create an empty session for login_id.
     /// 为 login_id 创建空会话。
     pub fn new(login_id: String) -> Self {
-        let now = Utc::now();
+        let now = Timestamp::now();
         Self {
             login_id,
             clients: Vec::new(),
@@ -119,14 +119,14 @@ impl SsoSession {
         if !self.clients.contains(&service) {
             self.clients.push(service);
         }
-        self.last_active_time = Utc::now();
+        self.last_active_time = Timestamp::now();
     }
 
     /// Remove a client URL.
     /// 移除客户端 URL。
     pub fn remove_client(&mut self, service: &str) {
         self.clients.retain(|c| c != service);
-        self.last_active_time = Utc::now();
+        self.last_active_time = Timestamp::now();
     }
 }
 

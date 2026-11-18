@@ -1316,9 +1316,9 @@ impl StpUtil {
         let token_info = manager.get_token_info(token).await?;
 
         if let Some(expire_time) = token_info.expire_time {
-            let now = chrono::Utc::now();
-            let duration = expire_time.signed_duration_since(now);
-            Ok(Some(duration.num_seconds()))
+            let now = jiff::Timestamp::now();
+            let duration = expire_time.duration_since(now);
+            Ok(Some(duration.as_secs()))
         } else {
             Ok(None) // 永久有效
         }
@@ -1608,7 +1608,7 @@ pub struct TokenBuilder {
     device: Option<String>,
     login_type: Option<String>,
     nonce: Option<String>,
-    expire_time: Option<chrono::DateTime<chrono::Utc>>,
+    expire_time: Option<jiff::Timestamp>,
 }
 
 impl std::fmt::Debug for TokenBuilder {
@@ -1656,21 +1656,21 @@ impl TokenBuilder {
     }
 
     /// 设置绝对过期时间 / Set absolute expiration
-    pub fn expire_at(mut self, expire_time: chrono::DateTime<chrono::Utc>) -> Self {
+    pub fn expire_at(mut self, expire_time: jiff::Timestamp) -> Self {
         self.expire_time = Some(expire_time);
         self
     }
 
     /// 设置 Unix 秒级绝对过期时间 / Set absolute expiration from Unix seconds
     pub fn expire_at_unix(mut self, unix_seconds: i64) -> Self {
-        self.expire_time = chrono::DateTime::from_timestamp(unix_seconds, 0);
+        self.expire_time = jiff::Timestamp::from_second(unix_seconds).ok();
         self
     }
 
     /// Alias of [`Self::expire_at`].
     /// [`Self::expire_at`] 的别名。
     #[deprecated(note = "use expire_at()")]
-    pub fn expire_time(self, expire_time: chrono::DateTime<chrono::Utc>) -> Self {
+    pub fn expire_time(self, expire_time: jiff::Timestamp) -> Self {
         self.expire_at(expire_time)
     }
 

@@ -9,7 +9,7 @@ use crate::error::{SaTokenError, SaTokenResult};
 use crate::token::TokenValue;
 use crate::token::csprng::{fill_bytes, random_hex, random_tik};
 use crate::token::jwt::{JwtAlgorithm, JwtClaims, JwtManager};
-use chrono::Utc;
+use jiff::Timestamp;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
@@ -78,7 +78,7 @@ impl TokenGenerator {
     pub fn generate_jwt(config: &SaTokenConfig, login_id: &str) -> SaTokenResult<TokenValue> {
         let secret = require_jwt_secret(config)?;
         let effective_login_id = if login_id.is_empty() {
-            Utc::now().timestamp_millis().to_string()
+            Timestamp::now().as_millisecond().to_string()
         } else {
             login_id.to_string()
         };
@@ -118,7 +118,7 @@ impl TokenGenerator {
     ) -> SaTokenResult<TokenValue> {
         let secret = require_jwt_secret(config)?;
         let effective_login_id = if login_id.is_empty() {
-            Utc::now().timestamp_millis().to_string()
+            Timestamp::now().as_millisecond().to_string()
         } else {
             login_id.to_string()
         };
@@ -164,7 +164,7 @@ impl TokenGenerator {
     /// Generate Hash style token | 生成 Hash 风格 token
     pub fn generate_hash(login_id: &str) -> SaTokenResult<TokenValue> {
         let login_id_value = if login_id.is_empty() {
-            Utc::now().timestamp_millis().to_string()
+            Timestamp::now().as_millisecond().to_string()
         } else {
             login_id.to_string()
         };
@@ -173,7 +173,7 @@ impl TokenGenerator {
         let data = format!(
             "{}{}{}",
             login_id_value,
-            Utc::now().timestamp_millis(),
+            Timestamp::now().as_millisecond(),
             hex::encode(salt)
         );
         let mut hasher = Sha256::new();
@@ -183,7 +183,7 @@ impl TokenGenerator {
 
     /// Generate Timestamp style token | 生成时间戳风格 token
     pub fn generate_timestamp() -> SaTokenResult<TokenValue> {
-        let timestamp = Utc::now().timestamp_millis();
+        let timestamp = Timestamp::now().as_millisecond();
         let suffix = random_hex(16)?;
         Ok(TokenValue::new(format!("{timestamp}_{suffix}")))
     }

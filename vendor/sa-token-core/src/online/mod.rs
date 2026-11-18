@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use tokio::sync::RwLock;
 
 use crate::dao::SaTokenDao;
@@ -34,9 +34,9 @@ pub struct OnlineUser {
     /// Device / terminal label | 设备/终端标识
     pub device: String,
     /// First connect time | 首次连接时间
-    pub connect_time: DateTime<Utc>,
+    pub connect_time: Timestamp,
     /// Last activity time | 最近活跃时间
-    pub last_activity: DateTime<Utc>,
+    pub last_activity: Timestamp,
     /// Extra key-value metadata | 扩展元数据
     pub metadata: HashMap<String, String>,
 }
@@ -49,7 +49,7 @@ impl OnlineUser {
         token: impl Into<String>,
         device: impl Into<String>,
     ) -> Self {
-        let now = Utc::now();
+        let now = Timestamp::now();
         Self {
             login_type: LOGIN_TYPE_DEFAULT.to_string(),
             login_id: login_id.into(),
@@ -72,7 +72,7 @@ pub struct PushMessage {
     /// Message kind | 消息类型
     pub message_type: MessageType,
     /// Event timestamp | 事件时间戳
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: Timestamp,
     /// Extra key-value metadata | 扩展元数据
     pub metadata: HashMap<String, String>,
 }
@@ -242,7 +242,7 @@ impl OnlineManager {
             message_id: uuid::Uuid::new_v4().to_string(),
             content,
             message_type: MessageType::Text,
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             metadata: HashMap::new(),
         };
         let pushers = self.cloned_pushers().await;
@@ -283,7 +283,7 @@ impl OnlineManager {
             message_id: uuid::Uuid::new_v4().to_string(),
             content: reason,
             message_type: MessageType::KickOut,
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             metadata: HashMap::new(),
         };
         self.push_message_to_user(login_id, message).await?;
