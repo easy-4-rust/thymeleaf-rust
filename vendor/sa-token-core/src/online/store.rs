@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
@@ -30,9 +30,9 @@ pub struct StoredOnlineUser {
     /// Device / terminal label | 设备/终端标识
     pub device: String,
     /// First connect time | 首次连接时间
-    pub connect_time: DateTime<Utc>,
+    pub connect_time: Timestamp,
     /// Last activity time | 最近活跃时间
-    pub last_activity: DateTime<Utc>,
+    pub last_activity: Timestamp,
     /// Extra key-value metadata | 扩展元数据
     pub metadata: HashMap<String, String>,
 }
@@ -247,7 +247,7 @@ impl OnlineStore for DistributedOnlineStore {
     ) -> SaTokenResult<()> {
         let key = self.item_key(login_type, login_id, token);
         if let Some(mut stored) = self.dao.get_object::<StoredOnlineUser>(&key).await? {
-            stored.last_activity = Utc::now();
+            stored.last_activity = Timestamp::now();
             self.dao.set_object(&key, &stored, self.entry_ttl).await?;
         }
         Ok(())
@@ -384,7 +384,7 @@ impl OnlineStore for LocalOnlineStore {
         let mut map = self.inner.write().await;
         if let Some(list) = map.get_mut(&local_map_key(login_type, login_id)) {
             if let Some(u) = list.iter_mut().find(|u| u.token == token) {
-                u.last_activity = Utc::now();
+                u.last_activity = Timestamp::now();
             }
         }
         Ok(())

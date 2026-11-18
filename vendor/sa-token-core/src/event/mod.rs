@@ -118,7 +118,7 @@
 //! ```
 
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -219,7 +219,7 @@ pub struct SaTokenEvent {
     /// 登录类型（如 "default", "admin" 等）| Login type (e.g. "default", "admin")
     pub login_type: String,
     /// 事件发生时间 | Event timestamp
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: Timestamp,
     /// 额外数据（用于扩展）| Extra data (for extension)
     pub extra: Option<serde_json::Value>,
 }
@@ -232,7 +232,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: None,
         }
     }
@@ -244,7 +244,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: None,
         }
     }
@@ -256,7 +256,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: None,
         }
     }
@@ -277,7 +277,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: Some(serde_json::json!({ "timeout_seconds": timeout_seconds })),
         }
     }
@@ -289,7 +289,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: None,
         }
     }
@@ -306,7 +306,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: String::new(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: Some(serde_json::json!({ "service": service.into(), "level": level })),
         }
     }
@@ -322,7 +322,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: String::new(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: Some(serde_json::json!({ "service": service.into() })),
         }
     }
@@ -338,7 +338,7 @@ impl SaTokenEvent {
             login_id: String::new(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: Some(serde_json::json!({ "service": svc })),
         }
     }
@@ -351,7 +351,7 @@ impl SaTokenEvent {
             login_id: String::new(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: Some(serde_json::json!({ "service": svc })),
         }
     }
@@ -364,7 +364,7 @@ impl SaTokenEvent {
             login_id: String::new(),
             token: token.into(),
             login_type: "default".to_string(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: Some(serde_json::json!({ "service": svc })),
         }
     }
@@ -376,7 +376,7 @@ impl SaTokenEvent {
             login_id: login_id.into(),
             token: String::new(),
             login_type: login_type.into(),
-            timestamp: Utc::now(),
+            timestamp: Timestamp::now(),
             extra: None,
         }
     }

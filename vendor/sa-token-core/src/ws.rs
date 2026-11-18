@@ -134,7 +134,7 @@ pub struct WsAuthInfo {
     pub session_id: String,
 
     /// Connection timestamp | 连接时间戳
-    pub connect_time: chrono::DateTime<chrono::Utc>,
+    pub connect_time: jiff::Timestamp,
 
     /// Custom metadata for this connection | 该连接的自定义元数据
     pub metadata: HashMap<String, String>,
@@ -292,7 +292,7 @@ impl WsAuthManager {
         let token = TokenValue::new(token_str.clone());
         let token_info = self.manager.get_token_info(&token).await?;
         if let Some(expire_time) = token_info.expire_time
-            && chrono::Utc::now() > expire_time
+            && jiff::Timestamp::now() > expire_time
         {
             return Err(SaTokenError::TokenExpired);
         }
@@ -303,7 +303,7 @@ impl WsAuthManager {
             login_id: login_id.clone(),
             token: token_str.clone(),
             session_id,
-            connect_time: chrono::Utc::now(),
+            connect_time: jiff::Timestamp::now(),
             metadata: HashMap::new(),
         };
 
@@ -316,7 +316,7 @@ impl WsAuthManager {
                 token: token_str.clone(),
                 device: token_info.device.clone().unwrap_or_else(|| "ws".into()),
                 connect_time: auth_info.connect_time,
-                last_activity: chrono::Utc::now(),
+                last_activity: jiff::Timestamp::now(),
                 metadata: HashMap::new(),
             };
             if let Err(e) = online.mark_online(user).await {
@@ -350,7 +350,7 @@ impl WsAuthManager {
 
         // Validate expiration | 验证过期时间
         if let Some(expire_time) = token_info.expire_time
-            && chrono::Utc::now() > expire_time
+            && jiff::Timestamp::now() > expire_time
         {
             return Err(SaTokenError::TokenExpired);
         }

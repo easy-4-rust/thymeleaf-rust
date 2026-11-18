@@ -15,8 +15,8 @@
 //! - `Temporals`（167）：表达式对象（本批 utils 的委托层，既有
 //!   `expression_invoker_methods_java_parity.rs` 的 `#temporals` 用例强化）。
 
-use chrono::{NaiveDate, NaiveDateTime};
-use chrono_tz::Tz;
+use jiff::civil::{Date, DateTime, Time};
+use jiff::tz::TimeZone;
 
 use thymeleaf::temporal::{
     TemporalArrayUtils, TemporalCreationUtils, TemporalFormattingUtils, TemporalKind,
@@ -37,7 +37,14 @@ fn germany() -> Locale {
 }
 
 fn date(year: i32, month: u32, day: u32) -> TemporalValue {
-    TemporalValue::LocalDate(NaiveDate::from_ymd_opt(year, month, day).expect("valid date"))
+    TemporalValue::LocalDate(
+        Date::new(
+            year.try_into().expect("year"),
+            month.try_into().expect("month"),
+            day.try_into().expect("day"),
+        )
+        .expect("valid date"),
+    )
 }
 
 fn date_time(
@@ -49,10 +56,18 @@ fn date_time(
     second: u32,
 ) -> TemporalValue {
     TemporalValue::LocalDateTime(
-        NaiveDate::from_ymd_opt(year, month, day)
-            .expect("valid date")
-            .and_hms_opt(hour, minute, second)
-            .expect("valid time"),
+        Date::new(
+            year.try_into().expect("year"),
+            month.try_into().expect("month"),
+            day.try_into().expect("day"),
+        )
+        .expect("valid date")
+        .at(
+            hour.try_into().expect("hour"),
+            minute.try_into().expect("minute"),
+            second.try_into().expect("second"),
+            0,
+        ),
     )
 }
 
@@ -152,7 +167,7 @@ fn temporal_creation_utils_matches_java() {
 
 #[test]
 fn temporal_formatting_utils_matches_java() {
-    let formatting = TemporalFormattingUtils::new(us(), Tz::UTC).expect("formatting utils");
+    let formatting = TemporalFormattingUtils::new(us(), TimeZone::UTC).expect("formatting utils");
 
     // 默认本地化格式（Java: ofLocalizedDate(LONG).withLocale(US)）
     let day = date(2015, 1, 1);
@@ -250,7 +265,7 @@ fn temporal_formatting_utils_matches_java() {
                     Some(&moment),
                     Some("yyyy-MM-dd HH:mm:ss"),
                     None,
-                    Some(Tz::Etc__GMTPlus5),
+                    Some(TimeZone::get("Etc/GMT+5").expect("fixed IANA offset")),
                 )
                 .expect("format")
         ),
@@ -329,7 +344,7 @@ fn temporal_formatting_utils_matches_java() {
 
 #[test]
 fn temporal_array_utils_matches_java() {
-    let array_utils = TemporalArrayUtils::new(us(), Tz::UTC).expect("array utils");
+    let array_utils = TemporalArrayUtils::new(us(), TimeZone::UTC).expect("array utils");
     let array = [Some(date(2015, 1, 1)), Some(date(2015, 12, 31))];
 
     // arrayFormat 默认 US
@@ -452,7 +467,7 @@ fn temporal_array_utils_matches_java() {
 
 #[test]
 fn temporal_list_utils_matches_java() {
-    let list_utils = TemporalListUtils::new(us(), Tz::UTC).expect("list utils");
+    let list_utils = TemporalListUtils::new(us(), TimeZone::UTC).expect("list utils");
     let list = vec![Some(date(2015, 1, 1)), Some(date(2015, 12, 31))];
 
     let formatted = list_utils
@@ -494,7 +509,7 @@ fn temporal_list_utils_matches_java() {
 
 #[test]
 fn temporal_set_utils_matches_java() {
-    let set_utils = TemporalSetUtils::new(us(), Tz::UTC).expect("set utils");
+    let set_utils = TemporalSetUtils::new(us(), TimeZone::UTC).expect("set utils");
     let set = vec![Some(date(2015, 1, 1)), Some(date(2015, 12, 31))];
 
     // Java LinkedHashSet 语义：去重保序
@@ -553,9 +568,9 @@ fn temporal_objects_dispatch_matches_java() {
     assert_eq!(moment.kind(), TemporalKind::LocalDateTime);
     assert_eq!(
         TemporalValue::LocalTime(
-            NaiveDateTime::new(
-                NaiveDate::from_ymd_opt(2015, 1, 1).expect("date"),
-                chrono::NaiveTime::from_hms_opt(23, 59, 45).expect("time"),
+            DateTime::from_parts(
+                Date::new(2015, 1, 1).expect("date"),
+                Time::new(23, 59, 45, 0).expect("time"),
             )
             .time(),
         )
@@ -564,5 +579,5 @@ fn temporal_objects_dispatch_matches_java() {
     );
 
     // 偏移秒（Java ZoneOffset.getTotalSeconds；UTC = 0）
-    assert_eq!(TemporalObjects::offset_seconds(&day, Tz::UTC), 0);
+    assert_eq!(TemporalObjects::offset_seconds(&day, TimeZone::UTC), 0);
 }

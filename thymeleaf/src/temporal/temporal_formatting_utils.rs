@@ -1,11 +1,11 @@
-use chrono::Timelike;
-use chrono_tz::Tz;
+use jiff::fmt::strtime;
+use jiff::tz::TimeZone;
 use thiserror::Error;
 
 use crate::util::{Locale, Utf16String};
 
 use super::temporal_creation_utils::process_pattern;
-use super::temporal_objects::java_short_zone;
+use super::temporal_objects::{java_short_zone, year_month_date};
 use super::{TemporalObjects, TemporalValue};
 
 /// Java 8 Time 对象格式化及字段读取工具。
@@ -13,13 +13,13 @@ use super::{TemporalObjects, TemporalValue};
 /// 对应 Java: `org.thymeleaf.util.temporal.TemporalFormattingUtils`。
 pub struct TemporalFormattingUtils {
     locale: Locale,
-    default_zone_id: Tz,
+    default_zone_id: TimeZone,
 }
 
 impl TemporalFormattingUtils {
     /// 使用 Locale 与默认 ZoneId 创建格式化工具。
     /// 对应 Java 语义：`TemporalFormattingUtils` 的 `new` 行为（Rust 侧辅助/私有路径）。
-    pub fn new(locale: Locale, default_zone_id: Tz) -> Result<Self, TemporalFormattingError> {
+    pub fn new(locale: Locale, default_zone_id: TimeZone) -> Result<Self, TemporalFormattingError> {
         Ok(Self {
             locale,
             default_zone_id,
@@ -33,7 +33,7 @@ impl TemporalFormattingUtils {
         target: Option<&TemporalValue>,
         pattern: Option<&str>,
         locale: Option<&Locale>,
-        zone_id: Option<Tz>,
+        zone_id: Option<TimeZone>,
     ) -> Result<Option<Utf16String>, TemporalFormattingError> {
         let Some(target) = target else {
             return Ok(None);
@@ -54,16 +54,16 @@ impl TemporalFormattingUtils {
 
         let formatted = match target {
             TemporalValue::Instant(value) if !has_explicit_pattern && pattern.contains('Z') => {
-                value.format(&pattern).to_string()
+                strtime::format(&pattern, *value).map_err(|error| invalid(error.to_string()))?
             }
             TemporalValue::LocalDate(value) if !has_explicit_pattern && zone_id.is_none() => {
-                value.format(&pattern).to_string()
+                strtime::format(&pattern, *value).map_err(|error| invalid(error.to_string()))?
             }
             TemporalValue::LocalDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
-                value.format(&pattern).to_string()
+                strtime::format(&pattern, *value).map_err(|error| invalid(error.to_string()))?
             }
             TemporalValue::LocalTime(value) if !has_explicit_pattern && zone_id.is_none() => {
-                value.format(&pattern).to_string()
+                strtime::format(&pattern, *value).map_err(|error| invalid(error.to_string()))?
             }
             TemporalValue::OffsetDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
                 // Java formatterFor(OffsetDateTime) = appendLocalized(LONG, MEDIUM)
@@ -71,8 +71,8 @@ impl TemporalFormattingUtils {
                 // "GMT+HH:MM"，由 format() 按目标自身偏移追加。
                 format!(
                     "{}{}",
-                    value.format(&pattern),
-                    gmt_offset(value.offset().local_minus_utc())
+                    strtime::format(&pattern, value).map_err(|error| invalid(error.to_string()))?,
+                    gmt_offset(value.offset().seconds())
                 )
             }
             TemporalValue::OffsetTime(value, offset)
@@ -81,35 +81,35 @@ impl TemporalFormattingUtils {
                 // Java formatterFor(OffsetTime) = `HH:mm:ss` + appendLocalizedOffset(FULL)。
                 format!(
                     "{}{}",
-                    value.format(&pattern),
-                    gmt_offset(offset.local_minus_utc())
+                    strtime::format(&pattern, *value)
+                        .map_err(|error| invalid(error.to_string()))?,
+                    gmt_offset(offset.seconds())
                 )
             }
             TemporalValue::Year(value) if !has_explicit_pattern && zone_id.is_none() => {
                 format_year(*value, &pattern)
             }
             TemporalValue::YearMonth(year, month) if !has_explicit_pattern && zone_id.is_none() => {
-                let date = chrono::NaiveDate::from_ymd_opt(*year, *month, 1)
-                    .ok_or_else(|| invalid("Invalid YearMonth"))?;
-                date.format(&pattern).to_string()
+                let date = year_month_date(*year, *month)?;
+                strtime::format(&pattern, date).map_err(|error| invalid(error.to_string()))?
             }
             TemporalValue::ZonedDateTime(value) if !has_explicit_pattern && zone_id.is_none() => {
-                value.format(&pattern).to_string()
+                strtime::format(&pattern, value).map_err(|error| invalid(error.to_string()))?
             }
             // Java: `DateTimeFormatter.ofPattern(pattern).withZone(zoneId)`
             // 对 `zonedTime(target, defaultZoneId)` 按同一瞬时重定区；
             // 显式 zone 时先以默认区建立带区时间，再保持瞬时换算。
             _ => {
-                let zoned = TemporalObjects::zoned_time(target, self.default_zone_id)?;
+                let zoned = TemporalObjects::zoned_time(target, self.default_zone_id.clone())?;
                 let converted = match zone_id {
-                    Some(zone) => zoned.with_timezone(&zone),
+                    Some(zone) => zoned.timestamp().to_zoned_datetime(zone),
                     None => zoned,
                 };
-                converted.format(&pattern).to_string()
+                strtime::format(&pattern, &converted).map_err(|error| invalid(error.to_string()))?
             }
         };
         let formatted = replace_java_fraction_markers(formatted, target)?;
-        // Java CLDR 按 locale 本地化月份/星期名；chrono 只输出英文，德语
+        // Java CLDR 按 locale 本地化月份/星期名；strftime 输出英文，德语
         // locale 下替换为 Java `Locale.GERMANY` 的名称。
         let formatted = if locale.get_language().to_string_lossy() == "de" {
             localize_german_names(formatted)
@@ -260,16 +260,16 @@ impl TemporalFormattingUtils {
         };
         let formatted = match target {
             TemporalValue::OffsetDateTime(value) => {
-                value.format("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
+                value.strftime("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
             }
             // OffsetTime 与其余类型一致走 `zonedTime`：Java 在默认 ZoneId 下组装
             // （`ZonedDateTime.of(LocalDate.now(), localTime, defaultZoneId)`），
             // 偏移本身不参与。
             TemporalValue::ZonedDateTime(value) => {
-                value.format("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
+                value.strftime("%Y-%m-%dT%H:%M:%S%.3f%z").to_string()
             }
-            _ => TemporalObjects::zoned_time(target, self.default_zone_id)?
-                .format("%Y-%m-%dT%H:%M:%S%.3f%z")
+            _ => TemporalObjects::zoned_time(target, self.default_zone_id.clone())?
+                .strftime("%Y-%m-%dT%H:%M:%S%.3f%z")
                 .to_string(),
         };
         Ok(Some(Utf16String::from_rust_str(&formatted)))
@@ -294,12 +294,14 @@ fn replace_java_fraction_markers(
     target: &TemporalValue,
 ) -> Result<String, TemporalFormattingError> {
     let nanosecond = match target {
-        TemporalValue::Instant(value) => value.nanosecond(),
+        TemporalValue::Instant(value) => value.subsec_nanosecond(),
         TemporalValue::LocalDate(_) | TemporalValue::Year(_) | TemporalValue::YearMonth(_, _) => 0,
-        TemporalValue::LocalDateTime(value) => value.nanosecond(),
-        TemporalValue::LocalTime(value) | TemporalValue::OffsetTime(value, _) => value.nanosecond(),
-        TemporalValue::OffsetDateTime(value) => value.nanosecond(),
-        TemporalValue::ZonedDateTime(value) => value.nanosecond(),
+        TemporalValue::LocalDateTime(value) => value.subsec_nanosecond(),
+        TemporalValue::LocalTime(value) | TemporalValue::OffsetTime(value, _) => {
+            value.subsec_nanosecond()
+        }
+        TemporalValue::OffsetDateTime(value) => value.subsec_nanosecond(),
+        TemporalValue::ZonedDateTime(value) => value.subsec_nanosecond(),
     };
     const PREFIX: &str = "__THYMELEAF_FRACTION_";
     const SUFFIX: &str = "__";
@@ -344,7 +346,7 @@ fn localized_pattern(
     target: &TemporalValue,
     locale: &Locale,
     style: &str,
-    default_zone: &Tz,
+    default_zone: &TimeZone,
 ) -> String {
     let date_only = matches!(target, TemporalValue::LocalDate(_));
     let time_only = matches!(
@@ -355,7 +357,7 @@ fn localized_pattern(
     let zh = language == "zh";
     // Java CLDR（DateTimeFormatter.ofLocalizedDate/ofLocalizedDateTime）：
     // 德语日期样式为 `dd.MM.yy` / `dd.MM.y` / `d. MMMM y` /
-    // `EEEE, d. MMMM y`（chrono 等价 %d.%m.%y 等）。
+    // `EEEE, d. MMMM y`（strftime 等价 %d.%m.%y 等）。
     let de = language == "de";
     // Java `z`（LONG/FULL 的通用时区名）：ZoneOffset.UTC → "Z"；固定偏移 →
     // "+18:00"；命名时区 → 缩写（EST/PST 等）。

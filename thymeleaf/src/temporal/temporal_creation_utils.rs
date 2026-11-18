@@ -1,5 +1,7 @@
-use chrono::{LocalResult, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Timelike, Utc};
-use chrono_tz::Tz;
+use jiff::civil::{Date, DateTime, Time};
+use jiff::tz::AmbiguousOffset;
+use jiff::tz::TimeZone;
+use jiff::{SignedDuration, Timestamp};
 use thiserror::Error;
 
 use super::TemporalValue;
@@ -22,19 +24,22 @@ impl TemporalCreationUtils {
         if !matches!(fields.len(), 3 | 5 | 6 | 7) {
             return Err(invalid("Temporal create requires 3, 5, 6 or 7 fields"));
         }
-        let date = NaiveDate::from_ymd_opt(fields[0], to_u32(fields[1])?, to_u32(fields[2])?)
-            .ok_or_else(|| invalid("Invalid value for Year/MonthOfYear/DayOfMonth"))?;
+        let year = i16::try_from(fields[0]).map_err(|_| invalid("Invalid Year"))?;
+        let date = Date::new(year, field(fields[1])?, field(fields[2])?)
+            .map_err(|_| invalid("Invalid value for Year/MonthOfYear/DayOfMonth"))?;
         if fields.len() == 3 {
             return Ok(TemporalValue::LocalDate(date));
         }
-        let time = NaiveTime::from_hms_nano_opt(
-            to_u32(fields[3])?,
-            to_u32(fields[4])?,
-            fields.get(5).copied().map_or(Ok(0), to_u32)?,
-            fields.get(6).copied().map_or(Ok(0), to_u32)?,
+        let time = Time::new(
+            field(fields[3])?,
+            field(fields[4])?,
+            field(fields.get(5).copied().unwrap_or(0))?,
+            fields.get(6).copied().unwrap_or(0),
         )
-        .ok_or_else(|| invalid("Invalid value for Hour/Minute/Second/NanoOfSecond"))?;
-        Ok(TemporalValue::LocalDateTime(NaiveDateTime::new(date, time)))
+        .map_err(|_| invalid("Invalid value for Hour/Minute/Second/NanoOfSecond"))?;
+        Ok(TemporalValue::LocalDateTime(DateTime::from_parts(
+            date, time,
+        )))
     }
 
     /// 解析 ISO 或自定义 Java pattern 的 `LocalDate`。
@@ -45,7 +50,7 @@ impl TemporalCreationUtils {
         pattern: Option<&str>,
     ) -> Result<TemporalValue, TemporalCreationError> {
         let pattern = pattern.map_or("%Y-%m-%d".to_owned(), process_pattern);
-        NaiveDate::parse_from_str(text, &pattern)
+        Date::strptime(&pattern, text)
             .map(TemporalValue::LocalDate)
             .map_err(|error| invalid(error.to_string()))
     }
@@ -58,7 +63,7 @@ impl TemporalCreationUtils {
         pattern: Option<&str>,
     ) -> Result<TemporalValue, TemporalCreationError> {
         let pattern = pattern.map_or("%Y-%m-%dT%H:%M:%S".to_owned(), process_pattern);
-        NaiveDateTime::parse_from_str(text, &pattern)
+        DateTime::strptime(&pattern, text)
             .map(TemporalValue::LocalDateTime)
             .map_err(|error| invalid(error.to_string()))
     }
@@ -67,7 +72,7 @@ impl TemporalCreationUtils {
     #[must_use]
     /// 对应 Java: `TemporalCreationUtils#createNow()`。
     pub fn create_now(&self) -> TemporalValue {
-        TemporalValue::LocalDateTime(Utc::now().with_timezone(&default_zone()).naive_local())
+        TemporalValue::LocalDateTime(default_zone().to_datetime(Timestamp::now()))
     }
 
     /// 返回指定 ZoneId 当前 `ZonedDateTime`。
@@ -78,7 +83,7 @@ impl TemporalCreationUtils {
     ) -> Result<TemporalValue, TemporalCreationError> {
         let zone = parse_zone(zone_id)?;
         Ok(TemporalValue::ZonedDateTime(
-            Utc::now().with_timezone(&zone),
+            Timestamp::now().to_zoned_datetime(zone),
         ))
     }
 
@@ -86,7 +91,7 @@ impl TemporalCreationUtils {
     #[must_use]
     /// 对应 Java: `TemporalCreationUtils#createToday()`。
     pub fn create_today(&self) -> TemporalValue {
-        TemporalValue::LocalDate(Utc::now().with_timezone(&default_zone()).date_naive())
+        TemporalValue::LocalDate(default_zone().to_datetime(Timestamp::now()).date())
     }
 
     /// 返回指定 ZoneId 当天零点 `ZonedDateTime`。
@@ -96,26 +101,23 @@ impl TemporalCreationUtils {
         zone_id: &str,
     ) -> Result<TemporalValue, TemporalCreationError> {
         let zone = parse_zone(zone_id)?;
-        let now = Utc::now().with_timezone(&zone);
-        let midnight = now
-            .date_naive()
-            .and_hms_nano_opt(0, 0, 0, 0)
-            .expect("midnight is valid");
-        let value = match zone.from_local_datetime(&midnight) {
-            LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => value,
-            LocalResult::None => zone
-                .from_local_datetime(&(midnight + chrono::Duration::hours(1)))
-                .earliest()
-                .ok_or_else(|| invalid("Cannot resolve local midnight in ZoneId"))?,
-        };
-        Ok(TemporalValue::ZonedDateTime(
-            value
-                .with_hour(0)
-                .and_then(|value| value.with_minute(0))
-                .and_then(|value| value.with_second(0))
-                .and_then(|value| value.with_nanosecond(0))
-                .unwrap_or(value),
-        ))
+        let midnight = zone.to_datetime(Timestamp::now()).date().at(0, 0, 0, 0);
+        let candidate = zone.to_ambiguous_zoned_datetime(midnight);
+        let value = match candidate.offset() {
+            AmbiguousOffset::Gap { .. } => {
+                let next_hour = midnight
+                    .checked_add(SignedDuration::from_hours(1))
+                    .map_err(|_| invalid("Cannot resolve local midnight in ZoneId"))?;
+                let next = zone.to_ambiguous_zoned_datetime(next_hour);
+                if matches!(next.offset(), AmbiguousOffset::Gap { .. }) {
+                    return Err(invalid("Cannot resolve local midnight in ZoneId"));
+                }
+                next.earlier()
+            }
+            _ => candidate.earlier(),
+        }
+        .map_err(|_| invalid("Cannot resolve local midnight in ZoneId"))?;
+        Ok(TemporalValue::ZonedDateTime(value))
     }
 }
 
@@ -139,21 +141,19 @@ fn invalid(message: impl Into<String>) -> TemporalCreationError {
     }
 }
 
-fn to_u32(value: i32) -> Result<u32, TemporalCreationError> {
-    u32::try_from(value).map_err(|_| invalid(format!("Invalid negative temporal field: {value}")))
+fn field(value: i32) -> Result<i8, TemporalCreationError> {
+    i8::try_from(value).map_err(|_| invalid(format!("Invalid temporal field: {value}")))
 }
 
-fn parse_zone(value: &str) -> Result<Tz, TemporalCreationError> {
-    value
-        .parse()
-        .map_err(|_| invalid(format!("Unknown time-zone ID: {value}")))
+fn parse_zone(value: &str) -> Result<TimeZone, TemporalCreationError> {
+    TimeZone::get(value).map_err(|_| invalid(format!("Unknown time-zone ID: {value}")))
 }
 
-fn default_zone() -> Tz {
+fn default_zone() -> TimeZone {
     std::env::var("TZ")
         .ok()
-        .and_then(|value| value.parse().ok())
-        .unwrap_or(chrono_tz::UTC)
+        .and_then(|value| TimeZone::get(&value).ok())
+        .unwrap_or(TimeZone::UTC)
 }
 
 /// 对应 Java 语义：`TemporalCreationUtils` 的 `process_pattern` 行为（Rust 侧辅助/私有路径）。

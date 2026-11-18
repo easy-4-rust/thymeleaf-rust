@@ -209,7 +209,7 @@
 use crate::config::SaTokenConfig;
 use crate::dao::SaTokenDao;
 use crate::error::{SaTokenError, SaTokenResult};
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use sa_token_adapter::storage::SaStorage;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -229,7 +229,9 @@ impl NonceRecord {
     pub fn new(login_id: impl Into<String>) -> Self {
         Self {
             login_id: login_id.into(),
-            created_at: Utc::now().to_rfc3339(),
+            created_at: Timestamp::now()
+                .strftime("%Y-%m-%dT%H:%M:%S%.f+00:00")
+                .to_string(),
         }
     }
 }
@@ -287,7 +289,7 @@ impl NonceManager {
     pub fn generate(&self) -> String {
         format!(
             "nonce_{}_{}",
-            Utc::now().timestamp_millis(),
+            Timestamp::now().as_millisecond(),
             Uuid::new_v4().simple()
         )
     }
@@ -339,7 +341,7 @@ impl NonceManager {
             .ok_or(SaTokenError::InvalidNonceFormat)?
             .parse()
             .map_err(|_| SaTokenError::InvalidNonceTimestamp)?;
-        let now_ms = Utc::now().timestamp_millis();
+        let now_ms = Timestamp::now().as_millisecond();
         let age_seconds = (now_ms - timestamp_ms) / 1000;
         Ok(age_seconds >= 0 && age_seconds <= window_seconds)
     }
@@ -352,7 +354,7 @@ impl NonceManager {
         let pattern = self.dao.keys().scan_pattern("nonce", None);
         let mut removed = 0usize;
         let mut cursor = 0u64;
-        let cutoff = Utc::now() - chrono::Duration::seconds(self.timeout);
+        let cutoff = Timestamp::now() - jiff::SignedDuration::from_secs(self.timeout);
 
         loop {
             let page = match self.dao.scan(&pattern, cursor, 200).await {
@@ -366,8 +368,8 @@ impl NonceManager {
 
             for key in page.keys {
                 if let Some(record) = self.dao.get_object::<NonceRecord>(&key).await? {
-                    if let Ok(dt) = DateTime::parse_from_rfc3339(&record.created_at) {
-                        if dt.with_timezone(&Utc) < cutoff {
+                    if let Ok(dt) = record.created_at.parse::<Timestamp>() {
+                        if dt < cutoff {
                             self.dao.delete(&key).await?;
                             removed += 1;
                         }

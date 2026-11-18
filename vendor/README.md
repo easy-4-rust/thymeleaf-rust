@@ -7,7 +7,7 @@ separate license file. Original `Cargo.toml.orig`, attribution, and README are
 kept with the source. The archive's nested Cargo.lock and registry cache marker
 are omitted so audits use the workspace lockfile that actually builds.
 
-The only source changes are in the normalized `Cargo.toml`:
+The normalized manifest retains the following security fixes:
 
 - `jsonwebtoken` 10.4 uses `aws_lc_rs` instead of `rust_crypto` to avoid the
   vulnerable `crypto-bigint` 0.5.x and unpatched `rsa` 0.9.x dependencies.
@@ -15,6 +15,10 @@ The only source changes are in the normalized `Cargo.toml`:
   `argon2::password_hash::rand_core::OsRng`; previously it relied on a
   transitive feature from the removed crypto backend. Without this line the
   crate fails to compile as a standalone dependency.
+
+The #57 migration also replaces Chrono with Jiff timestamps and signed
+durations. Persisted RFC 3339 records remain readable and JWT numeric
+claims keep their existing epoch-second representation.
 
 `thymeleaf-sa-token` uses a direct path dependency so consumers of this Git
 checkout resolve the reviewed source. Cargo rewrites path dependencies to

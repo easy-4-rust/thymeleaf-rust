@@ -39,7 +39,7 @@
 //! println!("User ID: {}", decoded_claims.login_id);
 //! ```
 
-use chrono::{DateTime, Duration, Utc};
+use jiff::{SignedDuration, Timestamp};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -140,7 +140,7 @@ impl JwtClaims {
     ///
     /// * `login_id` - User identifier | 用户标识符
     pub fn new(login_id: impl Into<String>) -> Self {
-        let now = Utc::now().timestamp();
+        let now = Timestamp::now().as_second();
         Self {
             login_id: login_id.into(),
             iss: None,
@@ -161,14 +161,14 @@ impl JwtClaims {
     ///
     /// * `seconds` - Seconds until expiration | 到期秒数
     pub fn set_expiration(&mut self, seconds: i64) -> &mut Self {
-        let exp_time = Utc::now() + Duration::seconds(seconds);
-        self.exp = Some(exp_time.timestamp());
-        self
+        let exp_time = Timestamp::now() + SignedDuration::from_secs(seconds);
+        self.set_expiration_at(exp_time)
     }
 
     /// Set expiration at specific time | 设置具体的过期时间
-    pub fn set_expiration_at(&mut self, datetime: DateTime<Utc>) -> &mut Self {
-        self.exp = Some(datetime.timestamp());
+    pub fn set_expiration_at(&mut self, datetime: Timestamp) -> &mut Self {
+        let seconds = datetime.as_nanosecond().div_euclid(1_000_000_000);
+        self.exp = Some(i64::try_from(seconds).expect("Jiff timestamp range fits in i64 seconds"));
         self
     }
 
@@ -227,7 +227,7 @@ impl JwtClaims {
     /// Check if token is expired | 检查 token 是否过期
     pub fn is_expired(&self) -> bool {
         if let Some(exp) = self.exp {
-            let now = Utc::now().timestamp();
+            let now = Timestamp::now().as_second();
             now >= exp
         } else {
             false
@@ -237,7 +237,7 @@ impl JwtClaims {
     /// Get remaining time in seconds | 获取剩余时间（秒）
     pub fn remaining_time(&self) -> Option<i64> {
         self.exp.map(|exp| {
-            let now = Utc::now().timestamp();
+            let now = Timestamp::now().as_second();
             (exp - now).max(0)
         })
     }
@@ -399,7 +399,7 @@ impl JwtManager {
         claims.set_expiration(extend_seconds);
 
         // Update issued at time | 更新签发时间
-        claims.iat = Some(Utc::now().timestamp());
+        claims.iat = Some(Timestamp::now().as_second());
 
         self.generate(&claims)
     }
@@ -455,7 +455,7 @@ mod tests {
         let mut claims = JwtClaims::new("user_123");
         // Set expiration to 10 seconds in the past to account for leeway
         // 设置过期时间为10秒前以考虑时间偏差
-        let exp_time = Utc::now() - Duration::seconds(10);
+        let exp_time = Timestamp::now() - SignedDuration::from_secs(10);
         claims.set_expiration_at(exp_time);
 
         let token = jwt_manager.generate(&claims).unwrap();
