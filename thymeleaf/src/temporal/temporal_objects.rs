@@ -216,6 +216,7 @@ impl TemporalObjects {
 }
 
 /// 将公开的年份与月份字段校验后构造该月第一天。
+/// 对应 Java 语义：`TemporalObjects#zonedTime()` 为 Year 和 YearMonth 补齐日期字段。
 pub(crate) fn year_month_date(year: i32, month: u32) -> Result<Date, TemporalError> {
     let year = i16::try_from(year).map_err(|_| invalid("Invalid Year"))?;
     let month = i8::try_from(month).map_err(|_| invalid("Invalid YearMonth"))?;
