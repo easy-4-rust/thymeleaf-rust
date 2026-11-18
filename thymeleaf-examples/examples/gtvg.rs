@@ -37,7 +37,7 @@ fn build_template_engine() -> TemplateEngine {
 
 /// 当前时刻 —— 对应 Java `Calendar.getInstance()`（引擎默认 UTC 时区）。
 fn now() -> DateValue {
-    DateValue::calendar(chrono::Utc::now(), chrono_tz::UTC)
+    DateValue::calendar(jiff::Timestamp::now(), jiff::tz::TimeZone::UTC)
 }
 
 /// 处理单个 URL —— 对应 `GTVGFilter#process`。

@@ -86,7 +86,7 @@ impl SsoTicketStore {
         if ticket.service != service {
             return Err(SaTokenError::ServiceMismatch);
         }
-        let remain = ticket.expire_time.signed_duration_since(chrono::Utc::now());
-        Ok((ticket.login_id, remain.num_seconds().max(0)))
+        let remain = ticket.expire_time.duration_since(jiff::Timestamp::now());
+        Ok((ticket.login_id, remain.as_secs().max(0)))
     }
 }

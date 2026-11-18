@@ -302,7 +302,7 @@
 //!     async fn save_session(&self, session: DistributedSession, ttl: Option<Duration>)
 //!         -> Result<(), SaTokenError>
 //!     {
-//!         let expires_at = ttl.map(|t| Utc::now() + chrono::Duration::from_std(t).unwrap());
+//!         let expires_at = ttl.map(|t| Timestamp::now() + jiff::SignedDuration::try_from(t).unwrap());
 //!         
 //!         sqlx::query!(
 //!             "INSERT INTO distributed_sessions
@@ -338,7 +338,7 @@
 //!     service_id: "user-service".to_string(),
 //!     service_name: "User Management Service".to_string(),
 //!     secret_key: generate_secure_secret(), // Use crypto-secure generation
-//!     created_at: Utc::now(),
+//!     created_at: Timestamp::now(),
 //!     permissions: vec!["user.read".to_string(), "user.write".to_string()],
 //! };
 //! manager.register_service(credential).await;
@@ -450,7 +450,7 @@ use crate::config::SaTokenConfig;
 use crate::dao::SaTokenDao;
 use crate::error::SaTokenError;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use sa_token_adapter::storage::SaStorage;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -478,10 +478,10 @@ pub struct DistributedSession {
     pub service_id: String,
 
     /// Session creation time | Session 创建时间
-    pub create_time: DateTime<Utc>,
+    pub create_time: Timestamp,
 
     /// Last access time | 最后访问时间
-    pub last_access: DateTime<Utc>,
+    pub last_access: Timestamp,
 
     /// Session attributes (key-value pairs) | Session 属性（键值对）
     pub attributes: HashMap<String, String>,
@@ -504,7 +504,7 @@ pub struct ServiceCredential {
     pub secret_key: String,
 
     /// Service registration time | 服务注册时间
-    pub created_at: DateTime<Utc>,
+    pub created_at: Timestamp,
 
     /// List of permissions this service has | 该服务拥有的权限列表
     pub permissions: Vec<String>,
@@ -689,8 +689,8 @@ impl DistributedSessionManager {
             login_id,
             token,
             service_id: self.service_id.clone(),
-            create_time: Utc::now(),
-            last_access: Utc::now(),
+            create_time: Timestamp::now(),
+            last_access: Timestamp::now(),
             attributes: HashMap::new(),
         };
 
@@ -766,7 +766,7 @@ impl DistributedSessionManager {
     /// ```
     pub async fn refresh_session(&self, session_id: &str) -> Result<(), SaTokenError> {
         let mut session = self.get_session(session_id).await?;
-        session.last_access = Utc::now();
+        session.last_access = Timestamp::now();
         self.update_session(session).await
     }
 
@@ -790,7 +790,7 @@ impl DistributedSessionManager {
     ) -> Result<(), SaTokenError> {
         let mut session = self.get_session(session_id).await?;
         session.attributes.insert(key, value);
-        session.last_access = Utc::now();
+        session.last_access = Timestamp::now();
         self.update_session(session).await
     }
 
@@ -834,7 +834,7 @@ impl DistributedSessionManager {
     pub async fn remove_attribute(&self, session_id: &str, key: &str) -> Result<(), SaTokenError> {
         let mut session = self.get_session(session_id).await?;
         session.attributes.remove(key);
-        session.last_access = Utc::now();
+        session.last_access = Timestamp::now();
         self.update_session(session).await
     }
 
@@ -1256,7 +1256,7 @@ mod tests {
             service_id: "service2".to_string(),
             service_name: "Service 2".to_string(),
             secret_key: "secret123".to_string(),
-            created_at: Utc::now(),
+            created_at: Timestamp::now(),
             permissions: vec!["read".to_string(), "write".to_string()],
         };
 

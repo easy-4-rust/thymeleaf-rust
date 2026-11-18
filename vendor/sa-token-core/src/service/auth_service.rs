@@ -12,7 +12,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use chrono::{Duration as ChronoDuration, Utc};
+use jiff::{SignedDuration, Timestamp};
 
 use crate::config::{LogoutMode, LogoutRange, ReplacedLoginExitMode, ReplacedRange, SaTokenConfig};
 use crate::dao::SaTokenDao;
@@ -182,8 +182,9 @@ impl AuthService {
         if let Some(ref mgr) = refresh_mgr {
             token_info.refresh_token = Some(mgr.generate(&login_id));
             if self.config.refresh_token_timeout > 0 {
-                token_info.refresh_token_expire_time =
-                    Some(Utc::now() + ChronoDuration::seconds(self.config.refresh_token_timeout));
+                token_info.refresh_token_expire_time = Some(
+                    Timestamp::now() + SignedDuration::from_secs(self.config.refresh_token_timeout),
+                );
             }
         }
 
@@ -317,10 +318,10 @@ impl AuthService {
         if let Some(expire) = req.expire_time {
             info.expire_time = Some(expire);
         } else if let Some(timeout) = self.config.timeout_duration() {
-            let d = ChronoDuration::from_std(timeout).map_err(|_| {
+            let d = SignedDuration::try_from(timeout).map_err(|_| {
                 SaTokenError::ConfigError("timeout value is out of supported range".to_string())
             })?;
-            info.expire_time = Some(Utc::now() + d);
+            info.expire_time = Some(Timestamp::now() + d);
         }
 
         Ok(info)
@@ -780,7 +781,7 @@ impl AuthService {
 
         info.update_active_time();
         let ttl = if timeout_seconds > 0 {
-            info.expire_time = Some(Utc::now() + ChronoDuration::seconds(timeout_seconds));
+            info.expire_time = Some(Timestamp::now() + SignedDuration::from_secs(timeout_seconds));
             Some(std::time::Duration::from_secs(timeout_seconds as u64))
         } else {
             info.expire_time = None;

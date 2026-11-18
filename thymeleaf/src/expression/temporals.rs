@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
-use chrono_tz::Tz;
+use jiff::tz::TimeZone;
 
 use crate::temporal::{
     TemporalCreationUtils, TemporalFormattingError, TemporalFormattingUtils, TemporalObjects,
@@ -32,7 +32,7 @@ impl Temporals {
     /// 对应 Java 语义：`Temporals` 的 `with_default_zone_id` 行为（Rust 侧辅助/私有路径）。
     pub fn with_default_zone_id(
         locale: Locale,
-        default_zone_id: Tz,
+        default_zone_id: TimeZone,
     ) -> Result<Self, TemporalsError> {
         Ok(Self {
             creation: TemporalCreationUtils::new(),
@@ -129,7 +129,7 @@ impl Temporals {
                 locale = Some(value);
             } else {
                 let zone_id = required_string(third, "ZoneId cannot be null")?;
-                zone = Some(zone_id.parse().map_err(|_| {
+                zone = Some(TimeZone::get(&zone_id).map_err(|_| {
                     TemporalsError::new(format!("Unknown time-zone ID: {zone_id}"))
                 })?);
             }
@@ -323,9 +323,9 @@ fn collection_method(method_name: &str) -> Option<(bool, String)> {
     None
 }
 
-fn default_zone() -> Tz {
+fn default_zone() -> TimeZone {
     std::env::var("TZ")
         .ok()
-        .and_then(|value| value.parse().ok())
-        .unwrap_or(chrono_tz::UTC)
+        .and_then(|value| TimeZone::get(&value).ok())
+        .unwrap_or(TimeZone::UTC)
 }

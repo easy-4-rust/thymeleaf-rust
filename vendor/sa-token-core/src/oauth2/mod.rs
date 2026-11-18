@@ -13,7 +13,7 @@ pub use secret::ClientSecretHasher;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -73,10 +73,10 @@ pub struct AuthorizationCode {
     pub scope: Vec<String>,
     /// Creation time.
     /// 创建时间。
-    pub created_at: DateTime<Utc>,
+    pub created_at: Timestamp,
     /// Expiration time.
     /// 过期时间。
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: Timestamp,
     /// Optional PKCE challenge.
     /// 可选 PKCE 挑战。
     pub pkce: Option<PkceChallenge>,
@@ -124,10 +124,10 @@ pub struct OAuth2TokenInfo {
     pub scope: Vec<String>,
     /// Creation time.
     /// 创建时间。
-    pub created_at: DateTime<Utc>,
+    pub created_at: Timestamp,
     /// Expiration time.
     /// 过期时间。
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: Timestamp,
     /// Linked refresh token if any.
     /// 关联的刷新令牌（如有）。
     pub refresh_token: Option<String>,
@@ -151,7 +151,7 @@ pub struct OAuth2RefreshRecord {
     pub access_token: String,
     /// Creation time.
     /// 创建时间。
-    pub created_at: DateTime<Utc>,
+    pub created_at: Timestamp,
 }
 
 /// Unified token-endpoint request.
@@ -333,7 +333,7 @@ impl OAuth2Manager {
         pkce: Option<PkceChallenge>,
         state: Option<String>,
     ) -> AuthorizationCode {
-        let now = Utc::now();
+        let now = Timestamp::now();
         AuthorizationCode {
             code: format!("code_{}", Uuid::new_v4().simple()),
             client_id,
@@ -341,7 +341,7 @@ impl OAuth2Manager {
             redirect_uri,
             scope,
             created_at: now,
-            expires_at: now + chrono::Duration::seconds(self.code_ttl),
+            expires_at: now + jiff::SignedDuration::from_secs(self.code_ttl),
             pkce,
             state,
         }
@@ -368,7 +368,7 @@ impl OAuth2Manager {
             .await?
             .ok_or(SaTokenError::OAuth2CodeNotFound)?;
         let auth_code: AuthorizationCode = self.dao.decode(&raw)?;
-        if Utc::now() > auth_code.expires_at {
+        if Timestamp::now() > auth_code.expires_at {
             return Err(SaTokenError::TokenExpired);
         }
         Ok(auth_code)
@@ -426,7 +426,7 @@ impl OAuth2Manager {
         user_id: &str,
         scope: Vec<String>,
     ) -> SaTokenResult<AccessToken> {
-        let now = Utc::now();
+        let now = Timestamp::now();
         let access_token = format!("at_{}", Uuid::new_v4().simple());
         let refresh_token = format!("rt_{}", Uuid::new_v4().simple());
         let token_info = OAuth2TokenInfo {
@@ -435,7 +435,7 @@ impl OAuth2Manager {
             user_id: user_id.to_string(),
             scope: scope.clone(),
             created_at: now,
-            expires_at: now + chrono::Duration::seconds(self.token_ttl),
+            expires_at: now + jiff::SignedDuration::from_secs(self.token_ttl),
             refresh_token: Some(refresh_token.clone()),
         };
         let at_key = self.dao.keys().oauth2_token(&access_token);
@@ -479,7 +479,7 @@ impl OAuth2Manager {
             .get_object(&key)
             .await?
             .ok_or(SaTokenError::OAuth2AccessTokenNotFound)?;
-        if Utc::now() > info.expires_at {
+        if Timestamp::now() > info.expires_at {
             let _ = self.dao.delete(&key).await;
             return Err(SaTokenError::TokenExpired);
         }

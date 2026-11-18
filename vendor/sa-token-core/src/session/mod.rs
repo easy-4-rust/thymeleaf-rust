@@ -2,7 +2,7 @@
 //
 //! Session 管理模块
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -35,7 +35,7 @@ pub struct SaSession {
     pub id: String,
 
     /// 创建时间 | Creation time
-    pub create_time: DateTime<Utc>,
+    pub create_time: Timestamp,
 
     /// Logged-in device terminal list.
     /// 已登录设备终端列表。
@@ -57,7 +57,7 @@ impl SaSession {
     pub fn new(id: impl Into<String>) -> Self {
         Self {
             id: id.into(),
-            create_time: Utc::now(),
+            create_time: Timestamp::now(),
             terminal_list: Vec::new(),
             history_terminal_count: 0,
             data: HashMap::new(),
@@ -239,5 +239,8 @@ mod tests {
         let session: SaSession = serde_json::from_str(json).unwrap();
         assert!(session.terminal_list.is_empty());
         assert_eq!(session.history_terminal_count, 0);
+        assert_eq!(session.create_time.as_second(), 1_704_067_200);
+        let encoded = serde_json::to_value(&session).expect("serialize session");
+        assert_eq!(encoded["create_time"], "2024-01-01T00:00:00Z");
     }
 }

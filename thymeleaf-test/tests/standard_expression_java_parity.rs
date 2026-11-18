@@ -18,7 +18,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use chrono::{Datelike, TimeZone, Timelike};
+use jiff::{Timestamp, tz::TimeZone};
 
 use thymeleaf::context::{Context, IContext};
 use thymeleaf::expression::{
@@ -235,19 +235,17 @@ fn format_message_like_java(
                     };
                     match millis {
                         Some(millis) => {
-                            let naive = chrono::Local
-                                .timestamp_millis_opt(millis)
-                                .single()
-                                .expect("millis in range")
-                                .naive_local();
+                            let naive = TimeZone::system().to_datetime(
+                                Timestamp::from_millisecond(millis).expect("millis in range"),
+                            );
                             let date = thymeleaf::util::DateUtils::create(
-                                Some(naive.year()),
+                                Some(i32::from(naive.year())),
                                 Some(naive.month() as i32),
                                 Some(naive.day() as i32),
                                 Some(naive.hour() as i32),
                                 Some(naive.minute() as i32),
                                 Some(naive.second() as i32),
-                                Some(naive.and_utc().timestamp_subsec_millis() as i32),
+                                Some(naive.subsec_nanosecond() / 1_000_000),
                                 None,
                                 None,
                             )

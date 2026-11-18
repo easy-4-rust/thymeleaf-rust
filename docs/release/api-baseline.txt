@@ -11290,7 +11290,7 @@ impl<T> tracing::instrument::WithSubscriber for thymeleaf::expression::Subtracti
 pub struct thymeleaf::expression::Temporals
 impl thymeleaf::expression::Temporals
 pub fn thymeleaf::expression::Temporals::new(thymeleaf::Locale) -> core::result::Result<Self, thymeleaf::expression::TemporalsError>
-pub fn thymeleaf::expression::Temporals::with_default_zone_id(thymeleaf::Locale, chrono_tz::prebuilt::timezones::Tz) -> core::result::Result<Self, thymeleaf::expression::TemporalsError>
+pub fn thymeleaf::expression::Temporals::with_default_zone_id(thymeleaf::Locale, jiff::tz::timezone::TimeZone) -> core::result::Result<Self, thymeleaf::expression::TemporalsError>
 impl thymeleaf::TemplateObject for thymeleaf::expression::Temporals
 pub fn thymeleaf::expression::Temporals::as_any(&self) -> &dyn core::any::Any
 pub fn thymeleaf::expression::Temporals::class_name(&self) -> &str
@@ -20435,15 +20435,15 @@ pub fn thymeleaf::temporal::TemporalKind::from(T) -> T
 impl<T> tracing::instrument::Instrument for thymeleaf::temporal::TemporalKind
 impl<T> tracing::instrument::WithSubscriber for thymeleaf::temporal::TemporalKind
 pub enum thymeleaf::temporal::TemporalValue
-pub thymeleaf::temporal::TemporalValue::Instant(chrono::datetime::DateTime<chrono::offset::utc::Utc>)
-pub thymeleaf::temporal::TemporalValue::LocalDate(chrono::naive::date::NaiveDate)
-pub thymeleaf::temporal::TemporalValue::LocalDateTime(chrono::naive::datetime::NaiveDateTime)
-pub thymeleaf::temporal::TemporalValue::LocalTime(chrono::naive::time::NaiveTime)
-pub thymeleaf::temporal::TemporalValue::OffsetDateTime(chrono::datetime::DateTime<chrono::offset::fixed::FixedOffset>)
-pub thymeleaf::temporal::TemporalValue::OffsetTime(chrono::naive::time::NaiveTime, chrono::offset::fixed::FixedOffset)
+pub thymeleaf::temporal::TemporalValue::Instant(jiff::timestamp::Timestamp)
+pub thymeleaf::temporal::TemporalValue::LocalDate(jiff::civil::date::Date)
+pub thymeleaf::temporal::TemporalValue::LocalDateTime(jiff::civil::datetime::DateTime)
+pub thymeleaf::temporal::TemporalValue::LocalTime(jiff::civil::time::Time)
+pub thymeleaf::temporal::TemporalValue::OffsetDateTime(jiff::zoned::ZonedDateTime)
+pub thymeleaf::temporal::TemporalValue::OffsetTime(jiff::civil::time::Time, jiff::tz::offset::Offset)
 pub thymeleaf::temporal::TemporalValue::Year(i32)
 pub thymeleaf::temporal::TemporalValue::YearMonth(i32, u32)
-pub thymeleaf::temporal::TemporalValue::ZonedDateTime(chrono::datetime::DateTime<chrono_tz::prebuilt::timezones::Tz>)
+pub thymeleaf::temporal::TemporalValue::ZonedDateTime(jiff::zoned::ZonedDateTime)
 impl thymeleaf::temporal::TemporalValue
 pub const fn thymeleaf::temporal::TemporalValue::kind(&self) -> thymeleaf::temporal::TemporalKind
 pub fn thymeleaf::temporal::TemporalValue::to_javascript_iso_string(&self) -> thymeleaf::util::Utf16String
@@ -20510,7 +20510,7 @@ pub fn thymeleaf::temporal::TemporalArrayUtils::array_month_name_short(&self, &[
 pub fn thymeleaf::temporal::TemporalArrayUtils::array_nanosecond(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalArrayUtils::array_second(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalArrayUtils::array_year(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
-pub fn thymeleaf::temporal::TemporalArrayUtils::new(thymeleaf::Locale, chrono_tz::prebuilt::timezones::Tz) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
+pub fn thymeleaf::temporal::TemporalArrayUtils::new(thymeleaf::Locale, jiff::tz::timezone::TimeZone) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
 impl core::marker::Freeze for thymeleaf::temporal::TemporalArrayUtils
 impl core::marker::Send for thymeleaf::temporal::TemporalArrayUtils
 impl core::marker::Sync for thymeleaf::temporal::TemporalArrayUtils
@@ -20645,7 +20645,7 @@ pub fn thymeleaf::temporal::TemporalFormattingUtils::day(&self, core::option::Op
 pub fn thymeleaf::temporal::TemporalFormattingUtils::day_of_week(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<i32>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::day_of_week_name(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::day_of_week_name_short(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
-pub fn thymeleaf::temporal::TemporalFormattingUtils::format(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>, core::option::Option<&str>, core::option::Option<&thymeleaf::Locale>, core::option::Option<chrono_tz::prebuilt::timezones::Tz>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
+pub fn thymeleaf::temporal::TemporalFormattingUtils::format(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>, core::option::Option<&str>, core::option::Option<&thymeleaf::Locale>, core::option::Option<jiff::tz::timezone::TimeZone>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::format_iso(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::hour(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<i32>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::minute(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<i32>, thymeleaf::temporal::TemporalFormattingError>
@@ -20653,7 +20653,7 @@ pub fn thymeleaf::temporal::TemporalFormattingUtils::month(&self, core::option::
 pub fn thymeleaf::temporal::TemporalFormattingUtils::month_name(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::month_name_short(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<thymeleaf::util::Utf16String>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::nanosecond(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<i32>, thymeleaf::temporal::TemporalFormattingError>
-pub fn thymeleaf::temporal::TemporalFormattingUtils::new(thymeleaf::Locale, chrono_tz::prebuilt::timezones::Tz) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
+pub fn thymeleaf::temporal::TemporalFormattingUtils::new(thymeleaf::Locale, jiff::tz::timezone::TimeZone) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::second(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<i32>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalFormattingUtils::year(&self, core::option::Option<&thymeleaf::temporal::TemporalValue>) -> core::result::Result<core::option::Option<i32>, thymeleaf::temporal::TemporalFormattingError>
 impl core::marker::Freeze for thymeleaf::temporal::TemporalFormattingUtils
@@ -20697,7 +20697,7 @@ pub fn thymeleaf::temporal::TemporalListUtils::list_month_name_short(&self, &[co
 pub fn thymeleaf::temporal::TemporalListUtils::list_nanosecond(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalListUtils::list_second(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalListUtils::list_year(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
-pub fn thymeleaf::temporal::TemporalListUtils::new(thymeleaf::Locale, chrono_tz::prebuilt::timezones::Tz) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
+pub fn thymeleaf::temporal::TemporalListUtils::new(thymeleaf::Locale, jiff::tz::timezone::TimeZone) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
 impl core::marker::Freeze for thymeleaf::temporal::TemporalListUtils
 impl core::marker::Send for thymeleaf::temporal::TemporalListUtils
 impl core::marker::Sync for thymeleaf::temporal::TemporalListUtils
@@ -20727,10 +20727,10 @@ pub struct thymeleaf::temporal::TemporalObjects
 impl thymeleaf::temporal::TemporalObjects
 pub fn thymeleaf::temporal::TemporalObjects::date_fields(&thymeleaf::temporal::TemporalValue) -> core::result::Result<(i32, u32, u32, u32), thymeleaf::temporal::temporal_objects::TemporalError>
 pub fn thymeleaf::temporal::TemporalObjects::formatter_for(&thymeleaf::temporal::TemporalValue, &thymeleaf::Locale) -> core::result::Result<alloc::string::String, thymeleaf::temporal::temporal_objects::TemporalError>
-pub fn thymeleaf::temporal::TemporalObjects::offset_seconds(&thymeleaf::temporal::TemporalValue, chrono_tz::prebuilt::timezones::Tz) -> i32
+pub fn thymeleaf::temporal::TemporalObjects::offset_seconds(&thymeleaf::temporal::TemporalValue, jiff::tz::timezone::TimeZone) -> i32
 pub fn thymeleaf::temporal::TemporalObjects::temporal(core::option::Option<&thymeleaf::TemplateValue>) -> core::result::Result<core::option::Option<&thymeleaf::temporal::TemporalValue>, thymeleaf::temporal::temporal_objects::TemporalError>
 pub fn thymeleaf::temporal::TemporalObjects::time_fields(&thymeleaf::temporal::TemporalValue) -> core::result::Result<(u32, u32, u32, u32), thymeleaf::temporal::temporal_objects::TemporalError>
-pub fn thymeleaf::temporal::TemporalObjects::zoned_time(&thymeleaf::temporal::TemporalValue, chrono_tz::prebuilt::timezones::Tz) -> core::result::Result<chrono::datetime::DateTime<chrono_tz::prebuilt::timezones::Tz>, thymeleaf::temporal::temporal_objects::TemporalError>
+pub fn thymeleaf::temporal::TemporalObjects::zoned_time(&thymeleaf::temporal::TemporalValue, jiff::tz::timezone::TimeZone) -> core::result::Result<jiff::zoned::ZonedDateTime, thymeleaf::temporal::temporal_objects::TemporalError>
 impl core::marker::Freeze for thymeleaf::temporal::TemporalObjects
 impl core::marker::Send for thymeleaf::temporal::TemporalObjects
 impl core::marker::Sync for thymeleaf::temporal::TemporalObjects
@@ -20758,7 +20758,7 @@ impl<T> tracing::instrument::Instrument for thymeleaf::temporal::TemporalObjects
 impl<T> tracing::instrument::WithSubscriber for thymeleaf::temporal::TemporalObjects
 pub struct thymeleaf::temporal::TemporalSetUtils
 impl thymeleaf::temporal::TemporalSetUtils
-pub fn thymeleaf::temporal::TemporalSetUtils::new(thymeleaf::Locale, chrono_tz::prebuilt::timezones::Tz) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
+pub fn thymeleaf::temporal::TemporalSetUtils::new(thymeleaf::Locale, jiff::tz::timezone::TimeZone) -> core::result::Result<Self, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalSetUtils::set_day(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalSetUtils::set_day_of_week(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<i32>>, thymeleaf::temporal::TemporalFormattingError>
 pub fn thymeleaf::temporal::TemporalSetUtils::set_day_of_week_name(&self, &[core::option::Option<thymeleaf::temporal::TemporalValue>]) -> core::result::Result<alloc::vec::Vec<core::option::Option<thymeleaf::util::Utf16String>>, thymeleaf::temporal::TemporalFormattingError>
@@ -23528,8 +23528,8 @@ impl<T> tracing::instrument::Instrument for thymeleaf::util::DateUtils
 impl<T> tracing::instrument::WithSubscriber for thymeleaf::util::DateUtils
 pub struct thymeleaf::util::DateValue
 impl thymeleaf::util::DateValue
-pub const fn thymeleaf::util::DateValue::calendar(chrono::datetime::DateTime<chrono::offset::utc::Utc>, chrono_tz::prebuilt::timezones::Tz) -> Self
-pub const fn thymeleaf::util::DateValue::date(chrono::datetime::DateTime<chrono::offset::utc::Utc>) -> Self
+pub const fn thymeleaf::util::DateValue::calendar(jiff::timestamp::Timestamp, jiff::tz::timezone::TimeZone) -> Self
+pub const fn thymeleaf::util::DateValue::date(jiff::timestamp::Timestamp) -> Self
 pub const fn thymeleaf::util::DateValue::is_calendar(&self) -> bool
 pub fn thymeleaf::util::DateValue::time_in_millis(&self) -> i64
 pub const fn thymeleaf::util::DateValue::to_date(&self) -> Self

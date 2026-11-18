@@ -6,7 +6,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{Duration as ChronoDuration, Utc};
+use jiff::{SignedDuration, Timestamp};
 
 use crate::config::SaTokenConfig;
 use crate::dao::SaTokenDao;
@@ -327,7 +327,7 @@ impl TokenRepo {
 
         match info.expire_time {
             Some(expire) => {
-                let remaining = expire.signed_duration_since(Utc::now()).num_seconds();
+                let remaining = expire.duration_since(Timestamp::now()).as_secs();
                 remaining <= self.config.renew_threshold
             }
             None => self.config.active_timeout > 0,
@@ -347,7 +347,7 @@ impl TokenRepo {
 
         let secs = self.dao.renew_secs();
         let ttl = if secs > 0 {
-            info.expire_time = Some(Utc::now() + ChronoDuration::seconds(secs));
+            info.expire_time = Some(Timestamp::now() + SignedDuration::from_secs(secs));
             Some(Duration::from_secs(secs as u64))
         } else {
             None
@@ -426,7 +426,7 @@ mod tests {
     fn should_auto_renew_false_when_disabled() {
         let r = repo(false, -1, 3600);
         let mut info = TokenInfo::new(TokenValue::new("t"), "u");
-        info.expire_time = Some(Utc::now() + ChronoDuration::seconds(10));
+        info.expire_time = Some(Timestamp::now() + SignedDuration::from_secs(10));
         assert!(!r.should_auto_renew(&info));
     }
 
@@ -434,7 +434,7 @@ mod tests {
     fn should_auto_renew_always_when_threshold_negative() {
         let r = repo(true, -1, 3600);
         let mut info = TokenInfo::new(TokenValue::new("t"), "u");
-        info.expire_time = Some(Utc::now() + ChronoDuration::seconds(3500));
+        info.expire_time = Some(Timestamp::now() + SignedDuration::from_secs(3500));
         assert!(r.should_auto_renew(&info));
     }
 
@@ -442,11 +442,11 @@ mod tests {
     fn should_auto_renew_only_when_remaining_within_threshold() {
         let r = repo(true, 300, 3600);
         let mut far = TokenInfo::new(TokenValue::new("t1"), "u");
-        far.expire_time = Some(Utc::now() + ChronoDuration::seconds(3500));
+        far.expire_time = Some(Timestamp::now() + SignedDuration::from_secs(3500));
         assert!(!r.should_auto_renew(&far));
 
         let mut near = TokenInfo::new(TokenValue::new("t2"), "u");
-        near.expire_time = Some(Utc::now() + ChronoDuration::seconds(200));
+        near.expire_time = Some(Timestamp::now() + SignedDuration::from_secs(200));
         assert!(r.should_auto_renew(&near));
     }
 }

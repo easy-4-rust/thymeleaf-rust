@@ -10,7 +10,7 @@ use crate::error::{SaTokenError, SaTokenResult};
 use crate::keys::LOGIN_TYPE_DEFAULT;
 use crate::repository::TokenRepo;
 use crate::token::{TokenGenerator, TokenInfo, TokenValue};
-use chrono::{DateTime, Duration, Utc};
+use jiff::{SignedDuration, Timestamp};
 use sa_token_adapter::storage::SaStorage;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -35,15 +35,17 @@ impl RefreshTokenRecord {
         Self {
             access_token: access_token.into(),
             login_id: login_id.into(),
-            created_at: Utc::now().to_rfc3339(),
+            created_at: Timestamp::now()
+                .strftime("%Y-%m-%dT%H:%M:%S%.f+00:00")
+                .to_string(),
             expire_time: None,
             refreshed_at: None,
             extra_data: None,
         }
     }
 
-    fn with_expire_time(mut self, expire: Option<DateTime<Utc>>) -> Self {
-        self.expire_time = expire.map(|t| t.to_rfc3339());
+    fn with_expire_time(mut self, expire: Option<Timestamp>) -> Self {
+        self.expire_time = expire.map(|t| t.strftime("%Y-%m-%dT%H:%M:%S%.f+00:00").to_string());
         self
     }
 
@@ -54,12 +56,16 @@ impl RefreshTokenRecord {
 
     fn mark_refreshed(&mut self, new_access_token: impl Into<String>) {
         self.access_token = new_access_token.into();
-        self.refreshed_at = Some(Utc::now().to_rfc3339());
+        self.refreshed_at = Some(
+            Timestamp::now()
+                .strftime("%Y-%m-%dT%H:%M:%S%.f+00:00")
+                .to_string(),
+        );
     }
 }
 
-fn chrono_from_std(d: std::time::Duration) -> SaTokenResult<Duration> {
-    Duration::from_std(d)
+fn token_timeout_duration(d: std::time::Duration) -> SaTokenResult<SignedDuration> {
+    SignedDuration::try_from(d)
         .map_err(|_| SaTokenError::ConfigError("token timeout duration out of range".into()))
 }
 
@@ -128,7 +134,7 @@ impl RefreshTokenManager {
     pub fn generate(&self, login_id: &str) -> String {
         format!(
             "refresh_{}_{}_{}",
-            Utc::now().timestamp_millis(),
+            Timestamp::now().as_millisecond(),
             login_id,
             Uuid::new_v4().simple()
         )
@@ -157,7 +163,7 @@ impl RefreshTokenManager {
     ) -> SaTokenResult<()> {
         let key = self.refresh_key(refresh_token);
         let expire_time = if self.config.refresh_token_timeout > 0 {
-            Some(Utc::now() + Duration::seconds(self.config.refresh_token_timeout))
+            Some(Timestamp::now() + SignedDuration::from_secs(self.config.refresh_token_timeout))
         } else {
             None
         };
@@ -202,11 +208,11 @@ impl RefreshTokenManager {
         }
 
         if let Some(expire_str) = record.expire_time.as_deref() {
-            let expire_time = DateTime::parse_from_rfc3339(expire_str)
-                .map_err(|_| SaTokenError::RefreshTokenInvalidExpireTime)?
-                .with_timezone(&Utc);
+            let expire_time = expire_str
+                .parse::<Timestamp>()
+                .map_err(|_| SaTokenError::RefreshTokenInvalidExpireTime)?;
 
-            if Utc::now() > expire_time {
+            if Timestamp::now() > expire_time {
                 self.delete(refresh_token).await?;
                 return Err(SaTokenError::TokenExpired);
             }
@@ -241,8 +247,9 @@ impl RefreshTokenManager {
         token_info.update_active_time();
         token_info.refresh_token = Some(refresh_token.to_string());
         if self.config.refresh_token_timeout > 0 {
-            token_info.refresh_token_expire_time =
-                Some(Utc::now() + Duration::seconds(self.config.refresh_token_timeout));
+            token_info.refresh_token_expire_time = Some(
+                Timestamp::now() + SignedDuration::from_secs(self.config.refresh_token_timeout),
+            );
         }
         if let Some(extra) = &extra_data {
             token_info.extra_data = Some(extra.clone());
@@ -250,7 +257,7 @@ impl RefreshTokenManager {
         if token_info.expire_time.is_none()
             && let Some(timeout) = self.config.timeout_duration()
         {
-            token_info.expire_time = Some(Utc::now() + chrono_from_std(timeout)?);
+            token_info.expire_time = Some(Timestamp::now() + token_timeout_duration(timeout)?);
         }
 
         // 刷新必须同步：token 体、反向映射、login:token 标量、多设备索引；并删掉旧 access。

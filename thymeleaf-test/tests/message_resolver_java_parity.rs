@@ -916,7 +916,7 @@ fn big_decimal(value: &str) -> Option<Arc<TemplateValue>> {
 }
 
 fn date(epoch_millis: i64) -> Option<Arc<TemplateValue>> {
-    let instant = chrono::DateTime::from_timestamp_millis(epoch_millis).expect("valid epoch");
+    let instant = jiff::Timestamp::from_millisecond(epoch_millis).expect("valid epoch");
     Some(Arc::new(TemplateValue::Object(Arc::new(DateValue::date(
         instant,
     )))))

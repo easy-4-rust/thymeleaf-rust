@@ -1,7 +1,6 @@
-use chrono::{
-    DateTime, Datelike, LocalResult, NaiveDate, NaiveDateTime, Offset, TimeZone, Timelike, Utc,
-};
-use chrono_tz::Tz;
+use jiff::civil::{Date, DateTime};
+use jiff::tz::{AmbiguousOffset, Offset, TimeZone};
+use jiff::{Timestamp, ZonedDateTime};
 use thiserror::Error;
 
 use crate::expression::TemplateValue;
@@ -17,37 +16,34 @@ pub struct TemporalObjects;
 /// Java `z` pattern 的通用时区名：带偏移类型保留偏移（UTC → "Z"、否则
 /// "+HH:MM"）；其余在默认 ZoneId 下取 UTC → "Z"、命名时区取缩写。
 /// 对应 Java 语义：`TemporalObjects` 的 `java_short_zone` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn java_short_zone(target: &TemporalValue, default_zone: &Tz) -> String {
+pub(crate) fn java_short_zone(target: &TemporalValue, default_zone: &TimeZone) -> String {
     match target {
-        TemporalValue::OffsetDateTime(value) => fixed_offset_zone(value.offset()),
+        TemporalValue::OffsetDateTime(value) => fixed_offset_zone(&value.offset()),
         TemporalValue::OffsetTime(_, offset) => fixed_offset_zone(offset),
-        TemporalValue::ZonedDateTime(value) => tz_zone(value.timezone()),
-        _ => tz_zone(*default_zone),
+        TemporalValue::ZonedDateTime(value) => tz_zone(value.time_zone()),
+        _ => tz_zone(default_zone),
     }
 }
 
 /// 对应 Java 语义：`TemporalObjects` 的 `fixed_offset_zone` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn fixed_offset_zone(offset: &chrono::FixedOffset) -> String {
-    if offset.local_minus_utc() == 0 {
+pub(crate) fn fixed_offset_zone(offset: &Offset) -> String {
+    if offset.seconds() == 0 {
         "Z".to_owned()
     } else {
-        // FixedOffset 通过 TimeZone trait 构造参考时刻后按 `%:z` 渲染 "+HH:MM"。
-        chrono::Utc::now()
-            .with_timezone(offset)
-            .format("%:z")
-            .to_string()
+        let seconds = offset.seconds().unsigned_abs();
+        let sign = if offset.seconds() < 0 { '-' } else { '+' };
+        format!("{sign}{:02}:{:02}", seconds / 3600, seconds / 60 % 60)
     }
 }
 
 /// 对应 Java 语义：`TemporalObjects` 的 `tz_zone` 行为（Rust 侧辅助/私有路径）。
-pub(crate) fn tz_zone(zone: Tz) -> String {
-    if zone == Tz::UTC {
+pub(crate) fn tz_zone(zone: &TimeZone) -> String {
+    if zone == &TimeZone::UTC || zone.iana_name() == Some("UTC") {
         "Z".to_owned()
     } else {
-        chrono::Utc::now()
-            .with_timezone(&zone)
-            .format("%Z")
-            .to_string()
+        zone.to_offset_info(Timestamp::now())
+            .abbreviation()
+            .to_owned()
     }
 }
 
@@ -76,7 +72,7 @@ impl TemporalObjects {
         }
     }
 
-    /// 返回与 Java `formatterFor` 类型分派一致的默认 chrono pattern。
+    /// 返回与 Java `formatterFor` 类型分派一致的默认 strftime pattern。
     ///
     /// Java（JDK 9+ CLDR）基准：LocalDateTime → `ofLocalizedDateTime(LONG, MEDIUM)`
     /// （无时区名）；ZonedDateTime → `ofLocalizedDateTime(LONG)`（含 `z` 时区名，
@@ -92,7 +88,7 @@ impl TemporalObjects {
             TemporalKind::LocalDateTime => localized_datetime_pattern(&language),
             TemporalKind::ZonedDateTime => {
                 let zone = match target {
-                    TemporalValue::ZonedDateTime(value) => tz_zone(value.timezone()),
+                    TemporalValue::ZonedDateTime(value) => tz_zone(value.time_zone()),
                     _ => unreachable!("ZonedDateTime kind implies ZonedDateTime value"),
                 };
                 if language == "zh" {
@@ -131,39 +127,34 @@ impl TemporalObjects {
     /// 对应 Java: `TemporalObjects#zonedTime()`。
     pub fn zoned_time(
         target: &TemporalValue,
-        default_zone_id: Tz,
-    ) -> Result<DateTime<Tz>, TemporalError> {
-        let today = Utc::now().with_timezone(&default_zone_id).date_naive();
+        default_zone_id: TimeZone,
+    ) -> Result<ZonedDateTime, TemporalError> {
+        let today = default_zone_id.to_datetime(Timestamp::now()).date();
         let local = match target {
-            TemporalValue::Instant(value) => return Ok(value.with_timezone(&default_zone_id)),
-            TemporalValue::LocalDate(value) => value.and_hms_opt(0, 0, 0).expect("midnight"),
+            TemporalValue::Instant(value) => return Ok(value.to_zoned_datetime(default_zone_id)),
+            TemporalValue::LocalDate(value) => value.at(0, 0, 0, 0),
             TemporalValue::LocalDateTime(value) => *value,
-            TemporalValue::LocalTime(value) => NaiveDateTime::new(today, *value),
+            TemporalValue::LocalTime(value) => DateTime::from_parts(today, *value),
             TemporalValue::OffsetDateTime(value) => {
-                return Ok(value.with_timezone(&Utc).with_timezone(&default_zone_id));
+                return Ok(value.timestamp().to_zoned_datetime(default_zone_id));
             }
             TemporalValue::OffsetTime(value, offset) => {
-                let fixed = today
-                    .and_time(*value)
-                    .and_local_timezone(*offset)
-                    .single()
-                    .ok_or_else(|| invalid("Cannot resolve OffsetTime"))?;
-                return Ok(fixed.with_timezone(&Utc).with_timezone(&default_zone_id));
+                let fixed = offset
+                    .to_timestamp(DateTime::from_parts(today, *value))
+                    .map_err(|_| invalid("Cannot resolve OffsetTime"))?;
+                return Ok(fixed.to_zoned_datetime(default_zone_id));
             }
-            TemporalValue::Year(year) => NaiveDate::from_ymd_opt(*year, 1, 1)
-                .ok_or_else(|| invalid("Invalid Year"))?
-                .and_hms_opt(0, 0, 0)
-                .expect("midnight"),
-            TemporalValue::YearMonth(year, month) => NaiveDate::from_ymd_opt(*year, *month, 1)
-                .ok_or_else(|| invalid("Invalid YearMonth"))?
-                .and_hms_opt(0, 0, 0)
-                .expect("midnight"),
-            TemporalValue::ZonedDateTime(value) => return Ok(*value),
+            TemporalValue::Year(year) => year_month_date(*year, 1)?.at(0, 0, 0, 0),
+            TemporalValue::YearMonth(year, month) => year_month_date(*year, *month)?.at(0, 0, 0, 0),
+            TemporalValue::ZonedDateTime(value) => return Ok(value.clone()),
         };
-        match default_zone_id.from_local_datetime(&local) {
-            LocalResult::Single(value) | LocalResult::Ambiguous(value, _) => Ok(value),
-            LocalResult::None => Err(invalid("Local temporal is in a ZoneId gap")),
+        let candidate = default_zone_id.to_ambiguous_zoned_datetime(local);
+        if matches!(candidate.offset(), AmbiguousOffset::Gap { .. }) {
+            return Err(invalid("Local temporal is in a ZoneId gap"));
         }
+        candidate
+            .earlier()
+            .map_err(|error| invalid(error.to_string()))
     }
 
     /// 读取日期字段；目标不支持该字段时返回 Java 式错误。
@@ -172,19 +163,17 @@ impl TemporalObjects {
         let date = match target {
             TemporalValue::LocalDate(value) => *value,
             TemporalValue::LocalDateTime(value) => value.date(),
-            TemporalValue::OffsetDateTime(value) => value.date_naive(),
-            TemporalValue::ZonedDateTime(value) => value.date_naive(),
-            TemporalValue::Year(year) => NaiveDate::from_ymd_opt(*year, 1, 1).expect("valid year"),
-            TemporalValue::YearMonth(year, month) => {
-                NaiveDate::from_ymd_opt(*year, *month, 1).expect("valid year-month")
-            }
+            TemporalValue::OffsetDateTime(value) => value.date(),
+            TemporalValue::ZonedDateTime(value) => value.date(),
+            TemporalValue::Year(year) => year_month_date(*year, 1)?,
+            TemporalValue::YearMonth(year, month) => year_month_date(*year, *month)?,
             _ => return Err(invalid("Unsupported field: DayOfMonth")),
         };
         Ok((
-            date.year(),
-            date.month(),
-            date.day(),
-            date.weekday().number_from_monday(),
+            i32::from(date.year()),
+            date.month() as u32,
+            date.day() as u32,
+            date.weekday() as u32,
         ))
     }
 
@@ -198,22 +187,23 @@ impl TemporalObjects {
             TemporalValue::ZonedDateTime(value) => value.time(),
             _ => return Err(invalid("Unsupported field: HourOfDay")),
         };
-        Ok((time.hour(), time.minute(), time.second(), time.nanosecond()))
+        Ok((
+            time.hour() as u32,
+            time.minute() as u32,
+            time.second() as u32,
+            time.subsec_nanosecond() as u32,
+        ))
     }
 
     /// 返回 temporal 自身固定偏移秒数；无偏移类型返回默认时区当前偏移。
     #[must_use]
     /// 对应 Java 语义：`TemporalObjects` 的 `offset_seconds` 行为（Rust 侧辅助/私有路径）。
-    pub fn offset_seconds(target: &TemporalValue, default_zone_id: Tz) -> i32 {
+    pub fn offset_seconds(target: &TemporalValue, default_zone_id: TimeZone) -> i32 {
         match target {
-            TemporalValue::OffsetDateTime(value) => value.offset().local_minus_utc(),
-            TemporalValue::OffsetTime(_, offset) => offset.local_minus_utc(),
-            TemporalValue::ZonedDateTime(value) => value.offset().fix().local_minus_utc(),
-            _ => Utc::now()
-                .with_timezone(&default_zone_id)
-                .offset()
-                .fix()
-                .local_minus_utc(),
+            TemporalValue::OffsetDateTime(value) => value.offset().seconds(),
+            TemporalValue::OffsetTime(_, offset) => offset.seconds(),
+            TemporalValue::ZonedDateTime(value) => value.offset().seconds(),
+            _ => default_zone_id.to_offset(Timestamp::now()).seconds(),
         }
     }
 
@@ -225,7 +215,15 @@ impl TemporalObjects {
     }
 }
 
-/// Java `DateTimeFormatter.ofLocalizedDate(LONG)` 的 chrono 等价。
+/// 将公开的年份与月份字段校验后构造该月第一天。
+/// 对应 Java 语义：`TemporalObjects#zonedTime()` 为 Year 和 YearMonth 补齐日期字段。
+pub(crate) fn year_month_date(year: i32, month: u32) -> Result<Date, TemporalError> {
+    let year = i16::try_from(year).map_err(|_| invalid("Invalid Year"))?;
+    let month = i8::try_from(month).map_err(|_| invalid("Invalid YearMonth"))?;
+    Date::new(year, month, 1).map_err(|error| invalid(error.to_string()))
+}
+
+/// Java `DateTimeFormatter.ofLocalizedDate(LONG)` 的 strftime 等价。
 fn localized_date_pattern(language: &str) -> String {
     if language == "zh" {
         "%Y年%m月%d日".to_owned()
@@ -236,7 +234,7 @@ fn localized_date_pattern(language: &str) -> String {
     }
 }
 
-/// Java `DateTimeFormatter.ofLocalizedDateTime(LONG, MEDIUM)` 的 chrono 等价（不含时区名）。
+/// Java `DateTimeFormatter.ofLocalizedDateTime(LONG, MEDIUM)` 的 strftime 等价（不含时区名）。
 fn localized_datetime_pattern(language: &str) -> String {
     if language == "zh" {
         "%Y年%m月%d日 %H:%M:%S".to_owned()

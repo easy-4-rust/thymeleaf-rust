@@ -5,7 +5,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -30,7 +30,7 @@ pub struct TempTokenRecord {
     pub namespace: String,
     /// Absolute expiry; used when the store has not yet evicted the key.
     /// 绝对过期时间；存储尚未逐出键时仍用它判定。
-    pub expire_at: Option<DateTime<Utc>>,
+    pub expire_at: Option<Timestamp>,
 }
 
 /// Temp-token operations bound to a Dao.
@@ -66,11 +66,11 @@ impl TempTokenManager {
         }
     }
 
-    fn expire_at(timeout_secs: i64) -> Option<DateTime<Utc>> {
+    fn expire_at(timeout_secs: i64) -> Option<Timestamp> {
         if timeout_secs < 0 {
             None
         } else {
-            Some(Utc::now() + chrono::Duration::seconds(timeout_secs))
+            Some(Timestamp::now() + jiff::SignedDuration::from_secs(timeout_secs))
         }
     }
 
@@ -145,7 +145,7 @@ impl TempTokenManager {
             .await?
             .ok_or(SaTokenError::TempTokenNotFound)?;
         if let Some(exp) = rec.expire_at {
-            if Utc::now() > exp {
+            if Timestamp::now() > exp {
                 let _ = self.dao.delete(&key).await;
                 return Err(SaTokenError::TempTokenExpired);
             }

@@ -80,7 +80,7 @@ impl RequestSign {
         &self,
         mut params: BTreeMap<String, String>,
     ) -> SaTokenResult<BTreeMap<String, String>> {
-        let now = chrono::Utc::now().timestamp().to_string();
+        let now = jiff::Timestamp::now().as_second().to_string();
         let nonce = crate::token::random_hex(32)?;
         params.insert("timestamp".into(), now);
         params.insert("nonce".into(), nonce);
@@ -105,7 +105,7 @@ impl RequestSign {
             .get("timestamp")
             .and_then(|s| s.parse::<i64>().ok())
             .ok_or(SaTokenError::SignTimestampExpired)?;
-        let now = chrono::Utc::now().timestamp();
+        let now = jiff::Timestamp::now().as_second();
         if (now - ts).abs() > self.window_secs {
             return Err(SaTokenError::SignTimestampExpired);
         }
