@@ -13,13 +13,15 @@
 [English](./README.md) · [简体中文](./README.zh-CN.md)
 
 [Overview](#1-overview) · [Maturity](#2-maturity) · [Workspace](#4-workspace-layout) ·
-[Quick Start](#6-quick-start) · [Quality](#13-quality-gates) · [Roadmap](#16-roadmap)
+[Quick Start](#6-quick-start) · [Quality](#8-quality-gates) · [Roadmap](#10-roadmap)
 
 </div>
 
 ---
 
-> **Version**: `0.1.2` · **MSRV**: Rust 1.95 · **Edition**: 2024 · **Resolver**: 3
+> **Version**: `0.2.0` · **MSRV**: Rust 1.95 · **Edition**: 2024 · **Resolver**: 3
+>
+> [crates.io](https://crates.io/crates/thymeleaf/0.2.0) · [docs.rs](https://docs.rs/thymeleaf/0.2.0/thymeleaf/) · [GitHub Release](https://github.com/easy-4-rust/thymeleaf-rust/releases/tag/v0.2.0)
 >
 > **Upstream baseline**: Thymeleaf `3.1.5.RELEASE` @ `10f9dd2e`
 
@@ -28,19 +30,18 @@
 thymeleaf-rust is a behavioral port of Java Thymeleaf 3.1.5 to Rust. It parses and
 renders HTML/XML/TEXT templates with expression evaluation, dialect processors,
 caching, and a framework-neutral web contract. The project does not depend on the
-JVM at runtime — all Java semantics are re-implemented in pure Rust.
+JVM at runtime — the supported template semantics run in Rust.
 
 ### 1.1 Status Evidence
 
 | Claim | Value | Evidence |
 |:---|:---|:---|
-| Semantic parity corpus | 2,608 `.thtest` cases, 2,595 behaviorally identical | CI `thtest_upstream_plain_batch` |
+| Semantic parity corpus | 2,608 `.thtest` cases, 2,595 verified by the differential test | [Corpus test](./thymeleaf-test/tests/thtest_upstream_plain_batch.rs) |
 | Object-level coverage | 491 main objects, 4,291 methods, 0 missing | `cargo xtask migration-check` |
-| Source-parity ledger | 413 core test entries (Spring excluded by policy) | `source_parity_inventory.json` |
-| Acceptance gate | 2,686 assets SHA-256 verified | `thymeleaf-test/tests/acceptance.rs` |
-| Tests | 295 (lib) + 964 (integration) + 45 (adapters) | `cargo test --workspace` |
+| Source-parity ledger | 413 core Java test methods and 1,154 runtime cases | [Source parity inventory](./docs/migration/baseline/source_parity_inventory.json) |
+| Acceptance gate | Registered test assets checked against SHA-256 | [Acceptance test](./thymeleaf-test/tests/acceptance.rs) |
 | CI platforms | ubuntu-latest, macos-latest | GitHub Actions matrix |
-| unsafe | `forbid` across all crates | `[lints.rust] unsafe_code = "forbid"` |
+| unsafe | `forbid` in the core and adapter crates | `[lints.rust] unsafe_code = "forbid"` |
 
 ### 1.2 Non-Goals
 
@@ -54,48 +55,48 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 
 | Feature | Status | Crate | Limitation |
 |:---|:---:|:---|:---|
-| HTML/XML/TEXT template parsing | ✅ Stable | `thymeleaf` | html5gum tokenizer has pathological-input memory risk |
+| HTML/XML/TEXT template parsing | ✅ Stable | `thymeleaf` | Parser and rendering coverage varies by mode |
 | Expression evaluation (OGNL subset) | ✅ Stable | `thymeleaf` | No JVM reflection; ACL-gated static method whitelist |
-| Standard dialect processors | ✅ Stable | `thymeleaf` | 2,608 corpus cases verified |
+| Standard dialect processors | ✅ Stable | `thymeleaf` | 2,595 cases passed semantic comparison |
 | Template cache & resolvers | ✅ Stable | `thymeleaf` | String/File/Class/URL/Multi/ByteArray loaders |
 | Auto-escaping & output formats | ✅ Stable | `thymeleaf` | HTML/XML/JavaScript/CSS/JSON/RTF/PlainText |
 | Decoupled template logic | ✅ Stable | `thymeleaf` | `.th.xml` sidecar |
-| Optional DTD validation (XML mode) | 🧪 Preview | `thymeleaf` (`dtd-validation` feature) | Embedded W3C XHTML DTDs; `Disabled`/`Warn`/`Strict` policy, default `Disabled` (zero overhead); internal-subset DOCTYPEs skip validation |
+| Optional DTD validation (XML mode) | 🧪 Preview | `thymeleaf` (`dtd-validation` feature) | Embedded W3C XHTML DTDs; `Disabled`/`Warn`/`Strict` policy, default `Disabled`; internal-subset DOCTYPEs skip validation |
 | Framework-neutral web contract | ✅ Stable | `thymeleaf` | IWebExchange / IWebRequest / IWebSession |
 | Framework adapters (P0) | ✅ Stable | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | Full IWebExchange suite + contract tests aligned with hyper benchmark + `render_async` |
 | Framework adapters (thin) | 🧪 Preview | hyper/tower/ntex/poem/rocket/salvo/tonic | Response-level adapters; IWebExchange via hyper benchmark |
 | Framework adapters (experimental) | 🧪 Experimental | gotham/warp | Upstream stalled/replaced; best-effort, tests behind `full` feature |
 | Tide adapter (source-only) | 🧪 Experimental | `thymeleaf-tide` | Excluded from workspace CI/security graph: Tide and async-std are discontinued; `publish = false`; retained for reference only |
-| sa-token security dialect | 🧪 Preview | `thymeleaf-sa-token` | 12 contract tests |
-| Vernal view layer | 🧪 Preview | `thymeleaf-vernal` | ThymeleafView → vernal HttpResponse; ViewResolver bridge planned |
-| Fuzz (property tests) | 🚧 Partial | `thymeleaf-test` | XML/TEXT parser proptest; HTML/render excluded (see Known Limitations) |
+| sa-token security dialect | 🧪 Preview | `thymeleaf-sa-token` | Authorization-aware template processors |
+| Vernal view layer | 🧪 Preview | `thymeleaf-vernal` | `ThymeleafView` renders to a Vernal response. `ThymeleafViewResolver` resolves views. |
+| Fuzz (property tests) | 🚧 Partial | `thymeleaf-test` | XML and TEXT parser property tests |
 
 ### 2.2 Upstream Compatibility
 
 | Dimension | Scope | Method |
 |:---|:---|:---|
-| Behavioral | 2,595 / 2,608 executable cases match Java byte-for-byte | Corpus differential |
+| Behavioral | 2,595 of 2,608 executable cases pass the differential test | Corpus differential |
 | Policy differences | 13 cases (12 `execinfo` upstream-disabled + 1 arbitrary reflection chain) | Named disposition |
-| Source parity | 413 core Java test classes tracked (Spring excluded) | `source_parity_inventory.json` |
+| Source parity | 413 core Java test methods (Spring excluded) | [Source parity inventory](./docs/migration/baseline/source_parity_inventory.json) |
 | Object parity | 491 / 491 main objects, 4,291 / 4,291 methods | `migration-check` |
 
 ## 3. Rust Baseline
 
 | Item | Value |
 |:---|:---|
-| MSRV | 1.95 |
+| MSRV | Core 1.95, Topcoat adapter 1.99 |
 | Edition | 2024 |
 | Resolver | 3 |
 | Clippy | `-D warnings` |
 | rustfmt | stable |
-| unsafe | `forbid` (all crates) |
+| unsafe | `forbid` (core and adapters) |
 | missing_docs | `deny` (`thymeleaf` crate) |
 
 ## 4. Workspace Layout
 
 ```text
 [Downstream crate]
-        │ cargo add thymeleaf / thymeleaf-<framework>
+        │ cargo add thymeleaf
         ▼
 ┌──────────────────────────────────────────────────────────┐
 │ thymeleaf-rust Workspace                                 │
@@ -116,45 +117,45 @@ JVM at runtime — all Java semantics are re-implemented in pure Rust.
 
 ### Crate Map
 
-| Crate | Publish | Role |
+| Crate | crates.io in v0.2.0 | Role |
 |:---|:---:|:---|
-| `thymeleaf` | ✅ | Core engine |
-| `thymeleaf-actix-web` | ✅ | Actix-web adapter |
-| `thymeleaf-axum` | ✅ | Axum adapter |
-| `thymeleaf-gotham` | ✅ | Gotham adapter |
-| `thymeleaf-hyper` | ✅ | Hyper adapter |
-| `thymeleaf-ntex` | ✅ | Ntex adapter |
-| `thymeleaf-poem` | ✅ | Poem adapter |
-| `thymeleaf-rocket` | ✅ | Rocket adapter |
-| `thymeleaf-sa-token` | ✅ | Sa-Token security dialect |
-| `thymeleaf-salvo` | ✅ | Salvo adapter |
-| `thymeleaf-tonic` | ✅ | Tonic adapter |
-| `thymeleaf-topcoat` | ✅ | Topcoat adapter |
-| `thymeleaf-tower` | ✅ | Tower adapter |
-| `thymeleaf-warp` | ✅ | Warp adapter |
-| `thymeleaf-tide` | ❌ | Tide adapter (excluded from workspace; unmaintained upstream) |
-| `thymeleaf-vernal` | ❌ | Vernal adapter (git deps, pending crates.io) |
-| `thymeleaf-test` | ❌ | Test harness (internal) |
-| `thymeleaf-examples` | ❌ | Examples (internal) |
+| `thymeleaf` | [crates.io](https://crates.io/crates/thymeleaf/0.2.0) | Core engine |
+| `thymeleaf-actix-web` | Source | Actix-web adapter |
+| `thymeleaf-axum` | Source | Axum adapter |
+| `thymeleaf-gotham` | Source | Gotham adapter |
+| `thymeleaf-hyper` | Source | Hyper adapter |
+| `thymeleaf-ntex` | Source | Ntex adapter |
+| `thymeleaf-poem` | Source | Poem adapter |
+| `thymeleaf-rocket` | Source | Rocket adapter |
+| `thymeleaf-sa-token` | Source | Sa-Token security dialect |
+| `thymeleaf-salvo` | Source | Salvo adapter |
+| `thymeleaf-tonic` | Source | Tonic adapter |
+| `thymeleaf-topcoat` | Source | Topcoat adapter |
+| `thymeleaf-tower` | Source | Tower adapter |
+| `thymeleaf-warp` | Source | Warp adapter |
+| `thymeleaf-tide` | Unpublished | Tide adapter (excluded from workspace; unmaintained upstream) |
+| `thymeleaf-vernal` | Unpublished | Vernal adapter (Git dependencies) |
+| `thymeleaf-test` | Unpublished | Test harness (internal) |
+| `thymeleaf-examples` | Unpublished | Examples (internal) |
 
 ## 5. Security Model
 
-Expression evaluation defaults to a read-only safe subset:
+Restricted expression contexts can block external access. Static class and method access follows the policies enforced by `ThymeleafACLClassResolver` and `OgnlRuntime`. Use trusted templates when rendering application data.
 
-- **`restrict_external_access = true`** by default — `new`, `param`, `@Type@` syntax blocked.
-- **Arbitrary classes and reflection blocked** — 10 blocked package prefixes (`java.`/`javax.`/`jakarta.`/`jdk.`/…), 53 allowed classes (wrappers, collections, time, math).
-- **Restricted static method whitelist** — `Math.abs/sqrt/…`, `Integer.parseInt`, `LocalDateTime.of`, `String.format` on 9 classes; all others rejected by `ThymeleafACLClassResolver`.
-- **`unsafe_code = "forbid"`** across all crates — zero unsafe in workspace source.
-- Hosts can further restrict via `OgnlRuntime` (opt-in).
+[Expression context policies](./thymeleaf/src/expression/standard_expression_execution_context.rs)
 
 ## 6. Quick Start
 
 ### From crates.io (recommended)
 
+Add the dependency to `Cargo.toml`. Put the example in `src/main.rs` and run `cargo run`.
+
 ```toml
 [dependencies]
-thymeleaf = "0.1"
+thymeleaf = "0.2.0"
 ```
+
+0.2.0 keeps the template expression objects `#dates` and `#temporals`. Rust callers that construct date or time values use Jiff types. See the [time API migration guide](./docs/superpowers/specs/2026-11-18-chrono-migration.md).
 
 ### From Git (development snapshots)
 
@@ -166,25 +167,36 @@ thymeleaf = { git = "https://github.com/easy-4-rust/thymeleaf-rust.git" }
 ### Minimal Example
 
 ```rust
-use thymeleaf::{TemplateEngine, TemplateMode};
-use thymeleaf::context::Context;
-use thymeleaf::templateresolver::StringTemplateResolver;
-use thymeleaf::ITemplateResolver;
 use std::sync::Arc;
+use thymeleaf::context::Context;
+use thymeleaf::expression::TemplateValue;
+use thymeleaf::templateresolver::StringTemplateResolver;
+use thymeleaf::util::Utf16String;
+use thymeleaf::{TemplateEngine, TemplateMode};
 
 fn main() {
     let mut resolver = StringTemplateResolver::new();
     resolver.set_template_mode(TemplateMode::HTML);
-    let engine = TemplateEngine::new();
-    engine.set_template_resolver(Arc::new(resolver) as Arc<dyn ITemplateResolver>)
-        .expect("resolver");
 
-    let ctx = Context::new();
-    let output = engine.process_template("<p th:text=\"${msg}\">fallback</p>", &ctx)
-        .expect("render");
+    let engine = TemplateEngine::new();
+    engine.set_template_resolver(Arc::new(resolver)).expect("configure resolver");
+
+    let context = Context::new();
+    context.set_variable(
+        Some(Utf16String::from_rust_str("name")),
+        Some(Arc::new(TemplateValue::string(Utf16String::from_rust_str("Rust")))),
+    );
+
+    let output = engine
+        .process_template(r#"<p th:text="${name}">fallback</p>"#, &context)
+        .expect("render template");
     println!("{}", output.to_string_lossy());
 }
 ```
+
+Expected output `<p>Rust</p>`.
+
+Enable the `dtd-validation` Cargo feature for XML DTD validation. Before rendering, call `TemplateEngine::set_dtd_validation_policy` with `thymeleaf::dtd::ValidationPolicy::Warn` or `Strict`.
 
 ## 7. Java → Rust Semantic Mapping
 
@@ -199,35 +211,27 @@ fn main() {
 
 ## 8. Quality Gates
 
-### CI Pipeline (24 steps)
+Run from the repository root using a Rust toolchain that satisfies the complete workspace, including the Topcoat adapter's Rust 1.99 requirement.
 
 ```bash
 cargo fmt --all --check
+python3 scripts/generate_test_asset_manifest.py --output thymeleaf-test/source-test-parity.json
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features
-cargo xtask migration-check --upstream <upstream> --baseline 10f9dd2e...
-python3 scripts/audit_migration_layout.py --fail-on-warning   # layout audit 0/0/0
-cargo deny check                                               # licenses/bans/sources/advisories
-cargo audit                                                    # vulnerabilities
-cargo llvm-cov --workspace --all-features --summary-only
-THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream_plain_batch  # 2,608 corpus
 ```
 
-### Test Types
+Check out the pinned Java baseline at `upstream-thymeleaf` to reproduce the semantic corpus.
 
-| Type | Count | Purpose |
-|:---|:---:|:---|
-| Unit (lib) | 295 | Core logic |
-| Integration (parity) | 964 | Java 1:1 differential |
-| Adapter contracts | 45 | Framework integration smoke |
-| Corpus | 2,608 | Upstream behavioral parity |
-| Acceptance | 2,686 assets | SHA-256 byte-identical |
-| Fuzz (proptest) | 2 active | XML/TEXT parser robustness |
+```bash
+THYMELEAF_UPSTREAM="$PWD/upstream-thymeleaf" THYMELEAF_SCOPE=semantic_all \
+  cargo test -p thymeleaf-test --test thtest_upstream_plain_batch
+```
+
+The [CI workflow](./.github/workflows/ci.yml) records the upstream checkout, Java regression and migration audit commands. See also [coverage](./.github/workflows/coverage.yml), [security](./.github/workflows/security.yml) and [release preflight](./.github/workflows/release-preflight.yml).
 
 ## 9. Known Limitations
 
-- **html5gum tokenizer**: Pathological Unicode input (isolated surrogates, special sequences) can cause internal memory inflation. HTML parser fuzz excluded; robustness covered by 2,608 corpus.
-- **Render smoke proptest**: Random expression injection can cause `process_template` timeout (>60s). Excluded; covered by corpus + workspace tests.
+- **Fuzz coverage**. The workspace [property tests](./thymeleaf-test/tests/robustness_fuzz_smoke.rs) exercise XML and TEXT parsing. The scheduled [fuzz workflow](./.github/workflows/fuzz.yml) exercises HTML rendering and expression evaluation.
 - **API baseline CI**: `cargo public-api` baseline is a hard CI gate on pinned nightly (`nightly-2026-07-28`); any public-API drift fails CI.
 
 ## 10. Roadmap
@@ -237,19 +241,13 @@ THYMELEAF_SCOPE=semantic_all cargo test -p thymeleaf-test --test thtest_upstream
 | Semantic alignment | ✅ Done | 2,608 corpus, 491 objects, 4,291 methods |
 | Governance audit | ✅ Done | strict blockers 0, warnings 0, CI enforced |
 | Fuzz OOM fix | ✅ Done | DiscardingWriter + shrink clamp + serial |
-| Release ecosystem | 🚧 In progress | `cargo package --verify`, docs.rs, adapter contracts |
-| Version 0.1.0 | ✅ Done | First stable release, 2026-09-17 |
-| Benchmark suite | 🗓️ Planned | Criterion render/parse/expression |
+| Core v0.2.0 | ✅ Published | [crates.io](https://crates.io/crates/thymeleaf/0.2.0) · [docs.rs](https://docs.rs/thymeleaf/0.2.0/thymeleaf/) · [GitHub Release](https://github.com/easy-4-rust/thymeleaf-rust/releases/tag/v0.2.0) |
+| Render benchmark | ✅ Running | [Criterion regression](./.github/workflows/bench-regression.yml) |
+| Adapter acceptance | 🚧 In progress | Expand host-level streaming, error and cancellation tests |
 
 ## 11. Contributing
 
-Run the basic gates before submitting:
-
-```bash
-cargo fmt --all --check
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features
-```
+Run the [quality checks](#8-quality-gates) before submitting.
 
 New public APIs must include docs, tests, and SemVer/MSRV impact notes.
 
