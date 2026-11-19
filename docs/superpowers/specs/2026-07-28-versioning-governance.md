@@ -61,6 +61,13 @@ alpha 阶段不承诺稳定 API；但以下红线始终有效：
 - git tag：`v<version>`（annotated），GitHub Release 自动生成
 - 重新生成 coverage/审计/语料台账快照并落档
 
+### 3.4 GitHub Release 说明与资产
+
+- 在 `CHANGELOG.md` 的目标版本 `## [X.Y.Z]` 下填写 `### 简体中文` 和 `### English`，各自记录该版本的用户可见变更。公开 API 有破坏性变更时，两种语言都说明迁移步骤。
+- 运行 `bash scripts/publish-precheck.sh <输出目录>`。预检须通过 Cargo 发布干跑和解包后的默认配置、全特性测试，并从解包源码生成全特性离线 API 文档。输出目录应包含 `release-notes.md`、`thymeleaf-X.Y.Z.crate`、`thymeleaf-X.Y.Z-api-docs.tar.gz` 和 `SHA256SUMS`。
+- 正式发布在 crates.io 上传成功后下载该版本的公开源码包，核对包内 Git 提交与 tag 一致，再用同一脚本构建离线文档和双语说明。GitHub 草稿附带源码包、文档压缩包和校验清单，维护者审核后公开。
+- 从同一目录执行 `sha256sum -c SHA256SUMS`（Linux）或 `shasum -a 256 -c SHA256SUMS`（macOS），两个构建产物都须通过校验。
+
 ## 4. 版本号纪律
 
 - 版本号单一事实来源：`Cargo.toml` `[workspace.package].version`（当前 14 个 Workspace support

@@ -6,6 +6,16 @@
 # publish=false 是测试包），单 crate 无内部依赖 → 完整 cargo publish --dry-run。
 set -euo pipefail
 
+if [ "$#" -gt 1 ]; then
+  echo "Usage: $0 [release-bundle-dir]" >&2
+  exit 2
+fi
+release_bundle_dir="${1:-}"
+if [ -n "$release_bundle_dir" ]; then
+  mkdir -p "$release_bundle_dir"
+  release_bundle_dir="$(cd "$release_bundle_dir" && pwd)"
+fi
+
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
@@ -56,27 +66,10 @@ if [ ! -f "$PACKAGED_ARCHIVE" ]; then
   echo "::error::Missing verified package archive: $PACKAGED_ARCHIVE" >&2
   exit 1
 fi
-PACKAGED_DIR="$(mktemp -d)"
-trap 'rm -rf "$PACKAGED_DIR"' EXIT
-tar -xzf "$PACKAGED_ARCHIVE" -C "$PACKAGED_DIR"
-(
-  cd "$PACKAGED_DIR/thymeleaf-$PACKAGED_VERSION"
-  # Keep compile-time CARGO_MANIFEST_DIR paths scoped to this extraction. Reusing
-  # an external target can run cached test binaries pointing at a removed temp dir.
-  export CARGO_TARGET_DIR="$PACKAGED_DIR/target"
-  cargo test --no-default-features
-  cargo test --all-features
-  cargo doc --all-features --no-deps
-)
-echo "  PASS (packaged default/all-features tests and rustdoc)"
-
-echo "=== 4) CHANGELOG 存在未发布条目检查 ==="
-NEXT=$(cargo metadata --format-version 1 --no-deps | python3 -c "import json,sys; m=json.load(sys.stdin); print([p['version'] for p in m['packages'] if p['name']=='thymeleaf'][0])")
-echo "  待发布版本: $NEXT"
-if ! grep -q "^## \[$NEXT\]" CHANGELOG.md; then
-  echo "::error::CHANGELOG.md 缺少 [${NEXT}] 条目（无版本时也算缺）"
-  exit 1
+if [ -z "$release_bundle_dir" ]; then
+  release_bundle_dir="$(mktemp -d)"
+  trap 'rm -rf "$release_bundle_dir"' EXIT
 fi
-echo "  CHANGELOG 条目存在"
-
+bash scripts/build-release-bundle.sh "$PACKAGED_ARCHIVE" "$release_bundle_dir" --test
+echo "  PASS (packaged tests, rustdoc, bilingual release notes and checksums)"
 echo "=== 预检通过 ==="

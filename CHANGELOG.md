@@ -10,9 +10,17 @@
 
 ## [0.2.0]
 
-### Changed
+### 简体中文
 
-- 日期与时间依赖迁移至 Jiff（#57）。模板继续使用 `#dates` 和 `#temporals`。直接构建 Rust 时间值的调用方须改用 Jiff 类型，迁移映射见[日期与时间迁移说明](docs/superpowers/specs/2026-11-18-chrono-migration.md)。
+- 日期和时间依赖由 Chrono 与 `chrono-tz` 迁移至 Jiff。现有模板继续使用 `#dates` 和 `#temporals`。Rust 侧保留 `DateValue`、`TemporalValue` 的名称及枚举分支，直接构建或读取其值的调用方须使用 Jiff 类型。
+- UTC 瞬时使用 `jiff::Timestamp`。无时区日期、日期时间和时间分别使用 `jiff::civil::Date`、`DateTime` 和 `Time`。时区和固定偏移分别使用 `jiff::tz::TimeZone` 和 `Offset`。带时区或固定偏移的日期时间使用 `jiff::ZonedDateTime`，固定偏移可通过 `Offset::to_time_zone()` 构造时区。
+- 详见[日期与时间迁移说明](docs/superpowers/specs/2026-11-18-chrono-migration.md)（#57）。
+
+### English
+
+- Date and time dependencies moved from Chrono and `chrono-tz` to Jiff. Existing template calls to `#dates` and `#temporals` still work. The `DateValue` and `TemporalValue` types keep their names and enum variants. Rust callers constructing or reading the values held by those variants must use Jiff types.
+- Use `jiff::Timestamp` for UTC instants, `jiff::civil::Date`, `DateTime`, and `Time` for civil values, and `jiff::tz::TimeZone` or `Offset` for time zones and fixed offsets. Zoned and fixed-offset date-times use `jiff::ZonedDateTime`. Use `Offset::to_time_zone()` to construct a time zone from a fixed offset.
+- See the [date and time migration guide](docs/superpowers/specs/2026-11-18-chrono-migration.md) (Chinese, #57).
 
 ## [0.1.2]
 
