@@ -3,7 +3,7 @@ name: Release
 # 正式版发布工作流：推送已审核的 v* tag（或手动选择已有 tag）触发。
 # 1. validate-tag：检出目标 tag，校验 tag 格式及 Cargo workspace 版本。
 # 2. publish：Ubuntu/macOS build + test + cargo publish --dry-run。
-# 3. publish-crates 实际上传 crates.io；成功后 create-release 创建 GitHub Release 草稿。
+# 3. publish-crates 实际上传 crates.io；成功后 create-release 从已发布 crate 生成双语说明和构建物，再上传到 GitHub 草稿。
 #
 # 发布纪律：先全量验证再实际上传；CARGO_REGISTRY_TOKEN 使用组织 Actions Secret；
 # GitHub Release 以 draft=true 创建，CHANGELOG 必须包含对应版本条目。
@@ -18,6 +18,10 @@ on:
         description: "Version to release (e.g. v0.1.0 or v0.1.0-beta.0)"
         required: true
         type: string
+
+concurrency:
+  group: release-${{ inputs.version || github.ref_name }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -102,52 +106,60 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ needs.validate-tag.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.validate-tag.outputs.version }}
+          persist-credentials: false
 
-      - name: Extract CHANGELOG section for tag
-        id: extract
+      - name: Check for an existing public release
+        id: existing
         env:
-          RELEASE_TAG: ${{ needs.validate-tag.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          VERSION="$RELEASE_TAG"
-          # 剥掉 v 前缀：tag v0.1.0-beta.0 → CHANGELOG [0.1.0-beta.0]
-          CHANGELOG_VER="${VERSION#v}"
-          # 提以 [CHANGELOG_VER] 开头的块到下一个 ## [
-          SECTION=$(awk -v ver="$CHANGELOG_VER" '
-            $0 ~ "^## \\[" ver "\\]" {found=1}
-            found {print}
-            found && /^## \[/ && $0 !~ "^## \\[" ver "\\]" {exit}
-          ' CHANGELOG.md)
-          if [ -z "$SECTION" ]; then
-            echo "::error::CHANGELOG.md 缺少 [${CHANGELOG_VER}] 条目"
-            exit 1
+          states=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$RELEASE_TAG\") | .draft")
+          if grep -qx false <<< "$states"; then
+            echo "Release $RELEASE_TAG is already public."
+            echo "public=true" >> "$GITHUB_OUTPUT"
           fi
-          {
-            echo "# Release Notes"
-            echo
-            echo "完整变更日志见 [CHANGELOG.md](../../blob/main/CHANGELOG.md)。"
-            echo
-            echo "## Highlights"
-            echo
-            echo "$SECTION"
-          } > release-notes.md
 
-      - name: Create GitHub Release (draft, auto-pre-release for alpha/beta/rc)
+      - name: Install Rust
+        if: steps.existing.outputs.public != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build assets from the published crate
+        id: bundle
+        if: steps.existing.outputs.public != 'true'
+        run: |
+          version="${RELEASE_TAG#v}"
+          archive="$RUNNER_TEMP/thymeleaf-$version.crate"
+          curl --fail --silent --show-error --location --retry 6 --retry-all-errors --max-time 60 \
+            "https://static.crates.io/crates/thymeleaf/thymeleaf-$version.crate" -o "$archive"
+          tar -xOzf "$archive" "thymeleaf-$version/.cargo_vcs_info.json" |
+            python3 -c 'import json, sys; actual=json.load(sys.stdin)["git"]["sha1"]; sys.exit(0 if actual == sys.argv[1] else f"Published crate commit {actual} differs from release commit {sys.argv[1]}")' "$(git rev-parse HEAD)"
+          bundle="$RUNNER_TEMP/release-bundle"
+          bash scripts/build-release-bundle.sh "$archive" "$bundle"
+          echo "directory=$bundle" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub Release draft
+        if: steps.existing.outputs.public != 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.validate-tag.outputs.version }}
           name: ${{ needs.validate-tag.outputs.version }}
-          body_path: release-notes.md
-          draft: true  # 草稿——待维护者审核
+          body_path: ${{ steps.bundle.outputs.directory }}/release-notes.md
+          files: |
+            ${{ steps.bundle.outputs.directory }}/thymeleaf-*.crate
+            ${{ steps.bundle.outputs.directory }}/thymeleaf-*-api-docs.tar.gz
+            ${{ steps.bundle.outputs.directory }}/SHA256SUMS
+          fail_on_unmatched_files: true
+          draft: true
           prerelease: ${{ contains(needs.validate-tag.outputs.version, '-') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Block-on gate (CHANGELOG [Unreleased] 无未完成项)
-        run: scripts/check_block_on.sh
 
   precheck:
     name: Publish Precheck
@@ -171,10 +183,8 @@ jobs:
       - name: Enforce unpublished task gate before publishing
         run: bash scripts/check_block_on.sh
 
-      - name: Run publish-precheck (metadata + dry-run + CHANGELOG)
-        env:
-          THYMELEAF_UPSTREAM: ${{ github.workspace }}/upstream-thymeleaf
-        run: scripts/publish-precheck.sh
+      - name: Validate package and assemble the release bundle
+        run: bash scripts/publish-precheck.sh "$RUNNER_TEMP/release-precheck"
 
   dry-run-publish:
     name: Dry-run Publish (validation)

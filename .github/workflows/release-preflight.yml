@@ -10,6 +10,9 @@ on:
       - 'dtd-files/**'
       - CHANGELOG.md
       - scripts/publish-precheck.sh
+      - scripts/build-release-bundle.sh
+      - scripts/render_release_notes.py
+      - .github/workflows/release.yml
       - scripts/check_block_on.sh
       - .github/workflows/release-preflight.yml
   workflow_dispatch:
@@ -37,12 +40,9 @@ jobs:
       - name: Inspect package file list
         run: cargo package -p thymeleaf --list --allow-dirty
 
-      - name: Verify publish metadata, dependency graph and dry-run
-        # Never upload or consume CARGO_REGISTRY_TOKEN on a pull_request.
-        run: bash scripts/publish-precheck.sh
-
-      - name: Verify core crate documentation
-        run: cargo doc -p thymeleaf --all-features --no-deps
-
       - name: Verify no blocked release items
         run: bash scripts/check_block_on.sh
+
+      - name: Verify package and assemble the release bundle
+        # Never upload or consume CARGO_REGISTRY_TOKEN on a pull_request.
+        run: bash scripts/publish-precheck.sh "$RUNNER_TEMP/release-precheck"
