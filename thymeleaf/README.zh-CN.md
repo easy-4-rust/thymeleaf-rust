@@ -6,10 +6,10 @@
 
 **迁移 Thymeleaf 核心语义、面向 Rust 的框架中立模板引擎。**
 
-[![项目状态：语义验证进行中](https://img.shields.io/badge/status-semantic%20verification%20in%20progress-blue)](#项目状态)
-[![许可证：MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![crates.io](https://img.shields.io/crates/v/thymeleaf)](https://crates.io/crates/thymeleaf/0.2.0)
+[![许可证：MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/LICENSE)
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+[English](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/thymeleaf/README.md) | [简体中文](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/thymeleaf/README.zh-CN.md)
 
 [项目概览](#项目概览) · [架构](#架构) · [Crate 模型](#crate-模型) ·
 [集成模型](#集成模型) · [后续路线](#后续路线) · [参与贡献](#参与贡献)
@@ -18,13 +18,11 @@
 
 ---
 
-> **项目状态：0.1.2 修复 DTD 打包与节流渲染**
+> **Thymeleaf 核心包 v0.2.0** · Rust 1.95 · Rust Edition 2024
 >
-> `thymeleaf` 核心包已在 [crates.io](https://crates.io/crates/thymeleaf) 发布。
-> 固定 Java 3.1.5 基线登记了 2,608 个 `.thtest` 用例：2,595 个行为相同，
-> 13 个为明确记录的策略差异。对象/方法处置率不等于任意输入下行为完全兼容。
-> 框架适配器的 HTTP Full/Stream/Error/Cancellation 合同仍需持续补充；
-> 当前版本与 CI 证据以仓库根目录 README 和 crates.io 为准。
+> [crates.io](https://crates.io/crates/thymeleaf/0.2.0) · [API 文档](https://docs.rs/thymeleaf/0.2.0/thymeleaf/) · [GitHub Release](https://github.com/easy-4-rust/thymeleaf-rust/releases/tag/v0.2.0)
+>
+> 上游差分测试包含 2,608 个可执行用例，其中 2,595 个通过，另有 13 个具名处置记录。
 
 ## 项目概览
 
@@ -238,7 +236,7 @@ Web 能力；出站时，只转换 Status、Header 和 Body 类型。整合 crat
 Resolver、Parser、Expression、Processor、Charset 编码或节流控制。独立框架适配与
 `thymeleaf-vernal` 是同一组中立合同的平级消费者，两条路径互不依赖。详细设计、
 调用链证据和风险见
-[可行性与架构设计](docs/superpowers/specs/2026-07-28-architecture-design.md)。
+[可行性与架构设计](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md)。
 
 当前 Hyper 宿主桥已经实现中立入站 trait；其他框架 crate 目前主要完成
 `RenderedTemplate` 出站转换，对等的原生 Request/Session/Application Wrapper 仍属于
@@ -332,7 +330,7 @@ flowchart TB
 | Poem | `thymeleaf-poem` | `thymeleaf-vernal` + `vernal-poem` | IntoResponse、Endpoint、Stream |
 | Rocket | `thymeleaf-rocket` | `thymeleaf-vernal` + `vernal-rocket` | Responder 与 ByteStream |
 | Salvo | `thymeleaf-salvo` | `thymeleaf-vernal` + `vernal-salvo` | Handler 与 Response Body |
-| Tide | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint 与 Response |
+| Tide（仅源码） | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint 与 Response |
 | Warp | `thymeleaf-warp` | `thymeleaf-vernal` + `vernal-warp` | Reply 与 Rejection 映射 |
 | Tower | `thymeleaf-tower` | `thymeleaf-vernal` + `vernal-tower` | Service、Layer、Response Body |
 | Tonic | `thymeleaf-tonic` | `thymeleaf-vernal` + `vernal-tonic` | 动态 String/Bytes、Gateway、服务内容 |
@@ -343,56 +341,38 @@ flowchart TB
 
 | 交付物 | 状态 | 证据 |
 |:---|:---:|:---|
-| 可行性与架构基线 | 已有，CodeGraph 复核 | [`docs/superpowers/specs/2026-07-28-architecture-design.md`](docs/superpowers/specs/2026-07-28-architecture-design.md) |
+| 可行性与架构基线 | 已有，CodeGraph 复核 | [`docs/superpowers/specs/2026-07-28-architecture-design.md`](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md) |
 | 命名与中立性决策 | 已记录 | 架构提案 ADR |
-| Cargo Workspace | 已有 | [`Cargo.toml`](Cargo.toml) |
+| Cargo Workspace | 已有 | [`Cargo.toml`](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/Cargo.toml) |
 | Rust 核心 API | 语义清单已闭合 | Engine、配置、Resolver、六种 Parser、事件模型、Context、缓存、Standard Dialect、Processor SPI、表达式安全子集与中立 Web 输出均有真实实现 |
-| 框架适配器（P0） | ✅ 稳定 | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` | IWebExchange 四件套 + 与 hyper 标杆对齐的契约测试 + `render_async` |
+| 框架适配器（P0） | ✅ 稳定 | `thymeleaf-axum`/`thymeleaf-actix-web`/`thymeleaf-topcoat` 提供 Web 契约测试和 `render_async` |
 | 框架适配器（薄层/实验性） | 预览/实验 | hyper/tower/ntex/poem/rocket/salvo/tonic；gotham/warp 实验性，tide 仅保留源码 |
 | 上游兼容矩阵 | 迁移清单与登记语义语料已验收 | 491 个主对象与 4,291 个方法已有处置记录；迁移账本记录 479 个行为已验证对象和 12 个 Java-only 宿主等价映射，2,608 个语义用例中 2,595 个一致、13 个策略差异 |
 | 迁移治理 | 已自动化 | `cargo xtask migration-check` 校验基线、清单、布局、来源注释和红线 |
-| 测试与 CI | 语义门禁通过 | Java 五模块基线 2,156/2,156；SOURCE_PARITY 875/875、0 缺失；Rust 与 2,595/2,595 个可比较 `.thtest` 一致；源码覆盖率仅作诊断 |
+| 测试与 CI | Java 核心基线与 Rust 语义差分 | [CI 工作流](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/.github/workflows/ci.yml) |
 | crates.io 包 | 已发布 | [crates.io/crates/thymeleaf](https://crates.io/crates/thymeleaf) |
 
 ## 文档快速开始
 
-针对固定上游检出复现完整语义一致性门禁：
-
-```bash
-git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
-cd thymeleaf-rust
-cargo test --workspace --all-features
-THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
-THYMELEAF_SCOPE=semantic_all \
-cargo test --test thtest_upstream_plain_batch
-
-# 可选诊断，不设置 fail-under 阈值
-cargo llvm-cov --workspace --all-features --summary-only
-```
+运行 `cargo add thymeleaf@0.2.0` 添加已发布的核心包。仓库 README 提供[可运行示例](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/README.zh-CN.md#6-快速开始)及[工作区验证命令](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/README.zh-CN.md#8-质量门禁)。
 
 然后阅读：
 
-- [可行性与架构基线](docs/superpowers/specs/2026-07-28-architecture-design.md)
-- [迁移路线图](docs/superpowers/specs/2026-07-28-migration-roadmap.md)
-- [对象级对照表](docs/superpowers/specs/2026-07-28-object-level-mapping.md)
-- [方法级对照表](docs/superpowers/specs/2026-07-28-method-level-mapping.md)
-- [语义迁移对照表](docs/superpowers/specs/2026-07-28-semantic-migration-mapping.md)
-- [对象名称一致性检查](docs/superpowers/specs/2026-07-28-naming-consistency-check.md)
-- [迁移技术要求](docs/superpowers/specs/2026-07-28-migration-technical-requirements.md)
-- [迁移测试对照表](docs/superpowers/specs/2026-07-28-migration-test-mapping.md)
-- [English README](README.md)
+- [可行性与架构基线](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md)
+- [迁移路线图](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-migration-roadmap.md)
+- [对象级对照表](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-object-level-mapping.md)
+- [方法级对照表](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-method-level-mapping.md)
+- [语义迁移对照表](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-semantic-migration-mapping.md)
+- [对象名称一致性检查](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-naming-consistency-check.md)
+- [迁移技术要求](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-migration-technical-requirements.md)
+- [迁移测试对照表](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-migration-test-mapping.md)
+- [English README](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/thymeleaf/README.md)
 
 ## 兼容方向
 
 兼容基线固定为 Thymeleaf 3.1.5.RELEASE 提交
 `10f9dd2eb8cbd98515ce14b149d115e0287d0add`。现有证据包括对象与方法清单、
-覆盖 2,156 个 Java 运行时 case 的 875/875 SOURCE_PARITY 处置、61 组共 4,384 条
-Java/Rust Golden，以及 2,595 个可比较上游 `.thtest` 结果。最新闭合的
-`ConfigurationPrinterHelper`、`EngineConfiguration` 与 `IEngineConfiguration`
-批次验证了不可变有序快照、按接口能力查询 Dialect、并发 ModelFactory 发布，以及
-完整 DEBUG/TRACE 配置诊断。
-Engine Context 工厂/管理器生命周期批次还验证了普通/Web 分流、有序变量复制、
-内建 Web capability 保留、嵌套上下文身份以及 TemplateData 栈恢复。
+覆盖 413 个核心 Java 测试方法、1,154 个运行用例的[源码对照台账](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/migration/baseline/source_parity_inventory.json)，以及覆盖 2,608 个上游 `.thtest` 用例的 Rust 差分测试。
 
 后续证据工作集中在提升保守的对象级成熟度标签、扩展适配器 Full/Stream/Error/
 Cancellation 测试，以及持续维护显式差异登记。
@@ -414,7 +394,7 @@ Thymeleaf 上游采用 Apache License 2.0。任何从上游调整而来的源码
 ## 使用状态
 
 核心包现已在 [crates.io](https://crates.io/crates/thymeleaf) 发布。业务项目可以执行
-`cargo add thymeleaf`；若需要复现 Java 差分与迁移测试，则使用仓库固定基线检出。
+`cargo add thymeleaf@0.2.0`；若需要复现 Java 差分与迁移测试，则使用仓库固定基线检出。
 具体版本以 crates.io 的当前发布记录为准。
 
 ## 参与贡献
@@ -433,18 +413,13 @@ Thymeleaf 上游采用 Apache License 2.0。任何从上游调整而来的源码
 
 ## 安全
 
-Parser 和渲染 Runtime 已可执行。默认表达式求值采用只读安全子集：`new`/`param`/`@Type@`
-外部访问默认封禁（`restrict_external_access = true`）；任意 Class 和反射被阻断。
-一组受限的白名单静态方法调用被允许（Math/Integer/Double/… 的 `parse`/`valueOf`/
-`abs`/`sqrt`/`LocalDateTime.of`/`String.format`），由 `ThymeleafACLClassResolver` 控制
-（~50 个允许类 + `java.`/`javax.`/`jakarta.`/`jdk.` 等封禁包前缀）。宿主可通过
-`OgnlRuntime` 进一步收紧（opt-in）。
+受限表达式上下文可阻止外部访问。静态类和方法访问遵循 `ThymeleafACLClassResolver` 与 `OgnlRuntime` 执行的策略。应用应使用可信模板渲染数据。
 
 请勿在公开 Issue 中披露疑似漏洞或敏感验证数据。项目会在发布可执行版本前确定私密报告渠道。
 
 ## 许可证
 
-本仓库采用 [MIT License](LICENSE)。
+本仓库采用 [MIT License](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/LICENSE)。
 
 上游衍生材料仍受其原许可证和署名要求约束。
 
@@ -452,7 +427,7 @@ Parser 和渲染 Runtime 已可执行。默认表达式求值采用只读安全�
 
 <div align="center">
 
-[返回顶部](#readme-top) · [架构文档](docs/superpowers/specs/2026-07-28-architecture-design.md) ·
+[返回顶部](#readme-top) · [架构文档](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md) ·
 [Issues](https://github.com/easy-4-rust/thymeleaf-rust/issues)
 
 </div>
