@@ -6,10 +6,10 @@
 
 **A framework-neutral Rust template engine migrating Thymeleaf core semantics.**
 
-[![Project status: semantic verification in progress](https://img.shields.io/badge/status-semantic%20verification%20in%20progress-blue)](#project-status)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![crates.io](https://img.shields.io/crates/v/thymeleaf)](https://crates.io/crates/thymeleaf/0.2.0)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/LICENSE)
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+[English](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/thymeleaf/README.md) | [简体中文](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/thymeleaf/README.zh-CN.md)
 
 [Overview](#overview) · [Architecture](#architecture) · [Crate model](#crate-model) ·
 [Integrations](#integration-model) · [Remaining roadmap](#remaining-roadmap) ·
@@ -19,14 +19,11 @@
 
 ---
 
-> **Project status: 0.1.2 includes DTD packaging and throttled rendering fixes**
+> **Thymeleaf core v0.2.0** · Rust 1.95 · Rust edition 2024
 >
-> The `thymeleaf` core crate is available on [crates.io](https://crates.io/crates/thymeleaf).
-> Its fixed Java 3.1.5 oracle has 2,608 tracked `.thtest` cases: 2,595 identical
-> outcomes and 13 documented policy differences. Object/method disposition is
-> tracked separately from behavioral parity; this does not certify every input.
-> Framework adapter completeness and HTTP full/stream/error/cancellation coverage
-> continue to be tracked in the repository's main README and CI.
+> [crates.io](https://crates.io/crates/thymeleaf/0.2.0) · [API documentation](https://docs.rs/thymeleaf/0.2.0/thymeleaf/) · [GitHub Release](https://github.com/easy-4-rust/thymeleaf-rust/releases/tag/v0.2.0)
+>
+> The upstream differential suite covers 2,608 executable cases. It verifies 2,595 and records 13 explicit dispositions.
 
 ## Overview
 
@@ -249,7 +246,7 @@ status, headers, and body types. They must not reimplement resolvers, parsers,
 expressions, processors, charset handling, or streaming control. Direct adapters and
 `thymeleaf-vernal` are peer consumers of the same contracts; neither path depends on
 the other. See the detailed
-[feasibility and architecture design](docs/superpowers/specs/2026-07-28-architecture-design.md) for
+[feasibility and architecture design](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md) for
 call-chain evidence and risks.
 
 The neutral inbound traits are implemented today by the Hyper host bridge. The other
@@ -346,7 +343,7 @@ combination remains subject to the corresponding Vernal host adapter.
 | Poem | `thymeleaf-poem` | `thymeleaf-vernal` + `vernal-poem` | IntoResponse, endpoint, stream |
 | Rocket | `thymeleaf-rocket` | `thymeleaf-vernal` + `vernal-rocket` | Responder and byte stream |
 | Salvo | `thymeleaf-salvo` | `thymeleaf-vernal` + `vernal-salvo` | Handler and response body |
-| Tide | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint and response |
+| Tide (source only) | `thymeleaf-tide` | `thymeleaf-vernal` + `vernal-tide` | Endpoint and response |
 | Warp | `thymeleaf-warp` | `thymeleaf-vernal` + `vernal-warp` | Reply and rejection mapping |
 | Tower | `thymeleaf-tower` | `thymeleaf-vernal` + `vernal-tower` | Service, layer, response body |
 | Tonic | `thymeleaf-tonic` | `thymeleaf-vernal` + `vernal-tonic` | Dynamic string/bytes, gateway, service content |
@@ -357,57 +354,37 @@ Release order may be phased, but the architecture must not require independent u
 
 | Deliverable | Status | Evidence |
 |:---|:---:|:---|
-| Feasibility and architecture baseline | Available; CodeGraph reviewed | [`docs/superpowers/specs/2026-07-28-architecture-design.md`](docs/superpowers/specs/2026-07-28-architecture-design.md) |
+| Feasibility and architecture baseline | Available; CodeGraph reviewed | [`docs/superpowers/specs/2026-07-28-architecture-design.md`](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md) |
 | Naming and neutrality decisions | Documented | Architecture proposal ADRs |
-| Cargo workspace | Available | [`Cargo.toml`](Cargo.toml) |
+| Cargo workspace | Available | [`Cargo.toml`](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/Cargo.toml) |
 | Rust core API | Semantic inventory closed | Engine, configuration, resolvers, six parsers, event model, context, caches, standard dialect, processor SPI, safe expression subset, and neutral web output have real implementations |
-| Framework adapters | Available; host tests need expansion | 13 independent framework crates plus `thymeleaf-vernal` compile; 28 adapter/Hyper host contract tests pass |
+| Framework adapters | Available; host tests need expansion | Workspace and source-only adapters are listed in the [repository README](https://github.com/easy-4-rust/thymeleaf-rust#4-workspace-layout) |
 | Upstream compatibility matrix | Structural inventory and registered parity corpus verified | All 491 main objects and 4,291 methods have dispositions; the repository's migration ledger records 479 verified objects and 12 Java-only host equivalents; 2,595 of 2,608 semantic cases match with 13 approved differences |
 | Migration governance | Automated | `cargo xtask migration-check` validates baseline, manifest, layout, documentation, and red lines |
-| Tests and CI | Semantic gate passing | Java five-module baseline 2,156/2,156; SOURCE_PARITY 875/875 with 0 missing; Rust matches 2,595/2,595 comparable `.thtest` cases; source coverage is informational |
+| Tests and CI | Core Java baseline and Rust differential tests | [CI workflow](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/.github/workflows/ci.yml) |
 | crates.io package | Published | [crates.io/crates/thymeleaf](https://crates.io/crates/thymeleaf) |
 
 ## Documentation quick start
 
-To reproduce the complete semantic parity gate against the fixed upstream checkout:
-
-```bash
-git clone --branch dev https://github.com/easy-4-rust/thymeleaf-rust.git
-cd thymeleaf-rust
-cargo test --workspace --all-features
-THYMELEAF_UPSTREAM=/absolute/path/to/thymeleaf \
-THYMELEAF_SCOPE=semantic_all \
-cargo test -p thymeleaf-test --test thtest_upstream_plain_batch
-
-# Optional diagnostic; no fail-under threshold
-cargo llvm-cov --workspace --all-features --summary-only
-```
+Add the published core crate with `cargo add thymeleaf@0.2.0`. The repository README provides a [runnable example](https://github.com/easy-4-rust/thymeleaf-rust#6-quick-start) and [workspace validation commands](https://github.com/easy-4-rust/thymeleaf-rust#8-quality-gates).
 
 Then read:
 
-- [Feasibility and architecture baseline](docs/superpowers/specs/2026-07-28-architecture-design.md)
-- [Migration roadmap](docs/superpowers/specs/2026-07-28-migration-roadmap.md)
-- [Object-level mapping](docs/superpowers/specs/2026-07-28-object-level-mapping.md)
-- [Method-level mapping](docs/superpowers/specs/2026-07-28-method-level-mapping.md)
-- [Semantic migration matrix](docs/superpowers/specs/2026-07-28-semantic-migration-mapping.md)
-- [Object naming consistency check](docs/superpowers/specs/2026-07-28-naming-consistency-check.md)
-- [Migration technical requirements](docs/superpowers/specs/2026-07-28-migration-technical-requirements.md)
-- [Migration test ledger](docs/superpowers/specs/2026-07-28-migration-test-mapping.md)
-- [Chinese README](README.zh-CN.md)
+- [Feasibility and architecture baseline](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md)
+- [Migration roadmap](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-migration-roadmap.md)
+- [Object-level mapping](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-object-level-mapping.md)
+- [Method-level mapping](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-method-level-mapping.md)
+- [Semantic migration matrix](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-semantic-migration-mapping.md)
+- [Object naming consistency check](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-naming-consistency-check.md)
+- [Migration technical requirements](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-migration-technical-requirements.md)
+- [Migration test ledger](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-migration-test-mapping.md)
+- [Chinese README](https://github.com/easy-4-rust/thymeleaf-rust/blob/main/thymeleaf/README.zh-CN.md)
 
 ## Compatibility direction
 
 Compatibility is pinned to Thymeleaf 3.1.5.RELEASE commit
 `10f9dd2eb8cbd98515ce14b149d115e0287d0add`. Evidence includes object and method
-inventories, 875/875 SOURCE_PARITY dispositions covering 2,156 Java runtime cases,
-61 Java/Rust Golden groups with 4,384 records, and 2,595 comparable upstream `.thtest`
-results. The latest verified batch covers `ConfigurationPrinterHelper`,
-`EngineConfiguration`, and `IEngineConfiguration`, including immutable ordered snapshots,
-interface-capability dialect lookup, concurrent model-factory publication, and complete
-DEBUG/TRACE configuration diagnostics.
-The Engine Context factory/manager lifecycle batch additionally verifies plain/web selection,
-ordered variable copying, built-in Web capability preservation, nested context identity and
-TemplateData stack restoration.
+inventories, a [source parity ledger](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/migration/baseline/source_parity_inventory.json) covering 413 core Java test methods and 1,154 runtime cases, and the Rust differential test covering 2,608 upstream `.thtest` cases.
 
 Remaining evidence work focuses on raising conservative object-level maturity labels,
 expanding adapter full/stream/error/cancellation tests, and maintaining the explicit
@@ -431,7 +408,7 @@ streaming-load acceptance remains a separate, ongoing verification effort.
 ## Usage status
 
 The core API is published as [`thymeleaf`](https://crates.io/crates/thymeleaf).
-Use `cargo add thymeleaf` for a registry dependency or Git checkout when reproducing
+Use `cargo add thymeleaf@0.2.0` for a registry dependency or Git checkout when reproducing
 migration and Java parity tests; consult crates.io for the current published version.
 
 ## Contributing
@@ -451,20 +428,13 @@ dependency-direction checks.
 
 ## Security
 
-The parser and rendering runtime are executable. Expression evaluation defaults to a
-read-only safe subset. Arbitrary classes, reflection, and `new`/`param`/`@Type@`
-external access are blocked by default (`restrict_external_access = true`). A
-restricted whitelist of static method calls is permitted (Math/Integer/Double/…
-`parse`/`valueOf`/`abs`/`sqrt`/`LocalDateTime.of`/`String.format`), gated by
-`ThymeleafACLClassResolver` with ~50 allowed classes and blocked package prefixes
-(`java.`/`javax.`/`jakarta.`/`jdk.`/…). Hosts can further restrict via
-`OgnlRuntime` (opt-in).
+Restricted expression contexts can block external access. Static class and method access follows the policies enforced by `ThymeleafACLClassResolver` and `OgnlRuntime`. Render application data with trusted templates.
 
 Do not publish suspected vulnerabilities or sensitive proof-of-concept data in a public issue. A private reporting channel will be finalized before executable releases.
 
 ## License
 
-This repository is licensed under the [MIT License](LICENSE).
+This repository is licensed under the [MIT License](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/LICENSE).
 
 Upstream-derived material remains subject to its original license and attribution requirements.
 
@@ -472,7 +442,7 @@ Upstream-derived material remains subject to its original license and attributio
 
 <div align="center">
 
-[Back to top](#readme-top) · [Architecture](docs/superpowers/specs/2026-07-28-architecture-design.md) ·
+[Back to top](#readme-top) · [Architecture](https://github.com/easy-4-rust/thymeleaf-rust/blob/v0.2.0/docs/superpowers/specs/2026-07-28-architecture-design.md) ·
 [Issues](https://github.com/easy-4-rust/thymeleaf-rust/issues)
 
 </div>
