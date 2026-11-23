@@ -353,7 +353,8 @@ fn parse_html(
             Token::String(text) => text.span.end,
             Token::Comment(comment) => comment.span.end,
             Token::Doctype(doc_type) => doc_type.span.end,
-            // 可恢复错误没有 span，按"未前进"计数——卡死时同样会被中止。
+            Token::ProcessingInstruction(instruction) => instruction.span.end,
+            // 可恢复错误不消耗模板内容，按"未前进"计数。
             Token::Error(_) => last_token_end,
         };
         if token_end < last_token_end {
@@ -569,6 +570,21 @@ fn parse_html(
                     ) {
                         adapter.comment(source, start, content_start, content_end, end)?;
                     }
+                }
+            }
+            Token::ProcessingInstruction(instruction) => {
+                if should_emit_event(
+                    selection,
+                    &mut stack,
+                    &mut document_siblings,
+                    SelectorNodeType::ProcessingInstruction,
+                ) {
+                    emit_processing_instruction(
+                        source,
+                        instruction.span.start,
+                        instruction.span.end,
+                        adapter,
+                    )?;
                 }
             }
             Token::Doctype(doc_type) => {

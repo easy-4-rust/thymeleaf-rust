@@ -145,7 +145,7 @@ jobs:
         # EmbarkStudios/cargo-deny-action 是容器 action，仅支持 Linux runner；
         # 许可证/来源/重复检查与平台无关，macOS 任务跳过（复用 ubuntu 结果）。
         if: runner.os == 'Linux'
-        uses: EmbarkStudios/cargo-deny-action@70f81531115945ba6eb6b941ec9d39d063438eb9 # v2, cargo-deny 0.21.0 (advisory expiry)
+        uses: EmbarkStudios/cargo-deny-action@17aeb3c839e42274e2b8adf721c8c65edfdc74dd # v2, cargo-deny 0.21.0 (advisory expiry)
 
       - name: Install cargo-audit
         uses: taiki-e/install-action@cargo-audit
