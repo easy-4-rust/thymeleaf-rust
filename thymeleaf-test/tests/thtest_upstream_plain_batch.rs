@@ -1275,6 +1275,10 @@ fn canonical_markup_trace(markup: &str) -> Vec<String> {
                     trace.push(format!("T:{compressed}"));
                 }
             }
+            Token::ProcessingInstruction(instruction) => trace.push(format!(
+                "PI:{:?}:{:?}",
+                instruction.target, instruction.data
+            )),
             Token::Comment(comment) => trace.push(format!(
                 "C:{}",
                 String::from_utf8_lossy(comment.value.as_ref())

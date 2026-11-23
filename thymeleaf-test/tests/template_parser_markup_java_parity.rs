@@ -592,6 +592,8 @@ fn markup_parsers_roundtrip_identity() {
     for document in [
         "<div a='1'>x</div>",
         "<!DOCTYPE html><html><body><p>a</p></body></html>",
+        "<div>中文<?target name=\"示例\"?><span>after</span></div>",
+        "<?xml version=\"1.0\"?><?xml-stylesheet href=\"style.css\"?><div>body</div>",
     ] {
         assert_eq!(
             document,
