@@ -321,6 +321,10 @@ fn canonical_markup_trace(markup: &str) -> Vec<String> {
                     trace.push(format!("T:{compressed}"));
                 }
             }
+            html5gum::Token::ProcessingInstruction(instruction) => trace.push(format!(
+                "PI:{:?}:{:?}",
+                instruction.target, instruction.data
+            )),
             html5gum::Token::Comment(comment) => trace.push(format!(
                 "C:{}",
                 String::from_utf8_lossy(comment.value.as_ref())
